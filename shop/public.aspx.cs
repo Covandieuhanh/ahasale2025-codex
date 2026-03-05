@@ -1,0 +1,287 @@
+using System;
+using System.Globalization;
+using System.Linq;
+using System.Web;
+
+public partial class shop_public : System.Web.UI.Page
+{
+    private const string HomeLoginFlag = "home_login";
+
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        if (!IsPostBack)
+            LoadShopPublicPage();
+    }
+
+    private void LoadShopPublicPage()
+    {
+        string queryShopSlug = (Request.QueryString["shop_slug"] ?? "").Trim().ToLowerInvariant();
+        string queryUser = (Request.QueryString["user"] ?? "").Trim().ToLowerInvariant();
+
+        if (string.IsNullOrEmpty(queryShopSlug) && string.IsNullOrEmpty(queryUser))
+        {
+            RedirectToRoot();
+            return;
+        }
+
+        using (dbDataContext db = new dbDataContext())
+        {
+            taikhoan_tb shop = null;
+
+            if (!string.IsNullOrEmpty(queryShopSlug))
+            {
+                shop = ShopSlug_cl.FindApprovedShopBySlug(db, queryShopSlug);
+            }
+            else
+            {
+                shop = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == queryUser);
+                if (shop != null && !ShopSlug_cl.IsShopAccount(db, shop))
+                    shop = null;
+            }
+
+            if (shop == null)
+            {
+                RedirectToRoot();
+                return;
+            }
+
+            string canonicalPath = ShopSlug_cl.GetPublicUrl(db, shop);
+            string requestPath = (Request.Url.AbsolutePath ?? "").Trim().ToLowerInvariant();
+            if (!requestPath.Equals(canonicalPath, StringComparison.OrdinalIgnoreCase)
+                && !requestPath.EndsWith("/shop/public.aspx", StringComparison.OrdinalIgnoreCase))
+            {
+                Response.Redirect(canonicalPath, false);
+                Context.ApplicationInstance.CompleteRequest();
+                return;
+            }
+
+            string currentHomeAccount = GetCurrentHomeAccount(db);
+            if (ShouldStartHomeLogin())
+            {
+                if (string.IsNullOrEmpty(currentHomeAccount))
+                {
+                    Session["url_back_home"] = BuildAbsoluteUrl(canonicalPath).ToLowerInvariant();
+                    Response.Redirect(BuildHomeLoginUrl(canonicalPath), false);
+                    Context.ApplicationInstance.CompleteRequest();
+                    return;
+                }
+
+                Response.Redirect(canonicalPath, false);
+                Context.ApplicationInstance.CompleteRequest();
+                return;
+            }
+
+            BindShopSummary(db, shop, canonicalPath, currentHomeAccount);
+            BindShopProducts(db, shop.taikhoan);
+        }
+    }
+
+    private void BindShopSummary(dbDataContext db, taikhoan_tb shop, string canonicalPath, string currentHomeAccount)
+    {
+        string displayName = (shop.ten_shop ?? "").Trim();
+        if (string.IsNullOrEmpty(displayName))
+            displayName = (shop.hoten ?? "").Trim();
+        if (string.IsNullOrEmpty(displayName))
+            displayName = (shop.taikhoan ?? "").Trim();
+
+        string ownerName = (shop.hoten ?? "").Trim();
+        if (string.IsNullOrEmpty(ownerName))
+            ownerName = (shop.taikhoan ?? "").Trim();
+
+        string avatar = (shop.anhdaidien ?? "").Trim();
+        if (string.IsNullOrEmpty(avatar))
+            avatar = "/uploads/images/macdinh.jpg";
+
+        string slug = ShopSlug_cl.EnsureSlugForShop(db, shop);
+        if (string.IsNullOrEmpty(slug))
+            slug = (shop.taikhoan ?? "").Trim().ToLowerInvariant();
+
+        int totalProducts = db.BaiViet_tbs.Count(p => p.nguoitao == shop.taikhoan && p.bin == false && p.phanloai == "sanpham");
+        int totalViews = db.BaiViet_tbs
+            .Where(p => p.nguoitao == shop.taikhoan && p.bin == false && p.phanloai == "sanpham")
+            .Select(p => (int?)p.LuotTruyCap)
+            .ToList()
+            .Sum() ?? 0;
+
+        int totalSold = db.DonHang_ChiTiet_tbs
+            .Where(p => p.nguoiban_goc == shop.taikhoan || p.nguoiban_danglai == shop.taikhoan)
+            .Select(p => (int?)p.soluong)
+            .ToList()
+            .Sum() ?? 0;
+
+        int pendingOrders = db.DonHang_tbs.Count(p =>
+            p.nguoiban == shop.taikhoan &&
+            (
+                p.exchange_status == DonHangStateMachine_cl.Exchange_ChoTraoDoi
+                || (p.exchange_status == null && p.trangthai == DonHangStateMachine_cl.Exchange_ChoTraoDoi)
+            ));
+
+        img_avatar.ImageUrl = avatar;
+        lb_shop_name.Text = displayName;
+        lb_shop_slug.Text = slug;
+        lb_owner_name.Text = ownerName;
+        lb_total_products.Text = totalProducts.ToString("#,##0");
+        lb_total_views.Text = totalViews.ToString("#,##0");
+        lb_total_sold.Text = totalSold.ToString("#,##0");
+        lb_pending_orders.Text = pendingOrders.ToString("#,##0");
+        lb_public_url.Text = Request.Url.GetLeftPart(UriPartial.Authority) + canonicalPath;
+
+        if (!string.IsNullOrEmpty(currentHomeAccount))
+        {
+            lnk_home_login.Text = "Vào trang Home";
+            lnk_home_login.NavigateUrl = "/home/default.aspx";
+            lnk_home_login.ToolTip = "Đã đăng nhập Home: " + currentHomeAccount;
+        }
+        else
+        {
+            lnk_home_login.Text = "Đăng nhập Home để trao đổi";
+            lnk_home_login.NavigateUrl = BuildHomeLoginUrl(canonicalPath);
+            lnk_home_login.ToolTip = "Đăng nhập Home để thao tác trao đổi";
+        }
+    }
+
+    private void BindShopProducts(dbDataContext db, string taiKhoanShop)
+    {
+        var products = db.BaiViet_tbs
+            .Where(p => p.nguoitao == taiKhoanShop && p.bin == false && p.phanloai == "sanpham")
+            .OrderByDescending(p => p.ngaytao)
+            .Select(p => new
+            {
+                p.id,
+                p.name,
+                p.name_en,
+                p.image,
+                p.giaban,
+                p.ngaytao
+            })
+            .ToList();
+
+        rp_products.DataSource = products;
+        rp_products.DataBind();
+
+        bool hasProducts = products.Count > 0;
+        ph_products.Visible = hasProducts;
+        ph_empty_products.Visible = !hasProducts;
+    }
+
+    private void RedirectToRoot()
+    {
+        Response.Redirect("/", false);
+        Context.ApplicationInstance.CompleteRequest();
+    }
+
+    private bool ShouldStartHomeLogin()
+    {
+        string q1 = (Request.QueryString[HomeLoginFlag] ?? "").Trim();
+        if (q1 == "1" || q1.Equals("true", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        string rawUrl = (Request.RawUrl ?? "").Trim();
+        if (!string.IsNullOrEmpty(rawUrl)
+            && rawUrl.IndexOf(HomeLoginFlag + "=1", StringComparison.OrdinalIgnoreCase) >= 0)
+            return true;
+
+        string q2 = (Request.Url == null ? "" : Request.Url.Query ?? "").Trim();
+        if (!string.IsNullOrEmpty(q2))
+        {
+            var parsed = HttpUtility.ParseQueryString(q2.TrimStart('?'));
+            string value = (parsed[HomeLoginFlag] ?? "").Trim();
+            if (value == "1" || value.Equals("true", StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+
+        return false;
+    }
+
+    private string BuildHomeLoginUrl(string canonicalPath)
+    {
+        string path = (canonicalPath ?? "").Trim();
+        if (string.IsNullOrEmpty(path))
+            path = (Request.Url == null ? "/" : (Request.Url.AbsolutePath ?? "/")).Trim();
+        if (string.IsNullOrEmpty(path))
+            path = "/";
+
+        return "/dang-nhap?return_url=" + HttpUtility.UrlEncode(path);
+    }
+
+    private string BuildAbsoluteUrl(string relativePath)
+    {
+        string path = (relativePath ?? "").Trim();
+        if (string.IsNullOrEmpty(path))
+            path = "/";
+        return Request.Url.GetLeftPart(UriPartial.Authority) + path;
+    }
+
+    private string GetCurrentHomeAccount(dbDataContext db)
+    {
+        string tkEncrypted = Session["taikhoan_home"] as string;
+        if (string.IsNullOrEmpty(tkEncrypted))
+        {
+            HttpCookie ck = Request.Cookies["cookie_userinfo_home_bcorn"];
+            if (ck != null && !string.IsNullOrEmpty(ck["taikhoan"]))
+                tkEncrypted = ck["taikhoan"];
+        }
+
+        if (string.IsNullOrEmpty(tkEncrypted))
+            return "";
+
+        string tk = "";
+        try
+        {
+            tk = mahoa_cl.giaima_Bcorn(tkEncrypted);
+        }
+        catch
+        {
+            tk = "";
+        }
+
+        tk = (tk ?? "").Trim().ToLowerInvariant();
+        if (string.IsNullOrEmpty(tk))
+            return "";
+
+        taikhoan_tb acc = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == tk);
+        if (acc == null)
+            return "";
+
+        if (!PortalScope_cl.CanLoginHome(acc.taikhoan, acc.phanloai, acc.permission))
+            return "";
+
+        return acc.taikhoan;
+    }
+
+    protected string ResolveProductImage(object imageRaw)
+    {
+        string image = (imageRaw ?? "").ToString().Trim();
+        if (string.IsNullOrEmpty(image))
+            return "/uploads/images/macdinh.jpg";
+        return image;
+    }
+
+    protected string ResolveProductUrl(object idRaw, object nameEnRaw)
+    {
+        int id;
+        int.TryParse((idRaw ?? "").ToString(), out id);
+        if (id <= 0) return "#";
+
+        string slug = (nameEnRaw ?? "").ToString().Trim().ToLowerInvariant();
+        if (string.IsNullOrEmpty(slug))
+            slug = "san-pham";
+
+        return "/" + slug + "-" + id.ToString() + ".html";
+    }
+
+    protected string FormatCurrency(object valueRaw)
+    {
+        decimal value;
+        decimal.TryParse(Convert.ToString(valueRaw, CultureInfo.InvariantCulture), out value);
+        return value.ToString("#,##0.##");
+    }
+
+    protected string FormatDate(object dateRaw)
+    {
+        DateTime date;
+        if (DateTime.TryParse(Convert.ToString(dateRaw, CultureInfo.InvariantCulture), out date))
+            return date.ToString("dd/MM/yyyy HH:mm");
+        return "--";
+    }
+}
