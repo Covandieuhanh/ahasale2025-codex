@@ -1,0 +1,496 @@
+﻿<?xml version="1.0" encoding="utf-8"?><Database Name="hot79334_aha_sale" Class="dbDataContext" xmlns="http://schemas.microsoft.com/linqtosql/dbml/2007">
+  <Table Name="dbo.BaiViet_tb" Member="BaiViet_tbs">
+    <Type Name="BaiViet_tb">
+      <Column Name="id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="name" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="name_en" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="id_DanhMuc" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="id_DanhMucCap2" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="content_post" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="description" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="image" Type="System.String" DbType="VarChar(MAX)" CanBeNull="true" />
+      <Column Name="bin" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="nguoitao" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="ngaytao" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="noibat" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="giaban" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="giavon" Type="System.Int64" DbType="BigInt" CanBeNull="true" />
+      <Column Name="phanloai" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="soluong_tonkho" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="chotsale_phantram_hoac_tien" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="chotsale_thuong" Type="System.Int64" DbType="BigInt" CanBeNull="true" />
+      <Column Name="banhang_phantram_hoac_tien" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="banhang_thuong" Type="System.Int64" DbType="BigInt" CanBeNull="true" />
+      <Column Name="soluong_daban" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="ThanhPho" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="LuotTruyCap" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="LinkMap" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="PhanTram_GiamGia_ThanhToan_BangEvoucher" Type="System.Int32" DbType="Int" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="hot79334_aha_sale.YeuCau_HeThongSanPham_tb" Member="YeuCau_HeThongSanPham_tbs">
+    <Type Name="YeuCau_HeThongSanPham_tb">
+      <Column Name="id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="taikhoan" Type="System.String" DbType="NVarChar(50) NOT NULL" CanBeNull="false" />
+      <Column Name="CapHienTai" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="GiaTriHienTai" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="CapYeuCau" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="GiaTriYeuCau" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="TrangThai" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="NgayTao" Type="System.DateTime" DbType="DateTime NOT NULL" CanBeNull="false" />
+      <Column Name="NgayDuyet" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="NguoiDuyet" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="GhiChuAdmin" Type="System.String" DbType="NVarChar(255)" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Banner_tb" Member="Banner_tbs">
+    <Type Name="Banner_tb">
+      <Column Name="id" Type="System.Int64" DbType="BigInt NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="img" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="rank" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="show" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.BanSanPhamNay_tb" Member="BanSanPhamNay_tbs">
+    <Type Name="BanSanPhamNay_tb">
+      <Column Name="id" Type="System.Int64" DbType="BigInt NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="taikhoan_goc" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="taikhoan_ban" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="idsp" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="ngaythem" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="ban_ngungban" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.CaiDatChung_tb" Member="CaiDatChung_tbs">
+    <Type Name="CaiDatChung_tb">
+      <Column Name="id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="phanloai_trang" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="lienket_chiase_title" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="lienket_chiase_description" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="lienket_chiase_image" Type="System.String" DbType="VarChar(MAX)" CanBeNull="true" />
+      <Column Name="thongtin_icon" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="thongtin_apple_touch_icon" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="thongtin_logo" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="thongtin_logo1" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="thongtin_tencongty" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="thongtin_slogan" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="thongtin_diachi" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="thongtin_link_googlemap" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="thongtin_hotline" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="thongtin_email" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="thongtin_masothue" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="thongtin_zalo" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="thongtin_link_trangchu" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="baotri_trangthai" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="baotri_thoigian_batdau" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="baotri_thoigian_ketthuc" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="nhungma_head2" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="nhungma_head1" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="nhungma_body1" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="nhungma_body2" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="nhungma_fanpage" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="nhungma_googlemaps" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="link_facebook" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="link_zalo" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="link_youtube" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="link_instagram" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="link_twitter" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="link_tiktok" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="link_wechat" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="link_linkedin" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="link_whatsapp" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.cauhinh_web_tb" Member="cauhinh_web_tbs">
+    <Type Name="cauhinh_web_tb">
+      <Column Name="id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+    </Type>
+  </Table>
+  <Table Name="dbo.DangKy_GianHangDoiTac_tb" Member="DangKy_GianHangDoiTac_tbs">
+    <Type Name="DangKy_GianHangDoiTac_tb">
+      <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="taikhoan" Type="System.String" DbType="NVarChar(100) NOT NULL" CanBeNull="false" />
+      <Column Name="TrangThai" Type="System.Byte" DbType="TinyInt NOT NULL" CanBeNull="false" />
+      <Column Name="NgayTao" Type="System.DateTime" DbType="DateTime NOT NULL" CanBeNull="false" />
+      <Column Name="GhiChuAdmin" Type="System.String" DbType="NVarChar(500)" CanBeNull="true" />
+      <Column Name="NgayDuyet" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="AdminDuyet" Type="System.String" DbType="NVarChar(100)" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.DanhMuc_tb" Member="DanhMuc_tbs">
+    <Type Name="DanhMuc_tb">
+      <Column Name="id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="name" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="icon_html" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="name_en" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="id_parent" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="name_parent" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="id_level" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="description" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="image" Type="System.String" DbType="VarChar(MAX)" CanBeNull="true" />
+      <Column Name="rank" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="url_other" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="bin" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="kyhieu_danhmuc" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="nguoitao" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="ngaytao" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.data_yeucau_tuvan_table" Member="data_yeucau_tuvan_tables">
+    <Type Name="data_yeucau_tuvan_table">
+      <Column Name="id" Type="System.Int64" DbType="BigInt NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="ten" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="sdt" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="noidung" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="ngay" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="bin" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="kyhieu_nguon" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.DonHang_ChiTiet_tb" Member="DonHang_ChiTiet_tbs">
+    <Type Name="DonHang_ChiTiet_tb">
+      <Column Name="id" Type="System.Int64" DbType="BigInt NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="id_donhang" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="idsp" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="nguoiban_goc" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="nguoiban_danglai" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="soluong" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="giaban" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="thanhtien" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="PhanTram_GiamGia_ThanhToan_BangEvoucher" Type="System.Int32" DbType="Int" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.DonHang_tb" Member="DonHang_tbs">
+    <Type Name="DonHang_tb">
+      <Column Name="id" Type="System.Int64" DbType="BigInt NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="ngaydat" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="nguoiban" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="nguoimua" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="trangthai" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="tongtien" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="hoten_nguoinhan" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="sdt_nguoinhan" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="diahchi_nguoinhan" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="online_offline" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="chothanhtoan" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.GioHang_tb" Member="GioHang_tbs">
+    <Type Name="GioHang_tb">
+      <Column Name="id" Type="System.Int64" DbType="BigInt NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="idsp" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="ngaythem" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="taikhoan" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="nguoiban_goc" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="nguoiban_danglai" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="soluong" Type="System.Int32" DbType="Int" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.LichSu_DongA_tb" Member="LichSu_DongA_tbs">
+    <Type Name="LichSu_DongA_tb">
+      <Column Name="id" Type="System.Int64" DbType="BigInt NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="taikhoan" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="dongA" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="ngay" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="CongTru" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="id_donhang" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="ghichu" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="id_rutdiem" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="LoaiHoSo_Vi" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="KyHieu9HanhVi_1_9" Type="System.Int32" DbType="Int" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.lichsu_get_data_tb" Member="lichsu_get_data_tbs">
+    <Type Name="lichsu_get_data_tb">
+      <Column Name="id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="hoten" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="sdt" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="ngaysinh" Type="System.DateTime" DbType="Date" CanBeNull="true" />
+      <Column Name="gioitinh" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="zalo" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="tinhthanh" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="nguon" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="ngaydangky" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.LichSuChuyenDiem_tb" Member="LichSuChuyenDiem_tbs">
+    <Type Name="LichSuChuyenDiem_tb">
+      <Column Name="id" Type="System.Int64" DbType="BigInt NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="taikhoan_chuyen" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="taikhoan_nhan" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="ngay" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="dongA" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="nap_rut" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="trangtrai_rut" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="GhiChu" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Log_tb" Member="Log_tbs">
+    <Type Name="Log_tb">
+      <Column Name="id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="log_date" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="log_mes" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="log_line" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="log_user" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="log_url" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="trangthai" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="bin" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="time_fix" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="user_fix" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="mota_loi" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Module_Slide_tb" Member="Module_Slide_tbs">
+    <Type Name="Module_Slide_tb">
+      <Column Name="id" Type="System.Int64" DbType="BigInt NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="img" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="rank" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="show" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="album" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.taikhoan_tb" Member="taikhoan_tbs">
+    <Type Name="taikhoan_tb">
+      <Column Name="id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="phanloai" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="taikhoan" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="matkhau" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="hoten" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="ten" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="hoten_khongdau" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="ngaysinh" Type="System.DateTime" DbType="Date" CanBeNull="true" />
+      <Column Name="tuoi" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="gioitinh" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="email" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="dienthoai" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="hansudung" Type="System.DateTime" DbType="Date" CanBeNull="true" />
+      <Column Name="makhoiphuc" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="hsd_makhoiphuc" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="permission" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="anhdaidien" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="block" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="nguoitao" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="ngaytao" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="DongA" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="qr_code" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="diachi" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="gioithieu" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="link_fb" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="link_youtube" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="link_tiktok" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="Ten_Zalo" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="link_zalo" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="Ten_FB" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="Ten_Youtube" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="Ten_TikTok" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="logo_shop" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="anhbia_shop" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="ten_shop" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="sdt_shop" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="email_shop" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="link_zalo_shop" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="motangan_shop" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="diachi_shop" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="linkfb_shop" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="youtube_shop" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="tiktok_shop" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="mapin_thanhtoan" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="Ten_FB_Shop" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="Ten_Youtube_Shop" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="Ten_TikTok_Shop" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="Ten_Zalo_Shop" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="ChiPhanTram_BanDichVu_ChoSan" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="Affiliate_tai_khoan_cap_tren" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="Affiliate_duong_dan_tuyen_tren" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="Affiliate_cap_tuyen" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="HeThongSanPham_Cap123" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="HeThongSanPham_QuyenLoi_MoVi_Cap1_15_9_6" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="HeThongSanPham_QuyenLoi_MoVi_Cap2_25_15_10" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="HeThongSanPham_QuyenLoi_MoVi_Cap3_10_6_4" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="Vi1_15PhanTram" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="Vi2_9PhanTram" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="Vi3_6PhanTram" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="Vi4_10PhanTram" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="Vi5_15PhanTram" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="Vi6_25PhanTram" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="Vi7_4PhanTram" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="Vi8_6PhanTram" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="Vi9_10PhanTram" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="DuVi1_Evocher_30PhanTram" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="DuVi2_LaoDong_50PhanTram" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="DuVi3_GanKet_20PhanTram" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="Vi1That_Evocher_30PhanTram" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="Vi2That_LaoDong_50PhanTram" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="Vi3That_GanKet_20PhanTram" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="HoSo_TieuDung_ShopOnly" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="HoSo_UuDai_ShopOnly" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.The_PhatHanh_tb" Member="The_PhatHanh_tbs">
+    <Type Name="The_PhatHanh_tb">
+      <Column Name="idGuide" Type="System.Guid" DbType="UniqueIdentifier NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="taikhoan" Type="System.String" DbType="NVarChar(50) NOT NULL" CanBeNull="false" />
+      <Column Name="LoaiThe" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="TenThe" Type="System.String" DbType="NVarChar(200) NOT NULL" CanBeNull="false" />
+      <Column Name="NgayPhatHanh" Type="System.DateTime" DbType="DateTime NOT NULL" CanBeNull="false" />
+      <Column Name="TrangThai" Type="System.Boolean" DbType="Bit NOT NULL" CanBeNull="false" />
+      <Column Name="NgayTao" Type="System.DateTime" DbType="DateTime NOT NULL" CanBeNull="false" />
+      <Column Name="NguoiTao" Type="System.String" DbType="NVarChar(50) NOT NULL" CanBeNull="false" />
+      <Column Name="NgayCapNhatTrangThai" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="NguoiCapNhatTrangThai" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.ThongBao_tb" Member="ThongBao_tbs">
+    <Type Name="ThongBao_tb">
+      <Column Name="ma" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="id" Type="System.Guid" DbType="UniqueIdentifier NOT NULL" CanBeNull="false" />
+      <Column Name="nguoithongbao" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="nguoinhan" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="link" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="thoigian" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="noidung" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="daxem" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="bin" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.VanBanMoTa_9Level_tb" Member="VanBanMoTa_9Level_tbs">
+    <Type Name="VanBanMoTa_9Level_tb">
+      <Column Name="id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="Capbac" Type="System.String" DbType="NVarChar(10) NOT NULL" CanBeNull="false" />
+      <Column Name="MoTa" Type="System.String" DbType="NVarChar(MAX) NOT NULL" CanBeNull="false" />
+      <Column Name="TrachNhiem" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.ViLoiNhuan_LichSuBanHang_ChiTiet_tb" Member="ViLoiNhuan_LichSuBanHang_ChiTiet_tbs">
+    <Type Name="ViLoiNhuan_LichSuBanHang_ChiTiet_tb">
+      <Column Name="id" Type="System.Int64" DbType="BigInt NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="id_LichSuBanHang" Type="System.Int64" DbType="BigInt NOT NULL" CanBeNull="false" />
+      <Column Name="TaiKhoan_Nhan" Type="System.String" DbType="NVarChar(100) NOT NULL" CanBeNull="false" />
+      <Column Name="LoaiHanhVi" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="PhanTramNhanDuoc" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="DongANhanDuoc" Type="System.Decimal" DbType="Decimal(18,2) NOT NULL" CanBeNull="false" />
+      <Column Name="ThoiGian" Type="System.DateTime" DbType="DateTime NOT NULL" CanBeNull="false" />
+      <Column Name="GhiChu" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="IdYeuCauRut" Type="System.Guid" DbType="UniqueIdentifier" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.YeuCauRutQuyen_tb" Member="YeuCauRutQuyen_tbs">
+    <Type Name="YeuCauRutQuyen_tb">
+      <Column Name="IdYeuCauRut" Type="System.Guid" DbType="UniqueIdentifier NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="TaiKhoan" Type="System.String" DbType="NVarChar(50) NOT NULL" CanBeNull="false" />
+      <Column Name="LoaiHanhVi" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="KyHieu9HanhVi_1_9" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="TongQuyen" Type="System.Decimal" DbType="Decimal(18,2) NOT NULL" CanBeNull="false" />
+      <Column Name="TrangThai" Type="System.String" DbType="NVarChar(30) NOT NULL" CanBeNull="false" />
+      <Column Name="NgayTao" Type="System.DateTime" DbType="DateTime NOT NULL" CanBeNull="false" />
+      <Column Name="NgayCapNhat" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="NguoiDuyet" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="GhiChu" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="hot79334_aha_sale.AnhSanPham_tb" Member="AnhSanPham_tbs">
+    <Type Name="AnhSanPham_tb">
+      <Column Name="id" Type="System.Int64" DbType="BigInt NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="url" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="idsp" Type="System.Int32" DbType="Int" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="hot79334_aha_sale.DanhGiaBaiViet" Member="DanhGiaBaiViets">
+    <Type Name="DanhGiaBaiViet">
+      <Column Name="id" Type="System.Int64" DbType="BigInt NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="NoiDung" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="Diem" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="TaiKhoanDanhGia" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="ThuocTaiKhoan" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="NgayDang" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="idBaiViet" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="UrlAnh" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="hot79334_aha_sale.DongGopYKien_tb" Member="DongGopYKien_tbs">
+    <Type Name="DongGopYKien_tb">
+      <Column Name="id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="LoaiVanDe" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="ChiTietYKien" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="SoDienThoai" Type="System.String" DbType="VarChar(20)" CanBeNull="true" />
+      <Column Name="Media" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="NgayTao" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="taikhoan" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="HoTen" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="hot79334_aha_sale.MangXaHoi_tb" Member="MangXaHoi_tbs">
+    <Type Name="MangXaHoi_tb">
+      <Column Name="id" Type="System.Int64" DbType="BigInt NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="Ten" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="Link" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="Icon" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="TaiKhoan" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="Kieu" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="hot79334_aha_sale.media_tb" Member="media_tbs">
+    <Type Name="media_tb">
+      <Column Name="id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="link" Type="System.String" DbType="VarChar(MAX)" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="hot79334_aha_sale.MediaYKien_tb" Member="MediaYKien_tbs">
+    <Type Name="MediaYKien_tb">
+      <Column Name="id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="idYKien" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="idMedia" Type="System.Int32" DbType="Int" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="hot79334_aha_sale.SanPham_Aha_tb" Member="SanPham_Aha_tbs">
+    <Type Name="SanPham_Aha_tb">
+      <Column Name="id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="TenSanPham" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="GiaBan" Type="System.Int64" DbType="BigInt" CanBeNull="true" />
+      <Column Name="PhanTramChoSan" Type="System.Decimal" DbType="Decimal(5,2)" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="hot79334_aha_sale.ThanhPho" Member="ThanhPhos">
+    <Type Name="ThanhPho">
+      <Column Name="id" Type="System.Int64" DbType="BigInt NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="Ten" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="hot79334_aha_sale.TheoDoiTin_db" Member="TheoDoiTin_dbs">
+    <Type Name="TheoDoiTin_db">
+      <Column Name="id" Type="System.Int64" DbType="BigInt NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="taikhoan" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="idBaiviet" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="NgayLuu" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="hot79334_aha_sale.TinDaXem_tb" Member="TinDaXem_tbs">
+    <Type Name="TinDaXem_tb">
+      <Column Name="id" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="idBaiViet" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="TaiKhoan" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="NgayXem" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="hot79334_aha_sale.ViLoiNhuan_LichSuBanHang_tb" Member="ViLoiNhuan_LichSuBanHang_tbs">
+    <Type Name="ViLoiNhuan_LichSuBanHang_tb">
+      <Column Name="id" Type="System.Int64" DbType="BigInt NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="TaiKhoan_Ban" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="TaiKhoan_Mua" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="id_SanPhamDichVu" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="SanPham_Or_Dichvu" Type="System.Boolean" DbType="Bit" CanBeNull="true" />
+      <Column Name="Gia_VND_SanPhamDichVu" Type="System.Int64" DbType="BigInt" CanBeNull="true" />
+      <Column Name="Gia_DongA_SanPhamDichVu" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="PhanTram_ChiTra_ChoSan" Type="System.Decimal" DbType="Decimal(5,2)" CanBeNull="true" />
+      <Column Name="ViLoiNhuan_DongA_CuaSan_NhanDuoc_ViTong" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="ThoiGian" Type="System.DateTime" DbType="DateTime" CanBeNull="true" />
+      <Column Name="SoLuong" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="Vi1_30PhanTram_NhanDuoc_ViEVoucher" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="Vi2_50PhanTram_NhanDuoc_ViLaoDong" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="Vi3_20PhanTram_NhanDuoc_ViGanKet" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="DuVi1_30PhanTram_NhanDuoc_ViEVoucher" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="DuVi2_50PhanTram_NhanDuoc_ViLaoDong" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+      <Column Name="DuVi3_20PhanTram_NhanDuoc_ViGanKet" Type="System.Decimal" DbType="Decimal(18,2)" CanBeNull="true" />
+    </Type>
+  </Table>
+</Database>

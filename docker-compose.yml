@@ -1,0 +1,77 @@
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    platform: linux/amd64
+    container_name: ahasale_local_db
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Developer"
+      MSSQL_SA_PASSWORD: "AhaSaleLocal#2026"
+      TZ: "Asia/Ho_Chi_Minh"
+    ports:
+      - "11433:1433"
+    volumes:
+      - ahasale_sql_data:/var/opt/mssql
+      - ./docker/sql/backup/ahasale.bak:/var/opt/mssql/backup/ahasale.bak:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P 'AhaSaleLocal#2026' -Q "SELECT 1" || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 40
+      start_period: 20s
+    restart: unless-stopped
+
+  init-db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    platform: linux/amd64
+    container_name: ahasale_local_db_init
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      MSSQL_SA_PASSWORD: "AhaSaleLocal#2026"
+      TZ: "Asia/Ho_Chi_Minh"
+    volumes:
+      - ./docker/sql/init-db.sh:/init-db.sh:ro
+      - ./docker/sql/backup/ahasale.bak:/var/opt/mssql/backup/ahasale.bak:ro
+    entrypoint:
+      - /bin/bash
+      - /init-db.sh
+    restart: "no"
+
+  web:
+    image: ahasale-local-web:latest
+    build:
+      context: ./docker/web
+      dockerfile: Dockerfile
+    container_name: ahasale_local_web
+    depends_on:
+      init-db:
+        condition: service_completed_successfully
+    environment:
+      TZ: "Asia/Ho_Chi_Minh"
+    ports:
+      - "80:80"
+    volumes:
+      - ./:/app
+    restart: unless-stopped
+
+  admin:
+    image: ahasale-local-web:latest
+    container_name: ahasale_local_admin
+    depends_on:
+      init-db:
+        condition: service_completed_successfully
+    environment:
+      ADMIN_PORTAL: "true"
+      TZ: "Asia/Ho_Chi_Minh"
+    ports:
+      - "8081:80"
+    volumes:
+      - ./:/app
+    restart: unless-stopped
+
+volumes:
+  ahasale_sql_data:

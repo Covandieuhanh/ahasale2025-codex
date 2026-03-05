@@ -1,0 +1,502 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+
+public partial class home_quan_ly_bai_Default : System.Web.UI.Page
+{
+    DanhMuc_cl dm_cl = new DanhMuc_cl();
+    String_cl str_cl = new String_cl();
+    DateTime_cl dt_cl = new DateTime_cl();
+
+    bool IsDuyetGianHangDoiTac()
+    {
+        string _tk = PortalRequest_cl.GetCurrentAccountEncrypted();
+        if (string.IsNullOrEmpty(_tk)) return false;
+
+        string tk = mahoa_cl.giaima_Bcorn(_tk);
+
+        using (dbDataContext db = new dbDataContext())
+        {
+            // ✅ điều kiện: đã có bản ghi duyệt thành công TrangThai = 1
+            return db.DangKy_GianHangDoiTac_tbs.Any(x => x.taikhoan == tk && x.TrangThai == 1);
+        }
+    }
+
+    private string GetCreatePostUrl()
+    {
+        return PortalRequest_cl.IsShopPortalRequest()
+            ? "/shop/quan-ly-tin/them"
+            : "/home/quan-ly-tin/them.aspx";
+    }
+
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        lnk_add_new.NavigateUrl = GetCreatePostUrl();
+
+        if (!IsPostBack)
+        {
+            Session["url_back_home"] = HttpContext.Current.Request.Url.AbsoluteUri.ToLower();
+            check_login_cl.check_login_home("none", "none", true); //check tài khoản, có chuyển hướng. YÊU CẦU ĐĂNG NHẬP.
+
+            // ✅ CHỈ CHO VÀO NẾU ĐÃ ĐƯỢC DUYỆT GIAN HÀNG ĐỐI TÁC
+            if (!IsDuyetGianHangDoiTac())
+            {
+                // set modal để trang chủ hiển thị
+                Session["home_modal_msg"] = "Tính năng này chỉ dành cho tài khoản đã đăng ký gian hàng đối tác thành công.";
+                Session["home_modal_title"] = "Chưa đủ điều kiện";
+                Session["home_modal_type"] = "warning"; // success/info/warning/danger
+
+                Response.Redirect(PortalRequest_cl.IsShopPortalRequest() ? "/shop/default.aspx" : "~/", true); // đổi lại đúng trang chủ bạn dùng
+                return;
+            }
+
+            string _tk = PortalRequest_cl.GetCurrentAccountEncrypted();
+
+            if (!string.IsNullOrEmpty(_tk))//nếu có khách đăng nhập
+            {
+                ViewState["taikhoan"] = mahoa_cl.giaima_Bcorn(_tk);
+            }
+            else
+            { }
+
+            set_dulieu_macdinh();
+            show_main();
+        }
+    }
+    public void set_dulieu_macdinh()
+    {
+        ViewState["current_page_qltin_home"] = "1";
+    }
+
+    #region main - phân trang - tìm kiếm
+    public void show_main()
+    {
+    
+        using (dbDataContext db = new dbDataContext())
+        {
+            #region lấy dữ liệu
+            var list_all = (from ob1 in db.BaiViet_tbs.Where(p => p.phanloai == "sanpham" && p.nguoitao == ViewState["taikhoan"].ToString())
+                            join ob2 in db.DanhMuc_tbs on ob1.id_DanhMuc equals ob2.id.ToString() into danhMucGroup
+                            from ob2 in danhMucGroup.DefaultIfEmpty()
+                            join ob3 in db.DanhMuc_tbs on ob1.id_DanhMucCap2 equals ob3.id.ToString() into danhMucGroup2
+                            from ob3 in danhMucGroup2.DefaultIfEmpty()
+                            select new
+                            {
+                                ob1.id,
+                                ob1.image,
+                                ob1.name,
+                                ob1.name_en,
+                                ob1.ngaytao,
+                                ob1.giaban,
+                                ob1.bin,
+                                ob1.description,
+                           
+                                PhanTram_GiamGia_ThanhToan_BangEvoucher = ob1.PhanTram_GiamGia_ThanhToan_BangEvoucher,
+                                TenMenu = ob2 != null ? ob2.name : "",  // Trả về rỗng nếu không có danh mục
+                                TenMenu2 = ob3 != null ? "<span class='pl-3 mif-chevron-right'></span>" + ob3.name : "",  // Trả về rỗng nếu không có danh mục con
+                            }).AsQueryable();
+
+            // Kiểm tra xem textbox có dữ liệu tìm kiếm không
+            string _key = txt_timkiem.Text.Trim();
+            if (!string.IsNullOrEmpty(_key))
+                list_all = list_all.Where(p => p.name.Contains(_key) || p.name_en.Contains(_key) || p.id.ToString() == _key);
+            else
+            {
+                string _key1 = txt_timkiem1.Text.Trim();
+                if (!string.IsNullOrEmpty(_key1))
+                    list_all = list_all.Where(p => p.name.Contains(_key1) || p.name_en.Contains(_key) || p.id.ToString() == _key1);
+            }
+
+            //sắp xếp
+            list_all = list_all.OrderByDescending(p => p.ngaytao);
+            int _Tong_Record = list_all.Count();
+            #endregion
+
+            #region phân trang OK, k sửa
+            // Xử lý số record mỗi trang
+            int show = 30; if (show <= 0) show = 30;
+            //xử lý trang hiện tại. Đảm bảo current_page không nhỏ hơn 1 và không lớn hơn total_page
+            int current_page = int.Parse(ViewState["current_page_qltin_home"].ToString()); int total_page = number_of_page_class.return_total_page(_Tong_Record, show); if (current_page < 1) current_page = 1; else if (current_page > total_page) current_page = total_page;
+            ViewState["total_page"] = total_page;
+            //xử lý nút bấm tới lui
+            if (current_page >= total_page)
+            {
+                but_xemtiep.Enabled = false;//máy tính
+                but_xemtiep1.Enabled = false;//điện thoại
+            }
+            else
+            {
+                but_xemtiep.Enabled = true;
+                but_xemtiep1.Enabled = true;
+            }
+            if (current_page == 1)
+            {
+                but_quaylai.Enabled = false;
+                but_quaylai1.Enabled = false;
+            }
+            else
+            {
+                but_quaylai.Enabled = true;
+                but_quaylai1.Enabled = true;
+            }
+            //PHÂN TRANG****PHÂN TRANG
+            var list_split = list_all.Skip(current_page * show - show).Take(show);
+            //xử lý thanh thông báo phân trang
+            int stt = (show * current_page) - show + 1; int _s1 = stt + list_split.Count() - 1;
+            if (_Tong_Record != 0) lb_show.Text = stt + "-" + _s1 + " trong số " + _Tong_Record.ToString("#,##0"); else lb_show.Text = "0-0/0"; lb_show_md.Text = stt + "-" + _s1 + " trong số " + _Tong_Record.ToString("#,##0");
+            #endregion
+
+            Repeater1.DataSource = list_split;
+            Repeater1.DataBind();
+        }
+    }
+
+    protected void but_quaylai_Click(object sender, EventArgs e)
+    {
+        check_login_cl.check_login_home("none", "none", true);
+        ViewState["current_page_qltin_home"] = int.Parse(ViewState["current_page_qltin_home"].ToString()) - 1;
+        show_main();
+    }
+    protected void but_xemtiep_Click(object sender, EventArgs e)
+    {
+        check_login_cl.check_login_home("none", "none", true);
+        ViewState["current_page_qltin_home"] = int.Parse(ViewState["current_page_qltin_home"].ToString()) + 1;
+        show_main();
+    }
+    protected void txt_timkiem_TextChanged(object sender, EventArgs e)
+    {
+        check_login_cl.check_login_home("none", "none", true);
+        ViewState["current_page_qltin_home"] = 1;
+        show_main();
+    }
+    #endregion
+
+    #region ADD - EDIT - CHI TIẾT
+    public void reset_control_add_edit()
+    {
+        Label1.Text = null;
+        txt_name.Text = "";
+        txt_giaban.Text = "0";
+        txt_phantram_uu_dai.Text = "0"; // ✅ NEW default
+        txt_description.Text = "";
+        txt_noidung.Text = "";
+        txt_link_fileupload.Text = "";
+        hf_anhphu.Value = ""; // ✅ reset ảnh phụ
+        LinkMap.Text = "";
+        ViewState["add_edit"] = null;
+        ddl_DanhMuc.DataSource = null;
+        ddl_DanhMuc.DataBind();
+    }
+
+    protected void but_show_form_add_Click(object sender, EventArgs e)
+    {
+        check_login_cl.check_login_home("none", "none", true);
+        //reset control
+        reset_control_add_edit();
+
+        ViewState["add_edit"] = "add";
+        Label1.Text = "ĐĂNG TIN MỚI";
+        but_add_edit.Text = "ĐĂNG TIN";
+
+        DanhMuc_cl dm_cl = new DanhMuc_cl();
+        dm_cl.Show_DanhMuc(2, 3, ddl_DanhMuc, false, "web", "135");//ngoại trừ 135 là liên hệ
+
+        using (dbDataContext db = new dbDataContext())
+        {
+            var ThamPhos = db.ThanhPhos.ToList();
+            DanhSachTP.Items.Clear();
+            DanhSachTP.Items.Add(new ListItem("Nhấn để chọn", ""));
+            foreach (var tp in ThamPhos)
+            {
+                DanhSachTP.Items.Add(new ListItem(tp.Ten, tp.Ten));
+            }
+        }
+
+        //hiện form add_edit trong updatePanel_add
+        pn_add.Visible = !pn_add.Visible;
+        up_add.Update();
+    }
+
+    protected void but_close_form_add_Click(object sender, EventArgs e)
+    {
+        check_login_cl.check_login_home("none", "none", true);
+        //reset control
+        reset_control_add_edit();
+        //ẩn form
+        pn_add.Visible = !pn_add.Visible;
+    }
+
+    protected void but_add_edit_Click(object sender, EventArgs e)
+    {
+        check_login_cl.check_login_home("none", "none", true);
+        #region Chuẩn bị dữ liệu
+        //xác định loại bài viết
+        string _phanloai_baiviet = "sanpham";
+        //đảm bảo luôn có thư mục chứa ảnh
+        if (!Directory.Exists(Server.MapPath("~/uploads/img-handler/"))) Directory.CreateDirectory(Server.MapPath("~/uploads/img-handler/"));
+        //xử lý dữ liệu đầu vào
+        string _name = str_cl.Remove_Blank(txt_name.Text.Trim());
+        string _name_en = str_cl.replace_name_to_url(_name);
+        string _idmenu = ddl_DanhMuc.SelectedValue.ToString();//giá trị đầu là ""
+        string _description = txt_description.Text.Trim();
+        string _noidung = txt_noidung.Text.Trim();
+        string _image = txt_link_fileupload.Text;
+        string _linkMap = LinkMap.Text;
+        string _thanhPho = DanhSachTP.SelectedValue.ToString();
+        bool _bin = false;
+        DateTime _ngaytao = AhaTime_cl.Now;
+        string _nguoitao = PortalRequest_cl.GetCurrentAccount();
+        bool _noibat = false;
+
+        Int64 _giaban = 0, _giavon = 0;
+        bool _chotsale_phantram_hoac_tien = true, _banhang_phantram_hoac_tien = true;
+        Int64 _chotsale_thuong = 0, _banhang_thuong = 0;
+
+        _giaban = Number_cl.Check_Int64(txt_giaban.Text.Trim());
+        _giavon = 0;
+        _chotsale_thuong = 0;
+        _banhang_thuong = 0;
+        if (_giaban < 0) _giaban = 0;
+        if (_giavon < 0) _giavon = 0;
+        if (_chotsale_thuong < 0) _chotsale_thuong = 0;
+        if (_banhang_thuong < 0) _banhang_thuong = 0;
+
+        // ✅ NEW: phần trăm ưu đãi (null/rỗng -> 0)
+        int _phantram_uu_dai = 0;
+        string rawPercent = (txt_phantram_uu_dai.Text ?? "").Trim();
+        if (!string.IsNullOrEmpty(rawPercent))
+        {
+            int.TryParse(rawPercent, out _phantram_uu_dai);
+        }
+        if (_phantram_uu_dai < 0) _phantram_uu_dai = 0;
+
+        #endregion
+
+        using (dbDataContext db = new dbDataContext())
+        {
+            #region Kiểm tra ngoại lệ.
+            if (_idmenu == "")
+            {
+                Helper_Tabler_cl.ShowModal(this.Page, "Vui lòng chọn Danh mục.", "Thông báo", true, "warning");
+                return;
+            }
+            if (_name == "")
+            {
+                Helper_Tabler_cl.ShowModal(this.Page, "Vui lòng nhập tên sản phẩm.", "Thông báo", true, "warning");
+                return;
+            }
+            if (_image == "")
+            {
+                Helper_Tabler_cl.ShowModal(this.Page, "Vui lòng chọn ảnh sản phẩm.", "Thông báo", true, "warning");
+                return;
+            }
+            if (_noidung == "")
+            {
+                Helper_Tabler_cl.ShowModal(this.Page, "Vui lòng nhập nội dung.", "Thông báo", true, "warning");
+                return;
+            }
+            if (_giaban == 0)
+            {
+                Helper_Tabler_cl.ShowModal(this.Page, "Vui lòng nhập giá bán.", "Thông báo", true, "warning");
+                return;
+            }
+
+            // ✅ NEW: validate tối đa 50
+            if (_phantram_uu_dai > 50)
+            {
+                Helper_Tabler_cl.ShowModal(this.Page, "Phần trăm ưu đãi tối đa là 50%. Vui lòng nhập lại.", "Thông báo", true, "warning");
+                return;
+            }
+            #endregion
+
+            if (ViewState["add_edit"].ToString() == "add")
+            {
+                #region thêm mới
+                BaiViet_tb _ob = new BaiViet_tb();
+                _ob.name = _name;
+                _ob.name_en = _name_en;
+
+                var q_danhmuc = db.DanhMuc_tbs.FirstOrDefault(p => p.id.ToString() == _idmenu);
+                if (q_danhmuc != null)
+                {
+                    _ob.id_DanhMuc = _idmenu;
+                    _ob.id_DanhMucCap2 = "";
+                }
+                else
+                {
+                    Helper_Tabler_cl.ShowModal(this.Page, "Danh mục không hợp lệ.", "Thông báo", true, "warning");
+                    return;
+                }
+
+                _ob.content_post = _noidung;
+                _ob.description = _description;
+                _ob.image = _image;
+                _ob.bin = _bin;
+                _ob.ngaytao = _ngaytao;
+                _ob.nguoitao = _nguoitao;
+                _ob.noibat = _noibat;
+                _ob.giaban = _giaban;
+                _ob.giavon = _giavon;
+                _ob.soluong_tonkho = 0;
+                _ob.banhang_thuong = _banhang_thuong;
+                _ob.chotsale_thuong = _chotsale_thuong;
+                _ob.phanloai = _phanloai_baiviet;
+                _ob.banhang_phantram_hoac_tien = _banhang_phantram_hoac_tien;
+                _ob.chotsale_phantram_hoac_tien = _chotsale_phantram_hoac_tien;
+                _ob.soluong_daban = 0;
+                _ob.soluong_daban = 0;
+                _ob.ThanhPho = _thanhPho;
+                _ob.LinkMap = _linkMap;
+
+                // ✅ NEW: lưu phần trăm ưu đãi (null coi như 0)
+                // Nếu field của bạn là int? thì vẫn ok (0), còn nếu muốn null khi 0 thì có thể set null tại đây.
+                _ob.PhanTram_GiamGia_ThanhToan_BangEvoucher = _phantram_uu_dai;
+
+                db.BaiViet_tbs.InsertOnSubmit(_ob);
+                db.SubmitChanges();
+                #endregion
+
+                #region lưu danh sách ảnh phụ vào AnhSanPham_tb
+                string ds_anhphu = hf_anhphu.Value;
+                if (!string.IsNullOrEmpty(ds_anhphu))
+                {
+                    string[] arrUrl = ds_anhphu.Split('|');
+                    foreach (string url in arrUrl)
+                    {
+                        if (!string.IsNullOrWhiteSpace(url))
+                        {
+                            AnhSanPham_tb ob_anh = new AnhSanPham_tb();
+                            ob_anh.url = url.Trim();
+                            ob_anh.idsp = (int?)_ob.id; // idsp là nullable int
+                            db.AnhSanPham_tbs.InsertOnSubmit(ob_anh);
+                        }
+                    }
+                    db.SubmitChanges();
+                }
+                #endregion
+
+                #region cập nhật dữ liệu và update hiển thị
+                //reset 1 vài control để việc tiếp tục nhập (nếu muốn nhập tiếp) nhanh hơn
+                txt_name.Text = "";
+                txt_giaban.Text = "0";
+                txt_phantram_uu_dai.Text = "0"; // ✅ NEW reset
+                txt_description.Text = "";
+                txt_link_fileupload.Text = "";
+                txt_noidung.Text = "";
+                hf_anhphu.Value = "";
+
+                DropDownList_cl.Return_Index_By_ID(ddl_DanhMuc, _idmenu);//đảm bảo ddl giữ nguyên khi nạp lại dữ liệu
+                show_main();
+                up_main.Update();
+
+                Helper_Tabler_cl.ShowToast(this.Page, "Xử lý thành công", null, true, 2000, "Thông báo");
+                #endregion
+            }
+            else//edit
+            {
+
+            }
+        }
+    }
+    #endregion
+
+    protected void LinkButton1_Click(object sender, EventArgs e)//chuyển trạng thái thành đã bán
+    {
+        check_login_cl.check_login_home("none", "none", true);
+
+        var selectedIds = new List<int>(); // Danh sách để lưu trữ ID của các mục đã được chọn
+
+        // Thu thập tất cả ID của các mục đã được chọn trong Repeater1
+        foreach (RepeaterItem item in Repeater1.Items)
+        {
+            CheckBox chkItem = (CheckBox)item.FindControl("checkID");
+            Label lblData = (Label)item.FindControl("lbID");
+
+            if (chkItem != null && lblData != null && chkItem.Checked)
+            {
+                int id = int.Parse(lblData.Text);
+                selectedIds.Add(id); // Thêm ID vào danh sách
+            }
+        }
+
+        if (selectedIds.Count > 0)
+        {
+            // Sử dụng dbDataContext và thực hiện cập nhật hàng loạt
+            using (dbDataContext db = new dbDataContext())
+            {
+                // Lấy tất cả các mục có ID trong danh sách và cập nhật thuộc tính `bin` của chúng
+                var danhMucsToUpdate = db.BaiViet_tbs
+                    .Where(d => selectedIds.Contains(d.id))
+                    .ToList();
+
+                foreach (var dm in danhMucsToUpdate)
+                {
+                    dm.bin = false;//đang bán
+                }
+
+                // Lưu tất cả các thay đổi trong một lần
+                db.SubmitChanges();
+            }
+
+            // Hiển thị thông báo thành công
+            show_main();
+            Helper_Tabler_cl.ShowToast(this.Page, "Xử lý thành công", null, true, 2000, "Thông báo");
+        }
+        else
+        {
+            Helper_Tabler_cl.ShowModal(this.Page, "Không có mục nào được chọn.", "Thông báo", true, "warning");
+        }
+    }
+
+    protected void LinkButton2_Click(object sender, EventArgs e)//chuyển trạng thái thành ngưng bán
+    {
+        check_login_cl.check_login_home("none", "none", true);
+
+        var selectedIds = new List<int>(); // Danh sách để lưu trữ ID của các mục đã được chọn
+
+        // Thu thập tất cả ID của các mục đã được chọn trong Repeater1
+        foreach (RepeaterItem item in Repeater1.Items)
+        {
+            CheckBox chkItem = (CheckBox)item.FindControl("checkID");
+            Label lblData = (Label)item.FindControl("lbID");
+
+            if (chkItem != null && lblData != null && chkItem.Checked)
+            {
+                int id = int.Parse(lblData.Text);
+                selectedIds.Add(id); // Thêm ID vào danh sách
+            }
+        }
+
+        if (selectedIds.Count > 0)
+        {
+            // Sử dụng dbDataContext và thực hiện cập nhật hàng loạt
+            using (dbDataContext db = new dbDataContext())
+            {
+                // Lấy tất cả các mục có ID trong danh sách và cập nhật thuộc tính `bin` của chúng
+                var danhMucsToUpdate = db.BaiViet_tbs
+                    .Where(d => selectedIds.Contains(d.id))
+                    .ToList();
+
+                foreach (var dm in danhMucsToUpdate)
+                {
+                    dm.bin = true;//ngưng bán
+                }
+
+                // Lưu tất cả các thay đổi trong một lần
+                db.SubmitChanges();
+            }
+
+            // Hiển thị thông báo thành công
+            show_main();
+            Helper_Tabler_cl.ShowToast(this.Page, "Xử lý thành công", null, true, 2000, "Thông báo");
+        }
+        else
+        {
+            Helper_Tabler_cl.ShowModal(this.Page, "Không có mục nào được chọn.", "Thông báo", true, "warning");
+        }
+    }
+}
