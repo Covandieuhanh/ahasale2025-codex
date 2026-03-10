@@ -16,6 +16,7 @@ public partial class admin_Default : System.Web.UI.Page
     private const int BridgeRecentLimit = 8;
     private const string BridgeWatcherStateRelativePath = "~/scripts/usdt_bridge_state.json";
     private const string BridgeWatcherEnvRelativePath = "~/scripts/usdt_bridge.env";
+    private const string BridgeConfigUnlockSessionKey = "bridge_config_unlocked";
     private const string PermissionManageAdminAccounts = "5";
     private const string PermissionLegacyGeneralAdmin = "1";
     private const string PermissionHomeContent = "q3_1";
@@ -114,9 +115,11 @@ public partial class admin_Default : System.Web.UI.Page
                 ViewState["title"] = Session["title"].ToString();
         }
 
+        ApplyBridgeConfigVisibility();
+
         try
         {
-            LoadBridgeSummary();
+            LoadBridgeSummary(!IsPostBack);
         }
         catch (Exception ex)
         {
@@ -125,7 +128,7 @@ public partial class admin_Default : System.Web.UI.Page
         }
     }
 
-    private void LoadBridgeSummary()
+    private void LoadBridgeSummary(bool bindInputs)
     {
         string treasuryAccount = (USDTBridgeConfig_cl.TreasuryAccount ?? "").Trim();
         lb_bridge_treasury_account.Text = treasuryAccount;
@@ -144,9 +147,16 @@ public partial class admin_Default : System.Web.UI.Page
         RepeaterBridge.DataSource = null;
         RepeaterBridge.DataBind();
 
-        txt_bridge_deposit_address.Text = lb_bridge_deposit_address.Text;
-        txt_bridge_token_contract.Text = lb_bridge_token_contract.Text;
-        txt_bridge_treasury_account.Text = treasuryAccount;
+        if (bindInputs)
+        {
+            txt_bridge_deposit_address.Text = lb_bridge_deposit_address.Text;
+            txt_bridge_token_contract.Text = lb_bridge_token_contract.Text;
+            BindBridgeTreasuryAccounts(treasuryAccount);
+        }
+        else
+        {
+            EnsureBridgeTreasuryOptions(treasuryAccount);
+        }
 
         BridgeWatcherBalanceView watcherBalance = ReadBridgeWatcherBalance();
         using (dbDataContext db = new dbDataContext())
@@ -260,7 +270,7 @@ public partial class admin_Default : System.Web.UI.Page
 
     protected void but_refresh_bridge_Click(object sender, EventArgs e)
     {
-        LoadBridgeSummary();
+        LoadBridgeSummary(false);
     }
 
     private static string ShortTxHash(string txHash)
@@ -309,9 +319,16 @@ public partial class admin_Default : System.Web.UI.Page
         lb_bridge_config_notice.Text = "";
         lb_bridge_config_notice.CssClass = "";
 
+        if (!IsBridgeConfigUnlocked())
+        {
+            lb_bridge_config_notice.CssClass = "bridge-config-error";
+            lb_bridge_config_notice.Text = "Vui lòng nhập mật khẩu để mở cấu hình trước.";
+            return;
+        }
+
         string depositAddress = (txt_bridge_deposit_address.Text ?? "").Trim();
         string tokenContract = (txt_bridge_token_contract.Text ?? "").Trim();
-        string treasuryAccount = (txt_bridge_treasury_account.Text ?? "").Trim();
+        string treasuryAccount = (ddl_bridge_treasury_account.SelectedValue ?? "").Trim();
 
         List<string> errors = new List<string>();
         if (!IsHexAddress(depositAddress))
@@ -320,6 +337,8 @@ public partial class admin_Default : System.Web.UI.Page
             errors.Add("Token contract không hợp lệ. Định dạng: 0x + 40 ký tự hex.");
         if (string.IsNullOrWhiteSpace(treasuryAccount))
             errors.Add("Tài khoản ví tổng không được để trống.");
+        else if (!IsValidTreasuryAccount(treasuryAccount))
+            errors.Add("Tài khoản ví tổng không hợp lệ hoặc chưa được tạo.");
 
         if (errors.Count > 0)
         {
@@ -336,7 +355,7 @@ public partial class admin_Default : System.Web.UI.Page
             lb_bridge_config_notice.CssClass = "bridge-config-success";
             lb_bridge_config_notice.Text = "Đã lưu cấu hình. Cần khởi động lại watcher để áp dụng ví/token mới.";
 
-            LoadBridgeSummary();
+            LoadBridgeSummary(true);
         }
         catch (Exception ex)
         {
@@ -362,6 +381,131 @@ public partial class admin_Default : System.Web.UI.Page
                 return false;
         }
         return true;
+    }
+
+    private void BindBridgeTreasuryAccounts(string selectedValue)
+    {
+        ddl_bridge_treasury_account.Items.Clear();
+
+        using (dbDataContext db = new dbDataContext())
+        {
+            var q = db.taikhoan_tbs
+                .Where(p => p.phanloai != null
+                    && (p.phanloai.StartsWith(AccountType_cl.Treasury) || p.phanloai.StartsWith(AccountType_cl.LegacyTreasury)))
+                .Select(p => new { taikhoan = p.taikhoan, hienthi = p.taikhoan + " - " + p.hoten })
+                .OrderBy(p => p.taikhoan)
+                .ToList();
+
+            foreach (var row in q)
+                ddl_bridge_treasury_account.Items.Add(new ListItem(row.hienthi, row.taikhoan));
+        }
+
+        if (!string.IsNullOrWhiteSpace(selectedValue))
+        {
+            ListItem matched = ddl_bridge_treasury_account.Items.FindByValue(selectedValue);
+            if (matched != null)
+            {
+                matched.Selected = true;
+            }
+            else
+            {
+                ddl_bridge_treasury_account.Items.Insert(
+                    0,
+                    new ListItem("Đang cấu hình: " + selectedValue + " (không có trong danh sách)", selectedValue));
+                ddl_bridge_treasury_account.SelectedIndex = 0;
+            }
+        }
+        else if (ddl_bridge_treasury_account.Items.Count == 0)
+        {
+            ddl_bridge_treasury_account.Items.Add(new ListItem("Chưa có tài khoản tổng", ""));
+        }
+        else
+        {
+            ddl_bridge_treasury_account.SelectedIndex = 0;
+        }
+    }
+
+    private void EnsureBridgeTreasuryOptions(string selectedValue)
+    {
+        if (ddl_bridge_treasury_account.Items.Count == 0)
+            BindBridgeTreasuryAccounts(selectedValue);
+    }
+
+    private bool IsValidTreasuryAccount(string treasuryAccount)
+    {
+        if (string.IsNullOrWhiteSpace(treasuryAccount))
+            return false;
+
+        using (dbDataContext db = new dbDataContext())
+        {
+            return db.taikhoan_tbs.Any(p =>
+                p.taikhoan == treasuryAccount
+                && p.phanloai != null
+                && (p.phanloai.StartsWith(AccountType_cl.Treasury)
+                    || p.phanloai.StartsWith(AccountType_cl.LegacyTreasury)));
+        }
+    }
+
+    private bool IsBridgeConfigUnlocked()
+    {
+        object raw = Session[BridgeConfigUnlockSessionKey];
+        return raw is bool && (bool)raw;
+    }
+
+    private void ApplyBridgeConfigVisibility()
+    {
+        bool unlocked = IsBridgeConfigUnlocked();
+        pn_bridge_config_gate.Visible = !unlocked;
+        pn_bridge_config_fields.Visible = unlocked;
+    }
+
+    private string GetCurrentAdminPassword()
+    {
+        string mkMaHoa = "";
+        HttpCookie ck = Request.Cookies["cookie_userinfo_admin_bcorn"];
+        if (ck != null && !string.IsNullOrEmpty(ck["matkhau"]))
+            mkMaHoa = ck["matkhau"];
+        else if (Session["matkhau"] != null)
+            mkMaHoa = Session["matkhau"].ToString();
+
+        if (string.IsNullOrWhiteSpace(mkMaHoa))
+            return "";
+
+        try
+        {
+            return mahoa_cl.giaima_Bcorn(mkMaHoa);
+        }
+        catch
+        {
+            return "";
+        }
+    }
+
+    protected void but_unlock_bridge_config_Click(object sender, EventArgs e)
+    {
+        lb_bridge_gate_notice.Text = "";
+        lb_bridge_gate_notice.CssClass = "";
+
+        string input = (txt_bridge_config_password.Text ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            lb_bridge_gate_notice.CssClass = "bridge-config-error";
+            lb_bridge_gate_notice.Text = "Vui lòng nhập mật khẩu admin để mở cấu hình.";
+            return;
+        }
+
+        string currentPassword = GetCurrentAdminPassword();
+        if (string.IsNullOrWhiteSpace(currentPassword) || !AccountAuth_cl.IsPasswordValid(input, currentPassword))
+        {
+            lb_bridge_gate_notice.CssClass = "bridge-config-error";
+            lb_bridge_gate_notice.Text = "Mật khẩu không đúng.";
+            return;
+        }
+
+        Session[BridgeConfigUnlockSessionKey] = true;
+        txt_bridge_config_password.Text = "";
+        ApplyBridgeConfigVisibility();
+        LoadBridgeSummary(true);
     }
 
     private void UpdateBridgeEnv(string depositAddress, string tokenContract)

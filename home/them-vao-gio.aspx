@@ -66,6 +66,45 @@
             padding: 0 !important;
             height: 38px;
         }
+
+        html[data-bs-theme="dark"] .cart-add-page .product-media {
+            background: #0f172a;
+            border-color: #223246;
+        }
+
+        html[data-bs-theme="dark"] .cart-add-page .metric {
+            background: #0f172a;
+            border-color: #223246;
+        }
+
+        html[data-bs-theme="dark"] .cart-add-page .metric .label {
+            color: #94a3b8;
+        }
+
+        html[data-bs-theme="dark"] .cart-add-page .metric .value {
+            color: #e5e7eb;
+        }
+
+        html[data-bs-theme="dark"] .cart-add-page .qty-stepper {
+            background: #111d34;
+            border-color: #223246;
+        }
+
+        html[data-bs-theme="dark"] .cart-add-page .qty-step-btn {
+            background: #0f172a;
+            border-color: #334155;
+            color: #e5e7eb;
+        }
+
+        html[data-bs-theme="dark"] .cart-add-page .qty-step-btn:hover {
+            background: #1e2a3d;
+            border-color: #4b5563;
+            color: #ffffff;
+        }
+
+        html[data-bs-theme="dark"] .cart-add-page .qty-input {
+            color: #e5e7eb !important;
+        }
         .cart-add-page .btn-primary.loading {
             opacity: .92;
             pointer-events: none;

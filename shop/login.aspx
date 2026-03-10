@@ -163,14 +163,14 @@
                                 placeholder="email@domain.com"
                                 autocomplete="email"></asp:TextBox>
                             <div class="text-secondary mt-2">
-                                <small>Hệ thống sẽ gửi link đặt lại mật khẩu (hết hạn sau 5 phút).</small>
+                                <small>Hệ thống sẽ gửi OTP qua email (hết hạn sau 5 phút).</small>
                             </div>
                         </div>
                     </div>
 
                     <div class="modal-footer">
                         <asp:Button ID="but_nhanma" runat="server"
-                            Text="Nhận mã khôi phục"
+                            Text="Gửi OTP"
                             CssClass="btn btn-success"
                             OnClick="but_nhanma_Click" />
                     </div>

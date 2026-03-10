@@ -19,12 +19,18 @@
                                 </div>
                             </asp:Panel>
 
+                            <asp:Panel ID="pn_send_warning" runat="server" Visible="false">
+                                <div class="alert alert-warning" role="alert">
+                                    <asp:Literal ID="lit_send_warning" runat="server"></asp:Literal>
+                                </div>
+                            </asp:Panel>
+
                             <asp:Panel ID="pn_form" runat="server" Visible="false">
                                 <asp:HiddenField ID="hd_request_id" runat="server" />
                                 <asp:HiddenField ID="hd_request_type" runat="server" />
 
                                 <div class="mb-2 text-secondary">
-                                    OTP đã được gửi tới <strong><asp:Literal ID="lit_phone" runat="server"></asp:Literal></strong>
+                                    OTP đã được tạo cho <strong><asp:Literal ID="lit_phone" runat="server"></asp:Literal></strong>
                                 </div>
 
                                 <asp:Panel ID="pn_dev_otp" runat="server" Visible="false">

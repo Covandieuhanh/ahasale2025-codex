@@ -169,8 +169,10 @@
                 buttons.forEach(function (b) { b.classList.toggle('active', b.dataset.theme === theme); });
             }
 
-            const saved = localStorage.getItem(STORAGE_KEY) || 'light';
-            applyTheme(saved);
+            const saved = localStorage.getItem(STORAGE_KEY);
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = saved || (prefersDark ? 'dark' : 'light');
+            applyTheme(theme);
 
             buttons.forEach(function (btn) {
                 btn.addEventListener('click', function () { applyTheme(btn.dataset.theme); });

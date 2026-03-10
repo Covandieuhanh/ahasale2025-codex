@@ -8,6 +8,18 @@
     <meta http-equiv="content-language" content="vi" />
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes" />
 
+    <script>
+        (function () {
+            try {
+                const key = 'theme-preference';
+                const saved = localStorage.getItem(key);
+                const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const theme = saved || (prefersDark ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-bs-theme', theme);
+            } catch (e) { }
+        })();
+    </script>
+
     <link href="/Metro-UI-CSS-master/css/metro-all.min.css" rel="stylesheet" />
     <link href="/assetscss/home-style.css" rel="stylesheet" />
     <link href="/assetscss/login.css?v=2026-03-02.1" rel="stylesheet" />
@@ -28,6 +40,16 @@
             --wait-success: #06c167;
             --wait-danger: #dc2626;
             --wait-warn: #f59e0b;
+        }
+
+        html[data-bs-theme="dark"] {
+            --wait-bg-1: #0b1220;
+            --wait-bg-2: #0f1b2d;
+            --wait-card: #0f172a;
+            --wait-card-soft: #111d34;
+            --wait-border: rgba(148, 163, 184, 0.18);
+            --wait-text: #e5e7eb;
+            --wait-muted: #94a3b8;
         }
 
         html,
@@ -273,6 +295,10 @@
             padding-top: 10px;
         }
 
+        html[data-bs-theme="dark"] .wait-card-active .wait-actions {
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0), rgba(15, 23, 42, 0.88) 26%, rgba(15, 23, 42, 1));
+        }
+
         .wait-btn,
         .wait-btn:visited {
             appearance: none;
@@ -455,6 +481,98 @@
             background: linear-gradient(90deg, #ff5b2e, #06c167);
             animation: wait-progress-move 1.05s linear infinite;
             border-radius: 999px;
+        }
+
+        html[data-bs-theme="dark"] .wait-hero {
+            background: #111d34;
+            border-color: #223246;
+            box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
+        }
+
+        html[data-bs-theme="dark"] .wait-stage {
+            background: rgba(245, 158, 11, 0.18);
+            border-color: rgba(245, 158, 11, 0.45);
+            color: #fcd34d;
+        }
+
+        html[data-bs-theme="dark"] .wait-tag,
+        html[data-bs-theme="dark"] .wait-kicker,
+        html[data-bs-theme="dark"] .wait-amount {
+            background: rgba(16, 185, 129, 0.12);
+            border-color: rgba(16, 185, 129, 0.35);
+            color: #6ee7b7;
+        }
+
+        html[data-bs-theme="dark"] .wait-pin {
+            background: #0f172a;
+            border-color: #223246;
+        }
+
+        html[data-bs-theme="dark"] .wait-pin-icon {
+            color: #e5e7eb;
+            border-right-color: rgba(226, 232, 240, 0.16);
+        }
+
+        html[data-bs-theme="dark"] .wait-pin-input {
+            color: #e5e7eb !important;
+        }
+
+        html[data-bs-theme="dark"] .wait-pin-input::placeholder {
+            color: #94a3b8;
+        }
+
+        html[data-bs-theme="dark"] .wait-inline-error,
+        html[data-bs-theme="dark"] .wait-note.warn {
+            color: #fecaca;
+        }
+
+        html[data-bs-theme="dark"] .wait-alert {
+            background: rgba(248, 113, 113, 0.12);
+            border-color: rgba(248, 113, 113, 0.35);
+            color: #fecaca;
+        }
+
+        html[data-bs-theme="dark"] .wait-btn.muted {
+            background: #1f2a3a;
+            border-color: #334155;
+            color: #e5e7eb !important;
+        }
+
+        html[data-bs-theme="dark"] .wait-trust {
+            color: #94a3b8;
+        }
+
+        html[data-bs-theme="dark"] .wait-table-wrap {
+            background: #0f172a;
+            border-color: #223246;
+        }
+
+        html[data-bs-theme="dark"] .wait-table thead th {
+            background: #111d34;
+            color: #cbd5e1;
+            border-bottom-color: #223246;
+        }
+
+        html[data-bs-theme="dark"] .wait-table tbody td {
+            color: #e5e7eb;
+            border-bottom-color: rgba(148, 163, 184, 0.2) !important;
+        }
+
+        html[data-bs-theme="dark"] .wait-product-img {
+            background: #0b1220;
+            border-color: rgba(148, 163, 184, 0.3);
+        }
+
+        html[data-bs-theme="dark"] .wait-table .cell-product .price-line {
+            color: #5eead4;
+        }
+
+        html[data-bs-theme="dark"] .wait-table .cell-total {
+            color: #6ee7b7;
+        }
+
+        html[data-bs-theme="dark"] .wait-progress {
+            background: rgba(15, 23, 42, 0.55);
         }
 
         @keyframes wait-progress-move {

@@ -18,13 +18,24 @@
 
     <meta name="format-detection" content="telephone=no">
     <meta name="format-detection" content="date=no">
-    <meta name="format-detection" content="address=no">
-    <meta name="format-detection" content="email=no">
-    <meta name="format-detection" content="url=no">
+   <meta name="format-detection" content="address=no">
+   <meta name="format-detection" content="email=no">
+   <meta name="format-detection" content="url=no">
 
 
    <asp:Literal ID="literal_fav_icon" runat="server"></asp:Literal>
     <asp:ContentPlaceHolder ID="head_truoc" runat="server"></asp:ContentPlaceHolder>
+    <script>
+        (function () {
+            try {
+                const key = 'theme-preference';
+                const saved = localStorage.getItem(key);
+                const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const theme = saved || (prefersDark ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-bs-theme', theme);
+            } catch (e) { }
+        })();
+    </script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
     <%--icon--%>

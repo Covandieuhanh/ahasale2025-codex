@@ -38,4 +38,8 @@
     .dm-seo-scroll::-webkit-scrollbar-track {
         background: transparent;
     }
+
+    html[data-bs-theme="dark"] .dm-seo-scroll::-webkit-scrollbar-thumb {
+        background: rgba(148,163,184,.35);
+    }
 </style>

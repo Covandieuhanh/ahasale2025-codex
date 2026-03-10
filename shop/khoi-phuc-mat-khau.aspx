@@ -56,10 +56,10 @@
                     </div>
 
                     <div>
-                        <asp:PlaceHolder ID="PlaceHolder1" runat="server">
+                        <asp:PlaceHolder ID="PlaceHolder1" runat="server" Visible="true">
                             <div class="text-center fg-white">
-                                <asp:Label ID="Label2" runat="server" Text=""></asp:Label>
-                                <div class="mt-3"><a href="/shop/login.aspx" class="button small dark rounded">Quay lại trang đăng nhập</a></div>
+                                <asp:Label ID="Label2" runat="server" Text="Trang khôi phục bằng link đã được thay thế bằng OTP qua email."></asp:Label>
+                                <div class="mt-3"><a href="/shop/login.aspx" class="button small dark rounded">Quay lại để nhận OTP</a></div>
                             </div>
 
                         </asp:PlaceHolder>

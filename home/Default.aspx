@@ -379,6 +379,108 @@
             cursor: default;
         }
 
+        html[data-bs-theme="dark"] .square-container {
+            background: #111d34;
+        }
+
+        html[data-bs-theme="dark"] .bio-avatar {
+            background: #0f172a;
+        }
+
+        html[data-bs-theme="dark"] .bio-card {
+            border-color: #223246;
+            background: #0f172a;
+            box-shadow: 0 14px 34px rgba(0, 0, 0, .45);
+        }
+
+        html[data-bs-theme="dark"] .bio-card-head {
+            border-bottom-color: #223246;
+        }
+
+        html[data-bs-theme="dark"] .bio-card-title {
+            color: #e5e7eb;
+        }
+
+        html[data-bs-theme="dark"] .bio-card-sub,
+        html[data-bs-theme="dark"] .bio-contact-label,
+        html[data-bs-theme="dark"] .bio-link-url,
+        html[data-bs-theme="dark"] .bio-review-meta,
+        html[data-bs-theme="dark"] .bio-review-content {
+            color: #94a3b8;
+        }
+
+        html[data-bs-theme="dark"] .bio-contact-item {
+            background: #111d34;
+            border-color: #223246;
+            color: #e5e7eb;
+        }
+
+        html[data-bs-theme="dark"] .bio-contact-item i {
+            color: #34d399;
+        }
+
+        html[data-bs-theme="dark"] .bio-link-item {
+            background: #111d34;
+            border-color: #223246;
+            color: #e5e7eb;
+        }
+
+        html[data-bs-theme="dark"] .bio-link-item:hover {
+            background: #16253a;
+            border-color: #334155;
+            color: #ffffff;
+        }
+
+        html[data-bs-theme="dark"] .bio-link-icon {
+            background: #0f172a;
+            border-color: #223246;
+        }
+
+        html[data-bs-theme="dark"] .bio-link-icon.empty {
+            color: #94a3b8;
+        }
+
+        html[data-bs-theme="dark"] .bio-link-arrow {
+            color: #94a3b8;
+        }
+
+        html[data-bs-theme="dark"] .bio-empty {
+            background: #111d34;
+            border-color: #223246;
+            color: #94a3b8;
+        }
+
+        html[data-bs-theme="dark"] .bio-review-item {
+            background: #0f172a;
+            border-color: #223246;
+        }
+
+        html[data-bs-theme="dark"] .bio-review-title {
+            color: #e5e7eb;
+        }
+
+        html[data-bs-theme="dark"] .bio-review-avatar {
+            background: #0b1220;
+            border-color: #223246;
+        }
+
+        html[data-bs-theme="dark"] .pagination a,
+        html[data-bs-theme="dark"] .pagination .current-page {
+            background: #0f172a;
+            border-color: #334155;
+            color: #e5e7eb;
+        }
+
+        html[data-bs-theme="dark"] .pagination a:hover {
+            background: #162235;
+        }
+
+        html[data-bs-theme="dark"] .pagination .current-page {
+            background: rgba(34, 197, 94, 0.18);
+            border-color: rgba(34, 197, 94, 0.5);
+            color: #86efac;
+        }
+
         @media (max-width: 767.98px) {
             .bio-public-shell {
                 margin-top: 10px;

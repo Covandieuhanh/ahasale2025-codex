@@ -286,39 +286,40 @@ public partial class shop_login : System.Web.UI.Page
                 return;
             }
 
-            DateTime now = AhaTime_cl.Now;
-            bool needNewToken = (q.hsd_makhoiphuc == null)
-                                || (q.hsd_makhoiphuc.Value < now)
-                                || string.IsNullOrEmpty(q.makhoiphuc);
-            if (needNewToken)
+            int requestId;
+            string error;
+            bool usedFallback;
+            string devOtp;
+
+            bool sent = ShopOtp_cl.TrySendEmailOtp(db, email, q.taikhoan, ShopOtp_cl.TypePassword,
+                out requestId, out error, out usedFallback, out devOtp);
+
+            if (requestId <= 0)
             {
-                q.makhoiphuc = Guid.NewGuid().ToString().ToLower();
-                q.hsd_makhoiphuc = now.AddMinutes(5);
-                db.SubmitChanges();
+                Helper_Tabler_cl.ShowModal(this.Page, "Không tạo được OTP. Vui lòng thử lại.", "Thông báo", true, "warning");
+                return;
             }
 
-            string token = (q.makhoiphuc ?? "").ToLower();
-            DateTime expiry = q.hsd_makhoiphuc ?? now.AddMinutes(5);
-            string resetLink = string.Format("{0}://{1}{2}",
-                Request.Url.Scheme, Request.Url.Authority, "/shop/khoi-phuc-mat-khau.aspx?code=" + token);
+            if (!sent)
+            {
+                Session["shop_otp_send_warning"] = string.IsNullOrEmpty(error)
+                    ? "Hệ thống chưa gửi được OTP. Vui lòng nhận OTP từ admin."
+                    : error;
+            }
+            else
+            {
+                Session["shop_otp_send_warning"] = null;
+            }
 
-            string domainName = HttpContext.Current.Request.Url.Host.ToUpper();
-            string subject = "Khôi phục mật khẩu shop";
-            string body = "<div style='color:red'>Ai đó đã yêu cầu đặt lại mật khẩu shop của bạn tại " + domainName + "</div>";
-            body += "<div style='color:red'>Nếu không phải là bạn, vui lòng bỏ qua email này.<hr/></div>";
-            body += "<div>Tài khoản của bạn: <b>" + q.taikhoan + "</b></div>";
-            body += "<div><a href='" + resetLink + "'><b>Nhấp vào đây</b></a> để đặt lại mật khẩu của bạn.</div>";
-            body += "<div>Thời gian hết hạn: " + expiry.ToString("dd/MM/yyyy HH:mm") + "</div>";
-
-            guiEmail_cl.SendEmail(email, subject, body, domainName, "");
+            Session["shop_otp_dev_code"] = usedFallback ? devOtp : "";
+            Session["shop_otp_dev_type"] = ShopOtp_cl.TypePassword;
 
             if (txtEmail != null)
                 txtEmail.Text = "";
             SetPanelVisible(this, "pn_khoiphuc", false);
 
-            Helper_Tabler_cl.ShowModal(this.Page,
-                "Chúng tôi đã gửi yêu cầu khôi phục vào email của bạn. Vui lòng kiểm tra cả Hộp thư rác.",
-                "Thông báo", true, "warning");
+            Response.Redirect("/shop/xac-nhan-otp.aspx?type=password&id=" + requestId, false);
+            Context.ApplicationInstance.CompleteRequest();
         }
     }
     #endregion

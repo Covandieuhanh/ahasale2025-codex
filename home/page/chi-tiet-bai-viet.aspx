@@ -95,6 +95,22 @@
             color: #1d273b;
             cursor: default;
         }
+
+        html[data-bs-theme="dark"] .gallery-main {
+            background: #111d34;
+        }
+
+        html[data-bs-theme="dark"] .thumbs img,
+        html[data-bs-theme="dark"] .thumbs video {
+            background: #0f172a;
+            border-color: #223246;
+        }
+
+        html[data-bs-theme="dark"] .pagination .current-page {
+            background-color: rgba(34, 197, 94, 0.18);
+            color: #86efac;
+            border-color: rgba(34, 197, 94, 0.45);
+        }
     </style>
 </asp:Content>
 

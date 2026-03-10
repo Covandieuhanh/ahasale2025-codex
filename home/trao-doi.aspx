@@ -16,6 +16,18 @@
             --pay-success-soft: #eafaf0;
         }
 
+        html[data-bs-theme="dark"] {
+            --pay-page-bg: #0b1220;
+            --pay-card: #0f172a;
+            --pay-border: #223246;
+            --pay-text: #e5e7eb;
+            --pay-muted: #94a3b8;
+            --pay-danger: #f87171;
+            --pay-primary: #ff7a47;
+            --pay-success: #22c55e;
+            --pay-success-soft: rgba(34, 197, 94, 0.14);
+        }
+
         .exchange-page {
             background: var(--pay-page-bg);
             border: 1px solid var(--pay-border);
@@ -44,6 +56,12 @@
             background: #fff3db;
             border: 1px solid #ffd38a;
             margin-bottom: 8px;
+        }
+
+        html[data-bs-theme="dark"] .exchange-step {
+            color: #fcd34d;
+            background: rgba(245, 158, 11, 0.16);
+            border-color: rgba(245, 158, 11, 0.4);
         }
 
         .exchange-title {
@@ -285,6 +303,65 @@
             border: 1px solid #bbf0cd;
             border-radius: 12px;
             padding: 4px 10px;
+        }
+
+        html[data-bs-theme="dark"] .exchange-card {
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+        }
+
+        html[data-bs-theme="dark"] .exchange-card .card-header {
+            background: #111d34;
+            color: var(--pay-text);
+        }
+
+        html[data-bs-theme="dark"] .product-media {
+            background: #0b1220;
+        }
+
+        html[data-bs-theme="dark"] .product-tag {
+            color: #e5e7eb;
+            background: rgba(59, 130, 246, 0.16);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        html[data-bs-theme="dark"] .summary-box {
+            background: #111d34;
+        }
+
+        html[data-bs-theme="dark"] .summary-row .value.a {
+            color: #7dd3fc;
+        }
+
+        html[data-bs-theme="dark"] .summary-row .value.percent {
+            color: #fcd34d;
+        }
+
+        html[data-bs-theme="dark"] .qty-input {
+            color: #e5e7eb !important;
+        }
+
+        html[data-bs-theme="dark"] .qty-stepper {
+            background: #111d34;
+            border-color: #223246;
+        }
+
+        html[data-bs-theme="dark"] .qty-step-btn {
+            background: #0f172a;
+            border-color: #334155;
+            color: #e5e7eb;
+        }
+
+        html[data-bs-theme="dark"] .exchange-paybar {
+            background: #0f172a;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+        }
+
+        html[data-bs-theme="dark"] .exchange-paybar .trust {
+            color: #6ee7b7;
+        }
+
+        html[data-bs-theme="dark"] .exchange-paybar .total {
+            border-color: rgba(34, 197, 94, 0.4);
         }
 
         .exchange-paybar .btn-primary,

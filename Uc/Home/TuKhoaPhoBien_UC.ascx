@@ -86,4 +86,16 @@
         text-decoration: underline;
         text-underline-offset: 2px;
     }
+
+    html[data-bs-theme="dark"] .dm-keywords li::before {
+        background: rgba(148,163,184,.8);
+    }
+
+    html[data-bs-theme="dark"] .dm-link {
+        color: #cbd5e1;
+    }
+
+    html[data-bs-theme="dark"] .dm-link:hover {
+        color: #60a5fa;
+    }
 </style>

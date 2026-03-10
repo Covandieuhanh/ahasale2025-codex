@@ -66,16 +66,21 @@ public partial class home_khoi_phuc_ma_pin : System.Web.UI.Page
             bool sent = HomeOtp_cl.TrySendOtp(db, phone, q.taikhoan, HomeOtp_cl.TypePin,
                 out requestId, out error, out usedFallback, out devOtp);
 
-            if (!sent)
-            {
-                Helper_Tabler_cl.ShowModal(this.Page, error, "Thông báo", true, "warning");
-                return;
-            }
-
             if (requestId <= 0)
             {
                 Helper_Tabler_cl.ShowModal(this.Page, "Không tạo được yêu cầu OTP. Vui lòng thử lại.", "Thông báo", true, "warning");
                 return;
+            }
+
+            if (!sent)
+            {
+                Session["home_otp_send_warning"] = string.IsNullOrEmpty(error)
+                    ? "Hệ thống chưa gửi được OTP. Vui lòng nhận OTP từ admin."
+                    : error;
+            }
+            else
+            {
+                Session["home_otp_send_warning"] = null;
             }
 
             Session["home_otp_dev_code"] = usedFallback ? devOtp : "";

@@ -139,4 +139,20 @@
   color: var(--tblr-primary, #206bc4); /* xanh Tabler */
 }
 
+html[data-bs-theme="dark"] .dm-item:hover{
+  background: rgba(148,163,184,.12);
+}
+
+html[data-bs-theme="dark"] .dm-img{
+  background: rgba(148,163,184,.12);
+}
+
+html[data-bs-theme="dark"] .dm-name{
+  color: #94a3b8;
+}
+
+html[data-bs-theme="dark"] .dm-item:hover .dm-name{
+  color: #60a5fa;
+}
+
 </style>

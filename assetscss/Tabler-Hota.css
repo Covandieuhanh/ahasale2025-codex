@@ -198,6 +198,19 @@
     backdrop-filter: blur(2px);
 }
 
+html[data-bs-theme="dark"] .ts-wrapper.form-select {
+    background: var(--aha-surface-1) !important;
+    border-color: var(--aha-border) !important;
+}
+
+html[data-bs-theme="dark"] .ts-wrapper.form-select.single::after {
+    border-top-color: #94a3b8;
+}
+
+html[data-bs-theme="dark"] .page-loading {
+    background: rgba(5, 10, 20, 0.65);
+}
+
 .page-loading.active {
     display: flex;
 }

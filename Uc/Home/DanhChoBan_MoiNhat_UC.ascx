@@ -354,6 +354,84 @@
         border-bottom: 1px solid #dce8f4;
     }
 
+    html[data-bs-theme="dark"] .sp-card {
+        background: #0f172a;
+        box-shadow: 0 10px 26px rgba(0,0,0,.4);
+    }
+
+    html[data-bs-theme="dark"] .thumb-wrap {
+        background: #111d34;
+    }
+
+    html[data-bs-theme="dark"] .sp-title {
+        color: #e5e7eb;
+    }
+
+    html[data-bs-theme="dark"] .sp-card:hover .sp-title {
+        color: #4ade80;
+    }
+
+    html[data-bs-theme="dark"] .sp-desc,
+    html[data-bs-theme="dark"] .sp-meta,
+    html[data-bs-theme="dark"] .sp-loc,
+    html[data-bs-theme="dark"] .sp-time {
+        color: #94a3b8;
+    }
+
+    html[data-bs-theme="dark"] .heart-icon {
+        background: #0f172a;
+        border: 1px solid #223246;
+        color: #94a3b8;
+    }
+
+    html[data-bs-theme="dark"] .kebab-btn:hover {
+        background: rgba(148,163,184,.12);
+    }
+
+    html[data-bs-theme="dark"] .kebab-menu {
+        background: #0f172a;
+        border-color: #223246;
+        box-shadow: 0 10px 26px rgba(0,0,0,.45);
+    }
+
+    html[data-bs-theme="dark"] .kebab-item {
+        color: #e5e7eb;
+    }
+
+    html[data-bs-theme="dark"] .kebab-item:hover {
+        background: rgba(148,163,184,.12);
+    }
+
+    html[data-bs-theme="dark"] .sp-actions .btn-outline-success {
+        background: #1f2a3a;
+        border-color: #334155;
+        color: #e5e7eb;
+    }
+
+    html[data-bs-theme="dark"] .sp-actions .btn-outline-success:hover,
+    html[data-bs-theme="dark"] .sp-actions .btn-outline-success:focus {
+        background: #273449;
+        border-color: #3b4a61;
+        color: #ffffff;
+    }
+
+    html[data-bs-theme="dark"] .search-wrap.is-root-pinned.is-sticky-fixed {
+        background: linear-gradient(180deg, rgba(15, 23, 42, .98) 0%, rgba(15, 23, 42, .90) 100%);
+        border-bottom: 1px solid #223246;
+    }
+
+    html[data-bs-theme="dark"] .ct-guest-auth-btn.ct-login {
+        background: #0f172a;
+        border-color: #223246;
+        color: #ffffff !important;
+    }
+
+    html[data-bs-theme="dark"] .ct-guest-auth-btn.ct-register {
+        background: rgba(34, 197, 94, 0.16);
+        border-color: rgba(34, 197, 94, 0.35);
+        color: #86efac !important;
+    }
+
     .search-wrap.is-root-pinned.is-sticky-fixed .ct-shell {
         padding: 0 12px;
     }

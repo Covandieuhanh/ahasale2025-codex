@@ -384,10 +384,16 @@ VALUES
             using (SqlConnection conn = new SqlConnection(db.Connection.ConnectionString))
             {
                 conn.Open();
+                bool isMismatch = false;
+                int attempts = 0;
+                int status = 0;
+                string phone = "";
+                DateTime now = AhaTime_cl.Now;
+
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
                     cmd.CommandText = @"
-SELECT otp_code, expires_at, status, attempt_count
+SELECT otp_code, expires_at, status, attempt_count, phone
 FROM dbo.Home_Otp_tb
 WHERE id = @id AND otp_type = @type";
                     cmd.Parameters.AddWithValue("@id", requestId);
@@ -403,10 +409,10 @@ WHERE id = @id AND otp_type = @type";
 
                         string otp = reader.GetString(0);
                         DateTime expiresAt = reader.GetDateTime(1);
-                        int status = reader.GetInt32(2);
-                        int attempts = reader.GetInt32(3);
+                        status = reader.GetInt32(2);
+                        attempts = reader.GetInt32(3);
+                        phone = reader.IsDBNull(4) ? "" : reader.GetString(4);
 
-                        DateTime now = AhaTime_cl.Now;
                         if (expiresAt < now)
                         {
                             MarkStatus(conn, requestId, StatusExpired);
@@ -435,13 +441,23 @@ WHERE id = @id AND otp_type = @type";
 
                         if (!string.Equals(otp ?? "", cleanOtp, StringComparison.Ordinal))
                         {
-                            attempts += 1;
-                            int newStatus = (attempts >= MaxAttempts) ? StatusLocked : status;
-                            UpdateAttempt(conn, requestId, attempts, newStatus);
-                            error = "Mã OTP không đúng.";
-                            return false;
+                            isMismatch = true;
                         }
                     }
+                }
+
+                if (isMismatch)
+                {
+                    if (TryVerifyFallbackOtp(conn, requestId, phone, cleanType, cleanOtp, now))
+                    {
+                        return true;
+                    }
+
+                    attempts += 1;
+                    int newStatus = (attempts >= MaxAttempts) ? StatusLocked : status;
+                    UpdateAttempt(conn, requestId, attempts, newStatus);
+                    error = "Mã OTP không đúng.";
+                    return false;
                 }
 
                 using (SqlCommand cmd = conn.CreateCommand())
@@ -584,6 +600,75 @@ WHERE id = @id";
             cmd.Parameters.AddWithValue("@status", status);
             cmd.Parameters.AddWithValue("@id", requestId);
             cmd.ExecuteNonQuery();
+        }
+    }
+
+    private static bool TryVerifyFallbackOtp(SqlConnection conn, int requestId, string phone, string otpType, string otpInput, DateTime now)
+    {
+        if (string.IsNullOrEmpty(phone) || string.IsNullOrEmpty(otpType) || string.IsNullOrEmpty(otpInput))
+            return false;
+
+        using (SqlConnection fallbackConn = new SqlConnection(conn.ConnectionString))
+        {
+            fallbackConn.Open();
+
+            using (SqlCommand cmd = fallbackConn.CreateCommand())
+            {
+                cmd.CommandText = @"
+SELECT TOP 1 id, expires_at, status
+FROM dbo.Home_Otp_tb
+WHERE phone = @phone AND otp_type = @type AND otp_code = @otp
+ORDER BY id DESC";
+                cmd.Parameters.AddWithValue("@phone", phone);
+                cmd.Parameters.AddWithValue("@type", otpType);
+                cmd.Parameters.AddWithValue("@otp", otpInput);
+
+                using (SqlDataReader reader = cmd.ExecuteReader(CommandBehavior.SingleRow))
+                {
+                    if (!reader.Read())
+                        return false;
+
+                    int matchedId = reader.GetInt32(0);
+                    DateTime expiresAt = reader.GetDateTime(1);
+                    int status = reader.GetInt32(2);
+
+                    if (expiresAt < now)
+                        return false;
+                    if (status == StatusConsumed || status == StatusExpired || status == StatusLocked)
+                        return false;
+
+                    reader.Close();
+
+                    using (SqlCommand cmdUpdate = fallbackConn.CreateCommand())
+                    {
+                        cmdUpdate.CommandText = @"
+UPDATE dbo.Home_Otp_tb
+SET status = @status, verified_at = @verified, consumed_at = @consumed, last_attempt_at = @attempt
+WHERE id = @id";
+                        cmdUpdate.Parameters.AddWithValue("@status", StatusConsumed);
+                        cmdUpdate.Parameters.AddWithValue("@verified", now);
+                        cmdUpdate.Parameters.AddWithValue("@consumed", now);
+                        cmdUpdate.Parameters.AddWithValue("@attempt", now);
+                        cmdUpdate.Parameters.AddWithValue("@id", matchedId);
+                        cmdUpdate.ExecuteNonQuery();
+                    }
+
+                    using (SqlCommand cmdUpdateReq = fallbackConn.CreateCommand())
+                    {
+                        cmdUpdateReq.CommandText = @"
+UPDATE dbo.Home_Otp_tb
+SET status = @status, verified_at = @verified, last_attempt_at = @attempt
+WHERE id = @id";
+                        cmdUpdateReq.Parameters.AddWithValue("@status", StatusVerified);
+                        cmdUpdateReq.Parameters.AddWithValue("@verified", now);
+                        cmdUpdateReq.Parameters.AddWithValue("@attempt", now);
+                        cmdUpdateReq.Parameters.AddWithValue("@id", requestId);
+                        cmdUpdateReq.ExecuteNonQuery();
+                    }
+
+                    return true;
+                }
+            }
         }
     }
 }

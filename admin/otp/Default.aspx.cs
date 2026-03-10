@@ -70,6 +70,20 @@ public partial class admin_otp_Default : System.Web.UI.Page
             else
                 ddl_sms_method.SelectedValue = "POST";
             BindParamInputs(cfg.Params);
+
+            EmailOtpConfig emailCfg = OtpConfig_cl.GetEmailConfig(db) ?? new EmailOtpConfig();
+            txt_email_host.Text = emailCfg.Host ?? "";
+            txt_email_port.Text = emailCfg.Port > 0 ? emailCfg.Port.ToString() : "";
+            txt_email_user.Text = emailCfg.Username ?? "";
+            txt_email_pass.Text = emailCfg.Password ?? "";
+            txt_email_from_name.Text = emailCfg.FromName ?? "";
+            txt_email_from.Text = emailCfg.FromEmail ?? "";
+            txt_email_subject.Text = string.IsNullOrEmpty(emailCfg.SubjectTemplate) ? "[AhaSale] Mã OTP của bạn" : emailCfg.SubjectTemplate;
+            txt_email_body.Text = string.IsNullOrEmpty(emailCfg.BodyTemplate)
+                ? "Ma OTP cua ban la: {OTP}. Het han sau {EXPIRE} phut."
+                : emailCfg.BodyTemplate;
+            ck_email_ssl.Checked = emailCfg.UseSsl;
+            ck_email_dev.Checked = emailCfg.DevMode;
         }
     }
 
@@ -93,6 +107,34 @@ public partial class admin_otp_Default : System.Web.UI.Page
         }
 
         Helper_Tabler_cl.ShowModal(this.Page, "Đã lưu cấu hình OTP.", "Thông báo", true, "success");
+    }
+
+    protected void but_save_email_Click(object sender, EventArgs e)
+    {
+        using (dbDataContext db = new dbDataContext())
+        {
+            int port = 0;
+            int.TryParse((txt_email_port.Text ?? "").Trim(), out port);
+
+            EmailOtpConfig cfg = new EmailOtpConfig
+            {
+                Host = (txt_email_host.Text ?? "").Trim(),
+                Port = port,
+                Username = (txt_email_user.Text ?? "").Trim(),
+                Password = (txt_email_pass.Text ?? "").Trim(),
+                FromName = (txt_email_from_name.Text ?? "").Trim(),
+                FromEmail = (txt_email_from.Text ?? "").Trim(),
+                SubjectTemplate = (txt_email_subject.Text ?? "").Trim(),
+                BodyTemplate = (txt_email_body.Text ?? "").Trim(),
+                UseSsl = ck_email_ssl.Checked,
+                DevMode = ck_email_dev.Checked
+            };
+
+            string adminTk = GetCurrentAdminAccount();
+            OtpConfig_cl.SaveEmailConfig(db, cfg, adminTk);
+        }
+
+        Helper_Tabler_cl.ShowModal(this.Page, "Đã lưu cấu hình Email OTP.", "Thông báo", true, "success");
     }
 
     private void BindParamInputs(string raw)

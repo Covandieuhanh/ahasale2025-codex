@@ -141,6 +141,57 @@
                 </div>
 
                 <div class="otp-card p-4 mb-4">
+                    <div class="otp-section-title mb-2">Cấu hình OTP (Email)</div>
+                    <h3>Thiết lập email gửi OTP cho shop</h3>
+                    <div class="otp-grid">
+                        <div>
+                            <label class="fw-600">SMTP Host</label>
+                            <asp:TextBox ID="txt_email_host" runat="server" placeholder="smtp.gmail.com"></asp:TextBox>
+                        </div>
+                        <div>
+                            <label class="fw-600">SMTP Port</label>
+                            <asp:TextBox ID="txt_email_port" runat="server" placeholder="587"></asp:TextBox>
+                        </div>
+                        <div>
+                            <label class="fw-600">Username</label>
+                            <asp:TextBox ID="txt_email_user" runat="server" placeholder="user@email.com"></asp:TextBox>
+                        </div>
+                        <div>
+                            <label class="fw-600">Password</label>
+                            <asp:TextBox ID="txt_email_pass" runat="server" TextMode="Password" placeholder="********"></asp:TextBox>
+                        </div>
+                        <div>
+                            <label class="fw-600">From Name</label>
+                            <asp:TextBox ID="txt_email_from_name" runat="server" placeholder="AhaSale OTP"></asp:TextBox>
+                        </div>
+                        <div>
+                            <label class="fw-600">From Email</label>
+                            <asp:TextBox ID="txt_email_from" runat="server" placeholder="no-reply@ahasale.vn"></asp:TextBox>
+                        </div>
+                        <div>
+                            <label class="fw-600">Subject Template</label>
+                            <asp:TextBox ID="txt_email_subject" runat="server" placeholder="[AhaSale] Mã OTP của bạn"></asp:TextBox>
+                        </div>
+                        <div>
+                            <label class="fw-600">Body Template</label>
+                            <asp:TextBox ID="txt_email_body" runat="server" TextMode="MultiLine" Rows="3"
+                                placeholder="Ma OTP cua ban la: {OTP}. Het han sau {EXPIRE} phut."></asp:TextBox>
+                        </div>
+                        <div>
+                            <label class="fw-600">SSL/TLS</label>
+                            <asp:CheckBox ID="ck_email_ssl" runat="server" Text="Bật SSL" />
+                        </div>
+                        <div>
+                            <label class="fw-600">Dev Mode</label>
+                            <asp:CheckBox ID="ck_email_dev" runat="server" Text="Không gửi email, chỉ log" />
+                        </div>
+                    </div>
+                    <div class="mt-3 text-right">
+                        <asp:Button ID="but_save_email" runat="server" Text="Lưu cấu hình Email" CssClass="button success" OnClick="but_save_email_Click" />
+                    </div>
+                </div>
+
+                <div class="otp-card p-4 mb-4">
                     <div class="otp-section-title mb-2">Tạo OTP thủ công</div>
                     <h3>Cấp OTP cho tài khoản</h3>
                     <asp:Panel ID="pn_manual_home" runat="server">
@@ -148,7 +199,7 @@
                         <div class="row">
                             <div class="cell-lg-6">
                                 <label class="fw-600">Tài khoản</label>
-                                <asp:DropDownList ID="ddl_home_account" runat="server"></asp:DropDownList>
+                                <asp:DropDownList ID="ddl_home_account" runat="server" data-role="select" data-filter="true"></asp:DropDownList>
                             </div>
                             <div class="cell-lg-3">
                                 <label class="fw-600">Loại OTP</label>
@@ -169,7 +220,7 @@
                         <div class="row">
                             <div class="cell-lg-6">
                                 <label class="fw-600">Tài khoản</label>
-                                <asp:DropDownList ID="ddl_shop_account" runat="server"></asp:DropDownList>
+                                <asp:DropDownList ID="ddl_shop_account" runat="server" data-role="select" data-filter="true"></asp:DropDownList>
                             </div>
                             <div class="cell-lg-6">
                                 <label class="fw-600">Số điện thoại</label>
@@ -233,4 +284,42 @@
                 </div>
             </div>
     </div>
+</asp:Content>
+
+<asp:Content ID="Content3" ContentPlaceHolderID="foot" runat="Server">
+    <script>
+        (function () {
+            function initOtpSelect(id) {
+                var el = document.getElementById(id);
+                if (!el || !window.Metro || typeof Metro.getPlugin !== "function") {
+                    return;
+                }
+                var existing = Metro.getPlugin(el, "select");
+                if (existing) return;
+                if (typeof Metro.makePlugin === "function") {
+                    Metro.makePlugin(el, "select", {
+                        filter: true,
+                        filterPlaceholder: "Search..."
+                    });
+                }
+            }
+
+            function initAll() {
+                initOtpSelect("<%= ddl_home_account.ClientID %>");
+                initOtpSelect("<%= ddl_shop_account.ClientID %>");
+            }
+
+            if (document.readyState === "loading") {
+                document.addEventListener("DOMContentLoaded", initAll);
+            } else {
+                initAll();
+            }
+
+            if (window.Sys && Sys.WebForms && Sys.WebForms.PageRequestManager) {
+                Sys.WebForms.PageRequestManager.getInstance().add_endRequest(function () {
+                    initAll();
+                });
+            }
+        })();
+    </script>
 </asp:Content>

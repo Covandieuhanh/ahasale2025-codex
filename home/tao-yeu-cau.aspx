@@ -40,6 +40,30 @@
         border-color: #efc4c4;
         color: #943838;
     }
+
+    html[data-bs-theme="dark"] .yc-status {
+        background: #111d34;
+        border-color: #334155;
+        color: #e2e8f0;
+    }
+
+    html[data-bs-theme="dark"] .yc-status.pending {
+        background: rgba(245, 158, 11, 0.18);
+        border-color: rgba(245, 158, 11, 0.45);
+        color: #fcd34d;
+    }
+
+    html[data-bs-theme="dark"] .yc-status.approved {
+        background: rgba(34, 197, 94, 0.18);
+        border-color: rgba(34, 197, 94, 0.45);
+        color: #86efac;
+    }
+
+    html[data-bs-theme="dark"] .yc-status.rejected {
+        background: rgba(248, 113, 113, 0.18);
+        border-color: rgba(248, 113, 113, 0.45);
+        color: #fecaca;
+    }
 </style>
 
 <div class="container-xl py-4" style="max-width:640px">
