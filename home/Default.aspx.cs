@@ -484,6 +484,8 @@ public partial class home_Default : System.Web.UI.Page
                 string linkHoSoCongKhai = ShopSlug_cl.GetPublicUrl(db, q_tk);
                 ViewState["link_hoso_congkhai"] = linkHoSoCongKhai;
                 ViewState["public_profile_url"] = Request.Url.GetLeftPart(UriPartial.Authority) + linkHoSoCongKhai;
+                ViewState["link_dangky_ref"] = "/home/dangky.aspx?ref=" + HttpUtility.UrlEncode((q_tk.taikhoan ?? "").Trim().ToLowerInvariant());
+                ViewState["link_luu_danhba"] = "/home/luu-danh-ba.aspx?user=" + HttpUtility.UrlEncode((q_tk.taikhoan ?? "").Trim().ToLowerInvariant());
 
                 // ✅ XÁC ĐỊNH: user_query đã là gian hàng đối tác chưa (ưu tiên: phanloai hoặc đã duyệt đăng ký)
                 bool laGianHangDoiTac = ShopSlug_cl.IsShopAccount(db, q_tk);

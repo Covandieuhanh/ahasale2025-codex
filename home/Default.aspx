@@ -549,8 +549,17 @@
                                 <a href="<%= ViewState["sdt_href_query"] %>" class="bio-action-btn bio-action-solid">
                                     <i class="ti ti-phone"></i>Gọi ngay
                                 </a>
-                                <a href="<%= ViewState["public_profile_url"] %>" target="_blank" class="bio-action-btn">
-                                    <i class="ti ti-world"></i>Mở link hồ sơ
+                                <% if (string.IsNullOrEmpty((ViewState["taikhoan"] ?? "").ToString())) { %>
+                                    <a href="<%= ViewState["link_dangky_ref"] %>" class="bio-action-btn">
+                                        <i class="ti ti-user-plus"></i>Đăng ký
+                                    </a>
+                                <% } else { %>
+                                    <a href="<%= ViewState["public_profile_url"] %>" target="_blank" class="bio-action-btn">
+                                        <i class="ti ti-world"></i>Mở link hồ sơ
+                                    </a>
+                                <% } %>
+                                <a href="<%= ViewState["link_luu_danhba"] %>" class="bio-action-btn">
+                                    <i class="ti ti-id"></i>Lưu thông tin
                                 </a>
                                 <button type="button"
                                     class="bio-action-btn"

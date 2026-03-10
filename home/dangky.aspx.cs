@@ -71,6 +71,12 @@ public partial class home_dangky : System.Web.UI.Page
                 // init ref display
                 lb_ref_hoten.Text = "";
                 hf_ref_valid.Value = "";
+                string refQuery = (Request.QueryString["ref"] ?? "").Trim().ToLowerInvariant();
+                if (!string.IsNullOrEmpty(refQuery))
+                {
+                    txt_ref_taikhoan.Text = refQuery;
+                    txt_ref_taikhoan_TextChanged(txt_ref_taikhoan, EventArgs.Empty);
+                }
 
                 // checkbox mặc định unchecked (giữ an toàn)
                 cb_dongy.Checked = false;
