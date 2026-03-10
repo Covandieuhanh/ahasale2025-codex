@@ -45,6 +45,11 @@ public partial class admin_lich_su_chuyen_diem_Default : System.Web.UI.Page
         public DateTime? NgayCapNhat { get; set; }
         public string NguoiDuyet { get; set; }
         public string GhiChu { get; set; }
+        public string TrangThaiUiCode { get; set; }
+        public bool CanChiTra { get; set; }
+        public bool DaChiTra { get; set; }
+        public decimal SoDaChiTra { get; set; }
+        public decimal SoConLaiChiTra { get; set; }
     }
 
     // ======================================================
@@ -620,7 +625,18 @@ public partial class admin_lich_su_chuyen_diem_Default : System.Web.UI.Page
         int profileCode = GetProfileCodeByTab(activeTab);
         int fromKy, toKy;
         HanhViGhiNhanHoSo_cl.TryGetHanhViRange(profileCode, out fromKy, out toKy);
-        lb_yc_heading.Text = "Yêu cầu ghi nhận hành vi (" + HanhViGhiNhanHoSo_cl.GetTenHoSoByProfile(profileCode) + ")";
+        if (profileCode == HanhViGhiNhanHoSo_cl.Profile_LaoDong)
+        {
+            lb_yc_heading.Text = "Yêu cầu ghi nhận hành vi (" + HanhViGhiNhanHoSo_cl.GetTenHoSoByProfile(profileCode) + ") - Duyệt xong ghi vào dữ liệu chờ chi trả lương.";
+        }
+        else if (profileCode == HanhViGhiNhanHoSo_cl.Profile_GanKet)
+        {
+            lb_yc_heading.Text = "Yêu cầu ghi nhận hành vi (" + HanhViGhiNhanHoSo_cl.GetTenHoSoByProfile(profileCode) + ") - Duyệt xong ghi vào dữ liệu chờ chi trả thưởng.";
+        }
+        else
+        {
+            lb_yc_heading.Text = "Yêu cầu ghi nhận hành vi (" + HanhViGhiNhanHoSo_cl.GetTenHoSoByProfile(profileCode) + ")";
+        }
 
         string key = (keyword ?? "").Trim().ToLower();
 
@@ -644,8 +660,45 @@ public partial class admin_lich_su_chuyen_diem_Default : System.Web.UI.Page
             })
             .ToList();
 
+        Dictionary<Guid, decimal> daChiTraTheoYeuCau = new Dictionary<Guid, decimal>();
+        bool hoSoCanChiTra = HanhViGhiNhanHoSo_cl.IsProfileChiTraQuanTri(profileCode);
+        if (hoSoCanChiTra && rowsRaw.Count > 0)
+        {
+            int loaiHoSo = HanhViGhiNhanHoSo_cl.GetLoaiHoSoViByProfile(profileCode);
+            Dictionary<string, Guid> refToIdMap = new Dictionary<string, Guid>(StringComparer.OrdinalIgnoreCase);
+            foreach (var item in rowsRaw)
+                refToIdMap[HanhViGhiNhanHoSo_cl.GetPayoutRefId(item.IdYeuCauRut)] = item.IdYeuCauRut;
+
+            var payoutRows = db.LichSu_DongA_tbs
+                .Where(p =>
+                    p.LoaiHoSo_Vi == loaiHoSo
+                    && p.CongTru.HasValue
+                    && p.CongTru.Value == false
+                    && p.id_rutdiem != null
+                    && p.id_rutdiem.StartsWith(HanhViGhiNhanHoSo_cl.PayoutRefPrefix))
+                .Select(p => new
+                {
+                    RefId = p.id_rutdiem,
+                    SoDiem = p.dongA
+                })
+                .ToList();
+
+            foreach (var payout in payoutRows)
+            {
+                Guid idYeuCau;
+                if (!refToIdMap.TryGetValue((payout.RefId ?? "").Trim(), out idYeuCau))
+                    continue;
+
+                decimal current = 0m;
+                if (daChiTraTheoYeuCau.ContainsKey(idYeuCau))
+                    current = daChiTraTheoYeuCau[idYeuCau];
+                daChiTraTheoYeuCau[idYeuCau] = current + (payout.SoDiem ?? 0m);
+            }
+        }
+
         var rows = rowsRaw.Select(p => new UuDaiYeuCauRowView
         {
+            SoDaChiTra = daChiTraTheoYeuCau.ContainsKey(p.IdYeuCauRut) ? daChiTraTheoYeuCau[p.IdYeuCauRut] : 0m,
             IdYeuCauRut = p.IdYeuCauRut,
             IdShort = p.IdYeuCauRut.ToString().Substring(0, 8).ToUpper(),
             ProfileCode = profileCode,
@@ -660,6 +713,17 @@ public partial class admin_lich_su_chuyen_diem_Default : System.Web.UI.Page
             NguoiDuyet = p.NguoiDuyet,
             GhiChu = p.GhiChu
         }).ToList();
+
+        foreach (var row in rows)
+        {
+            row.SoConLaiChiTra = row.TongQuyen - row.SoDaChiTra;
+            if (row.SoConLaiChiTra < 0m) row.SoConLaiChiTra = 0m;
+
+            bool daDuyet = row.TrangThaiCode == HanhViGhiNhanHoSo_cl.TrangThaiDaDuyet;
+            row.DaChiTra = hoSoCanChiTra && daDuyet && row.SoConLaiChiTra <= 0m;
+            row.CanChiTra = hoSoCanChiTra && daDuyet && row.SoConLaiChiTra > 0m;
+            row.TrangThaiUiCode = row.DaChiTra ? "3" : row.TrangThaiCode;
+        }
 
         if (key != "")
         {
@@ -838,6 +902,68 @@ public partial class admin_lich_su_chuyen_diem_Default : System.Web.UI.Page
                 show_main();
                 up_main.Update();
                 Notifi("Đã từ chối yêu cầu ghi nhận hành vi cho " + HanhViGhiNhanHoSo_cl.GetTenHoSoByProfile(profileCode) + ".");
+            }
+            catch (Exception ex)
+            {
+                tran.Rollback();
+                SafeLog(ex);
+                Alert("Lỗi hệ thống: " + ex.Message);
+            }
+        }
+    }
+
+    protected void but_chitra_yeucau_hanhvi_Click(object sender, EventArgs e)
+    {
+        string activeTab = GetActiveTab();
+        if (activeTab != TabLaoDong && activeTab != TabGanKet)
+        {
+            Alert("Tab hiện tại không có chức năng chi trả.");
+            return;
+        }
+
+        Button btn = sender as Button;
+        if (btn == null) return;
+
+        Guid idYeuCau;
+        if (!Guid.TryParse(btn.CommandArgument, out idYeuCau))
+        {
+            Alert("Mã yêu cầu không hợp lệ.");
+            return;
+        }
+
+        int profileCode = GetProfileCodeByTab(activeTab);
+        string currentUser = GetCurrentUser();
+        using (dbDataContext db = new dbDataContext())
+        {
+            if (!CanAccessTab(db, currentUser, activeTab))
+            {
+                Alert("Bạn không có quyền chi trả cho " + HanhViGhiNhanHoSo_cl.GetTenHoSoByProfile(profileCode) + ".");
+                return;
+            }
+
+            db.Connection.Open();
+            var tran = db.Connection.BeginTransaction();
+            db.Transaction = tran;
+
+            try
+            {
+                string msg;
+                bool ok = HanhViGhiNhanHoSo_cl.ChiTraYeuCau(db, idYeuCau, profileCode, currentUser, out msg);
+                if (!ok)
+                {
+                    tran.Rollback();
+                    Alert(msg);
+                    return;
+                }
+
+                db.SubmitChanges();
+                tran.Commit();
+
+                show_main();
+                up_main.Update();
+                Notifi(profileCode == HanhViGhiNhanHoSo_cl.Profile_LaoDong
+                    ? "Đã ghi nhận chi trả lương thành công."
+                    : "Đã ghi nhận chi trả thưởng thành công.");
             }
             catch (Exception ex)
             {

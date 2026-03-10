@@ -22,7 +22,10 @@ public partial class admin_Default : System.Web.UI.Page
     private const string ViewEdit = "edit";
     private const string ViewFilter = "filter";
     private const string ViewPermission = "phanquyen";
-    private const string ViewAffiliateTree = "afftree";
+    private const string AccountTypeAdminStaff = "Nhân viên admin";
+    private const string AccountTypeHomeDefault = "Khách hàng";
+    private const string AccountTypeShopDefault = "Gian hàng đối tác";
+    private const string PermissionManageAdminAccounts = "5";
 
     private bool IsRootAdminCurrent()
     {
@@ -32,6 +35,9 @@ public partial class admin_Default : System.Web.UI.Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
+        bool isStandaloneView = IsStandaloneViewByQuery();
+        bool isRepeaterRowPostback = IsRepeaterRowPostback();
+
         if (!IsPostBack)
         {
             Session["url_back"] = HttpContext.Current.Request.Url.AbsoluteUri;
@@ -42,16 +48,40 @@ public partial class admin_Default : System.Web.UI.Page
             else _tk = "";
 
             ViewState["taikhoan"] = _tk;
-            but_show_form_add.Visible = IsRootAdminCurrent();
 
             set_dulieu_macdinh();
+            if (TryHandleToggleHomeLockRequest())
+                return;
+
             show_main();
 
             ApplyOpenViewFromQuery();
         }
+        else if (isRepeaterRowPostback)
+        {
+            // Rebind repeater controls early on postback so row-level LinkButton events fire correctly.
+            show_main();
+        }
+
+        // Always render add button, then scope CSS decides display (admin scope shows it).
+        // This avoids runtime visibility glitches where the control was not rendered in scope=admin.
+        but_show_form_add.Visible = true;
+        but_lock_legacy_home.Visible = IsRootAdminCurrent();
+
+        if (isStandaloneView)
+            up_main.Visible = false;
 
         but_show_form_add.NavigateUrl = BuildAddUrl();
         but_show_filter.NavigateUrl = BuildFilterUrl();
+    }
+
+    private bool IsRepeaterRowPostback()
+    {
+        string eventTarget = (Request["__EVENTTARGET"] ?? "").Trim();
+        if (string.IsNullOrEmpty(eventTarget))
+            return false;
+
+        return eventTarget.StartsWith("ctl00$main$Repeater1$", StringComparison.OrdinalIgnoreCase);
     }
 
     public void set_dulieu_macdinh()
@@ -95,9 +125,116 @@ public partial class admin_Default : System.Web.UI.Page
     private string NormalizeViewMode(string raw)
     {
         string mode = (raw ?? "").Trim().ToLowerInvariant();
-        if (mode == ViewAdd || mode == ViewEdit || mode == ViewFilter || mode == ViewPermission || mode == ViewAffiliateTree)
+        if (mode == ViewAdd || mode == ViewEdit || mode == ViewFilter || mode == ViewPermission)
             return mode;
         return "";
+    }
+
+    private string NormalizeSearchText(string raw)
+    {
+        string text = (raw ?? "").Trim();
+        if (string.IsNullOrEmpty(text)) return "";
+
+        try
+        {
+            text = str_cl.remove_vietnamchar(text);
+        }
+        catch
+        {
+            // keep original text if conversion fails
+        }
+
+        text = str_cl.Remove_Blank(text).ToLowerInvariant();
+        return text;
+    }
+
+    private string NormalizeCompactToken(string raw)
+    {
+        return (raw ?? "")
+            .Replace(" ", "")
+            .Replace(".", "")
+            .Replace(",", "")
+            .Trim()
+            .ToLowerInvariant();
+    }
+
+    private bool MatchesSearchValue(string source, string keywordRaw, string keywordNormalized, string keywordCompact)
+    {
+        if (string.IsNullOrEmpty(keywordRaw)) return true;
+
+        string value = (source ?? "").Trim();
+        if (string.IsNullOrEmpty(value)) return false;
+
+        if (value.IndexOf(keywordRaw, StringComparison.OrdinalIgnoreCase) >= 0)
+            return true;
+
+        if (!string.IsNullOrEmpty(keywordCompact))
+        {
+            string valueCompact = NormalizeCompactToken(value);
+            if (!string.IsNullOrEmpty(valueCompact) && valueCompact.Contains(keywordCompact))
+                return true;
+        }
+
+        if (!string.IsNullOrEmpty(keywordNormalized))
+        {
+            string valueNormalized = NormalizeSearchText(value);
+            if (!string.IsNullOrEmpty(valueNormalized) && valueNormalized.Contains(keywordNormalized))
+                return true;
+        }
+
+        return false;
+    }
+
+    private bool IsAdminAccountManagementScope()
+    {
+        string scope = GetPageScopeForUrl();
+        return string.Equals(scope, PortalScope_cl.ScopeAdmin, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private bool CanManageAdminAccounts(dbDataContext db, string taiKhoanAdmin)
+    {
+        string tk = (taiKhoanAdmin ?? "").Trim();
+        if (string.IsNullOrEmpty(tk)) return false;
+        if (PermissionProfile_cl.IsRootAdmin(tk)) return true;
+        return check_login_cl.CheckQuyen(db, tk, PermissionManageAdminAccounts);
+    }
+
+    private bool CanManageAdminAccounts()
+    {
+        string tk = GetCurrentAdminUser();
+        if (string.IsNullOrEmpty(tk)) return false;
+        if (PermissionProfile_cl.IsRootAdmin(tk)) return true;
+
+        using (dbDataContext db = new dbDataContext())
+            return CanManageAdminAccounts(db, tk);
+    }
+
+    private bool CanCreateAdminAccountInCurrentScope()
+    {
+        // Robust scope detection for create-admin action.
+        // In some runtime flows, GetPageScopeForUrl() can be empty during redirect/open-view.
+        // Accept if either scope or filter-scope indicates admin.
+        string scope = NormalizeFilterScope(GetPageScopeForUrl());
+        if (string.Equals(scope, PortalScope_cl.ScopeAdmin, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        string scopeFromQuery = NormalizeFilterScope(Request.QueryString["scope"]);
+        if (string.Equals(scopeFromQuery, PortalScope_cl.ScopeAdmin, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        string scopeFromFilter = NormalizeFilterScope(Request.QueryString["fscope"]);
+        if (string.Equals(scopeFromFilter, PortalScope_cl.ScopeAdmin, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        string rawUrl = (Request.RawUrl ?? "").ToLowerInvariant();
+        return rawUrl.Contains("scope=admin") || rawUrl.Contains("fscope=admin");
+    }
+
+    protected bool IsStandaloneViewByQuery()
+    {
+        string view = NormalizeViewMode(Request.QueryString["view"]);
+        string edit = (Request.QueryString["edit"] ?? "").Trim();
+        return !string.IsNullOrEmpty(view) || !string.IsNullOrEmpty(edit);
     }
 
     private string GetPageScopeForUrl()
@@ -106,6 +243,18 @@ public partial class admin_Default : System.Web.UI.Page
         if (!string.IsNullOrEmpty(scope)) return scope;
         scope = NormalizeFilterScope(ViewState["filter_scope"] as string);
         return scope;
+    }
+
+    protected string GetAccountListScopeCssClass()
+    {
+        string scope = GetPageScopeForUrl();
+        if (string.Equals(scope, "home", StringComparison.OrdinalIgnoreCase))
+            return "scope-home";
+        if (string.Equals(scope, "shop", StringComparison.OrdinalIgnoreCase))
+            return "scope-shop";
+        if (string.Equals(scope, "admin", StringComparison.OrdinalIgnoreCase))
+            return "scope-admin";
+        return "scope-all";
     }
 
     private string BuildListUrl(string overrideFilterType = null, string overrideFilterScope = null)
@@ -125,7 +274,7 @@ public partial class admin_Default : System.Web.UI.Page
         if (!string.IsNullOrEmpty(filterScope))
             query.Add("fscope=" + HttpUtility.UrlEncode(filterScope));
 
-        return "/admin/quan-ly-tai-khoan/default.aspx" + (query.Count > 0 ? "?" + string.Join("&", query) : "");
+        return "/admin/quan-ly-tai-khoan/Default.aspx" + (query.Count > 0 ? "?" + string.Join("&", query) : "");
     }
 
     private string BuildViewUrl(string viewMode, string taiKhoan = "")
@@ -156,7 +305,7 @@ public partial class admin_Default : System.Web.UI.Page
                 query.Add("tk=" + HttpUtility.UrlEncode(tk));
         }
 
-        return "/admin/quan-ly-tai-khoan/default.aspx?" + string.Join("&", query);
+        return "/admin/quan-ly-tai-khoan/Default.aspx?" + string.Join("&", query);
     }
 
     public string BuildAddUrl()
@@ -176,18 +325,131 @@ public partial class admin_Default : System.Web.UI.Page
         return BuildViewUrl(ViewPermission, tk);
     }
 
-    public string BuildAffiliateTreeUrl(object taiKhoanObj)
-    {
-        string tk = (taiKhoanObj ?? "").ToString().Trim();
-        if (string.IsNullOrEmpty(tk)) return "#";
-        return BuildViewUrl(ViewAffiliateTree, tk);
-    }
-
     public string BuildEditUrl(object taiKhoanObj)
     {
         string tk = (taiKhoanObj ?? "").ToString().Trim();
         if (string.IsNullOrEmpty(tk)) return "#";
         return BuildViewUrl(ViewEdit, tk);
+    }
+
+    public string BuildToggleHomeLockUrl(object taiKhoanObj)
+    {
+        string tk = (taiKhoanObj ?? "").ToString().Trim();
+        if (string.IsNullOrEmpty(tk))
+            return "#";
+
+        string url = BuildListUrl();
+        string sep = url.Contains("?") ? "&" : "?";
+        return url
+            + sep + "toggle_home_lock=1"
+            + "&tk=" + HttpUtility.UrlEncode(tk)
+            + "&r=" + DateTime.UtcNow.Ticks.ToString();
+    }
+
+    private bool TryHandleToggleHomeLockRequest()
+    {
+        string toggle = (Request.QueryString["toggle_home_lock"] ?? "").Trim();
+        if (toggle != "1")
+            return false;
+
+        if (!IsRootAdminCurrent())
+        {
+            Session["thongbao"] = thongbao_class.metro_notifi_onload(
+                "Thông báo",
+                "Chỉ admin gốc được phép khóa/mở khóa tài khoản Home.",
+                "1800",
+                "warning");
+            Response.Redirect(BuildListUrl(), false);
+            Context.ApplicationInstance.CompleteRequest();
+            return true;
+        }
+
+        string taiKhoan = (Request.QueryString["tk"] ?? "").Trim();
+        if (string.IsNullOrEmpty(taiKhoan))
+        {
+            Session["thongbao"] = thongbao_class.metro_notifi_onload(
+                "Thông báo",
+                "Không xác định được tài khoản cần khóa/mở.",
+                "1500",
+                "warning");
+            Response.Redirect(BuildListUrl(), false);
+            Context.ApplicationInstance.CompleteRequest();
+            return true;
+        }
+
+        try
+        {
+            using (dbDataContext db = new dbDataContext())
+            {
+                taikhoan_tb acc = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == taiKhoan);
+                if (acc == null)
+                {
+                    acc = db.taikhoan_tbs
+                        .AsEnumerable()
+                        .FirstOrDefault(p => string.Equals((p.taikhoan ?? "").Trim(), taiKhoan, StringComparison.OrdinalIgnoreCase));
+                }
+
+                if (acc == null)
+                {
+                    Session["thongbao"] = thongbao_class.metro_notifi_onload(
+                        "Thông báo",
+                        "Không tìm thấy tài khoản.",
+                        "1500",
+                        "warning");
+                    Response.Redirect(BuildListUrl(), false);
+                    Context.ApplicationInstance.CompleteRequest();
+                    return true;
+                }
+
+                if (!AccountVisibility_cl.CanToggleHomeLock(acc))
+                {
+                    Session["thongbao"] = thongbao_class.metro_notifi_onload(
+                        "Thông báo",
+                        "Chỉ áp dụng khóa/mở khóa với tài khoản Home.",
+                        "1500",
+                        "warning");
+                    Response.Redirect(BuildListUrl(), false);
+                    Context.ApplicationInstance.CompleteRequest();
+                    return true;
+                }
+
+                bool lockNow = acc.block != true;
+                acc.block = lockNow;
+                db.SubmitChanges();
+
+                int visiblePostCount = db.BaiViet_tbs.Count(p =>
+                    p.nguoitao == acc.taikhoan
+                    && p.phanloai == "sanpham"
+                    && p.bin == false);
+
+                string msg = lockNow
+                    ? ("Đã khóa Home tài khoản " + acc.taikhoan + ". Tin đang hiển thị bị ảnh hưởng: " + visiblePostCount.ToString("#,##0") + ".")
+                    : ("Đã mở khóa Home tài khoản " + acc.taikhoan + ".");
+
+                Session["thongbao"] = thongbao_class.metro_notifi_onload(
+                    "Thông báo",
+                    msg,
+                    "1800",
+                    lockNow ? "warning" : "success");
+            }
+        }
+        catch (Exception _ex)
+        {
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk)) _tk = mahoa_cl.giaima_Bcorn(_tk);
+            else _tk = "";
+            Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
+
+            Session["thongbao"] = thongbao_class.metro_notifi_onload(
+                "Thông báo",
+                "Có lỗi khi cập nhật trạng thái khóa Home.",
+                "1800",
+                "alert");
+        }
+
+        Response.Redirect(BuildListUrl(), false);
+        Context.ApplicationInstance.CompleteRequest();
+        return true;
     }
 
     private void ApplyOpenViewFromQuery()
@@ -239,16 +501,6 @@ public partial class admin_Default : System.Web.UI.Page
             return;
         }
 
-        if (view == ViewAffiliateTree)
-        {
-            if (string.IsNullOrEmpty(targetTk))
-            {
-                up_main.Visible = true;
-                return;
-            }
-            ShowAffiliateTreePopup(targetTk);
-            return;
-        }
     }
 
     private string GetCurrentAdminUser()
@@ -263,45 +515,29 @@ public partial class admin_Default : System.Web.UI.Page
         return string.Equals(scope, PortalScope_cl.ScopeHome, StringComparison.OrdinalIgnoreCase);
     }
 
-    private int GetGiaTriByCap(taikhoan_tb acc, int cap)
+    private taikhoan_tb FindAccountByUsername(dbDataContext db, string taiKhoan)
     {
-        if (acc == null) return 0;
-        if (cap == 1) return acc.HeThongSanPham_QuyenLoi_MoVi_Cap1_15_9_6 ?? 0;
-        if (cap == 2) return acc.HeThongSanPham_QuyenLoi_MoVi_Cap2_25_15_10 ?? 0;
-        if (cap == 3) return acc.HeThongSanPham_QuyenLoi_MoVi_Cap3_10_6_4 ?? 0;
-        return 0;
-    }
+        if (db == null) return null;
+        string tk = (taiKhoan ?? "").Trim();
+        if (tk == "") return null;
 
-    private int NormalizeGiaTriForCap(int cap, int? rawGiaTri)
-    {
-        int giaTri = rawGiaTri ?? 0;
-        if (cap == 1)
-        {
-            if (giaTri == 15 || giaTri == 9 || giaTri == 6) return giaTri;
-            return 15;
-        }
-        if (cap == 2)
-        {
-            if (giaTri == 10 || giaTri == 15 || giaTri == 25) return giaTri;
-            return 10;
-        }
-        if (cap == 3)
-        {
-            if (giaTri == 10 || giaTri == 6 || giaTri == 4) return giaTri;
-            return 10;
-        }
-        return 0;
+        taikhoan_tb acc = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == tk);
+        if (acc != null) return acc;
+
+        return db.taikhoan_tbs
+            .AsEnumerable()
+            .FirstOrDefault(p => string.Equals((p.taikhoan ?? "").Trim(), tk, StringComparison.OrdinalIgnoreCase));
     }
 
     private int GetCurrentTierFromAccountForEdit(dbDataContext db, taikhoan_tb acc)
     {
-        if (acc == null) return TierHome_cl.Tier0;
+        if (acc == null) return TierHome_cl.Tier1;
+
+        int tierFromPhanLoai = TierHome_cl.GetTierFromPhanLoai(acc.phanloai);
+        if (tierFromPhanLoai > TierHome_cl.Tier0) return tierFromPhanLoai;
 
         int tierFromAccount = TierHome_cl.GetTierFromHanhVi(TierHome_cl.GetCurrentHanhViFromAccount(acc));
         if (tierFromAccount > TierHome_cl.Tier0) return tierFromAccount;
-
-        int tierFromHistory = TierHome_cl.TinhTierHome(db, acc.taikhoan);
-        if (tierFromHistory > TierHome_cl.Tier0) return tierFromHistory;
 
         return TierHome_cl.Tier1;
     }
@@ -333,34 +569,36 @@ public partial class admin_Default : System.Web.UI.Page
             PermissionProfile_cl.HoSoGanKet);
     }
 
-    private void ApplyTierToHomeAccount(taikhoan_tb acc, int targetTier, out int newCap, out int newGiaTri)
+    private void ResetHomeHanhVi(taikhoan_tb acc)
     {
-        newCap = 1;
-        newGiaTri = 15;
         if (acc == null) return;
 
-        if (targetTier >= TierHome_cl.Tier3)
-        {
-            newCap = 3;
-            newGiaTri = NormalizeGiaTriForCap(3, acc.HeThongSanPham_QuyenLoi_MoVi_Cap3_10_6_4);
-            acc.HeThongSanPham_Cap123 = 3;
-            acc.HeThongSanPham_QuyenLoi_MoVi_Cap3_10_6_4 = newGiaTri;
-            return;
-        }
+        acc.HeThongSanPham_Cap123 = 0;
+        acc.HeThongSanPham_QuyenLoi_MoVi_Cap1_15_9_6 = null;
+        acc.HeThongSanPham_QuyenLoi_MoVi_Cap2_25_15_10 = null;
+        acc.HeThongSanPham_QuyenLoi_MoVi_Cap3_10_6_4 = null;
+    }
 
-        if (targetTier >= TierHome_cl.Tier2)
-        {
-            newCap = 2;
-            newGiaTri = NormalizeGiaTriForCap(2, acc.HeThongSanPham_QuyenLoi_MoVi_Cap2_25_15_10);
-            acc.HeThongSanPham_Cap123 = 2;
-            acc.HeThongSanPham_QuyenLoi_MoVi_Cap2_25_15_10 = newGiaTri;
-            return;
-        }
+    private void CancelPendingHanhViRequests(dbDataContext db, string taiKhoan, string nguoiDuyet, string ghiChu)
+    {
+        if (db == null || string.IsNullOrWhiteSpace(taiKhoan)) return;
 
-        newCap = 1;
-        newGiaTri = NormalizeGiaTriForCap(1, acc.HeThongSanPham_QuyenLoi_MoVi_Cap1_15_9_6);
-        acc.HeThongSanPham_Cap123 = 1;
-        acc.HeThongSanPham_QuyenLoi_MoVi_Cap1_15_9_6 = newGiaTri;
+        var pending = db.YeuCau_HeThongSanPham_tbs
+            .Where(x => x.taikhoan == taiKhoan && x.TrangThai == 0)
+            .ToList();
+
+        DateTime now = AhaTime_cl.Now;
+        string note = (ghiChu ?? "").Trim();
+        if (string.IsNullOrEmpty(note))
+            note = "Yêu cầu bị huỷ do admin thay đổi tầng hồ sơ.";
+
+        foreach (var yc in pending)
+        {
+            yc.TrangThai = 2;
+            yc.NgayDuyet = now;
+            yc.NguoiDuyet = nguoiDuyet;
+            yc.GhiChuAdmin = note;
+        }
     }
 
     #region main - phân trang - tìm kiếm
@@ -392,17 +630,13 @@ public partial class admin_Default : System.Web.UI.Page
                                     ob1.ngaytao,
                                     ob1.phanloai,
                                     ob1.permission,
+                                    ob1.block,
                                     ob1.ChiPhanTram_BanDichVu_ChoSan,
                                     ob1.HeThongSanPham_Cap123,
 
                                     ob1.HeThongSanPham_QuyenLoi_MoVi_Cap1_15_9_6,
                                     ob1.HeThongSanPham_QuyenLoi_MoVi_Cap2_25_15_10,
                                     ob1.HeThongSanPham_QuyenLoi_MoVi_Cap3_10_6_4,
-
-
-
-                                    // ✅ NEW: affiliate
-                                    ob1.Affiliate_tai_khoan_cap_tren
                                 }).AsQueryable();
 
                 string _filter_phanloai = NormalizeFilterAccountType(ViewState["filter_phanloai"] as string);
@@ -422,9 +656,8 @@ public partial class admin_Default : System.Web.UI.Page
                 }
 
                 string _key = GetSearchKeyword();
-                if (!string.IsNullOrEmpty(_key))
-                    list_all = list_all.Where(p => p.hoten.Contains(_key) || p.hoten_khongdau.Contains(_key) || p.taikhoan == _key || p.email == _key || p.dienthoai == _key);
-
+                string _keyNormalized = NormalizeSearchText(_key);
+                string _keyCompact = NormalizeCompactToken(_key);
                 SyncSearchInputs(_key);
 
                 var list_filtered = list_all.ToList();
@@ -439,6 +672,52 @@ public partial class admin_Default : System.Web.UI.Page
                         if (_filter_scope == "shop")
                             return string.Equals(resolvedScope, PortalScope_cl.ScopeShop, StringComparison.OrdinalIgnoreCase);
                         return string.Equals(resolvedScope, PortalScope_cl.ScopeHome, StringComparison.OrdinalIgnoreCase);
+                    }).ToList();
+                }
+
+                if (!string.IsNullOrEmpty(_key))
+                {
+                    list_filtered = list_filtered.Where(p =>
+                    {
+                        int cap = p.HeThongSanPham_Cap123 ?? 0;
+                        int giaTriHanhVi = 0;
+                        if (cap == 1) giaTriHanhVi = p.HeThongSanPham_QuyenLoi_MoVi_Cap1_15_9_6 ?? 0;
+                        else if (cap == 2) giaTriHanhVi = p.HeThongSanPham_QuyenLoi_MoVi_Cap2_25_15_10 ?? 0;
+                        else if (cap == 3) giaTriHanhVi = p.HeThongSanPham_QuyenLoi_MoVi_Cap3_10_6_4 ?? 0;
+
+                        int? loaiHanhVi = HanhVi9Cap_cl.GetLoaiHanhViByCapGiaTri(cap, giaTriHanhVi);
+                        string hanhViHienThi = loaiHanhVi.HasValue
+                            ? HanhVi9Cap_cl.GetTenHanhViTheoLoai(loaiHanhVi)
+                            : "-";
+
+                        string scope = PortalScope_cl.ResolveScope(p.taikhoan, p.phanloai, p.permission);
+                        string ngaySinh = p.ngaysinh.HasValue ? p.ngaysinh.Value.ToString("dd/MM/yyyy") : "";
+                        string ngayTao = p.ngaytao.HasValue ? p.ngaytao.Value.ToString("dd/MM/yyyy HH:mm") : "";
+                        string dongA = (p.DongA ?? 0).ToString(CultureInfo.InvariantCulture);
+                        string dongAFormatted = (p.DongA ?? 0).ToString("#,##0.##");
+                        string chiPhanTram = (p.ChiPhanTram_BanDichVu_ChoSan ?? 0).ToString(CultureInfo.InvariantCulture);
+                        string tierName = TierHome_cl.GetTenTangHome(cap);
+                        string trangThaiKhoa = (p.block == true) ? "khoa" : "mo";
+
+                        return MatchesSearchValue(p.id.ToString(), _key, _keyNormalized, _keyCompact)
+                               || MatchesSearchValue(p.taikhoan, _key, _keyNormalized, _keyCompact)
+                               || MatchesSearchValue(p.hoten, _key, _keyNormalized, _keyCompact)
+                               || MatchesSearchValue(p.hoten_khongdau, _key, _keyNormalized, _keyCompact)
+                               || MatchesSearchValue(p.dienthoai, _key, _keyNormalized, _keyCompact)
+                               || MatchesSearchValue(p.email, _key, _keyNormalized, _keyCompact)
+                               || MatchesSearchValue(p.phanloai, _key, _keyNormalized, _keyCompact)
+                               || MatchesSearchValue(scope, _key, _keyNormalized, _keyCompact)
+                               || MatchesSearchValue(tierName, _key, _keyNormalized, _keyCompact)
+                               || MatchesSearchValue(cap.ToString(), _key, _keyNormalized, _keyCompact)
+                               || MatchesSearchValue(giaTriHanhVi.ToString(), _key, _keyNormalized, _keyCompact)
+                               || MatchesSearchValue(hanhViHienThi, _key, _keyNormalized, _keyCompact)
+                               || MatchesSearchValue(ngaySinh, _key, _keyNormalized, _keyCompact)
+                               || MatchesSearchValue(ngayTao, _key, _keyNormalized, _keyCompact)
+                               || MatchesSearchValue(dongA, _key, _keyNormalized, _keyCompact)
+                               || MatchesSearchValue(dongAFormatted, _key, _keyNormalized, _keyCompact)
+                               || MatchesSearchValue(chiPhanTram, _key, _keyNormalized, _keyCompact)
+                               || MatchesSearchValue(trangThaiKhoa, _key, _keyNormalized, _keyCompact)
+                               || MatchesSearchValue(p.permission, _key, _keyNormalized, _keyCompact);
                     }).ToList();
                 }
 
@@ -457,19 +736,7 @@ public partial class admin_Default : System.Web.UI.Page
                 but_quaylai1.Enabled = current_page > 1;
 
                 var list_split = list_filtered.Skip(current_page * show - show).Take(show).ToList();
-
-                // ✅ NEW: map người giới thiệu ra text
-                var listRefAcc = list_split
-                    .Where(x => !string.IsNullOrEmpty(x.Affiliate_tai_khoan_cap_tren))
-                    .Select(x => x.Affiliate_tai_khoan_cap_tren)
-                    .Distinct()
-                    .ToList();
-
-                var dictRef = db.taikhoan_tbs
-                    .Where(x => listRefAcc.Contains(x.taikhoan))
-                    .Select(x => new { x.taikhoan, x.hoten })
-                    .ToList()
-                    .ToDictionary(x => x.taikhoan, x => x.hoten);
+                bool canManageAdminAccountsCurrent = CanManageAdminAccounts(db, GetCurrentAdminUser());
 
                 var list_show = list_split.Select(x =>
                 {
@@ -486,7 +753,12 @@ public partial class admin_Default : System.Web.UI.Page
 
                     string scope = PortalScope_cl.ResolveScope(x.taikhoan, x.phanloai, x.permission);
                     bool isAdminScope = string.Equals(scope, PortalScope_cl.ScopeAdmin, StringComparison.OrdinalIgnoreCase);
-                    bool canShowPhanQuyen = isAdminScope && !PermissionProfile_cl.IsRootAdmin(x.taikhoan);
+                    bool isHomeScope = string.Equals(scope, PortalScope_cl.ScopeHome, StringComparison.OrdinalIgnoreCase);
+                    bool canShowPhanQuyen = canManageAdminAccountsCurrent && isAdminScope && !PermissionProfile_cl.IsRootAdmin(x.taikhoan);
+                    bool isBlocked = x.block == true;
+                    bool canToggleHomeLock = IsRootAdminCurrent()
+                        && isHomeScope
+                        && !PermissionProfile_cl.IsRootAdmin(x.taikhoan);
 
                     return new
                     {
@@ -503,16 +775,15 @@ public partial class admin_Default : System.Web.UI.Page
                         x.dienthoai,
                         x.ngaytao,
                         x.phanloai,
+                        x.block,
                         x.ChiPhanTram_BanDichVu_ChoSan,
 
                         HanhVi_HienThi = hanhViHienThi,
                         IsAdminScope = isAdminScope,
+                        IsHomeScope = isHomeScope,
+                        IsBlocked = isBlocked,
+                        CanToggleHomeLock = canToggleHomeLock,
                         CanShowPhanQuyen = canShowPhanQuyen,
-
-                        // ✅ NEW: hiển thị người giới thiệu
-                        NguoiGioiThieu_HienThi = (string.IsNullOrEmpty(x.Affiliate_tai_khoan_cap_tren))
-                            ? "Không có"
-                            : x.Affiliate_tai_khoan_cap_tren + " - " + (dictRef.ContainsKey(x.Affiliate_tai_khoan_cap_tren) ? dictRef[x.Affiliate_tai_khoan_cap_tren] : "")
                     };
                 }).ToList();
 
@@ -628,6 +899,147 @@ public partial class admin_Default : System.Web.UI.Page
             Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
         }
     }
+
+    protected void but_toggle_home_lock_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            check_login_cl.check_login_admin("none", "none");
+
+            if (!IsRootAdminCurrent())
+            {
+                ScriptManager.RegisterStartupScript(
+                    this.Page,
+                    this.GetType(),
+                    Guid.NewGuid().ToString(),
+                    thongbao_class.metro_notifi("Thông báo", "Chỉ admin gốc được phép khóa/mở khóa tài khoản Home.", "1800", "warning"),
+                    true);
+                show_main();
+                up_main.Update();
+                return;
+            }
+
+            LinkButton button = sender as LinkButton;
+            string taiKhoan = button == null ? "" : (button.CommandArgument ?? "").Trim();
+            if (string.IsNullOrEmpty(taiKhoan))
+            {
+                ScriptManager.RegisterStartupScript(
+                    this.Page,
+                    this.GetType(),
+                    Guid.NewGuid().ToString(),
+                    thongbao_class.metro_notifi("Thông báo", "Không xác định được tài khoản cần khóa/mở.", "1500", "warning"),
+                    true);
+                show_main();
+                up_main.Update();
+                return;
+            }
+
+            using (dbDataContext db = new dbDataContext())
+            {
+                taikhoan_tb acc = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == taiKhoan);
+                if (acc == null)
+                {
+                    acc = db.taikhoan_tbs
+                        .AsEnumerable()
+                        .FirstOrDefault(p => string.Equals((p.taikhoan ?? "").Trim(), taiKhoan, StringComparison.OrdinalIgnoreCase));
+                }
+                if (acc == null)
+                {
+                    ScriptManager.RegisterStartupScript(
+                        this.Page,
+                        this.GetType(),
+                        Guid.NewGuid().ToString(),
+                        thongbao_class.metro_notifi("Thông báo", "Không tìm thấy tài khoản.", "1500", "warning"),
+                        true);
+                    show_main();
+                    up_main.Update();
+                    return;
+                }
+
+                if (!AccountVisibility_cl.CanToggleHomeLock(acc))
+                {
+                    ScriptManager.RegisterStartupScript(
+                        this.Page,
+                        this.GetType(),
+                        Guid.NewGuid().ToString(),
+                        thongbao_class.metro_notifi("Thông báo", "Chỉ áp dụng khóa/mở khóa với tài khoản Home.", "1500", "warning"),
+                        true);
+                    show_main();
+                    up_main.Update();
+                    return;
+                }
+
+                bool lockNow = acc.block != true;
+                acc.block = lockNow;
+                db.SubmitChanges();
+
+                int visiblePostCount = db.BaiViet_tbs.Count(p =>
+                    p.nguoitao == acc.taikhoan
+                    && p.phanloai == "sanpham"
+                    && p.bin == false);
+
+                string msg = lockNow
+                    ? ("Đã khóa Home tài khoản " + acc.taikhoan + ". Tin đang hiển thị bị ảnh hưởng: " + visiblePostCount.ToString("#,##0") + ".")
+                    : ("Đã mở khóa Home tài khoản " + acc.taikhoan + ".");
+
+                ScriptManager.RegisterStartupScript(
+                    this.Page,
+                    this.GetType(),
+                    Guid.NewGuid().ToString(),
+                    thongbao_class.metro_notifi("Thông báo", msg, "1800", lockNow ? "warning" : "success"),
+                    true);
+            }
+
+            show_main();
+            up_main.Update();
+        }
+        catch (Exception _ex)
+        {
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk)) _tk = mahoa_cl.giaima_Bcorn(_tk);
+            else _tk = "";
+            Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
+        }
+    }
+
+    protected void but_lock_legacy_home_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            check_login_cl.check_login_admin("none", "none");
+
+            if (!IsRootAdminCurrent())
+            {
+                Session["thongbao"] = thongbao_class.metro_notifi_onload("Thông báo", "Chỉ admin gốc được phép khóa hàng loạt tài khoản Home.", "1800", "warning");
+                Response.Redirect(BuildListUrl(), false);
+                Context.ApplicationInstance.CompleteRequest();
+                return;
+            }
+
+            using (dbDataContext db = new dbDataContext())
+            {
+                int hiddenPostCount;
+                int lockedCount = AccountVisibility_cl.LockLegacyHomeAccountsWithoutPhone(db, out hiddenPostCount);
+
+                string msg;
+                if (lockedCount <= 0)
+                    msg = "Không có tài khoản Home nào cần khóa hàng loạt.";
+                else
+                    msg = "Đã khóa " + lockedCount.ToString("#,##0") + " tài khoản Home không đủ điều kiện đăng nhập bằng số điện thoại. Tin bị ảnh hưởng: " + hiddenPostCount.ToString("#,##0") + ".";
+
+                Session["thongbao"] = thongbao_class.metro_notifi_onload("Thông báo", msg, "2400", lockedCount <= 0 ? "warning" : "success");
+                Response.Redirect(BuildListUrl(), false);
+                Context.ApplicationInstance.CompleteRequest();
+            }
+        }
+        catch (Exception _ex)
+        {
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk)) _tk = mahoa_cl.giaima_Bcorn(_tk);
+            else _tk = "";
+            Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
+        }
+    }
     #endregion
 
     #region FILTER (NEW)
@@ -701,40 +1113,12 @@ public partial class admin_Default : System.Web.UI.Page
         }
     }
     #endregion
-    #region ✅ NEW: bind dropdown Người giới thiệu
+    #region ref (Home-only)
     public void bind_dropdown_nguoi_gioi_thieu(string selectedValue = "")
     {
-        using (dbDataContext db = new dbDataContext())
-        {
-            var list = db.taikhoan_tbs
-                .OrderBy(p => p.taikhoan)
-                .Select(p => new
-                {
-                    p.taikhoan,
-                    p.hoten
-                }).ToList();
-
-            ddl_nguoi_gioi_thieu.Items.Clear();
-
-            ddl_nguoi_gioi_thieu.Items.Add(new ListItem("Không có", ""));
-
-            foreach (var item in list)
-            {
-                string text = item.taikhoan + " - " + item.hoten;
-                ddl_nguoi_gioi_thieu.Items.Add(new ListItem(text, item.taikhoan));
-            }
-
-            if (!string.IsNullOrEmpty(selectedValue))
-            {
-                var li = ddl_nguoi_gioi_thieu.Items.FindByValue(selectedValue);
-                if (li != null) ddl_nguoi_gioi_thieu.SelectedValue = selectedValue;
-                else ddl_nguoi_gioi_thieu.SelectedValue = "";
-            }
-            else
-            {
-                ddl_nguoi_gioi_thieu.SelectedValue = "";
-            }
-        }
+        ddl_nguoi_gioi_thieu.Items.Clear();
+        ddl_nguoi_gioi_thieu.Items.Add(new ListItem("Không áp dụng ở Admin/Shop", ""));
+        ddl_nguoi_gioi_thieu.SelectedValue = "";
     }
     #endregion
 
@@ -751,12 +1135,21 @@ public partial class admin_Default : System.Web.UI.Page
 
         ddl_cap_sp.SelectedValue = "1";
         ddl_cap_sp.Enabled = false;
+        pn_tang_home.Visible = false;
+
+        txt_reset_home_password.Text = "";
+        txt_reset_home_pin.Text = "";
+        txt_reset_shop_password.Text = "";
+        lb_reset_scope_note.Text = "";
+        pn_reset_security_actions.Visible = false;
+        pn_reset_home_credentials.Visible = false;
+        pn_reset_shop_credentials.Visible = false;
 
 
 
 
 
-        ddl_nguoi_gioi_thieu.Items.Clear();
+        bind_dropdown_nguoi_gioi_thieu("");
 
         ViewState["add_edit"] = null;
         ViewState["id_edit"] = null;
@@ -765,8 +1158,49 @@ public partial class admin_Default : System.Web.UI.Page
         Label2.Text = "";
         txt_taikhoan.ReadOnly = false;
 
-        DropDownList1.Enabled = true;
-        ddl_nguoi_gioi_thieu.Enabled = true;
+        BindAccountTypeDropdownForAdminCreate();
+        pn_loai_taikhoan.Visible = false;
+        DropDownList1.Enabled = false;
+        ddl_nguoi_gioi_thieu.Enabled = false;
+    }
+
+    private void BindAccountTypeDropdownForAdminCreate()
+    {
+        DropDownList1.Items.Clear();
+        DropDownList1.Items.Add(new ListItem(AccountTypeAdminStaff, AccountTypeAdminStaff));
+        DropDownList1.Items.Add(new ListItem(AccountType_cl.Treasury, AccountType_cl.Treasury));
+        DropDownList1.SelectedValue = AccountTypeAdminStaff;
+    }
+
+    private void BindAccountTypeDropdownForScopedReadonly(taikhoan_tb acc, string resolvedScope)
+    {
+        string scope = (resolvedScope ?? "").Trim().ToLowerInvariant();
+        string displayType = "";
+
+        if (scope == PortalScope_cl.ScopeHome)
+        {
+            displayType = (acc != null ? (acc.phanloai ?? "").Trim() : "");
+            if (string.IsNullOrWhiteSpace(displayType) || string.Equals(displayType, AccountTypeAdminStaff, StringComparison.OrdinalIgnoreCase) || AccountType_cl.IsTreasury(displayType))
+                displayType = AccountTypeHomeDefault;
+        }
+        else if (scope == PortalScope_cl.ScopeShop)
+        {
+            displayType = AccountTypeShopDefault;
+        }
+        else
+        {
+            string normalized = AccountType_cl.Normalize(acc != null ? acc.phanloai : "");
+            if (string.IsNullOrWhiteSpace(normalized))
+                normalized = AccountTypeAdminStaff;
+
+            bool validAdminType = string.Equals(normalized, AccountTypeAdminStaff, StringComparison.OrdinalIgnoreCase)
+                || AccountType_cl.IsTreasury(normalized);
+            displayType = validAdminType ? normalized : AccountTypeAdminStaff;
+        }
+
+        DropDownList1.Items.Clear();
+        DropDownList1.Items.Add(new ListItem(displayType, displayType));
+        DropDownList1.SelectedIndex = 0;
     }
 
     private void ShowFilterForm()
@@ -786,9 +1220,9 @@ public partial class admin_Default : System.Web.UI.Page
 
     private void ShowAddForm()
     {
-        if (!IsRootAdminCurrent())
+        if (!CanCreateAdminAccountInCurrentScope())
         {
-            Session["thongbao"] = thongbao_class.metro_notifi_onload("Thông báo", "Chỉ tài khoản admin gốc mới được tạo tài khoản ở trang admin.", "1000", "warning");
+            Session["thongbao"] = thongbao_class.metro_notifi_onload("Thông báo", "Chỉ thao tác trong tab quản lý tài khoản admin mới được tạo tài khoản admin.", "1000", "warning");
             Response.Redirect(BuildListUrl(), false);
             Context.ApplicationInstance.CompleteRequest();
             return;
@@ -797,6 +1231,7 @@ public partial class admin_Default : System.Web.UI.Page
         reset_control_add_edit();
         ddl_cap_sp.SelectedValue = "1";
         ddl_cap_sp.Enabled = false;
+        pn_tang_home.Visible = false;
 
         PlaceHolder1.Visible = true;
         ViewState["add_edit"] = "add";
@@ -804,9 +1239,10 @@ public partial class admin_Default : System.Web.UI.Page
         but_add_edit.Text = "THÊM MỚI";
 
         bind_dropdown_nguoi_gioi_thieu("");
-
+        BindAccountTypeDropdownForAdminCreate();
+        pn_loai_taikhoan.Visible = true;
         DropDownList1.Enabled = true;
-        ddl_nguoi_gioi_thieu.Enabled = true;
+        ddl_nguoi_gioi_thieu.Enabled = false;
 
         pn_add.Visible = true;
         up_add.Update();
@@ -817,10 +1253,10 @@ public partial class admin_Default : System.Web.UI.Page
         try
         {
             check_login_cl.check_login_admin("none", "none");
-            if (!IsRootAdminCurrent())
+            if (!CanCreateAdminAccountInCurrentScope())
             {
                 ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                    thongbao_class.metro_dialog("Thông báo", "Chỉ tài khoản admin gốc mới được tạo tài khoản ở trang admin.", "false", "false", "OK", "alert", ""), true);
+                    thongbao_class.metro_dialog("Thông báo", "Chỉ thao tác trong tab quản lý tài khoản admin mới được tạo tài khoản admin.", "false", "false", "OK", "alert", ""), true);
                 return;
             }
             Response.Redirect(BuildAddUrl(), false);
@@ -892,13 +1328,7 @@ public partial class admin_Default : System.Web.UI.Page
 
         using (dbDataContext db = new dbDataContext())
         {
-            var q = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == _tk_edit);
-            if (q == null)
-            {
-                q = db.taikhoan_tbs
-                    .AsEnumerable()
-                    .FirstOrDefault(p => string.Equals((p.taikhoan ?? "").Trim(), _tk_edit, StringComparison.OrdinalIgnoreCase));
-            }
+            var q = FindAccountByUsername(db, _tk_edit);
             if (q == null)
             {
                 ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
@@ -909,7 +1339,9 @@ public partial class admin_Default : System.Web.UI.Page
             ViewState["id_edit"] = q.taikhoan;
 
             string tkAdmin = GetCurrentAdminUser();
-            bool isHomeAccount = IsHomeScopeAccount(q);
+            string resolvedScope = PortalScope_cl.ResolveScope(q.taikhoan, q.phanloai, q.permission);
+            bool isHomeAccount = string.Equals(resolvedScope, PortalScope_cl.ScopeHome, StringComparison.OrdinalIgnoreCase);
+            bool isShopAccount = string.Equals(resolvedScope, PortalScope_cl.ScopeShop, StringComparison.OrdinalIgnoreCase);
             int currentTier = GetCurrentTierFromAccountForEdit(db, q);
             if (currentTier < TierHome_cl.Tier1) currentTier = TierHome_cl.Tier1;
             if (currentTier > TierHome_cl.Tier3) currentTier = TierHome_cl.Tier3;
@@ -918,6 +1350,7 @@ public partial class admin_Default : System.Web.UI.Page
             var liCap = ddl_cap_sp.Items.FindByValue(tierValue);
             ddl_cap_sp.SelectedValue = (liCap != null) ? tierValue : "1";
             ddl_cap_sp.Enabled = isHomeAccount && CanAdjustAnyHomeTier(db, tkAdmin);
+            pn_tang_home.Visible = isHomeAccount;
 
             txt_taikhoan.Text = q.taikhoan;
             txt_taikhoan.ReadOnly = true;
@@ -926,30 +1359,266 @@ public partial class admin_Default : System.Web.UI.Page
             txt_email.Text = q.email;
             txt_ngaysinh.Text = q.ngaysinh != null ? q.ngaysinh.Value.ToString("dd/MM/yyyy") : "";
 
-            if (!string.IsNullOrEmpty(q.phanloai))
-            {
-                string selectedType = AccountType_cl.Normalize(q.phanloai);
-                var liType = DropDownList1.Items.FindByValue(selectedType);
-                if (liType == null)
-                {
-                    DropDownList1.Items.Add(new ListItem(selectedType, selectedType));
-                    liType = DropDownList1.Items.FindByValue(selectedType);
-                }
-                if (liType != null) DropDownList1.SelectedValue = selectedType;
-            }
+            BindAccountTypeDropdownForScopedReadonly(q, resolvedScope);
+            // Loại tài khoản không còn là trường chỉnh sửa ở màn hình chi tiết.
+            // Chỉ giữ khi tạo mới tài khoản admin.
+            pn_loai_taikhoan.Visible = false;
 
             string anh = q.anhdaidien;
             if (string.IsNullOrEmpty(anh)) anh = "/uploads/images/macdinh.jpg";
             Label2.Text = "<div class='mt-2'><small>Ảnh hiện tại</small></div><img width='100' src='" + anh + "' />";
             Button2.Visible = (anh != "/uploads/images/macdinh.jpg");
 
-            bind_dropdown_nguoi_gioi_thieu(q.Affiliate_tai_khoan_cap_tren);
+            bind_dropdown_nguoi_gioi_thieu("");
             DropDownList1.Enabled = false;
             ddl_nguoi_gioi_thieu.Enabled = false;
+
+            pn_reset_security_actions.Visible = isHomeAccount || isShopAccount;
+            pn_reset_home_credentials.Visible = isHomeAccount;
+            pn_reset_shop_credentials.Visible = isShopAccount;
+            lb_reset_scope_note.Text = isHomeAccount
+                ? "Phạm vi hiện tại: Home. Có thể reset mật khẩu/PIN tạm thời."
+                : (isShopAccount ? "Phạm vi hiện tại: Shop. Có thể reset mật khẩu tạm thời." : "");
+
+            string schemaError;
+            if (pn_reset_security_actions.Visible && !AccountResetSecurity_cl.EnsureSchemaSafe(db, out schemaError))
+            {
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                    thongbao_class.metro_notifi("Thông báo", "Không thể khởi tạo schema reset bảo mật: " + schemaError, "1800", "warning"), true);
+            }
         }
 
         pn_add.Visible = true;
         up_add.Update();
+    }
+
+    private bool TryGetEditingAccountWithScope(
+        dbDataContext db,
+        out taikhoan_tb account,
+        out string scope,
+        out string taiKhoan,
+        bool requiredHome,
+        bool requiredShop,
+        out string error)
+    {
+        account = null;
+        scope = "";
+        taiKhoan = "";
+        error = "";
+
+        if (ViewState["id_edit"] == null)
+        {
+            error = "Không xác định được tài khoản cần thao tác. Vui lòng mở lại trang chi tiết.";
+            return false;
+        }
+
+        taiKhoan = (ViewState["id_edit"] ?? "").ToString().Trim();
+        if (taiKhoan == "")
+        {
+            error = "Không xác định được tài khoản cần thao tác.";
+            return false;
+        }
+
+        account = FindAccountByUsername(db, taiKhoan);
+        if (account == null)
+        {
+            error = "Không tìm thấy tài khoản cần thao tác.";
+            return false;
+        }
+
+        scope = PortalScope_cl.ResolveScope(account.taikhoan, account.phanloai, account.permission);
+        bool isHome = string.Equals(scope, PortalScope_cl.ScopeHome, StringComparison.OrdinalIgnoreCase);
+        bool isShop = string.Equals(scope, PortalScope_cl.ScopeShop, StringComparison.OrdinalIgnoreCase);
+
+        if (requiredHome && !isHome)
+        {
+            error = "Chức năng này chỉ áp dụng cho tài khoản Home.";
+            return false;
+        }
+
+        if (requiredShop && !isShop)
+        {
+            error = "Chức năng này chỉ áp dụng cho tài khoản Shop.";
+            return false;
+        }
+
+        return true;
+    }
+
+    private void NotifyResetResultAndReload(string taiKhoan, string message, string style)
+    {
+        Session["thongbao"] = thongbao_class.metro_notifi_onload("Thông báo", message, "1800", style);
+        Response.Redirect(BuildViewUrl(ViewEdit, taiKhoan), false);
+        Context.ApplicationInstance.CompleteRequest();
+    }
+
+    protected void but_reset_home_password_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            check_login_cl.check_login_admin("none", "none");
+            string passTam = (txt_reset_home_password.Text ?? "").Trim();
+            if (string.IsNullOrEmpty(passTam))
+            {
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                    thongbao_class.metro_dialog("Thông báo", "Vui lòng nhập mật khẩu tạm thời cho Home.", "false", "false", "OK", "alert", ""), true);
+                return;
+            }
+
+            using (dbDataContext db = new dbDataContext())
+            {
+                taikhoan_tb account;
+                string scope;
+                string tk;
+                string error;
+                if (!TryGetEditingAccountWithScope(db, out account, out scope, out tk, true, false, out error))
+                {
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                        thongbao_class.metro_dialog("Thông báo", error, "false", "false", "OK", "alert", ""), true);
+                    return;
+                }
+
+                string actor = GetCurrentAdminUser();
+                string resetError;
+                if (!AccountResetSecurity_cl.ResetHomePassword(db, tk, passTam, actor, out resetError))
+                {
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                        thongbao_class.metro_dialog("Thông báo", "Reset mật khẩu Home thất bại: " + resetError, "false", "false", "OK", "alert", ""), true);
+                    return;
+                }
+
+                Helper_DongA_cl.AddNotify(
+                    db,
+                    actor,
+                    tk,
+                    "Admin đã cấp mật khẩu tạm thời mới. Vui lòng đăng nhập bằng mật khẩu tạm thời và đổi lại ngay.",
+                    "/home/DoiMatKhau.aspx?force=1");
+                db.SubmitChanges();
+
+                txt_reset_home_password.Text = "";
+                NotifyResetResultAndReload(tk, "Đã reset mật khẩu Home tạm thời cho tài khoản " + tk + ".", "success");
+            }
+        }
+        catch (Exception _ex)
+        {
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk)) _tk = mahoa_cl.giaima_Bcorn(_tk);
+            else _tk = "";
+            Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
+        }
+    }
+
+    protected void but_reset_home_pin_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            check_login_cl.check_login_admin("none", "none");
+            string pinTam = (txt_reset_home_pin.Text ?? "").Trim();
+            if (!PinSecurity_cl.IsValidPinFormat(pinTam))
+            {
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                    thongbao_class.metro_dialog("Thông báo", "PIN tạm thời phải gồm đúng 4 chữ số.", "false", "false", "OK", "alert", ""), true);
+                return;
+            }
+
+            using (dbDataContext db = new dbDataContext())
+            {
+                taikhoan_tb account;
+                string scope;
+                string tk;
+                string error;
+                if (!TryGetEditingAccountWithScope(db, out account, out scope, out tk, true, false, out error))
+                {
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                        thongbao_class.metro_dialog("Thông báo", error, "false", "false", "OK", "alert", ""), true);
+                    return;
+                }
+
+                string actor = GetCurrentAdminUser();
+                string resetError;
+                string pinHash = PinSecurity_cl.HashPin(pinTam);
+                if (!AccountResetSecurity_cl.ResetHomePin(db, tk, pinHash, actor, out resetError))
+                {
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                        thongbao_class.metro_dialog("Thông báo", "Reset PIN Home thất bại: " + resetError, "false", "false", "OK", "alert", ""), true);
+                    return;
+                }
+
+                Helper_DongA_cl.AddNotify(
+                    db,
+                    actor,
+                    tk,
+                    "Admin đã cấp PIN tạm thời mới. Vui lòng vào mục Đổi PIN để cập nhật lại ngay.",
+                    "/home/DoiPin.aspx?force=1");
+                db.SubmitChanges();
+
+                txt_reset_home_pin.Text = "";
+                NotifyResetResultAndReload(tk, "Đã reset PIN Home tạm thời cho tài khoản " + tk + ".", "success");
+            }
+        }
+        catch (Exception _ex)
+        {
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk)) _tk = mahoa_cl.giaima_Bcorn(_tk);
+            else _tk = "";
+            Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
+        }
+    }
+
+    protected void but_reset_shop_password_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            check_login_cl.check_login_admin("none", "none");
+            string passTam = (txt_reset_shop_password.Text ?? "").Trim();
+            if (string.IsNullOrEmpty(passTam))
+            {
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                    thongbao_class.metro_dialog("Thông báo", "Vui lòng nhập mật khẩu tạm thời cho Shop.", "false", "false", "OK", "alert", ""), true);
+                return;
+            }
+
+            using (dbDataContext db = new dbDataContext())
+            {
+                taikhoan_tb account;
+                string scope;
+                string tk;
+                string error;
+                if (!TryGetEditingAccountWithScope(db, out account, out scope, out tk, false, true, out error))
+                {
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                        thongbao_class.metro_dialog("Thông báo", error, "false", "false", "OK", "alert", ""), true);
+                    return;
+                }
+
+                string actor = GetCurrentAdminUser();
+                string resetError;
+                if (!AccountResetSecurity_cl.ResetShopPassword(db, tk, passTam, actor, out resetError))
+                {
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                        thongbao_class.metro_dialog("Thông báo", "Reset mật khẩu Shop thất bại: " + resetError, "false", "false", "OK", "alert", ""), true);
+                    return;
+                }
+
+                Helper_DongA_cl.AddNotify(
+                    db,
+                    actor,
+                    tk,
+                    "Admin đã cấp mật khẩu shop tạm thời mới. Vui lòng đăng nhập và đổi lại ngay.",
+                    "/shop/doi-mat-khau?force=1");
+                db.SubmitChanges();
+
+                txt_reset_shop_password.Text = "";
+                NotifyResetResultAndReload(tk, "Đã reset mật khẩu Shop tạm thời cho tài khoản " + tk + ".", "success");
+            }
+        }
+        catch (Exception _ex)
+        {
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk)) _tk = mahoa_cl.giaima_Bcorn(_tk);
+            else _tk = "";
+            Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
+        }
     }
 
     protected void Button2_Click(object sender, EventArgs e)
@@ -994,16 +1663,13 @@ public partial class admin_Default : System.Web.UI.Page
 
 
 
-            // ✅ NEW
-            string _nguoi_gioi_thieu = ddl_nguoi_gioi_thieu.SelectedValue;
-
             using (dbDataContext db = new dbDataContext())
             {
                 bool isAddMode = ViewState["add_edit"] != null && ViewState["add_edit"].ToString() == "add";
-                if (isAddMode && !IsRootAdminCurrent())
+                if (isAddMode && !CanCreateAdminAccountInCurrentScope())
                 {
                     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                        thongbao_class.metro_dialog("Thông báo", "Chỉ tài khoản admin gốc mới được tạo tài khoản ở trang admin.", "false", "false", "OK", "alert", ""), true);
+                        thongbao_class.metro_dialog("Thông báo", "Chỉ thao tác trong tab quản lý tài khoản admin mới được tạo tài khoản admin.", "false", "false", "OK", "alert", ""), true);
                     return;
                 }
 
@@ -1023,8 +1689,7 @@ public partial class admin_Default : System.Web.UI.Page
                 // ===== ADD =====
                 if (isAddMode)
                 {
-                    bool validAdminType = string.Equals(_loaitaikhoan, "Nhân viên admin", StringComparison.OrdinalIgnoreCase)
-                        || string.Equals(_loaitaikhoan, "Cộng tác phát triển", StringComparison.OrdinalIgnoreCase)
+                    bool validAdminType = string.Equals(_loaitaikhoan, AccountTypeAdminStaff, StringComparison.OrdinalIgnoreCase)
                         || AccountType_cl.IsTreasury(_loaitaikhoan);
                     if (!validAdminType)
                     {
@@ -1056,20 +1721,7 @@ public partial class admin_Default : System.Web.UI.Page
                         return;
                     }
 
-                    // ✅ validate người giới thiệu nếu có
-                    taikhoan_tb refAcc = null;
-                    if (!string.IsNullOrEmpty(_nguoi_gioi_thieu))
-                    {
-                        refAcc = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == _nguoi_gioi_thieu);
-                        if (refAcc == null)
-                        {
-                            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                                thongbao_class.metro_dialog("Thông báo", "Tài khoản giới thiệu không tồn tại.", "false", "false", "OK", "alert", ""), true);
-                            return;
-                        }
-                    }
-
-                    string _link_qr = $"https://ahasale.vn/{_user}.info";
+                    string _link_qr = string.Format("https://ahasale.vn/{0}.info", _user);
                     List<string> dataList = new List<string>();
                     dataList.Add(_link_qr);
                     string directoryPath = Server.MapPath("~/uploads/images/qr-user/");
@@ -1125,22 +1777,10 @@ public partial class admin_Default : System.Web.UI.Page
                     _ob.email = _email;
                     _ob.DongA = 0;
 
-                    // ✅ SET affiliate theo yêu cầu
-                    if (refAcc == null)
-                    {
-                        _ob.Affiliate_tai_khoan_cap_tren = "";
-                        _ob.Affiliate_duong_dan_tuyen_tren = ",";
-                        _ob.Affiliate_cap_tuyen = 0;
-                    }
-                    else
-                    {
-                        string refPath = string.IsNullOrEmpty(refAcc.Affiliate_duong_dan_tuyen_tren) ? "," : refAcc.Affiliate_duong_dan_tuyen_tren;
-                        int refLevel = (refAcc.Affiliate_cap_tuyen == null) ? 0 : refAcc.Affiliate_cap_tuyen.Value;
-
-                        _ob.Affiliate_tai_khoan_cap_tren = refAcc.taikhoan;
-                        _ob.Affiliate_cap_tuyen = refLevel + 1;
-                        _ob.Affiliate_duong_dan_tuyen_tren = refPath + refAcc.taikhoan + ",";
-                    }
+                    // Ref chỉ dùng ở Home. Tài khoản do Admin tạo không tham gia tuyến ref.
+                    _ob.Affiliate_tai_khoan_cap_tren = "";
+                    _ob.Affiliate_cap_tuyen = 0;
+                    _ob.Affiliate_duong_dan_tuyen_tren = ",";
                     // Tài khoản admin tạo mới luôn khởi tạo ở tier 0 (chưa có hành vi).
                     _ob.HeThongSanPham_Cap123 = 0;
                     _ob.HeThongSanPham_QuyenLoi_MoVi_Cap1_15_9_6 = null;
@@ -1152,7 +1792,10 @@ public partial class admin_Default : System.Web.UI.Page
                     db.SubmitChanges();
 
                     Session["thongbao"] = thongbao_class.metro_notifi_onload("Thông báo", "Xử lý thành công.", "1000", "warning");
-                    Response.Redirect(BuildListUrl(), false);
+                    if (CanManageAdminAccounts(db, GetCurrentAdminUser()))
+                        Response.Redirect(BuildViewUrl(ViewPermission, _user), false);
+                    else
+                        Response.Redirect(BuildListUrl(), false);
                     Context.ApplicationInstance.CompleteRequest();
                     return;
                 }
@@ -1173,6 +1816,20 @@ public partial class admin_Default : System.Web.UI.Page
                         ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
                             thongbao_class.metro_dialog("Thông báo", "Không tìm thấy tài khoản cần sửa.", "false", "false", "OK", "alert", ""), true);
                         return;
+                    }
+
+                    string resolvedScope = PortalScope_cl.ResolveScope(q.taikhoan, q.phanloai, q.permission);
+                    if (string.Equals(resolvedScope, PortalScope_cl.ScopeHome, StringComparison.OrdinalIgnoreCase))
+                    {
+                        _loaitaikhoan = AccountTypeHomeDefault;
+                    }
+                    else if (string.Equals(resolvedScope, PortalScope_cl.ScopeShop, StringComparison.OrdinalIgnoreCase))
+                    {
+                        _loaitaikhoan = AccountTypeShopDefault;
+                    }
+                    else
+                    {
+                        _loaitaikhoan = AccountType_cl.IsTreasury(q.phanloai) ? AccountType_cl.Treasury : AccountTypeAdminStaff;
                     }
 
                     if (!string.IsNullOrEmpty(_email))
@@ -1219,7 +1876,7 @@ public partial class admin_Default : System.Web.UI.Page
                     }
 
                     string tkAdmin = GetCurrentAdminUser();
-                    if (IsHomeScopeAccount(q))
+                    if (string.Equals(resolvedScope, PortalScope_cl.ScopeHome, StringComparison.OrdinalIgnoreCase))
                     {
                         int currentTier = GetCurrentTierFromAccountForEdit(db, q);
                         if (currentTier < TierHome_cl.Tier1) currentTier = TierHome_cl.Tier1;
@@ -1239,32 +1896,19 @@ public partial class admin_Default : System.Web.UI.Page
                                 return;
                             }
 
-                            int oldCap = q.HeThongSanPham_Cap123 ?? 0;
-                            int oldGiaTri = GetGiaTriByCap(q, oldCap);
-
-                            int newCap;
-                            int newGiaTri;
-                            ApplyTierToHomeAccount(q, targetTier, out newCap, out newGiaTri);
                             q.phanloai = TierHome_cl.GetTenTangHome(targetTier);
-
-                            YeuCau_HeThongSanPham_tb yc = new YeuCau_HeThongSanPham_tb();
-                            yc.taikhoan = q.taikhoan;
-                            yc.CapHienTai = oldCap;
-                            yc.GiaTriHienTai = oldGiaTri;
-                            yc.CapYeuCau = newCap;
-                            yc.GiaTriYeuCau = newGiaTri;
-                            yc.TrangThai = 1;
-                            yc.NgayTao = AhaTime_cl.Now;
-                            yc.NgayDuyet = AhaTime_cl.Now;
-                            yc.NguoiDuyet = tkAdmin;
-                            yc.GhiChuAdmin = "Điều chỉnh tầng home thủ công bởi admin.";
-                            db.YeuCau_HeThongSanPham_tbs.InsertOnSubmit(yc);
+                            ResetHomeHanhVi(q);
+                            CancelPendingHanhViRequests(
+                                db,
+                                q.taikhoan,
+                                tkAdmin,
+                                "Yêu cầu bị huỷ do admin thay đổi tầng hồ sơ. Vui lòng tạo yêu cầu xác nhận hành vi mới.");
 
                             Helper_DongA_cl.AddNotify(
                                 db,
                                 tkAdmin,
                                 q.taikhoan,
-                                "Tầng hồ sơ của bạn đã được cập nhật: " + TierHome_cl.GetTenTangHome(targetTier) + ".",
+                                "Tầng hồ sơ của bạn đã được cập nhật: " + TierHome_cl.GetTenTangHome(targetTier) + ". Quyền hành vi đã được đặt lại, vui lòng gửi yêu cầu xác nhận hành vi mới.",
                                 "/home/tao-yeu-cau.aspx");
                         }
                     }
@@ -1297,6 +1941,8 @@ public partial class admin_Default : System.Web.UI.Page
         check_list_quyen_1.SelectedIndex = -1;
         check_all_quyen_hoso.Checked = false;
         check_list_quyen_hoso.SelectedIndex = -1;
+        check_all_quyen_noidung_home.Checked = false;
+        check_list_quyen_noidung_home.SelectedIndex = -1;
         ViewState["tk_phanquyen"] = null;
     }
 
@@ -1360,6 +2006,10 @@ public partial class admin_Default : System.Web.UI.Page
                 foreach (ListItem item in check_list_quyen_hoso.Items)
                     item.Selected = quyenArray.Contains(item.Value);
                 check_all_quyen_hoso.Checked = check_list_quyen_hoso.Items.Cast<ListItem>().All(i => i.Selected);
+
+                foreach (ListItem item in check_list_quyen_noidung_home.Items)
+                    item.Selected = quyenArray.Contains(item.Value);
+                check_all_quyen_noidung_home.Checked = check_list_quyen_noidung_home.Items.Cast<ListItem>().All(i => i.Selected);
             }
         }
 
@@ -1420,6 +2070,9 @@ public partial class admin_Default : System.Web.UI.Page
                 foreach (string code in check_list_quyen_hoso.Items.Cast<ListItem>().Where(i => i.Selected).Select(i => (i.Value ?? "").Trim()))
                     if (code != "") allPermissions.Add(code);
 
+                foreach (string code in check_list_quyen_noidung_home.Items.Cast<ListItem>().Where(i => i.Selected).Select(i => (i.Value ?? "").Trim()))
+                    if (code != "") allPermissions.Add(code);
+
                 string selectedPermissions = string.Join(",", allPermissions.OrderBy(x => x));
                 string targetScope = PortalScope_cl.ResolveScope(q.taikhoan, q.phanloai, q.permission);
                 if (PortalScope_cl.ContainsAnyAdminPermission(selectedPermissions) || AccountType_cl.IsTreasury(q.phanloai) || PermissionProfile_cl.IsRootAdmin(q.taikhoan))
@@ -1473,200 +2126,18 @@ public partial class admin_Default : System.Web.UI.Page
         bool allSelected = check_list_quyen_hoso.Items.Cast<ListItem>().All(i => i.Selected);
         check_all_quyen_hoso.Checked = allSelected;
     }
+
+    protected void check_all_quyen_noidung_home_CheckedChanged(object sender, EventArgs e)
+    {
+        bool isChecked = check_all_quyen_noidung_home.Checked;
+        foreach (ListItem item in check_list_quyen_noidung_home.Items) item.Selected = isChecked;
+    }
+
+    protected void check_list_quyen_noidung_home_SelectedIndexChanged(object sender, EventArgs e)
+    {
+        bool allSelected = check_list_quyen_noidung_home.Items.Cast<ListItem>().All(i => i.Selected);
+        check_all_quyen_noidung_home.Checked = allSelected;
+    }
     #endregion
-
-    protected void but_close_form_aff_tree_Click(object sender, EventArgs e)
-    {
-        Response.Redirect(BuildListUrl(), false);
-        Context.ApplicationInstance.CompleteRequest();
-    }
-
-    protected void but_xem_cay_aff_Click(object sender, EventArgs e)
-    {
-        try
-        {
-            check_login_cl.check_login_admin("none", "none");
-
-            LinkButton button = (LinkButton)sender;
-            string tk = button.CommandArgument;
-
-            ShowAffiliateTreePopup(tk);
-        }
-        catch (Exception _ex)
-        {
-            string _tk = Session["taikhoan"] as string;
-            if (!string.IsNullOrEmpty(_tk)) _tk = mahoa_cl.giaima_Bcorn(_tk);
-            else _tk = "";
-            Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
-        }
-    }
-    public void ShowAffiliateTreePopup(string currentUser)
-    {
-        using (dbDataContext db = new dbDataContext())
-        {
-            var cur = db.taikhoan_tbs.FirstOrDefault(x => x.taikhoan == currentUser);
-            if (cur == null)
-            {
-                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                    thongbao_class.metro_dialog("Thông báo", "Không tìm thấy tài khoản.", "false", "false", "OK", "alert", ""), true);
-                return;
-            }
-
-            lb_aff_current.Text = currentUser;
-
-            // 1) Lấy tuyến trên (ancestors) từ Affiliate_duong_dan_tuyen_tren
-            List<string> ancestors = new List<string>();
-            if (!string.IsNullOrEmpty(cur.Affiliate_duong_dan_tuyen_tren))
-            {
-                // ví dụ: ",a,b,c,"
-                var arr = cur.Affiliate_duong_dan_tuyen_tren
-                    .Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-                    .ToList();
-
-                // arr sẽ là tuyến trên từ thấp lên cao theo cách bạn lưu
-                // mình giữ thứ tự như vậy để build chain
-                ancestors = arr;
-            }
-
-            // Query info tất cả tài khoản liên quan (tuyến trên + current + tuyến dưới)
-            // 2) lấy full tuyến dưới (descendants) của currentUser
-            var allUsers = db.taikhoan_tbs
-                .Select(x => new
-                {
-                    x.taikhoan,
-                    x.hoten,
-                    x.Affiliate_tai_khoan_cap_tren
-                })
-                .ToList();
-
-            // Dictionary để map taikhoan -> hoten
-            Dictionary<string, string> dictName = allUsers
-                .ToDictionary(x => x.taikhoan, x => (x.hoten ?? ""));
-
-            // Build map parent -> children cho tất cả
-            Dictionary<string, List<string>> mapChildren = new Dictionary<string, List<string>>();
-            foreach (var u in allUsers)
-            {
-                string parent = u.Affiliate_tai_khoan_cap_tren;
-                if (string.IsNullOrEmpty(parent)) continue;
-
-                if (!mapChildren.ContainsKey(parent))
-                    mapChildren[parent] = new List<string>();
-
-                mapChildren[parent].Add(u.taikhoan);
-            }
-
-            // Sắp xếp children theo taikhoan cho đẹp
-            foreach (var k in mapChildren.Keys.ToList())
-            {
-                mapChildren[k] = mapChildren[k].OrderBy(x => x).ToList();
-            }
-
-            // 3) Xác định ROOT hiển thị:
-            // Nếu có ancestors thì root = ancestor đầu tiên trong chuỗi
-            // Nếu không có ancestors => root chính là currentUser
-            string root = (ancestors.Count > 0) ? ancestors[0] : currentUser;
-
-            // 4) Build HTML tree:
-            // Mình dựng chain tuyến trên trước,
-            // rồi tại node currentUser thì append toàn bộ descendants.
-            string html = "<ul>";
-
-            // Nếu có ancestors: build chain
-            if (ancestors.Count > 0)
-            {
-                html += BuildAncestorChainHtml(ancestors, currentUser, dictName, mapChildren);
-            }
-            else
-            {
-                // Không có tuyến trên => root=currentUser luôn
-                html += BuildNodeWithDescendants(currentUser, currentUser, dictName, mapChildren);
-            }
-
-            html += "</ul>";
-
-            lit_aff_tree.Text = html;
-            pn_aff_tree.Visible = true;
-            up_aff_tree.Update();
-        }
-    }
-    private string BuildAncestorChainHtml(
-    List<string> ancestors,
-    string currentUser,
-    Dictionary<string, string> dictName,
-    Dictionary<string, List<string>> mapChildren)
-    {
-        // ancestors ví dụ: [a,b,c] nghĩa là: a -> b -> c -> currentUser
-        // Nhưng currentUser đã nằm ngoài duongdan, nên chain sẽ nối đến currentUser
-
-        string html = "";
-
-        for (int i = 0; i < ancestors.Count; i++)
-        {
-            string tk = ancestors[i];
-            string name = dictName.ContainsKey(tk) ? dictName[tk] : "";
-
-            html += "<li>";
-            html += $"<a href='#'>{tk} - {HttpUtility.HtmlEncode(name)}</a>";
-
-            // Nếu đây là ancestor cuối cùng => con tiếp theo là currentUser
-            if (i == ancestors.Count - 1)
-            {
-                html += "<ul>";
-                html += BuildNodeWithDescendants(currentUser, currentUser, dictName, mapChildren);
-                html += "</ul>";
-            }
-            else
-            {
-                // còn ancestor tiếp theo
-                html += "<ul>";
-            }
-        }
-
-        // đóng các ul/li còn mở
-        for (int i = 0; i < ancestors.Count; i++)
-        {
-            html += "</li></ul>";
-        }
-
-        // đoạn trên sẽ dư 1 </ul> ở cuối, mình trim lại cho chuẩn:
-        // thực tế BuildAncestorChainHtml return sẽ được wrap trong <ul> ngoài.
-        // cách đơn giản: remove 1 </ul> cuối nếu có
-        if (html.EndsWith("</ul>"))
-        {
-            html = html.Substring(0, html.Length - 5);
-        }
-
-        return html;
-    }
-    private string BuildNodeWithDescendants(
-        string tk,
-        string currentUser,
-        Dictionary<string, string> dictName,
-        Dictionary<string, List<string>> mapChildren)
-    {
-        string name = dictName.ContainsKey(tk) ? dictName[tk] : "";
-
-        // highlight current user
-        string liClass = (tk == currentUser) ? " class='aff-current-node'" : "";
-
-        string html = $"<li{liClass}>";
-
-        html += $"<a href='#'>{tk} - {HttpUtility.HtmlEncode(name)}</a>";
-
-        // nếu có con => đệ quy
-        if (mapChildren.ContainsKey(tk) && mapChildren[tk].Count > 0)
-        {
-            html += "<ul>";
-            foreach (string child in mapChildren[tk])
-            {
-                html += BuildNodeWithDescendants(child, currentUser, dictName, mapChildren);
-            }
-            html += "</ul>";
-        }
-
-        html += "</li>";
-        return html;
-    }
 
 }

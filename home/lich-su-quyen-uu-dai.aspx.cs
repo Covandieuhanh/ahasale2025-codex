@@ -50,8 +50,8 @@ public partial class home_lich_su_quyen_uu_dai : System.Web.UI.Page
         lb_so_du_da_ghi_nhan.Text = summary.TongSoDaGhiNhan.ToString("#,##0.##");
 
         lb_moc_hople.Text =
-            "Điểm nhận sẽ đủ điều kiện ghi nhận sau " + summary.SoPhutChoHopLe + " phút. "
-            + "Mốc đang áp dụng: " + summary.MocHopLe.ToString("dd/MM/yyyy HH:mm:ss");
+            (summary.DieuKienHopLeText ?? HanhViGhiNhanHoSo_cl.GetDieuKienHopLeText())
+            + " Mốc hệ thống hiện tại: " + AhaTime_cl.Now.ToString("dd/MM/yyyy HH:mm:ss");
 
         var hanhViRows = summary.Rows.Select(p => new
         {

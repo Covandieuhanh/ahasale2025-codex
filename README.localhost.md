@@ -47,7 +47,7 @@ Guard se:
 - Da bat `batch="false"` trong `Web.config` de tranh loi compile batch do source goc co nhieu page trung class
 - Da giu Roslyn provider trong `Bin/roslyn` va `Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll`
 - Da giu `System.Threading.Tasks.dll` trong `Bin/disabled` de tranh xung dot namespace tren Mono
-- Da vo hieu hoa cap file clone `home/cho-thanh-toan - Copy.aspx(.cs)` bang duoi `.disabled`
+- Da xoa file clone cu `home/cho-thanh-toan - Copy.aspx(.cs)` de tranh nham luong
 - Da mo day du menu admin (hien tat ca module admin trong source)
 - Da them che do super-admin local cho tai khoan `admin` khi chay tren `localhost`
 - Da nang cap dang nhap admin/home: chap nhan `tai khoan`, `email` hoac `so dien thoai`

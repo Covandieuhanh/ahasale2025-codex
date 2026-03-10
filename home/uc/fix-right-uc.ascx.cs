@@ -108,7 +108,7 @@ public partial class home_uc_fix_right_uc : System.Web.UI.UserControl
             //gán mail trực tiếp
             //List<string> emailAddresses = new List<string>
             //{
-            //    "bcorn.net@gmail.com","mail khác",...
+            //    "ahasale.vn@gmail.com","mail khác",...
             //};
             foreach (var _email_nhan in emailAddresses)
             {

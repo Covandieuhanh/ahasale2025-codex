@@ -6,6 +6,11 @@ using System.Web.UI.WebControls;
 public partial class admin_phat_hanh_the : System.Web.UI.Page
 {
     private const string ViewAdd = "add";
+    private const int CardTypeUuDai = 1;
+    private const int CardTypeTieuDung = 2;
+    private const int CardTypeShopPartner = 3;
+    private const int CardTypeDongHanhHeSinhThai = 4;
+    private const int CardTypeLaoDong = 5;
 
     private string BuildListUrl()
     {
@@ -17,27 +22,44 @@ public partial class admin_phat_hanh_the : System.Web.UI.Page
         return ResolveUrl("~/admin/phat-hanh-the.aspx?view=" + ViewAdd);
     }
 
-    private void ShowAddPage()
+    private void ShowAddPage(bool bindData)
     {
-        load_dropdown_taikhoan();
+        if (bindData)
+        {
+            load_dropdown_taikhoan();
+        }
         pn_add.Visible = true;
-        up_add.Update();
         up_main.Visible = false;
     }
 
     protected void Page_Load(object sender, EventArgs e)
     {
-        but_show_add.NavigateUrl = BuildAddUrl();
-
-        if (!IsPostBack)
+        try
         {
-            check_login_cl.check_login_admin(PermissionProfile_cl.HoSoTieuDung, PermissionProfile_cl.HoSoTieuDung);
-            ViewState["title"] = "Phát hành thẻ";
-            show_main();
-
+            but_show_add.NavigateUrl = BuildAddUrl();
+            lnk_back_list.NavigateUrl = BuildListUrl();
             string view = (Request.QueryString["view"] ?? "").Trim().ToLowerInvariant();
-            if (view == ViewAdd)
-                ShowAddPage();
+            bool isAddView = view == ViewAdd;
+
+            if (isAddView)
+            {
+                ShowAddPage(!IsPostBack);
+            }
+
+            if (!IsPostBack)
+            {
+                check_login_cl.check_login_admin(PermissionProfile_cl.HoSoTieuDung, PermissionProfile_cl.HoSoTieuDung);
+                ViewState["title"] = "Phát hành thẻ";
+                if (!isAddView)
+                    show_main();
+            }
+        }
+        catch (Exception ex)
+        {
+            Log_cl.Add_Log(ex.Message, "admin", ex.StackTrace);
+            Session["thongbao"] = thongbao_class.metro_dialog_onload("Thông báo", "Trang phát hành thẻ đang gặp lỗi dữ liệu. Vui lòng đăng nhập lại hoặc thử lại sau.", "false", "false", "OK", "alert", "");
+            Response.Redirect("/admin/login.aspx", false);
+            Context.ApplicationInstance.CompleteRequest();
         }
     }
 
@@ -68,11 +90,64 @@ public partial class admin_phat_hanh_the : System.Web.UI.Page
     {
         switch (loai)
         {
-            case 1: return "Thẻ ưu đãi";
-            case 2: return "Thẻ tiêu dùng";
-            case 3: return "Thẻ gian hàng đối tác";
-            case 4: return "Thẻ đồng hành hệ sinh thái";
+            case CardTypeUuDai: return "Thẻ ưu đãi";
+            case CardTypeTieuDung: return "Thẻ tiêu dùng";
+            case CardTypeShopPartner: return "Thẻ gian hàng đối tác";
+            case CardTypeDongHanhHeSinhThai: return "Thẻ đồng hành hệ sinh thái";
+            case CardTypeLaoDong: return "Thẻ lao động";
             default: return "Thẻ #" + loai;
+        }
+    }
+
+    private string ResolveAccountScope(taikhoan_tb account)
+    {
+        if (account == null) return "";
+        return PortalScope_cl.ResolveScope(account.taikhoan, account.phanloai, account.permission);
+    }
+
+    private bool IsCardTypeAllowedForScope(string scope, int loaiThe)
+    {
+        if (string.Equals(scope, PortalScope_cl.ScopeShop, StringComparison.OrdinalIgnoreCase))
+            return loaiThe == CardTypeShopPartner;
+
+        if (string.Equals(scope, PortalScope_cl.ScopeHome, StringComparison.OrdinalIgnoreCase))
+            return loaiThe == CardTypeUuDai
+                || loaiThe == CardTypeTieuDung
+                || loaiThe == CardTypeLaoDong
+                || loaiThe == CardTypeDongHanhHeSinhThai;
+
+        return false;
+    }
+
+    private string BuildInvalidCardTypeMessage(string scope)
+    {
+        if (string.Equals(scope, PortalScope_cl.ScopeShop, StringComparison.OrdinalIgnoreCase))
+            return "Tài khoản shop chỉ được phát hành thẻ gian hàng đối tác.";
+
+        if (string.Equals(scope, PortalScope_cl.ScopeHome, StringComparison.OrdinalIgnoreCase))
+            return "Tài khoản home chỉ được phát hành thẻ ưu đãi, thẻ tiêu dùng, thẻ lao động hoặc thẻ đồng hành hệ sinh thái.";
+
+        return "Tài khoản này không thuộc hệ home/shop nên không thể phát hành thẻ.";
+    }
+
+    private void BindCardTypesByScope(string scope)
+    {
+        ddl_loaithe.Items.Clear();
+        ddl_loaithe.Items.Add(new ListItem("-- Chọn loại thẻ --", ""));
+
+        if (string.Equals(scope, PortalScope_cl.ScopeShop, StringComparison.OrdinalIgnoreCase))
+        {
+            ddl_loaithe.Items.Add(new ListItem(GetTenTheByLoai(CardTypeShopPartner), CardTypeShopPartner.ToString()));
+            ddl_loaithe.SelectedValue = CardTypeShopPartner.ToString();
+            return;
+        }
+
+        if (string.Equals(scope, PortalScope_cl.ScopeHome, StringComparison.OrdinalIgnoreCase))
+        {
+            ddl_loaithe.Items.Add(new ListItem(GetTenTheByLoai(CardTypeUuDai), CardTypeUuDai.ToString()));
+            ddl_loaithe.Items.Add(new ListItem(GetTenTheByLoai(CardTypeTieuDung), CardTypeTieuDung.ToString()));
+            ddl_loaithe.Items.Add(new ListItem(GetTenTheByLoai(CardTypeLaoDong), CardTypeLaoDong.ToString()));
+            ddl_loaithe.Items.Add(new ListItem(GetTenTheByLoai(CardTypeDongHanhHeSinhThai), CardTypeDongHanhHeSinhThai.ToString()));
         }
     }
 
@@ -103,25 +178,46 @@ public partial class admin_phat_hanh_the : System.Web.UI.Page
     {
         using (dbDataContext db = new dbDataContext())
         {
-            var list = db.taikhoan_tbs
+            var raw = db.taikhoan_tbs
                 .Where(p => p.taikhoan != "admin"
                     && (p.phanloai == null
                         || (!p.phanloai.StartsWith(AccountType_cl.Treasury)
                             && !p.phanloai.StartsWith(AccountType_cl.LegacyTreasury))))
-                .OrderBy(p => p.taikhoan)
                 .Select(p => new
                 {
                     p.taikhoan,
-                    Text = p.taikhoan + " - " + (p.hoten ?? "")
+                    p.hoten,
+                    p.phanloai,
+                    p.permission
                 })
                 .ToList();
 
-            ddl_taikhoan.DataSource = list;
-            ddl_taikhoan.DataTextField = "Text";
-            ddl_taikhoan.DataValueField = "taikhoan";
-            ddl_taikhoan.DataBind();
+            var list = raw
+                .Select(p =>
+                {
+                    string scope = PortalScope_cl.ResolveScope(p.taikhoan, p.phanloai, p.permission);
+                    return new
+                    {
+                        p.taikhoan,
+                        Scope = scope,
+                        Text = p.taikhoan + " - " + (p.hoten ?? "")
+                    };
+                })
+                .Where(p => string.Equals(p.Scope, PortalScope_cl.ScopeHome, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(p.Scope, PortalScope_cl.ScopeShop, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(p => p.taikhoan)
+                .ToList();
 
-            ddl_taikhoan.Items.Insert(0, new ListItem("-- Chọn tài khoản --", ""));
+            ddl_taikhoan.Items.Clear();
+            ddl_taikhoan.Items.Add(new ListItem("-- Chọn tài khoản --", ""));
+
+            foreach (var item in list)
+            {
+                bool isShop = string.Equals(item.Scope, PortalScope_cl.ScopeShop, StringComparison.OrdinalIgnoreCase);
+                ListItem li = new ListItem(item.Text + (isShop ? " [SHOP]" : " [HOME]"), item.taikhoan);
+                li.Attributes["data-scope"] = item.Scope;
+                ddl_taikhoan.Items.Add(li);
+            }
         }
     }
 
@@ -175,7 +271,16 @@ public partial class admin_phat_hanh_the : System.Web.UI.Page
                     taikhoan_tb acc = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == tk);
                     if (acc == null)
                     {
+                        try { tran.Rollback(); } catch { }
                         RunClientScriptSafe(thongbao_class.metro_dialog("Thông báo", "Tài khoản không tồn tại.", "false", "false", "OK", "alert", ""));
+                        return;
+                    }
+
+                    string scope = ResolveAccountScope(acc);
+                    if (!IsCardTypeAllowedForScope(scope, loai))
+                    {
+                        try { tran.Rollback(); } catch { }
+                        RunClientScriptSafe(thongbao_class.metro_dialog("Thông báo", BuildInvalidCardTypeMessage(scope), "false", "false", "OK", "alert", ""));
                         return;
                     }
 

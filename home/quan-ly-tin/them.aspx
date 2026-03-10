@@ -75,6 +75,24 @@
                         <div class="field-note">Mặc định 0%. Sẽ được trừ tại hồ sơ ưu đãi của người mua.</div>
                     </div>
 
+                    <asp:PlaceHolder ID="ph_company_shop_options" runat="server" Visible="false">
+                        <div class="col-lg-6">
+                            <label class="form-label">Kênh hiển thị sản phẩm</label>
+                            <asp:DropDownList ID="ddl_kenh_hienthi" runat="server" CssClass="form-select">
+                                <asp:ListItem Value="public">Công khai (hiển thị ngoài Home)</asp:ListItem>
+                                <asp:ListItem Value="internal">Nội bộ (chỉ shop công ty tự bán)</asp:ListItem>
+                            </asp:DropDownList>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <label class="form-label">% chiết khấu cho sàn (0 - 100%)</label>
+                            <asp:TextBox ID="txt_phantram_san" runat="server"
+                                CssClass="form-control" Text="0" MaxLength="3"
+                                oninput="clamp_percent_0_100(this)"></asp:TextBox>
+                            <div class="field-note">Áp dụng cho luồng bán sản phẩm của shop công ty.</div>
+                        </div>
+                    </asp:PlaceHolder>
+
                     <div class="col-lg-6">
                         <label class="form-label">Thành phố</label>
                         <asp:DropDownList ID="DanhSachTP" runat="server" CssClass="form-select"></asp:DropDownList>
@@ -114,6 +132,16 @@
             if (isNaN(v)) { el.value = ""; return; }
             if (v < 0) v = 0;
             if (v > 50) v = 50;
+            el.value = v.toString();
+        }
+
+        function clamp_percent_0_100(el) {
+            el.value = (el.value || "").replace(/[^\d]/g, "");
+            if (el.value === "") return;
+            var v = parseInt(el.value, 10);
+            if (isNaN(v)) { el.value = ""; return; }
+            if (v < 0) v = 0;
+            if (v > 100) v = 100;
             el.value = v.toString();
         }
 

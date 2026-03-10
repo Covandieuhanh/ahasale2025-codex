@@ -49,11 +49,21 @@ public partial class home_page_gioi_thieu_nguoi_dung : System.Web.UI.Page
 
                 if (userLogin != "")
                 {
-                    Session["thongbao_home"] =
-                        (u == userLogin.ToLower())
-                        ? "Bạn không thể tự giới thiệu chính mình."
-                        : "Bạn đang đăng nhập nên không thể đăng ký qua người giới thiệu.";
-                    Response.Redirect("/");
+                    string targetUrl = Request.RawUrl ?? "/home/page/gioi-thieu-nguoi-dung.aspx";
+                    string logoutUrl = "/home/logout.aspx?return_url=" + HttpUtility.UrlEncode(targetUrl);
+                    string redirectUrl = "/?need_logout=1&return_url=" + HttpUtility.UrlEncode(targetUrl);
+
+                    Session["home_logout_return"] = targetUrl;
+                    Session["home_modal2_msg"] = "Bạn phải đăng xuất tài khoản để được phép thực hiện Đăng ký tài khoản";
+                    Session["home_modal2_title"] = "Thông báo";
+                    Session["home_modal2_type"] = "warning";
+                    Session["home_modal2_primary_text"] = "Đăng xuất";
+                    Session["home_modal2_primary_href"] = logoutUrl;
+                    Session["home_modal2_secondary_text"] = "Để sau";
+                    Session["home_modal2_secondary_href"] = "/";
+
+                    Response.Redirect(redirectUrl, false);
+                    Context.ApplicationInstance.CompleteRequest();
                     return;
                 }
 
@@ -96,8 +106,21 @@ public partial class home_page_gioi_thieu_nguoi_dung : System.Web.UI.Page
 
             if (userLogin != "")
             {
-                Session["thongbao_home"] = "Bạn đang đăng nhập nên không thể đăng ký.";
-                Response.Redirect("/");
+                string targetUrl = Request.RawUrl ?? "/home/page/gioi-thieu-nguoi-dung.aspx";
+                string logoutUrl = "/home/logout.aspx?return_url=" + HttpUtility.UrlEncode(targetUrl);
+                string redirectUrl = "/?need_logout=1&return_url=" + HttpUtility.UrlEncode(targetUrl);
+
+                Session["home_logout_return"] = targetUrl;
+                Session["home_modal2_msg"] = "Bạn phải đăng xuất tài khoản để được phép thực hiện Đăng ký tài khoản";
+                Session["home_modal2_title"] = "Thông báo";
+                Session["home_modal2_type"] = "warning";
+                Session["home_modal2_primary_text"] = "Đăng xuất";
+                Session["home_modal2_primary_href"] = logoutUrl;
+                Session["home_modal2_secondary_text"] = "Để sau";
+                Session["home_modal2_secondary_href"] = "/";
+
+                Response.Redirect(redirectUrl, false);
+                Context.ApplicationInstance.CompleteRequest();
                 return;
             }
 
@@ -193,7 +216,7 @@ public partial class home_page_gioi_thieu_nguoi_dung : System.Web.UI.Page
                     Format = BarcodeFormat.QR_CODE,
                     Options = new ZXing.Common.EncodingOptions { Width = 200, Height = 200, Margin = 3 }
                 };
-                bw.Write($"https://ahasale.vn/{_user}.info")
+                bw.Write(string.Format("https://ahasale.vn/{0}.info", _user))
                   .Save(Server.MapPath("~" + qrPath), ImageFormat.Png);
 
                 taikhoan_tb ob = new taikhoan_tb();
@@ -246,7 +269,7 @@ public partial class home_page_gioi_thieu_nguoi_dung : System.Web.UI.Page
                     "Đăng ký tài khoản thành công. Hệ thống đã tự động đăng nhập cho bạn.";
 
                 // URL BACK (NẾU CÓ)
-                string _url_back = Session["url_back_home"]?.ToString();
+                string _url_back = Convert.ToString(Session["url_back_home"]);
                 if (!string.IsNullOrEmpty(_url_back))
                 {
                     Response.Redirect(_url_back, false);
@@ -278,9 +301,12 @@ public partial class home_page_gioi_thieu_nguoi_dung : System.Web.UI.Page
             HttpCookie ck = Request.Cookies["cookie_userinfo_home_bcorn"];
             if (ck != null && !string.IsNullOrEmpty(ck["taikhoan"]))
                 return mahoa_cl.giaima_Bcorn(ck["taikhoan"]);
-        }
-        catch { }
 
-        return "";
+            return "";
+        }
+        catch
+        {
+            return "";
+        }
     }
 }

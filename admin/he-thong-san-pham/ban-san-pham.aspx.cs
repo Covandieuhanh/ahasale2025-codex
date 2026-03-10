@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Data;
 using System.Data.SqlClient;
 using System.Data.Linq;
+using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
@@ -12,14 +14,159 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
     const long VNDTOA = 1000; // 1A = 1000 VNĐ
     private const string ViewSell = "sell";
     private const string ViewDetail = "detail";
+    private const string PortalModeAdmin = "admin";
+    private const string PortalModeShop = "shop";
+    private const string ViewStatePortalMode = "portal_mode_bansp";
+    private const string ViewStateSellerAccount = "seller_account_bansp";
+    private const string ViewStateShopSpace = "shop_space_bansp";
+    private const string ShopSpacePublic = "public";
+    private const string ShopSpaceInternal = "internal";
+
+    private void ApplyShopPortalMasterLayout()
+    {
+        if (!IsShopPortalMode() || Master == null)
+            return;
+
+        Control leftMenu = Master.FindControl("menuleftuc");
+        if (leftMenu != null)
+            leftMenu.Visible = false;
+
+        Control topMenu = Master.FindControl("menutopuc");
+        if (topMenu != null)
+            topMenu.Visible = false;
+    }
+
+    private bool IsShopPortalMode()
+    {
+        return string.Equals((ViewState[ViewStatePortalMode] ?? "").ToString(), PortalModeShop, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private string GetSellerAccount()
+    {
+        return ((ViewState[ViewStateSellerAccount] ?? "").ToString() ?? "").Trim().ToLowerInvariant();
+    }
+
+    private string ResolveRequestedShopSpace()
+    {
+        string raw = (Request.QueryString["space"] ?? "").Trim().ToLowerInvariant();
+        if (raw == ShopSpaceInternal)
+            return ShopSpaceInternal;
+        return ShopSpacePublic;
+    }
+
+    private bool IsInternalShopSpace()
+    {
+        if (!IsShopPortalMode())
+            return false;
+        string space = ((ViewState[ViewStateShopSpace] ?? ShopSpacePublic).ToString() ?? "").Trim().ToLowerInvariant();
+        return space == ShopSpaceInternal;
+    }
+
+    private string BuildShopPortalSalesBaseUrl()
+    {
+        if (IsInternalShopSpace())
+            return "/shop/noi-bo/ban-san-pham";
+        return "/shop/ban-san-pham";
+    }
+
+    private string ResolveCurrentShopAccount()
+    {
+        string tk = "";
+        string encodedSession = Session["taikhoan_shop"] as string;
+        if (!string.IsNullOrEmpty(encodedSession))
+        {
+            tk = mahoa_cl.giaima_Bcorn(encodedSession);
+        }
+        else
+        {
+            HttpCookie ck = Request.Cookies["cookie_userinfo_shop_bcorn"];
+            if (ck != null && !string.IsNullOrEmpty(ck["taikhoan"]))
+                tk = mahoa_cl.giaima_Bcorn(ck["taikhoan"]);
+        }
+
+        return (tk ?? "").Trim().ToLowerInvariant();
+    }
+
+    private string ResolveCurrentAdminAccount()
+    {
+        string tk = "";
+        string encodedSession = Session["taikhoan"] as string;
+        if (!string.IsNullOrEmpty(encodedSession))
+        {
+            tk = mahoa_cl.giaima_Bcorn(encodedSession);
+        }
+        else
+        {
+            HttpCookie ck = Request.Cookies["cookie_userinfo_admin_bcorn"];
+            if (ck != null && !string.IsNullOrEmpty(ck["taikhoan"]))
+                tk = mahoa_cl.giaima_Bcorn(ck["taikhoan"]);
+        }
+        return (tk ?? "").Trim().ToLowerInvariant();
+    }
+
+    private bool EnsurePortalContext()
+    {
+        bool shopPortal = PortalRequest_cl.IsShopPortalRequest();
+
+        if (shopPortal)
+        {
+            check_login_cl.check_login_shop("none", "none", true);
+
+            string tkShop = ResolveCurrentShopAccount();
+            if (string.IsNullOrEmpty(tkShop))
+            {
+                Response.Redirect("/shop/login.aspx", false);
+                Context.ApplicationInstance.CompleteRequest();
+                return false;
+            }
+
+            using (dbDataContext db = new dbDataContext())
+            {
+                if (!CompanyShop_cl.IsCompanyShopAccount(db, tkShop))
+                {
+                    Session["thongbao_shop"] = thongbao_class.metro_dialog_onload(
+                        "Thông báo",
+                        "Tính năng này chỉ dành cho tài khoản shop công ty.",
+                        "false",
+                        "false",
+                        "OK",
+                        "alert",
+                        "");
+                    Response.Redirect("/shop/default.aspx", false);
+                    Context.ApplicationInstance.CompleteRequest();
+                    return false;
+                }
+            }
+
+            ViewState[ViewStatePortalMode] = PortalModeShop;
+            ViewState[ViewStateSellerAccount] = tkShop;
+            ViewState[ViewStateShopSpace] = ResolveRequestedShopSpace();
+            return true;
+        }
+
+        check_login_cl.check_login_admin(PermissionProfile_cl.HoSoTieuDung, PermissionProfile_cl.HoSoTieuDung);
+        ViewState[ViewStatePortalMode] = PortalModeAdmin;
+        ViewState[ViewStateShopSpace] = ShopSpacePublic;
+
+        string tkAdmin = ResolveCurrentAdminAccount();
+        if (string.IsNullOrEmpty(tkAdmin))
+            tkAdmin = "admin";
+        ViewState[ViewStateSellerAccount] = tkAdmin;
+
+        return true;
+    }
 
     private string BuildListUrl()
     {
+        if (IsShopPortalMode())
+            return ResolveUrl(BuildShopPortalSalesBaseUrl());
         return ResolveUrl("~/admin/he-thong-san-pham/ban-san-pham.aspx");
     }
 
     private string BuildSellUrl()
     {
+        if (IsShopPortalMode())
+            return ResolveUrl(BuildShopPortalSalesBaseUrl() + "?view=" + ViewSell);
         return ResolveUrl("~/admin/he-thong-san-pham/ban-san-pham.aspx?view=" + ViewSell);
     }
 
@@ -27,6 +174,8 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
     {
         string id = (idObj ?? "").ToString().Trim();
         if (string.IsNullOrEmpty(id)) return "#";
+        if (IsShopPortalMode())
+            return ResolveUrl(BuildShopPortalSalesBaseUrl() + "?view=" + ViewDetail + "&id=" + id);
         return ResolveUrl("~/admin/he-thong-san-pham/ban-san-pham.aspx?view=" + ViewDetail + "&id=" + id);
     }
 
@@ -40,6 +189,16 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
         lb_dongA.Text = "0.00";
         lb_phantram_san.Text = "0 %";
 
+        string idSp = (Request.QueryString["idsp"] ?? "").Trim();
+        if (!string.IsNullOrEmpty(idSp))
+        {
+            ListItem found = ddl_sanpham.Items.FindByValue(idSp);
+            if (found != null)
+                ddl_sanpham.SelectedValue = idSp;
+        }
+
+        tinhTienVaDongA();
+
         pn_banthe.Visible = true;
         up_banthe.Update();
         up_main.Visible = false;
@@ -47,12 +206,15 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
+        if (!EnsurePortalContext())
+            return;
+
+        ApplyShopPortalMasterLayout();
         but_show_form_banthe.NavigateUrl = BuildSellUrl();
 
         if (!IsPostBack)
         {
-            check_login_cl.check_login_admin(PermissionProfile_cl.HoSoTieuDung, PermissionProfile_cl.HoSoTieuDung);
-            ViewState["title"] = "Bán sản phẩm";
+            ViewState["title"] = IsShopPortalMode() ? "Bán sản phẩm công ty" : "Bán sản phẩm";
 
             // paging lịch sử bán
             ViewState["current_page_bansp"] = 1;
@@ -76,6 +238,29 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
         }
     }
 
+    private string ResolveProductName(dbDataContext db, int? productId, bool preferShopProduct)
+    {
+        int id = productId ?? 0;
+        if (id <= 0)
+            return "SP#0";
+
+        string tenShop = db.BaiViet_tbs.Where(p => p.id == id).Select(p => p.name).FirstOrDefault();
+        string tenSystem = db.SanPham_Aha_tbs.Where(p => p.id == id).Select(p => p.TenSanPham).FirstOrDefault();
+
+        if (preferShopProduct)
+        {
+            if (!string.IsNullOrEmpty(tenShop)) return tenShop;
+            if (!string.IsNullOrEmpty(tenSystem)) return tenSystem;
+        }
+        else
+        {
+            if (!string.IsNullOrEmpty(tenSystem)) return tenSystem;
+            if (!string.IsNullOrEmpty(tenShop)) return tenShop;
+        }
+
+        return "SP#" + id;
+    }
+
     // ======================= MAIN: LIST LỊCH SỬ BÁN =======================
     public void show_main()
     {
@@ -91,34 +276,33 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
 
                 if (current_page < 1) current_page = 1;
 
-                var q = from hd in db.ViLoiNhuan_LichSuBanHang_tbs
-                        join sp in db.SanPham_Aha_tbs on hd.id_SanPhamDichVu equals sp.id into gsp
-                        from sp in gsp.DefaultIfEmpty()
-                        orderby hd.ThoiGian descending
-                        select new
-                        {
-                            hd.id,
-                            hd.TaiKhoan_Mua,
-                            hd.TaiKhoan_Ban,
-                            hd.id_SanPhamDichVu,
-                            TenSanPham = (sp != null ? sp.TenSanPham : ("SP#" + hd.id_SanPhamDichVu)),
+                bool shopMode = IsShopPortalMode();
+                string sellerAccount = GetSellerAccount();
 
-                            hd.SoLuong,
-                            hd.Gia_VND_SanPhamDichVu,       // giá 1 SP
-                            hd.Gia_DongA_SanPhamDichVu,     // giá 1 SP quy đổi A
+                var q = db.ViLoiNhuan_LichSuBanHang_tbs.AsQueryable();
+                if (shopMode && !string.IsNullOrEmpty(sellerAccount))
+                    q = q.Where(hd => hd.TaiKhoan_Ban == sellerAccount);
 
-                            hd.PhanTram_ChiTra_ChoSan,
-                            hd.ViLoiNhuan_DongA_CuaSan_NhanDuoc_ViTong,
+                var listQuery = q
+                    .OrderByDescending(hd => hd.ThoiGian)
+                    .Select(hd => new
+                    {
+                        hd.id,
+                        hd.TaiKhoan_Mua,
+                        hd.TaiKhoan_Ban,
+                        hd.id_SanPhamDichVu,
+                        hd.SoLuong,
+                        hd.Gia_VND_SanPhamDichVu,
+                        hd.Gia_DongA_SanPhamDichVu,
+                        hd.PhanTram_ChiTra_ChoSan,
+                        hd.ViLoiNhuan_DongA_CuaSan_NhanDuoc_ViTong,
+                        hd.Vi1_30PhanTram_NhanDuoc_ViEVoucher,
+                        hd.Vi2_50PhanTram_NhanDuoc_ViLaoDong,
+                        hd.Vi3_20PhanTram_NhanDuoc_ViGanKet,
+                        hd.ThoiGian
+                    });
 
-                           
-                            hd.Vi1_30PhanTram_NhanDuoc_ViEVoucher,
-                            hd.Vi2_50PhanTram_NhanDuoc_ViLaoDong,
-                            hd.Vi3_20PhanTram_NhanDuoc_ViGanKet,
-
-                            hd.ThoiGian
-                        };
-
-                int total_record = q.Count();
+                int total_record = listQuery.Count();
                 int total_page = (total_record <= 0) ? 1 : (int)Math.Ceiling((double)total_record / show);
 
                 if (current_page > total_page) current_page = total_page;
@@ -130,7 +314,7 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
                 if (but_xemtiep != null) but_xemtiep.Enabled = current_page < total_page;
                 if (but_quaylai != null) but_quaylai.Enabled = current_page > 1;
 
-                var list = q.Skip((current_page - 1) * show).Take(show).ToList();
+                var list = listQuery.Skip((current_page - 1) * show).Take(show).ToList();
 
                 // Map hiển thị: tính tổng VNĐ/A theo số lượng
                 var list_show = list.Select(x =>
@@ -141,13 +325,14 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
 
                     long tongVND = gia1VND * (long)sl;
                     decimal tongA = Math.Round(gia1A * sl, 2, MidpointRounding.AwayFromZero);
+                    string tenSanPham = ResolveProductName(db, x.id_SanPhamDichVu, shopMode);
 
                     return new
                     {
                         x.id,
                         x.TaiKhoan_Mua,
                         x.TaiKhoan_Ban,
-                        x.TenSanPham,
+                        TenSanPham = tenSanPham,
 
                         SoLuong = sl,
                         TongVND = tongVND,
@@ -177,7 +362,10 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
         }
         catch (Exception ex)
         {
-            Log_cl.Add_Log(ex.Message, "admin", ex.StackTrace);
+            string actor = GetSellerAccount();
+            if (string.IsNullOrEmpty(actor))
+                actor = IsShopPortalMode() ? "shop" : "admin";
+            Log_cl.Add_Log(ex.Message, actor, ex.StackTrace);
             lb_show.Text = "";
         }
     }
@@ -233,7 +421,18 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
                     return;
                 }
 
-                var sp = db.SanPham_Aha_tbs.FirstOrDefault(x => x.id == (hd.id_SanPhamDichVu ?? 0));
+                bool shopMode = IsShopPortalMode();
+                string sellerAccount = GetSellerAccount();
+                if (shopMode && !string.IsNullOrEmpty(sellerAccount))
+                {
+                    string tkBan = (hd.TaiKhoan_Ban ?? "").Trim().ToLowerInvariant();
+                    if (!string.Equals(tkBan, sellerAccount, StringComparison.OrdinalIgnoreCase))
+                    {
+                        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                            thongbao_class.metro_dialog("Thông báo", "Bạn không có quyền xem giao dịch này.", "false", "false", "OK", "alert", ""), true);
+                        return;
+                    }
+                }
 
                 int sl = (int)(hd.SoLuong ?? 0);
                 long gia1VND = (long)(hd.Gia_VND_SanPhamDichVu ?? 0);
@@ -248,7 +447,7 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
                 lb_ct_tk_mua.Text = (hd.TaiKhoan_Mua ?? "");
                 lb_ct_tk_ban.Text = (hd.TaiKhoan_Ban ?? "");
 
-                lb_ct_sanpham.Text = (sp != null ? sp.TenSanPham : ("SP#" + (hd.id_SanPhamDichVu ?? 0)));
+                lb_ct_sanpham.Text = ResolveProductName(db, hd.id_SanPhamDichVu, shopMode);
                 lb_ct_soluong.Text = sl.ToString("#,##0");
                 lb_ct_tongvnd.Text = tongVND.ToString("#,##0") + " VNĐ";
                 lb_ct_tongdonga.Text = tongA.ToString("#,##0.##") + " A";
@@ -301,7 +500,10 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
         }
         catch (Exception ex)
         {
-            Log_cl.Add_Log(ex.Message, "admin", ex.StackTrace);
+            string actor = GetSellerAccount();
+            if (string.IsNullOrEmpty(actor))
+                actor = IsShopPortalMode() ? "shop" : "admin";
+            Log_cl.Add_Log(ex.Message, actor, ex.StackTrace);
         }
     }
 
@@ -381,20 +583,55 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
         {
             using (dbDataContext db = new dbDataContext())
             {
-                var list = db.SanPham_Aha_tbs
-                    .OrderBy(p => p.TenSanPham)
-                    .Select(p => new
-                    {
-                        p.id,
-                        p.TenSanPham,
-                        p.GiaBan,
-                        p.PhanTramChoSan
-                    }).ToList();
+                bool shopMode = IsShopPortalMode();
+                if (shopMode)
+                {
+                    string seller = GetSellerAccount();
+                    bool internalSpace = IsInternalShopSpace();
+                    var listShopQuery = db.BaiViet_tbs
+                        .Where(p => p.nguoitao == seller);
 
-                ddl_sanpham.DataSource = list;
-                ddl_sanpham.DataTextField = "TenSanPham";
-                ddl_sanpham.DataValueField = "id";
-                ddl_sanpham.DataBind();
+                    if (internalSpace)
+                        listShopQuery = listShopQuery.Where(p => p.phanloai == CompanyShop_cl.ProductTypeInternal);
+                    else
+                        listShopQuery = listShopQuery.Where(p => p.phanloai == CompanyShop_cl.ProductTypePublic);
+
+                    var listShop = listShopQuery
+                        .OrderByDescending(p => p.ngaytao)
+                        .Select(p => new
+                        {
+                            p.id,
+                            p.name,
+                            p.phanloai
+                        }).ToList()
+                        .Select(p => new
+                        {
+                            id = p.id,
+                            TenSanPham = "[" + CompanyShop_cl.BuildProductTypeLabel(p.phanloai) + "] " + (p.name ?? ("SP#" + p.id))
+                        }).ToList();
+
+                    ddl_sanpham.DataSource = listShop;
+                    ddl_sanpham.DataTextField = "TenSanPham";
+                    ddl_sanpham.DataValueField = "id";
+                    ddl_sanpham.DataBind();
+                }
+                else
+                {
+                    var list = db.SanPham_Aha_tbs
+                        .OrderBy(p => p.TenSanPham)
+                        .Select(p => new
+                        {
+                            p.id,
+                            p.TenSanPham,
+                            p.GiaBan,
+                            p.PhanTramChoSan
+                        }).ToList();
+
+                    ddl_sanpham.DataSource = list;
+                    ddl_sanpham.DataTextField = "TenSanPham";
+                    ddl_sanpham.DataValueField = "id";
+                    ddl_sanpham.DataBind();
+                }
 
                 ddl_sanpham.Items.Insert(0, new ListItem("-- Chọn sản phẩm --", ""));
             }
@@ -424,10 +661,24 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
 
         using (dbDataContext db = new dbDataContext())
         {
-            var sp = db.SanPham_Aha_tbs.FirstOrDefault(x => x.id == id);
-            if (sp == null) return 0;
+            if (IsShopPortalMode())
+            {
+                string seller = GetSellerAccount();
+                var spShop = db.BaiViet_tbs.FirstOrDefault(x =>
+                    x.id == id
+                    && x.nguoitao == seller
+                    && (x.phanloai == CompanyShop_cl.ProductTypePublic || x.phanloai == CompanyShop_cl.ProductTypeInternal));
 
-            return (long)(sp.GiaBan ?? 0);
+                if (spShop == null) return 0;
+                return (long)(spShop.giaban ?? 0m);
+            }
+            else
+            {
+                var sp = db.SanPham_Aha_tbs.FirstOrDefault(x => x.id == id);
+                if (sp == null) return 0;
+
+                return (long)(sp.GiaBan ?? 0);
+            }
         }
     }
 
@@ -438,15 +689,36 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
 
         using (dbDataContext db = new dbDataContext())
         {
-            var sp = db.SanPham_Aha_tbs.FirstOrDefault(x => x.id == id);
-            if (sp == null) return 0;
+            if (IsShopPortalMode())
+            {
+                string seller = GetSellerAccount();
+                var spShop = db.BaiViet_tbs.FirstOrDefault(x =>
+                    x.id == id
+                    && x.nguoitao == seller
+                    && (x.phanloai == CompanyShop_cl.ProductTypePublic || x.phanloai == CompanyShop_cl.ProductTypeInternal));
 
-            return (decimal)(sp.PhanTramChoSan ?? 0);
+                if (spShop == null) return 0;
+                return CompanyShop_cl.GetPlatformSharePercent(spShop);
+            }
+            else
+            {
+                var sp = db.SanPham_Aha_tbs.FirstOrDefault(x => x.id == id);
+                if (sp == null) return 0;
+
+                return (decimal)(sp.PhanTramChoSan ?? 0);
+            }
         }
     }
 
-    string formatMoneyVND(long money) => money.ToString("#,##0");
-    string formatDongAInternational(decimal dongA) => dongA.ToString("#,##0.##");
+    string formatMoneyVND(long money)
+    {
+        return money.ToString("#,##0");
+    }
+
+    string formatDongAInternational(decimal dongA)
+    {
+        return dongA.ToString("#,##0.##");
+    }
 
     void tinhTienVaDongA()
     {
@@ -479,7 +751,8 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin(PermissionProfile_cl.HoSoTieuDung, PermissionProfile_cl.HoSoTieuDung);
+            if (!EnsurePortalContext())
+                return;
             Response.Redirect(BuildSellUrl(), false);
             Context.ApplicationInstance.CompleteRequest();
         }
@@ -509,7 +782,8 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
     // ======================= CORE: BÁN SẢN PHẨM (LOGIC MỚI) =======================
     protected void but_tao_banthe_Click(object sender, EventArgs e)
     {
-        check_login_cl.check_login_admin(PermissionProfile_cl.HoSoTieuDung, PermissionProfile_cl.HoSoTieuDung);
+        if (!EnsurePortalContext())
+            return;
 
         // Validate
         if (string.IsNullOrEmpty(ddl_sanpham.SelectedValue))
@@ -533,6 +807,19 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
 
         string taiKhoanMua = ddl_taikhoan_nhadautu.SelectedValue.Trim();
         int idSanPham = getIdSanPham();
+        string taiKhoanBan = GetSellerAccount();
+        if (string.IsNullOrEmpty(taiKhoanBan))
+            taiKhoanBan = IsShopPortalMode() ? ResolveCurrentShopAccount() : ResolveCurrentAdminAccount();
+        if (string.IsNullOrEmpty(taiKhoanBan))
+            taiKhoanBan = IsShopPortalMode() ? "" : "admin";
+
+        if (string.IsNullOrEmpty(taiKhoanBan))
+        {
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                thongbao_class.metro_dialog("Thông báo", "Không xác định được tài khoản bán.", "false", "false", "OK", "alert", ""), true);
+            return;
+        }
+
         DateTime now = AhaTime_cl.Now;
 
         try
@@ -545,12 +832,31 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
                 {
                     db.Transaction = tran;
 
-                    var sp = db.SanPham_Aha_tbs.FirstOrDefault(x => x.id == idSanPham);
-                    if (sp == null)
-                        throw new Exception("Sản phẩm không tồn tại.");
+                    bool shopMode = IsShopPortalMode();
+                    long giaBan1 = 0;
+                    decimal ptChoSan = 0;
 
-                    long giaBan1 = (long)(sp.GiaBan ?? 0);
-                    decimal ptChoSan = (decimal)(sp.PhanTramChoSan ?? 0);
+                    if (shopMode)
+                    {
+                        var spShop = db.BaiViet_tbs.FirstOrDefault(x =>
+                            x.id == idSanPham
+                            && x.nguoitao == taiKhoanBan
+                            && (x.phanloai == CompanyShop_cl.ProductTypePublic || x.phanloai == CompanyShop_cl.ProductTypeInternal));
+                        if (spShop == null)
+                            throw new Exception("Sản phẩm không tồn tại hoặc không thuộc shop công ty.");
+
+                        giaBan1 = (long)(spShop.giaban ?? 0m);
+                        ptChoSan = CompanyShop_cl.GetPlatformSharePercent(spShop);
+                    }
+                    else
+                    {
+                        var sp = db.SanPham_Aha_tbs.FirstOrDefault(x => x.id == idSanPham);
+                        if (sp == null)
+                            throw new Exception("Sản phẩm không tồn tại.");
+
+                        giaBan1 = (long)(sp.GiaBan ?? 0);
+                        ptChoSan = (decimal)(sp.PhanTramChoSan ?? 0);
+                    }
 
                     if (giaBan1 <= 0)
                         throw new Exception("Giá bán sản phẩm không hợp lệ.");
@@ -607,7 +913,7 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
                     // 3) INSERT HEADER (LỊCH SỬ BÁN)
                     // =======================
                     var hd = new ViLoiNhuan_LichSuBanHang_tb();
-                    hd.TaiKhoan_Ban = "admin";
+                    hd.TaiKhoan_Ban = taiKhoanBan;
                     hd.TaiKhoan_Mua = taiKhoanMua;
                     hd.id_SanPhamDichVu = idSanPham;
                     hd.SanPham_Or_Dichvu = true;
@@ -892,13 +1198,19 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
                 return;
             }
 
-            Log_cl.Add_Log(sqlEx.Message, "admin", sqlEx.StackTrace);
+            string actor = GetSellerAccount();
+            if (string.IsNullOrEmpty(actor))
+                actor = IsShopPortalMode() ? "shop" : "admin";
+            Log_cl.Add_Log(sqlEx.Message, actor, sqlEx.StackTrace);
             ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
                 thongbao_class.metro_dialog("Thông báo", "Lỗi SQL: " + sqlEx.Message, "false", "false", "OK", "alert", ""), true);
         }
         catch (Exception ex)
         {
-            Log_cl.Add_Log(ex.Message, "admin", ex.StackTrace);
+            string actor = GetSellerAccount();
+            if (string.IsNullOrEmpty(actor))
+                actor = IsShopPortalMode() ? "shop" : "admin";
+            Log_cl.Add_Log(ex.Message, actor, ex.StackTrace);
             ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
                 thongbao_class.metro_dialog("Thông báo", "Có lỗi xảy ra: " + ex.Message, "false", "false", "OK", "alert", ""), true);
         }

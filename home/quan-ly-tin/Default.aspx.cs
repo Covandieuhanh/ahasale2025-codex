@@ -21,8 +21,45 @@ public partial class home_quan_ly_bai_Default : System.Web.UI.Page
 
         using (dbDataContext db = new dbDataContext())
         {
+            taikhoan_tb acc = db.taikhoan_tbs.FirstOrDefault(x => x.taikhoan == tk);
+            if (acc != null && PortalScope_cl.CanLoginShop(acc.taikhoan, acc.phanloai, acc.permission))
+                return true;
+
             // ✅ điều kiện: đã có bản ghi duyệt thành công TrangThai = 1
             return db.DangKy_GianHangDoiTac_tbs.Any(x => x.taikhoan == tk && x.TrangThai == 1);
+        }
+    }
+
+    private bool IsCurrentCompanyShopPortal()
+    {
+        using (dbDataContext db = new dbDataContext())
+        {
+            return CompanyShop_cl.IsCurrentPortalCompanyShop(db);
+        }
+    }
+
+    private bool IsCompanyShopPortalCached()
+    {
+        return string.Equals((ViewState["is_company_shop_portal"] ?? "").ToString(), "1", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void BindCompanyShopOptions(bool isCompanyShopPortal, bool resetDefaults)
+    {
+        ph_company_shop_options.Visible = isCompanyShopPortal;
+        if (!isCompanyShopPortal)
+            return;
+
+        if (ddl_kenh_hienthi.Items.Count == 0)
+        {
+            ddl_kenh_hienthi.Items.Add(new ListItem("Công khai (hiển thị ngoài Home)", "public"));
+            ddl_kenh_hienthi.Items.Add(new ListItem("Nội bộ (chỉ shop công ty tự bán)", "internal"));
+        }
+
+        if (resetDefaults)
+        {
+            if (ddl_kenh_hienthi.Items.FindByValue("public") != null)
+                ddl_kenh_hienthi.SelectedValue = "public";
+            txt_phantram_san.Text = "0";
         }
     }
 
@@ -36,6 +73,9 @@ public partial class home_quan_ly_bai_Default : System.Web.UI.Page
     protected void Page_Load(object sender, EventArgs e)
     {
         lnk_add_new.NavigateUrl = GetCreatePostUrl();
+        bool isCompanyShopPortal = IsCurrentCompanyShopPortal();
+        ViewState["is_company_shop_portal"] = isCompanyShopPortal ? "1" : "0";
+        ph_company_shop_options.Visible = isCompanyShopPortal;
 
         if (!IsPostBack)
         {
@@ -64,6 +104,7 @@ public partial class home_quan_ly_bai_Default : System.Web.UI.Page
             { }
 
             set_dulieu_macdinh();
+            BindCompanyShopOptions(isCompanyShopPortal, true);
             show_main();
         }
     }
@@ -79,7 +120,26 @@ public partial class home_quan_ly_bai_Default : System.Web.UI.Page
         using (dbDataContext db = new dbDataContext())
         {
             #region lấy dữ liệu
-            var list_all = (from ob1 in db.BaiViet_tbs.Where(p => p.phanloai == "sanpham" && p.nguoitao == ViewState["taikhoan"].ToString())
+            string taiKhoan = (ViewState["taikhoan"] ?? "").ToString().Trim().ToLowerInvariant();
+            if (taiKhoan == "")
+                taiKhoan = CompanyShop_cl.ResolveCurrentPortalAccount();
+            if (taiKhoan == "")
+            {
+                Repeater1.DataSource = new object[0];
+                Repeater1.DataBind();
+                lb_show.Text = "0-0/0";
+                lb_show_md.Text = "0-0/0";
+                return;
+            }
+
+            bool isCompanyShopPortal = IsCompanyShopPortalCached();
+            var sourcePosts = db.BaiViet_tbs.Where(p => p.nguoitao == taiKhoan);
+            if (isCompanyShopPortal)
+                sourcePosts = sourcePosts.Where(p => p.phanloai == CompanyShop_cl.ProductTypePublic || p.phanloai == CompanyShop_cl.ProductTypeInternal);
+            else
+                sourcePosts = sourcePosts.Where(p => p.phanloai == CompanyShop_cl.ProductTypePublic);
+
+            var list_all = (from ob1 in sourcePosts
                             join ob2 in db.DanhMuc_tbs on ob1.id_DanhMuc equals ob2.id.ToString() into danhMucGroup
                             from ob2 in danhMucGroup.DefaultIfEmpty()
                             join ob3 in db.DanhMuc_tbs on ob1.id_DanhMucCap2 equals ob3.id.ToString() into danhMucGroup2
@@ -96,6 +156,8 @@ public partial class home_quan_ly_bai_Default : System.Web.UI.Page
                                 ob1.description,
                            
                                 PhanTram_GiamGia_ThanhToan_BangEvoucher = ob1.PhanTram_GiamGia_ThanhToan_BangEvoucher,
+                                PhanTram_ChiTra_ChoSan = ob1.banhang_thuong,
+                                KenhRaw = ob1.phanloai,
                                 TenMenu = ob2 != null ? ob2.name : "",  // Trả về rỗng nếu không có danh mục
                                 TenMenu2 = ob3 != null ? "<span class='pl-3 mif-chevron-right'></span>" + ob3.name : "",  // Trả về rỗng nếu không có danh mục con
                             }).AsQueryable();
@@ -108,7 +170,7 @@ public partial class home_quan_ly_bai_Default : System.Web.UI.Page
             {
                 string _key1 = txt_timkiem1.Text.Trim();
                 if (!string.IsNullOrEmpty(_key1))
-                    list_all = list_all.Where(p => p.name.Contains(_key1) || p.name_en.Contains(_key) || p.id.ToString() == _key1);
+                    list_all = list_all.Where(p => p.name.Contains(_key1) || p.name_en.Contains(_key1) || p.id.ToString() == _key1);
             }
 
             //sắp xếp
@@ -182,6 +244,7 @@ public partial class home_quan_ly_bai_Default : System.Web.UI.Page
         txt_name.Text = "";
         txt_giaban.Text = "0";
         txt_phantram_uu_dai.Text = "0"; // ✅ NEW default
+        txt_phantram_san.Text = "0";
         txt_description.Text = "";
         txt_noidung.Text = "";
         txt_link_fileupload.Text = "";
@@ -215,6 +278,7 @@ public partial class home_quan_ly_bai_Default : System.Web.UI.Page
                 DanhSachTP.Items.Add(new ListItem(tp.Ten, tp.Ten));
             }
         }
+        BindCompanyShopOptions(IsCompanyShopPortalCached(), true);
 
         //hiện form add_edit trong updatePanel_add
         pn_add.Visible = !pn_add.Visible;
@@ -274,10 +338,18 @@ public partial class home_quan_ly_bai_Default : System.Web.UI.Page
         }
         if (_phantram_uu_dai < 0) _phantram_uu_dai = 0;
 
+        int _phantram_chietkhau_san = 0;
+        int.TryParse((txt_phantram_san.Text ?? "").Trim(), out _phantram_chietkhau_san);
+        _phantram_chietkhau_san = CompanyShop_cl.ClampPlatformSharePercent(_phantram_chietkhau_san);
+        string _kenh_hienthi = (ddl_kenh_hienthi.SelectedValue ?? "").Trim();
+
         #endregion
 
         using (dbDataContext db = new dbDataContext())
         {
+            bool isCompanyShop = CompanyShop_cl.IsCompanyShopAccount(db, _nguoitao);
+            _phanloai_baiviet = CompanyShop_cl.NormalizeProductType(_kenh_hienthi, isCompanyShop);
+
             #region Kiểm tra ngoại lệ.
             if (_idmenu == "")
             {
@@ -355,6 +427,7 @@ public partial class home_quan_ly_bai_Default : System.Web.UI.Page
                 // ✅ NEW: lưu phần trăm ưu đãi (null coi như 0)
                 // Nếu field của bạn là int? thì vẫn ok (0), còn nếu muốn null khi 0 thì có thể set null tại đây.
                 _ob.PhanTram_GiamGia_ThanhToan_BangEvoucher = _phantram_uu_dai;
+                CompanyShop_cl.SetPlatformSharePercent(_ob, isCompanyShop ? _phantram_chietkhau_san : 0);
 
                 db.BaiViet_tbs.InsertOnSubmit(_ob);
                 db.SubmitChanges();
@@ -384,6 +457,7 @@ public partial class home_quan_ly_bai_Default : System.Web.UI.Page
                 txt_name.Text = "";
                 txt_giaban.Text = "0";
                 txt_phantram_uu_dai.Text = "0"; // ✅ NEW reset
+                txt_phantram_san.Text = "0";
                 txt_description.Text = "";
                 txt_link_fileupload.Text = "";
                 txt_noidung.Text = "";

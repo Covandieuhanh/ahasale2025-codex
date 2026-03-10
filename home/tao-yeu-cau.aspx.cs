@@ -5,6 +5,7 @@ public partial class home_tao_yeu_cau : System.Web.UI.Page
 {
     int CapHienTai, GiaTriHienTai;
     int CapYeuCau, GiaTriYeuCau;
+    int TierChoPhep;
 
     protected void Page_Load(object sender, EventArgs e)
     {
@@ -30,30 +31,51 @@ public partial class home_tao_yeu_cau : System.Web.UI.Page
     {
         ViewState["CapHienTai"] = CapHienTai;
         ViewState["GiaTriHienTai"] = GiaTriHienTai;
+        ViewState["TierChoPhep"] = TierChoPhep;
     }
 
     private void RestoreCurrentStateFromViewState()
     {
         CapHienTai = GetIntFromViewState("CapHienTai", 0);
         GiaTriHienTai = GetIntFromViewState("GiaTriHienTai", 0);
+        TierChoPhep = GetIntFromViewState("TierChoPhep", TierHome_cl.Tier1);
+        if (TierChoPhep < TierHome_cl.Tier1) TierChoPhep = TierHome_cl.Tier1;
+        if (TierChoPhep > TierHome_cl.Tier3) TierChoPhep = TierHome_cl.Tier3;
     }
 
     private void PopulateCurrentStateFromAccount(taikhoan_tb acc)
     {
-        CapHienTai = acc.HeThongSanPham_Cap123 ?? 1;
-        GiaTriHienTai =
-            CapHienTai == 1 ? (acc.HeThongSanPham_QuyenLoi_MoVi_Cap1_15_9_6 ?? 15) :
-            CapHienTai == 2 ? (acc.HeThongSanPham_QuyenLoi_MoVi_Cap2_25_15_10 ?? 10) :
-                              (acc.HeThongSanPham_QuyenLoi_MoVi_Cap3_10_6_4 ?? 10);
+        CapHienTai = 0;
+        GiaTriHienTai = 0;
+
+        int cap = acc.HeThongSanPham_Cap123 ?? 0;
+        int giaTri = 0;
+        if (cap == 1) giaTri = acc.HeThongSanPham_QuyenLoi_MoVi_Cap1_15_9_6 ?? 0;
+        else if (cap == 2) giaTri = acc.HeThongSanPham_QuyenLoi_MoVi_Cap2_25_15_10 ?? 0;
+        else if (cap == 3) giaTri = acc.HeThongSanPham_QuyenLoi_MoVi_Cap3_10_6_4 ?? 0;
+
+        int? hanhVi = HanhVi9Cap_cl.GetLoaiHanhViByCapGiaTri(cap, giaTri);
+        if (hanhVi.HasValue)
+        {
+            CapHienTai = cap;
+            GiaTriHienTai = giaTri;
+        }
+
+        TierChoPhep = TierHome_cl.GetTierFromPhanLoai(acc.phanloai);
+        if (TierChoPhep <= TierHome_cl.Tier0)
+            TierChoPhep = TierHome_cl.GetTierFromHanhVi(hanhVi);
+        if (TierChoPhep < TierHome_cl.Tier1) TierChoPhep = TierHome_cl.Tier1;
+        if (TierChoPhep > TierHome_cl.Tier3) TierChoPhep = TierHome_cl.Tier3;
+
         SaveCurrentStateToViewState();
     }
 
     private void EnsureCurrentStateLoaded()
     {
-        if (CapHienTai > 0 && GiaTriHienTai > 0) return;
+        if (TierChoPhep > 0) return;
 
         RestoreCurrentStateFromViewState();
-        if (CapHienTai > 0 && GiaTriHienTai > 0) return;
+        if (TierChoPhep > 0) return;
 
         string tk = mahoa_cl.giaima_Bcorn(Session["taikhoan_home"] + "");
         using (dbDataContext db = new dbDataContext())
@@ -77,11 +99,22 @@ public partial class home_tao_yeu_cau : System.Web.UI.Page
             // ===== HIỆN TRẠNG =====
             PopulateCurrentStateFromAccount(acc);
 
-            lb_hientai.Text = HanhVi9Cap_cl.GetTenCapDoTheoCapGiaTri(CapHienTai, GiaTriHienTai);
-            lb_mota_hientai.Text = GetMoTaFromDB(CapHienTai, GiaTriHienTai);
+            bool hasHanhVi = CapHienTai > 0 && GiaTriHienTai > 0
+                && HanhVi9Cap_cl.GetLoaiHanhViByCapGiaTri(CapHienTai, GiaTriHienTai).HasValue;
+
+            if (hasHanhVi)
+            {
+                lb_hientai.Text = HanhVi9Cap_cl.GetTenCapDoTheoCapGiaTri(CapHienTai, GiaTriHienTai);
+                lb_mota_hientai.Text = GetMoTaFromDB(CapHienTai, GiaTriHienTai);
+            }
+            else
+            {
+                lb_hientai.Text = "Chưa có hành vi được xác nhận.";
+                lb_mota_hientai.Text = "Tài khoản chưa có quyền hành vi. Vui lòng gửi yêu cầu xác nhận hành vi mới và chờ admin duyệt.";
+            }
 
             // ===== TRÁCH NHIỆM (CHỈ HIỆN Ở HIỆN TRẠNG) =====
-            string trachNhiem = GetTrachNhiemFromDB(CapHienTai, GiaTriHienTai);
+            string trachNhiem = hasHanhVi ? GetTrachNhiemFromDB(CapHienTai, GiaTriHienTai) : "";
             lb_trachnhiem_hientai.Text = trachNhiem;
             pn_trachnhiem_hientai.Visible = !string.IsNullOrWhiteSpace(trachNhiem);
 
@@ -92,7 +125,7 @@ public partial class home_tao_yeu_cau : System.Web.UI.Page
             ViewState["GiaTriYeuCau"] = null;
 
             // ===== BIND DROPDOWN =====
-            BindDropdownTheoCap(CapHienTai, GiaTriHienTai);
+            BindDropdownTheoCap(TierChoPhep, CapHienTai, GiaTriHienTai);
             LoadLichSuYeuCau(db, tk);
         }
     }
@@ -139,8 +172,12 @@ public partial class home_tao_yeu_cau : System.Web.UI.Page
             x.NgayDuyet,
             x.NguoiDuyet,
             x.GhiChuAdmin,
-            HienTaiText = HanhVi9Cap_cl.GetTenCapDoTheoCapGiaTri(x.CapHienTai, x.GiaTriHienTai),
-            YeuCauText = HanhVi9Cap_cl.GetTenCapDoTheoCapGiaTri(x.CapYeuCau, x.GiaTriYeuCau),
+            HienTaiText = HanhVi9Cap_cl.GetLoaiHanhViByCapGiaTri(x.CapHienTai, x.GiaTriHienTai).HasValue
+                ? HanhVi9Cap_cl.GetTenCapDoTheoCapGiaTri(x.CapHienTai, x.GiaTriHienTai)
+                : "Chưa có hành vi",
+            YeuCauText = HanhVi9Cap_cl.GetLoaiHanhViByCapGiaTri(x.CapYeuCau, x.GiaTriYeuCau).HasValue
+                ? HanhVi9Cap_cl.GetTenCapDoTheoCapGiaTri(x.CapYeuCau, x.GiaTriYeuCau)
+                : ("Cấp " + x.CapYeuCau + " - " + x.GiaTriYeuCau),
             TrangThaiText = GetTrangThaiText(x.TrangThai),
             TrangThaiCss = GetTrangThaiCss(x.TrangThai)
         }).ToList();
@@ -150,29 +187,30 @@ public partial class home_tao_yeu_cau : System.Web.UI.Page
         pn_lichsu_empty.Visible = list.Count == 0;
     }
 
-    // ✅ CHỈNH: truyền thêm cap/giaTri hiện tại để loại bỏ khỏi dropdown
-    void BindDropdownTheoCap(int capHienTai, int giaTriHienTai)
+    // ✅ CHỈNH: bind theo tầng cho phép + loại bỏ hành vi hiện tại
+    void BindDropdownTheoCap(int tierChoPhep, int capHienTai, int giaTriHienTai)
     {
         ddl_level.Items.Clear();
         ddl_level.Items.Add(new System.Web.UI.WebControls.ListItem("-- Chọn cấp độ --", ""));
 
-        // ===== THỨ TỰ LEVEL CHUẨN – KHÓA BẰNG SỐ =====
+        if (tierChoPhep < TierHome_cl.Tier1) tierChoPhep = TierHome_cl.Tier1;
+        if (tierChoPhep > TierHome_cl.Tier3) tierChoPhep = TierHome_cl.Tier3;
 
-        // Cấp 1
-        AddLevelOption(1, 1, 15, capHienTai, giaTriHienTai); // KẾT NỐI
-        AddLevelOption(2, 1, 9, capHienTai, giaTriHienTai);  // CHIA SẺ
-        AddLevelOption(3, 1, 6, capHienTai, giaTriHienTai);  // MARKETING
+        if (tierChoPhep >= TierHome_cl.Tier1)
+        {
+            AddLevelOption(1, 1, 15, capHienTai, giaTriHienTai); // KẾT NỐI
+            AddLevelOption(2, 1, 9, capHienTai, giaTriHienTai);  // CHIA SẺ
+            AddLevelOption(3, 1, 6, capHienTai, giaTriHienTai);  // MARKETING
+        }
 
-        // Cấp 2
-        if (capHienTai >= 2)
+        if (tierChoPhep >= TierHome_cl.Tier2)
         {
             AddLevelOption(4, 2, 10, capHienTai, giaTriHienTai); // BÁN HÀNG
             AddLevelOption(5, 2, 15, capHienTai, giaTriHienTai); // PHÁT TRIỂN
             AddLevelOption(6, 2, 25, capHienTai, giaTriHienTai); // ĐIỀU PHỐI
         }
 
-        // Cấp 3
-        if (capHienTai >= 3)
+        if (tierChoPhep >= TierHome_cl.Tier3)
         {
             AddLevelOption(7, 3, 10, capHienTai, giaTriHienTai); // PHÚC LỢI
             AddLevelOption(8, 3, 6, capHienTai, giaTriHienTai);  // GHI NHẬN
@@ -209,6 +247,20 @@ public partial class home_tao_yeu_cau : System.Web.UI.Page
         var arr = ddl_level.SelectedValue.Split('_');
         CapYeuCau = int.Parse(arr[0]);
         GiaTriYeuCau = int.Parse(arr[1]);
+        int tierYeuCau = TierHome_cl.GetTierFromHanhVi(HanhVi9Cap_cl.GetLoaiHanhViByCapGiaTri(CapYeuCau, GiaTriYeuCau));
+        if (tierYeuCau <= TierHome_cl.Tier0 || tierYeuCau > TierChoPhep)
+        {
+            ddl_level.SelectedIndex = 0;
+            lb_yeucau.Text = "";
+            lb_mota_yeucau.Text = "";
+            ViewState["CapYeuCau"] = null;
+            ViewState["GiaTriYeuCau"] = null;
+
+            Helper_Tabler_cl.ShowModal(this,
+                "Hành vi chọn không thuộc tầng hồ sơ hiện tại.",
+                "Không hợp lệ", true, "warning");
+            return;
+        }
 
         // ✅ an toàn thêm: nếu lỡ có trường hợp trùng hiện tại (do data/logic khác), chặn luôn
         if (CapYeuCau == CapHienTai && GiaTriYeuCau == GiaTriHienTai)
@@ -281,6 +333,7 @@ public partial class home_tao_yeu_cau : System.Web.UI.Page
 
         CapYeuCau = (int)ViewState["CapYeuCau"];
         GiaTriYeuCau = (int)ViewState["GiaTriYeuCau"];
+        int tierYeuCau = TierHome_cl.GetTierFromHanhVi(HanhVi9Cap_cl.GetLoaiHanhViByCapGiaTri(CapYeuCau, GiaTriYeuCau));
 
         // ✅ chặn thêm ở bước gửi (phòng trường hợp viewstate bị set sai)
         if (CapYeuCau == CapHienTai && GiaTriYeuCau == GiaTriHienTai)
@@ -304,12 +357,35 @@ public partial class home_tao_yeu_cau : System.Web.UI.Page
                 return;
             }
             PopulateCurrentStateFromAccount(acc);
+            if (TierChoPhep < TierHome_cl.Tier1) TierChoPhep = TierHome_cl.Tier1;
+            if (TierChoPhep > TierHome_cl.Tier3) TierChoPhep = TierHome_cl.Tier3;
+
+            if (tierYeuCau <= TierHome_cl.Tier0 || tierYeuCau > TierChoPhep)
+            {
+                Helper_Tabler_cl.ShowModal(this,
+                    "Hành vi bạn chọn không thuộc tầng hồ sơ hiện tại. Vui lòng chọn hành vi phù hợp với tầng được admin thiết lập.",
+                    "Không hợp lệ", true, "warning");
+                return;
+            }
 
             if (CapYeuCau == CapHienTai && GiaTriYeuCau == GiaTriHienTai)
             {
                 Helper_Tabler_cl.ShowModal(this,
                     "Bạn đang ở cấp độ này rồi, vui lòng chọn cấp độ khác.",
                     "Không hợp lệ", true, "warning");
+                return;
+            }
+
+            bool hasPendingSame = db.YeuCau_HeThongSanPham_tbs.Any(x =>
+                x.taikhoan == tk
+                && x.TrangThai == 0
+                && x.CapYeuCau == CapYeuCau
+                && x.GiaTriYeuCau == GiaTriYeuCau);
+            if (hasPendingSame)
+            {
+                Helper_Tabler_cl.ShowModal(this,
+                    "Bạn đã có yêu cầu chờ duyệt cho hành vi này. Vui lòng chờ admin xử lý.",
+                    "Đang chờ duyệt", true, "warning");
                 return;
             }
 

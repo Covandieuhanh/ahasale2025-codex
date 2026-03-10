@@ -10,12 +10,42 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
 {// ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Tài khoản đã bị khóa.", "false", "false", "OK", "alert", ""), true);
     //ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Xóa ảnh thành công.", "1000", "warning"), true);
     DateTime_cl dt_cl = new DateTime_cl();
+
+    private string GetCurrentAdminUser()
+    {
+        string tkEnc = Session["taikhoan"] as string;
+        if (string.IsNullOrEmpty(tkEnc))
+            return "";
+
+        try { return mahoa_cl.giaima_Bcorn(tkEnc); }
+        catch { return tkEnc; }
+    }
+
+    private bool EnsureRootAdminAccess()
+    {
+        string tk = GetCurrentAdminUser();
+        if (PermissionProfile_cl.IsRootAdmin(tk))
+            return true;
+
+        Session["thongbao"] = thongbao_class.metro_notifi_onload(
+            "Thông báo",
+            "Chỉ tài khoản admin gốc mới được truy cập Trang chủ Home.",
+            "1500",
+            "warning");
+        Response.Redirect("/admin/default.aspx", false);
+        Context.ApplicationInstance.CompleteRequest();
+        return false;
+    }
+
     protected void Page_Load(object sender, EventArgs e)
     {
+        check_login_cl.check_login_admin("none", "none");
+        if (!EnsureRootAdminAccess())
+            return;
+
         if (!IsPostBack)
         {
             Session["url_back"] = HttpContext.Current.Request.Url.AbsoluteUri.ToLower();
-            check_login_cl.check_login_admin("none", "none");
             try
             {
                 //Nó k kịp lưu vì nó tải trang này trước khi load menu-left
@@ -538,15 +568,72 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
     #endregion
 
     #region THÔNG TIN KHÁC
+    private static bool IsExternalHttpUrl(string raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+            return false;
+        string v = raw.Trim();
+        return v.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+            || v.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsLocalUploadPath(string raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+            return false;
+        return raw.Trim().StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private string MapIfLocalUpload(string raw)
+    {
+        if (!IsLocalUploadPath(raw))
+            return "";
+
+        try
+        {
+            return Server.MapPath("~" + raw.Trim());
+        }
+        catch
+        {
+            return "";
+        }
+    }
+
+    private void TryDeleteOldUploadedFile(string oldPath)
+    {
+        string fullPath = MapIfLocalUpload(oldPath);
+        if (string.IsNullOrEmpty(fullPath))
+            return;
+
+        if (File.Exists(fullPath))
+            File.Delete(fullPath);
+    }
+
+    private static string NormalizeIconShortcutValue(string rawValue)
+    {
+        string value = (rawValue ?? "").Trim();
+        if (value == "")
+            return "/uploads/images/icon-mobile.jpg";
+
+        if (IsExternalHttpUrl(value))
+            return value;
+
+        if (!value.StartsWith("/"))
+            value = "/" + value;
+
+        return value;
+    }
+
     public void load_anh_favicon(string _img, string _url)
     {
         try
         {
-            if (!string.IsNullOrEmpty(_img) && File.Exists(_url)) //nếu có lưu thông tin file và file này tồn tại trên máy chủ
+            string image = (_img ?? "").Trim();
+            if (!string.IsNullOrEmpty(image))
             {
-                txt_link_upload_2.Text = _img;//textbox ẩn để chứa link ảnh /uploads/....
+                txt_link_upload_2.Text = image;//textbox ẩn để chứa link ảnh /uploads/....
                 Button22.Visible = true;
-                Label2.Text = "<img class='img-cover-vuong' style='max-width:100px;max-height:100px' src='" + _img + "' />";
+                Label2.Text = "<img class='img-cover-vuong' style='max-width:100px;max-height:100px' src='" + image + "' />";
             }
             else
             {
@@ -571,11 +658,12 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
     {
         try
         {
-            if (!string.IsNullOrEmpty(_img) && File.Exists(_url)) //nếu có lưu thông tin file và file này tồn tại trên máy chủ
+            string image = NormalizeIconShortcutValue(_img);
+            if (!string.IsNullOrEmpty(image))
             {
-                txt_link_upload_3.Text = _img;//textbox ẩn để chứa link ảnh /uploads/....
+                txt_link_upload_3.Text = image;//textbox ẩn để chứa link ảnh /uploads/....
                 Button33.Visible = true;
-                Label3.Text = "<img class='img-cover-vuong' style='max-width:100px;max-height:100px' src='" + _img + "' />";
+                Label3.Text = "<img class='img-cover-vuong' style='max-width:100px;max-height:100px' src='" + image + "' />";
             }
             else
             {
@@ -608,11 +696,11 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
             if (q != null)
             {
                 string _img_favicon = q.thongtin_icon;
-                string _url_favicon = Server.MapPath("~" + _img_favicon);
+                string _url_favicon = MapIfLocalUpload(_img_favicon);
                 load_anh_favicon(_img_favicon, _url_favicon);
 
                 string _img_icon_mobile = q.thongtin_apple_touch_icon;
-                string _url_icon_mobile = Server.MapPath("~" + _img_icon_mobile);
+                string _url_icon_mobile = MapIfLocalUpload(_img_icon_mobile);
                 load_anh_icon_mobile(_img_icon_mobile, _url_icon_mobile);
             }
         }
@@ -682,33 +770,32 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
                 if (q != null)
                 {
                     string _img_favicon = txt_link_upload_2.Text.Trim();
+                    if (string.IsNullOrEmpty(_img_favicon))
+                        _img_favicon = "/uploads/images/favicon.png";
+
                     string _img_favicon_old = q.thongtin_icon;
                     CaiDatChung_tb _ob = q;
                     _ob.thongtin_icon = _img_favicon;
                     if (_img_favicon != _img_favicon_old)//nếu có hình mới đc chọn hoặc có yêu cầu xóa ảnh cũ
                     {
-                        //thì xóa hình cũ
-                        string _url_favicon_old = Server.MapPath("~" + _img_favicon_old);
-                        if (File.Exists(_url_favicon_old)) //nếu có file
-                            File.Delete(_url_favicon_old);
+                        //thì xóa hình cũ nếu là file upload local
+                        TryDeleteOldUploadedFile(_img_favicon_old);
                     }
                     //giữ nguyên hiển thị ảnh khi nhấn nút CẬP NHẬT
-                    string _url_favicon = Server.MapPath("~" + _img_favicon);
+                    string _url_favicon = MapIfLocalUpload(_img_favicon);
                     load_anh_favicon(_img_favicon, _url_favicon);
 
-                    string _img_iconmobile = txt_link_upload_3.Text.Trim();
+                    string _img_iconmobile = NormalizeIconShortcutValue(txt_link_upload_3.Text);
                     string _img_iconmobile_old = q.thongtin_apple_touch_icon;
                     _ob.thongtin_apple_touch_icon = _img_iconmobile;
                     db.SubmitChanges();
                     if (_img_iconmobile != _img_iconmobile_old)//nếu có hình mới đc chọn hoặc có yêu cầu xóa ảnh cũ
                     {
-                        //thì xóa hình cũ
-                        string _url_iconmobile_old = Server.MapPath("~" + _img_iconmobile_old);
-                        if (File.Exists(_url_iconmobile_old)) //nếu có file
-                            File.Delete(_url_iconmobile_old);
+                        //thì xóa hình cũ nếu là file upload local
+                        TryDeleteOldUploadedFile(_img_iconmobile_old);
                     }
                     //giữ nguyên hiển thị ảnh khi nhấn nút CẬP NHẬT
-                    string _url_iconmobile = Server.MapPath("~" + _img_iconmobile);
+                    string _url_iconmobile = MapIfLocalUpload(_img_iconmobile);
                     load_anh_icon_mobile(_img_iconmobile, _url_iconmobile);
 
                     db.SubmitChanges();

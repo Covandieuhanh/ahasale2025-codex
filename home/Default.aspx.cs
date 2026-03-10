@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
+using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.UI;
@@ -10,8 +12,14 @@ public partial class home_Default : System.Web.UI.Page
     private int PageSize = 20;
     private int CurrentPage
     {
-        get => ViewState["CurrentPage"] != null ? (int)ViewState["CurrentPage"] : 1;
-        set => ViewState["CurrentPage"] = value;
+        get
+        {
+            return ViewState["CurrentPage"] != null ? (int)ViewState["CurrentPage"] : 1;
+        }
+        set
+        {
+            ViewState["CurrentPage"] = value;
+        }
     }
     private const decimal VND_PER_A = 1000m;
     private const bool PROFILE_COMMERCE_ENABLED = true;
@@ -58,11 +66,11 @@ public partial class home_Default : System.Web.UI.Page
         }
 
         // 1) badge
-        string spCuaMinh = DataBinder.Eval(dataItem, "SPCuaMinh")?.ToString() ?? "1";
+        string spCuaMinh = Convert.ToString(DataBinder.Eval(dataItem, "SPCuaMinh")) ?? "1";
         if (litBadge != null) litBadge.Text = RenderProductBadge(spCuaMinh);
 
         // 2) nếu chưa login: ẩn hết action
-        string tkLogin = ViewState["taikhoan"]?.ToString() ?? "";
+        string tkLogin = Convert.ToString(ViewState["taikhoan"]) ?? "";
         if (string.IsNullOrEmpty(tkLogin))
         {
             btnBanSanPham.Visible = false;
@@ -87,7 +95,7 @@ public partial class home_Default : System.Web.UI.Page
 
         // 4) đang xem shop người khác
         // không cho thao tác với sản phẩm do chính mình là người bán gốc (tránh tự bán chéo / tự mua chính mình)
-        string nguoiBanGoc = DataBinder.Eval(dataItem, "NguoiBan")?.ToString() ?? "";
+        string nguoiBanGoc = Convert.ToString(DataBinder.Eval(dataItem, "NguoiBan")) ?? "";
         if (!string.IsNullOrEmpty(nguoiBanGoc) && nguoiBanGoc == tkLogin)
         {
             btnBanSanPham.Visible = false;
@@ -160,7 +168,7 @@ public partial class home_Default : System.Web.UI.Page
         }
 
         // ✅ GUARD: nếu user_query chưa là gian hàng đối tác => không load/bind cửa hàng
-        bool laGianHang = (ViewState["laGianHangDoiTac"]?.ToString() == "1");
+        bool laGianHang = (Convert.ToString(ViewState["laGianHangDoiTac"]) == "1");
         if (!laGianHang)
         {
             // giữ không phá code, chỉ set rỗng / 0
@@ -197,7 +205,9 @@ public partial class home_Default : System.Web.UI.Page
         var list_1 = (from ob in db.BanSanPhamNay_tbs.Where(p => p.taikhoan_ban == ViewState["user_query"].ToString())
                       join ob1 in db.BaiViet_tbs on ob.idsp equals ob1.id.ToString() into BonBap
                       from ob1 in BonBap.DefaultIfEmpty()
-                      where ob1 != null && ob1.bin == false
+                      where ob1 != null
+                            && ob1.bin == false
+                            && db.taikhoan_tbs.Any(acc => acc.taikhoan == ob1.nguoitao && acc.block != true)
                       join ob2 in db.DanhMuc_tbs on ob1.id_DanhMuc equals ob2.id.ToString() into danhMucGroup
                       from ob2 in danhMucGroup.DefaultIfEmpty()
                       join ob3 in db.DanhMuc_tbs on ob1.id_DanhMucCap2 equals ob3.id.ToString() into danhMucGroup2
@@ -300,7 +310,7 @@ public partial class home_Default : System.Web.UI.Page
         {
             // ✅ GUARD: nếu userQuery chưa là gian hàng đối tác => trả về rỗng
             var q_tk = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == userQuery);
-            bool laGianHang = q_tk != null && ShopSlug_cl.IsShopAccount(db, q_tk);
+            bool laGianHang = q_tk != null && q_tk.block != true && ShopSlug_cl.IsShopAccount(db, q_tk);
             if (!laGianHang) return new List<string>();
 
             var list_all = (from ob1 in db.BaiViet_tbs
@@ -316,6 +326,9 @@ public partial class home_Default : System.Web.UI.Page
             var list_1 = (from ob in db.BanSanPhamNay_tbs.Where(p => p.taikhoan_ban == userQuery)
                           join ob1 in db.BaiViet_tbs on ob.idsp equals ob1.id.ToString() into BonBap
                           from ob1 in BonBap.DefaultIfEmpty()
+                          where ob1 != null
+                                && ob1.bin == false
+                                && db.taikhoan_tbs.Any(acc => acc.taikhoan == ob1.nguoitao && acc.block != true)
                           select new { ob1.name }).AsQueryable();
 
             var combinedList = list_all.Concat(list_1);
@@ -364,12 +377,19 @@ public partial class home_Default : System.Web.UI.Page
             var q = db.BanSanPhamNay_tbs.FirstOrDefault(p => p.idsp == _idsp && p.taikhoan_ban == ViewState["taikhoan"].ToString());
             if (q == null)
             {
+                var sp = AccountVisibility_cl.FindVisibleProductById(db, _idsp);
+                if (sp == null)
+                {
+                    Helper_Tabler_cl.ShowModal(this.Page, "Sản phẩm đã ngừng bán hoặc tài khoản đã bị khóa.", "Thông báo", true, "warning");
+                    return;
+                }
+
                 BanSanPhamNay_tb _ob = new BanSanPhamNay_tb();
                 _ob.idsp = _idsp;
                 _ob.ban_ngungban = true;
                 _ob.ngaythem = AhaTime_cl.Now;
                 _ob.taikhoan_ban = ViewState["taikhoan"].ToString();
-                _ob.taikhoan_goc = db.BaiViet_tbs.First(p => p.id.ToString() == _idsp).nguoitao;
+                _ob.taikhoan_goc = sp.nguoitao;
                 db.BanSanPhamNay_tbs.InsertOnSubmit(_ob);
                 db.SubmitChanges();
 
@@ -419,6 +439,12 @@ public partial class home_Default : System.Web.UI.Page
                     Context.ApplicationInstance.CompleteRequest();
                     return;
                 }
+                if (q_tk.block == true)
+                {
+                    Response.Redirect("/", false);
+                    Context.ApplicationInstance.CompleteRequest();
+                    return;
+                }
                 if (AccountType_cl.IsTreasury(q_tk.phanloai))
                 {
                     Response.Redirect("/", false);
@@ -435,15 +461,23 @@ public partial class home_Default : System.Web.UI.Page
                     return;
                 }
 
-                if (!fromSlugRoute && ShopSlug_cl.IsShopAccount(db, q_tk))
+                if (ShopSlug_cl.IsShopAccount(db, q_tk))
                 {
-                    string canonicalShopUrl = ShopSlug_cl.GetPublicUrl(db, q_tk);
-                    if (!string.IsNullOrEmpty(canonicalShopUrl) && canonicalShopUrl != "/")
+                    string targetPublic = ShopSlug_cl.GetPublicUrl(db, q_tk);
+                    string legacyInfoPath = "/" + (q_tk.taikhoan ?? "").Trim().ToLowerInvariant() + ".info";
+                    string currentRawUrl = (Request.RawUrl ?? "").Trim().ToLowerInvariant();
+
+                    // Chặn vòng lặp khi route .info cũ tự trỏ về chính nó.
+                    if (string.IsNullOrEmpty(targetPublic)
+                        || string.Equals(targetPublic, legacyInfoPath, StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(currentRawUrl, targetPublic, StringComparison.OrdinalIgnoreCase))
                     {
-                        Response.Redirect(canonicalShopUrl, false);
-                        Context.ApplicationInstance.CompleteRequest();
-                        return;
+                        targetPublic = "/shop/public.aspx?user=" + HttpUtility.UrlEncode((q_tk.taikhoan ?? "").Trim().ToLowerInvariant());
                     }
+
+                    Response.Redirect(targetPublic, false);
+                    Context.ApplicationInstance.CompleteRequest();
+                    return;
                 }
 
                 ViewState["user_query"] = q_tk.taikhoan;
@@ -468,20 +502,28 @@ public partial class home_Default : System.Web.UI.Page
                 rptMangXaHoiCH.DataBind();
                 phNoSocialLinks.Visible = linkCaNhan.Count == 0;
 
-                string _tk1 = Session["taikhoan_home"] as string;
+                string _tk1 = PortalRequest_cl.GetCurrentAccountEncrypted();
                 if (!string.IsNullOrEmpty(_tk1))
                 {
                     ViewState["taikhoan"] = mahoa_cl.giaima_Bcorn(_tk1);
                     #region kiểm tra nếu có chờ Trao đổi
-                    var q1 = db.DonHang_tbs.FirstOrDefault(p =>
-                        p.nguoiban == ViewState["taikhoan"].ToString()
-                        && (
-                            p.exchange_status == DonHangStateMachine_cl.Exchange_ChoTraoDoi
-                            || (p.exchange_status == null && p.trangthai == DonHangStateMachine_cl.Exchange_ChoTraoDoi)
-                        ));
-                    if (q1 != null)
+                    try
                     {
-                        Response.Redirect("/home/cho-thanh-toan.aspx");
+                        var q1 = db.DonHang_tbs.FirstOrDefault(p =>
+                            p.nguoiban == ViewState["taikhoan"].ToString()
+                            && (
+                                p.exchange_status == DonHangStateMachine_cl.Exchange_ChoTraoDoi
+                                || (p.exchange_status == null && p.trangthai == DonHangStateMachine_cl.Exchange_ChoTraoDoi)
+                            ));
+                        if (q1 != null)
+                        {
+                            Response.Redirect("/home/cho-thanh-toan.aspx");
+                        }
+                    }
+                    catch (SqlException ex)
+                    {
+                        if (!IsMissingDonHangStatusColumnError(ex))
+                            throw;
                     }
                     #endregion
                 }
@@ -491,13 +533,13 @@ public partial class home_Default : System.Web.UI.Page
                 }
                 phOwnerEditButton.Visible = ViewState["taikhoan"].ToString() == q_tk.taikhoan;
 
-                string metaTags = $@"
-                    <title>Hồ sơ {q_tk.hoten}</title>
-                ";
+                string metaTags = string.Format(@"
+                    <title>Hồ sơ {0}</title>
+                ", q_tk.hoten);
                 literal_meta.Text = metaTags;
 
                 ViewState["taikhoan_hienthi_query"] = q_tk.taikhoan;
-                ViewState["avt_query"] = string.IsNullOrWhiteSpace(q_tk.anhdaidien) ? "/uploads/images/macdinh.jpg" : q_tk.anhdaidien.Trim();
+                ViewState["avt_query"] = ResolveProductImage(q_tk.anhdaidien);
                 ViewState["hoten_query"] = string.IsNullOrWhiteSpace(q_tk.hoten) ? q_tk.taikhoan : q_tk.hoten.Trim();
                 ViewState["gioithieu_query"] = string.IsNullOrWhiteSpace(q_tk.gioithieu) ? "Chưa cập nhật giới thiệu." : q_tk.gioithieu.Trim();
                 ViewState["email_query"] = string.IsNullOrWhiteSpace(q_tk.email) ? "Chưa cập nhật" : q_tk.email.Trim();
@@ -548,21 +590,6 @@ public partial class home_Default : System.Web.UI.Page
     }
 
     #region trao đổi (đặt hàng)
-    protected void txt_soluong2_TextChanged(object sender, EventArgs e)
-    {
-        int sl = Number_cl.Check_Int(txt_soluong2.Text.Trim());
-        if (sl <= 0) sl = 0;
-
-        decimal giaVND = 0m;
-        if (ViewState["giaban_vnd"] != null)
-            decimal.TryParse(ViewState["giaban_vnd"].ToString(), out giaVND);
-
-        decimal tongVND = giaVND * sl;
-
-        Literal11.Text = QuyDoi_VND_To_A(tongVND).ToString("#,##0.##");
-        up_dathang.Update();
-    }
-
     private string BuildExchangePageUrl(string idsp, int soLuong, string userBanCheo)
     {
         var query = HttpUtility.ParseQueryString(string.Empty);
@@ -571,10 +598,26 @@ public partial class home_Default : System.Web.UI.Page
         if (!string.IsNullOrWhiteSpace(userBanCheo))
             query["user_bancheo"] = userBanCheo;
         query["return_url"] = (Request.RawUrl ?? "/");
-        if (PortalRequest_cl.IsShopPortalRequest())
-            query["shop_portal"] = "1";
 
-        return "/home/trao-doi.aspx?" + query.ToString();
+        string basePath = PortalRequest_cl.IsShopPortalRequest()
+            ? "/shop/trao-doi"
+            : "/home/trao-doi.aspx";
+        return basePath + "?" + query.ToString();
+    }
+
+    private string BuildAddCartPageUrl(string idsp, int soLuong, string userBanCheo)
+    {
+        var query = HttpUtility.ParseQueryString(string.Empty);
+        query["idsp"] = idsp;
+        query["qty"] = (soLuong <= 0 ? 1 : soLuong).ToString();
+        if (!string.IsNullOrWhiteSpace(userBanCheo))
+            query["user_bancheo"] = userBanCheo;
+        query["return_url"] = (Request.RawUrl ?? "/");
+
+        string basePath = PortalRequest_cl.IsShopPortalRequest()
+            ? "/shop/them-vao-gio"
+            : "/home/them-vao-gio.aspx";
+        return basePath + "?" + query.ToString();
     }
 
     protected void but_traodoi_Click(object sender, EventArgs e)
@@ -596,295 +639,159 @@ public partial class home_Default : System.Web.UI.Page
             return;
         }
 
-        Response.Redirect(BuildExchangePageUrl(idsp, 1, ""), true);
-    }
-
-    protected void but_close_form_dathang_Click(object sender, EventArgs e)
-    {
-        Literal9.Text = "";
-        Literal10.Text = "";
-        Literal11.Text = "";
-        LiteralUuDaiPercent.Text = "0";
-
-        txt_soluong2.Text = "1";
-        ViewState["idsp_giohang"] = null;
-        ViewState["giaban"] = null;
-
-        pn_dathang.Visible = false;
-        up_dathang.Update();
-    }
-
-    protected void but_dathang_Click(object sender, EventArgs e)
-    {
-        if (!EnsureProfileCommerceEnabled()) return;
-
-        using (dbDataContext db = new dbDataContext())
-        {
-            string tk = (ViewState["taikhoan"] ?? "").ToString();
-            if (string.IsNullOrEmpty(tk))
-            {
-                Helper_Tabler_cl.ShowModal(this.Page, "Bạn cần đăng nhập.", "Thông báo", true, "warning");
-                return;
-            }
-
-            int sl = Number_cl.Check_Int((txt_soluong2.Text ?? "").Trim());
-            if (sl <= 0)
-            {
-                Helper_Tabler_cl.ShowModal(this.Page, "Số lượng không hợp lệ.", "Thông báo", true, "danger");
-                return;
-            }
-
-            string idsp = (ViewState["idsp_giohang"] + "");
-            if (string.IsNullOrEmpty(idsp))
-            {
-                Helper_Tabler_cl.ShowModal(this.Page, "Không xác định được sản phẩm.", "Thông báo", true, "danger");
-                return;
-            }
-
-            var sp = db.BaiViet_tbs.FirstOrDefault(p => p.id.ToString() == idsp && p.bin == false);
-            if (sp == null)
-            {
-                Helper_Tabler_cl.ShowModal(this.Page, "Sản phẩm đã ngừng bán", "Thông báo", true, "danger");
-                return;
-            }
-
-            var q_tk = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == tk);
-            if (q_tk == null)
-            {
-                Helper_Tabler_cl.ShowModal(this.Page, "Tài khoản không tồn tại.", "Thông báo", true, "danger");
-                return;
-            }
-
-            decimal soDuA = (q_tk.DongA.HasValue) ? q_tk.DongA.Value : 0m;
-            decimal soDuUuDaiA = (q_tk.Vi1That_Evocher_30PhanTram.HasValue) ? q_tk.Vi1That_Evocher_30PhanTram.Value : 0m;
-
-
-            decimal giaVND = sp.giaban ?? 0m;
-            decimal tongVND = giaVND * sl;
-
-            int phanTramUuDai = 0;
-            if (sp.PhanTram_GiamGia_ThanhToan_BangEvoucher.HasValue)
-                phanTramUuDai = sp.PhanTram_GiamGia_ThanhToan_BangEvoucher.Value;
-            if (phanTramUuDai < 0) phanTramUuDai = 0;
-            if (phanTramUuDai > 50) phanTramUuDai = 50;
-
-            decimal canTraA_Tong = QuyDoi_VND_To_A(tongVND);
-
-            decimal tienUuDaiVND = 0m;
-            decimal A_UuDai = 0m;
-            if (phanTramUuDai > 0)
-            {
-                tienUuDaiVND = tongVND * phanTramUuDai / 100m;
-                A_UuDai = QuyDoi_VND_To_A(tienUuDaiVND);
-            }
-
-            bool apDungUuDai = (phanTramUuDai > 0 && A_UuDai > 0m && soDuUuDaiA >= A_UuDai);
-
-            decimal A_ConLai = 0m;
-
-            if (apDungUuDai)
-            {
-                A_ConLai = canTraA_Tong - A_UuDai;
-                if (A_ConLai < 0m) A_ConLai = 0m;
-
-                if (A_ConLai > soDuA)
-                {
-                    Helper_Tabler_cl.ShowModal(
-                        this.Page,
-                        $"Bạn đủ ví ưu đãi nhưng Đồng A không đủ cho phần còn lại.<br/>" +
-                        $"Cần <b>{A_ConLai:#,##0.##} A</b>, bạn đang có <b>{soDuA:#,##0.##} A</b>.",
-                        "Thông báo",
-                        true,
-                        "danger"
-                    );
-                    return;
-                }
-            }
-            else
-            {
-                if (canTraA_Tong > soDuA)
-                {
-                    Helper_Tabler_cl.ShowModal(
-                        this.Page,
-                        $"Quyền tiêu dùng của bạn không đủ.<br/>" +
-                        $"Cần <b>{canTraA_Tong:#,##0.##} A</b> (≈ {tongVND:#,##0}đ), bạn đang có <b>{soDuA:#,##0.##} A</b>.",
-                        "Thông báo",
-                        true,
-                        "danger"
-                    );
-                    return;
-                }
-            }
-
-            DateTime now = AhaTime_cl.Now;
-
-            DonHang_tb dh = new DonHang_tb();
-            dh.ngaydat = now;
-            dh.nguoimua = tk;
-            dh.nguoiban = sp.nguoitao;
-            dh.order_status = DonHangStateMachine_cl.Order_DaDat;
-            dh.exchange_status = DonHangStateMachine_cl.Exchange_ChuaTraoDoi;
-            dh.tongtien = tongVND;
-            dh.hoten_nguoinhan = (txt_hoten_nguoinhan.Text ?? "").Trim();
-            dh.sdt_nguoinhan = (txt_sdt_nguoinhan.Text ?? "").Trim();
-            dh.diahchi_nguoinhan = (txt_diachi_nguoinhan.Text ?? "").Trim();
-            dh.online_offline = true;
-            dh.chothanhtoan = false;
-            DonHangStateMachine_cl.SyncLegacyStatus(dh);
-
-            db.DonHang_tbs.InsertOnSubmit(dh);
-            db.SubmitChanges();
-
-            string id_dh = dh.id.ToString();
-
-            DonHang_ChiTiet_tb ct = new DonHang_ChiTiet_tb();
-            ct.id_donhang = id_dh;
-            ct.idsp = idsp;
-            ct.nguoiban_goc = dh.nguoiban;
-            ct.nguoiban_danglai = "";
-            ct.soluong = sl;
-            ct.giaban = giaVND;
-            ct.thanhtien = tongVND;
-            ct.PhanTram_GiamGia_ThanhToan_BangEvoucher = phanTramUuDai;
-
-            db.DonHang_ChiTiet_tbs.InsertOnSubmit(ct);
-
-            if (apDungUuDai)
-            {
-                LichSu_DongA_tb lsUuDai = new LichSu_DongA_tb();
-                lsUuDai.taikhoan = tk;
-                lsUuDai.dongA = A_UuDai;
-                lsUuDai.ngay = now;
-                lsUuDai.CongTru = false;
-                lsUuDai.id_donhang = id_dh;
-                lsUuDai.LoaiHoSo_Vi = 2;
-                lsUuDai.ghichu =
-                    $"Ưu đãi {phanTramUuDai}% đơn {id_dh}: {A_UuDai:#,##0.##}A (≈ {tienUuDaiVND:#,##0}đ, 1A={VND_PER_A:#,##0}đ)";
-                db.LichSu_DongA_tbs.InsertOnSubmit(lsUuDai);
-
-                if (q_tk.Vi1That_Evocher_30PhanTram.HasValue)
-                    q_tk.Vi1That_Evocher_30PhanTram = q_tk.Vi1That_Evocher_30PhanTram.Value - A_UuDai;
-
-
-                decimal conLaiVND = tongVND - tienUuDaiVND;
-
-                LichSu_DongA_tb lsA = new LichSu_DongA_tb();
-                lsA.taikhoan = tk;
-                lsA.dongA = A_ConLai;
-                lsA.ngay = now;
-                lsA.CongTru = false;
-                lsA.id_donhang = id_dh;
-                lsA.LoaiHoSo_Vi = 1;
-                lsA.ghichu =
-                    $"Trao đổi đơn {id_dh} (phần còn lại): {A_ConLai:#,##0.##}A (≈ {conLaiVND:#,##0}đ, 1A={VND_PER_A:#,##0}đ)";
-                db.LichSu_DongA_tbs.InsertOnSubmit(lsA);
-
-                if (q_tk.DongA.HasValue)
-                    q_tk.DongA = q_tk.DongA.Value - A_ConLai;
-            }
-            else
-            {
-                LichSu_DongA_tb ls = new LichSu_DongA_tb();
-                ls.taikhoan = tk;
-                ls.dongA = canTraA_Tong;
-                ls.ngay = now;
-                ls.CongTru = false;
-                ls.id_donhang = id_dh;
-                ls.LoaiHoSo_Vi = 1;
-                ls.ghichu =
-                    $"Trao đổi đơn {id_dh}: {canTraA_Tong:#,##0.##}A (≈ {tongVND:#,##0}đ, 1A={VND_PER_A:#,##0}đ)";
-                db.LichSu_DongA_tbs.InsertOnSubmit(ls);
-
-                if (q_tk.DongA.HasValue)
-                    q_tk.DongA = q_tk.DongA.Value - canTraA_Tong;
-            }
-
-            // ===================== THÔNG BÁO (KHÔNG TẠO TRÙNG) =====================
-            string buyerName = (q_tk != null && !string.IsNullOrEmpty(q_tk.hoten)) ? q_tk.hoten : tk;
-
-            bool daCoThongBao = db.ThongBao_tbs.Any(x =>
-                x.bin == false
-                && x.nguoinhan == dh.nguoiban
-                && x.link == "/home/don-ban.aspx"
-                && x.noidung.Contains("ID đơn hàng: " + id_dh)
-            );
-
-            if (!daCoThongBao)
-            {
-                db.ThongBao_tbs.InsertOnSubmit(new ThongBao_tb
-                {
-                    id = Guid.NewGuid(),
-                    daxem = false,
-                    nguoithongbao = tk,
-                    nguoinhan = dh.nguoiban,
-                    link = "/home/don-ban.aspx",
-                    noidung = buyerName + " vừa đặt hàng đến bạn. ID đơn hàng: " + id_dh,
-                    thoigian = now,
-                    bin = false
-                });
-            }
-
-
-            db.SubmitChanges();
-
-            Literal9.Text = "";
-            Literal10.Text = "";
-            Literal11.Text = "";
-            LiteralUuDaiPercent.Text = "0";
-
-            txt_soluong2.Text = "1";
-            ViewState["idsp_giohang"] = null;
-            ViewState["giaban"] = null;
-            ViewState["giaban_vnd"] = null;
-
-            pn_dathang.Visible = false;
-            up_dathang.Update();
-
-            string msgOk;
-            if (apDungUuDai)
-            {
-                decimal conLaiVND = tongVND - tienUuDaiVND;
-                msgOk =
-                    $"Đặt hàng thành công.<br/>" +
-                    $"ID đơn hàng: <b>{id_dh}</b><br/><br/>" +
-                    $"Tổng đơn: <b>{tongVND:#,##0}đ</b> (≈ <b>{canTraA_Tong:#,##0.##} A</b>)<br/>" +
-                    $"Ưu đãi: <b>{phanTramUuDai}%</b> → trừ ví ưu đãi <b>{A_UuDai:#,##0.##} A</b> (≈ {tienUuDaiVND:#,##0}đ)<br/>" +
-                    $"Còn lại: trừ Đồng A <b>{A_ConLai:#,##0.##} A</b> (≈ {conLaiVND:#,##0}đ)<br/><br/>" +
-                    $"(Tổng trừ: {A_UuDai:#,##0.##}A + {A_ConLai:#,##0.##}A = {canTraA_Tong:#,##0.##}A)";
-            }
-            else
-            {
-                if (phanTramUuDai > 0)
-                {
-                    msgOk =
-                        $"Đặt hàng thành công.<br/>" +
-                        $"ID đơn hàng: <b>{id_dh}</b><br/><br/>" +
-                        $"Tổng đơn: <b>{tongVND:#,##0}đ</b> (≈ <b>{canTraA_Tong:#,##0.##} A</b>)<br/>" +
-                        $"Ưu đãi: <b>{phanTramUuDai}%</b> nhưng <b>ví ưu đãi không đủ</b> → hệ thống trừ toàn bộ bằng Đồng A.<br/>" +
-                        $"Đã trừ: <b>{canTraA_Tong:#,##0.##} A</b>.";
-                }
-                else
-                {
-                    msgOk =
-                        $"Đặt hàng thành công.<br/>" +
-                        $"ID đơn hàng: <b>{id_dh}</b><br/>" +
-                        $"Đã trừ <b>{canTraA_Tong:#,##0.##} A</b> (≈ {tongVND:#,##0}đ).";
-                }
-            }
-
-            Helper_Tabler_cl.ShowModal(this.Page, msgOk, "Thông báo", true, "success");
-        }
+        string userBanCheo = (ViewState["user_query"] ?? "").ToString().Trim();
+        Response.Redirect(BuildExchangePageUrl(idsp, 1, userBanCheo), true);
     }
     #endregion
 
     protected bool ShouldShowIcon(object icon)
     {
-        return icon != null && !string.IsNullOrEmpty(icon.ToString());
+        return ShouldShowIcon(icon, null);
+    }
+
+    protected bool ShouldShowIcon(object icon, object link)
+    {
+        return !string.IsNullOrEmpty(ResolveSocialIcon(icon, link));
     }
 
     protected string GetMarginStyle(object icon)
     {
-        return !ShouldShowIcon(icon) ? "margin-left: 60px;" : "";
+        return GetMarginStyle(icon, null);
+    }
+
+    protected string GetMarginStyle(object icon, object link)
+    {
+        return !ShouldShowIcon(icon, link) ? "margin-left: 60px;" : "";
+    }
+
+    protected string ResolveExternalLink(object linkRaw)
+    {
+        string link = (linkRaw ?? "").ToString().Trim();
+        if (string.IsNullOrEmpty(link))
+            return "#";
+
+        if (link.StartsWith("javascript:", StringComparison.OrdinalIgnoreCase))
+            return "#";
+
+        Uri absolute;
+        if (!Uri.TryCreate(link, UriKind.Absolute, out absolute))
+        {
+            string normalized = "https://" + link.TrimStart('/');
+            if (!Uri.TryCreate(normalized, UriKind.Absolute, out absolute))
+                return "#";
+        }
+
+        if (!string.Equals(absolute.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(absolute.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+            return "#";
+
+        return absolute.AbsoluteUri;
+    }
+
+    protected string ResolveExternalLinkLabel(object linkRaw)
+    {
+        string link = (linkRaw ?? "").ToString().Trim();
+        if (string.IsNullOrEmpty(link))
+            return "Liên kết chưa hợp lệ";
+
+        Uri absolute;
+        if (Uri.TryCreate(link, UriKind.Absolute, out absolute))
+            return absolute.Host;
+
+        string compact = link.TrimStart('/');
+        int slash = compact.IndexOf('/');
+        if (slash > 0)
+            return compact.Substring(0, slash);
+
+        return compact;
+    }
+
+    protected string ResolveProductImage(object imageRaw)
+    {
+        return ResolveImageOrFallback(imageRaw, "/uploads/images/macdinh.jpg");
+    }
+
+    protected string ResolveSocialIcon(object imageRaw)
+    {
+        return ResolveSocialIcon(imageRaw, null);
+    }
+
+    protected string ResolveSocialIcon(object imageRaw, object linkRaw)
+    {
+        string explicitIcon = ResolveImageOrFallback(imageRaw, "");
+        if (!string.IsNullOrEmpty(explicitIcon))
+            return explicitIcon;
+
+        return SocialLinkIcon_cl.ResolveIconForDisplay(
+            "",
+            Convert.ToString(linkRaw) ?? ""
+        );
+    }
+
+    private string ResolveImageOrFallback(object imageRaw, string fallback)
+    {
+        string image = (imageRaw ?? "").ToString().Trim();
+        if (string.IsNullOrEmpty(image))
+            return fallback;
+
+        if (image.StartsWith("javascript:", StringComparison.OrdinalIgnoreCase))
+            return fallback;
+
+        Uri absolute;
+        if (Uri.TryCreate(image, UriKind.Absolute, out absolute))
+        {
+            if (string.Equals(absolute.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(absolute.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+                return absolute.AbsoluteUri;
+            return fallback;
+        }
+
+        if (image.StartsWith("~/", StringComparison.Ordinal))
+            image = image.Substring(1);
+        if (!image.StartsWith("/", StringComparison.Ordinal))
+            image = "/" + image;
+
+        if (IsMissingUploadFile(image))
+            return fallback;
+
+        return image;
+    }
+
+    private bool IsMissingUploadFile(string relativeUrl)
+    {
+        if (string.IsNullOrEmpty(relativeUrl))
+            return false;
+
+        string cleanPath = relativeUrl.Trim();
+        if (cleanPath.Length == 0)
+            return false;
+
+        int q = cleanPath.IndexOf('?');
+        if (q >= 0)
+            cleanPath = cleanPath.Substring(0, q);
+
+        int h = cleanPath.IndexOf('#');
+        if (h >= 0)
+            cleanPath = cleanPath.Substring(0, h);
+
+        if (!cleanPath.StartsWith("/", StringComparison.Ordinal))
+            cleanPath = "/" + cleanPath.TrimStart('/');
+
+        if (!cleanPath.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        try
+        {
+            string physical = Server.MapPath("~" + cleanPath);
+            if (string.IsNullOrEmpty(physical))
+                return false;
+
+            return !System.IO.File.Exists(physical);
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     #region thêm vào giỏ
@@ -892,70 +799,16 @@ public partial class home_Default : System.Web.UI.Page
     {
         if (!EnsureProfileCommerceEnabled()) return;
 
-        using (dbDataContext db = new dbDataContext())
+        Button button = (Button)sender;
+        string idsp = (button.CommandArgument ?? "").Trim();
+        if (string.IsNullOrEmpty(idsp))
         {
-            Button button = (Button)sender;
-            string _idsp = button.CommandArgument;
-
-            var q = db.BaiViet_tbs.FirstOrDefault(p => p.id.ToString() == _idsp);
-            if (q != null)
-            {
-                ViewState["idsp_giohang"] = _idsp;
-                Literal1.Text = q.name;
-                txt_soluong1.Text = "1";
-                pn_add_cart.Visible = !pn_add_cart.Visible;
-                up_add_cart.Update();
-            }
+            Helper_Tabler_cl.ShowModal(this.Page, "Không xác định được sản phẩm.", "Thông báo", true, "warning");
+            return;
         }
-    }
 
-    protected void but_close_form_addcart_Click(object sender, EventArgs e)
-    {
-        Literal1.Text = "";
-        txt_soluong1.Text = "1"; ViewState["idsp_giohang"] = null;
-        pn_add_cart.Visible = !pn_add_cart.Visible;
-    }
-
-    protected void but_add_cart_Click(object sender, EventArgs e)
-    {
-        using (dbDataContext db = new dbDataContext())
-        {
-            var q = db.GioHang_tbs.FirstOrDefault(p => p.idsp == ViewState["idsp_giohang"].ToString() && p.taikhoan == ViewState["taikhoan"].ToString());
-            if (q != null)
-            {
-                q.soluong = q.soluong + int.Parse(txt_soluong1.Text.Trim());
-                q.ngaythem = AhaTime_cl.Now;
-                if (q.nguoiban_goc != ViewState["user_query"].ToString())
-                    q.nguoiban_danglai = ViewState["user_query"].ToString();
-                db.SubmitChanges();
-
-                Literal1.Text = "";
-                txt_soluong1.Text = "1"; ViewState["idsp_giohang"] = null;
-                pn_add_cart.Visible = !pn_add_cart.Visible;
-
-                Helper_Tabler_cl.ShowModal(this.Page, "Xử lý thành công.", "Thông báo", true, "success");
-            }
-            else
-            {
-                GioHang_tb _ob = new GioHang_tb();
-                _ob.ngaythem = AhaTime_cl.Now;
-                _ob.taikhoan = ViewState["taikhoan"].ToString();
-                _ob.idsp = ViewState["idsp_giohang"].ToString();
-                _ob.soluong = int.Parse(txt_soluong1.Text.Trim());
-                _ob.nguoiban_goc = db.BaiViet_tbs.First(p => p.id.ToString() == ViewState["idsp_giohang"].ToString()).nguoitao;
-                _ob.nguoiban_danglai = "";
-                if (_ob.nguoiban_goc != ViewState["user_query"].ToString())
-                    _ob.nguoiban_danglai = ViewState["user_query"].ToString();
-                db.GioHang_tbs.InsertOnSubmit(_ob);
-                db.SubmitChanges();
-
-                Literal1.Text = "";
-                txt_soluong1.Text = "1"; ViewState["idsp_giohang"] = null;
-                pn_add_cart.Visible = !pn_add_cart.Visible;
-
-                Helper_Tabler_cl.ShowModal(this.Page, "Xử lý thành công.", "Thông báo", true, "success");
-            }
-        }
+        string userBanCheo = (ViewState["user_query"] ?? "").ToString().Trim();
+        Response.Redirect(BuildAddCartPageUrl(idsp, 1, userBanCheo), true);
     }
     #endregion
 
@@ -1055,13 +908,23 @@ public partial class home_Default : System.Web.UI.Page
 
     private bool IsMyShop()
     {
-        string tk = ViewState["taikhoan"]?.ToString() ?? "";
-        string userQuery = ViewState["user_query"]?.ToString() ?? "";
+        string tk = Convert.ToString(ViewState["taikhoan"]) ?? "";
+        string userQuery = Convert.ToString(ViewState["user_query"]) ?? "";
         return !string.IsNullOrEmpty(tk) && tk == userQuery;
     }
 
     private string RenderProductBadge(object spCuaMinhObj)
     {
         return "<span class='badge bg-green-lt text-green'>SP của shop</span>";
+    }
+
+    private static bool IsMissingDonHangStatusColumnError(SqlException ex)
+    {
+        if (ex == null)
+            return false;
+
+        string message = ex.Message ?? "";
+        return message.IndexOf("Invalid column name 'exchange_status'", StringComparison.OrdinalIgnoreCase) >= 0
+            || message.IndexOf("Invalid column name 'order_status'", StringComparison.OrdinalIgnoreCase) >= 0;
     }
 }

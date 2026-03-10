@@ -1,14 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing.Printing;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
 public partial class home_page_chi_tiet_bai_viet : System.Web.UI.Page
 {
+    private sealed class OneFlagRow
+    {
+        public int Flag { get; set; }
+    }
+
     private int PageSize = 20;
 
     // ✅ TỶ GIÁ: 1A = 1000 VNĐ
@@ -24,18 +31,24 @@ public partial class home_page_chi_tiet_bai_viet : System.Web.UI.Page
 
     private int CurrentPage
     {
-        get => ViewState["CurrentPage"] != null ? (int)ViewState["CurrentPage"] : 1;
-        set => ViewState["CurrentPage"] = value;
+        get
+        {
+            return ViewState["CurrentPage"] != null ? (int)ViewState["CurrentPage"] : 1;
+        }
+        set
+        {
+            ViewState["CurrentPage"] = value;
+        }
     }
 
     private string RenderMainMediaHtml(string mediaUrl, string title)
     {
-        string safeUrl = MediaFile_cl.GetSafeUrl(mediaUrl);
-        if (string.IsNullOrEmpty(safeUrl))
-            safeUrl = "/uploads/images/macdinh.jpg";
+        const string fallback = "/uploads/images/macdinh.jpg";
+        bool isVideo = MediaFile_cl.IsVideo(mediaUrl);
+        string safeUrl = ResolveMediaUrlOrFallback(mediaUrl, fallback);
         string safeAlt = MediaFile_cl.GetSafeText(title);
 
-        if (MediaFile_cl.IsVideo(mediaUrl))
+        if (isVideo && !string.Equals(safeUrl, fallback, StringComparison.OrdinalIgnoreCase))
         {
             string mime = MediaFile_cl.GetVideoMime(mediaUrl);
             return "<video controls playsinline preload='metadata' style='max-width:100%;max-height:100%;object-fit:contain'>" +
@@ -48,12 +61,12 @@ public partial class home_page_chi_tiet_bai_viet : System.Web.UI.Page
 
     private string RenderThumbMediaHtml(string mediaUrl)
     {
-        string safeUrl = MediaFile_cl.GetSafeUrl(mediaUrl);
-        if (string.IsNullOrEmpty(safeUrl))
-            safeUrl = "/uploads/images/macdinh.jpg";
+        const string fallback = "/uploads/images/macdinh.jpg";
+        bool isVideo = MediaFile_cl.IsVideo(mediaUrl);
+        string safeUrl = ResolveMediaUrlOrFallback(mediaUrl, fallback);
 
         string encodedForJs = HttpUtility.JavaScriptStringEncode(safeUrl);
-        if (MediaFile_cl.IsVideo(mediaUrl))
+        if (isVideo && !string.Equals(safeUrl, fallback, StringComparison.OrdinalIgnoreCase))
         {
             string mime = MediaFile_cl.GetVideoMime(mediaUrl);
             return "<video muted playsinline preload='metadata' onclick=\"changeMainMedia('" + encodedForJs + "','video')\">" +
@@ -62,6 +75,84 @@ public partial class home_page_chi_tiet_bai_viet : System.Web.UI.Page
         }
 
         return "<img src='" + safeUrl + "' onclick=\"changeMainMedia('" + encodedForJs + "','image')\" />";
+    }
+
+    private string ResolveMediaUrlOrFallback(string mediaUrl, string fallback)
+    {
+        string safeUrl = MediaFile_cl.GetSafeUrl(mediaUrl);
+        if (string.IsNullOrWhiteSpace(safeUrl))
+            return fallback;
+
+        if (safeUrl.StartsWith("javascript:", StringComparison.OrdinalIgnoreCase))
+            return fallback;
+
+        Uri absolute;
+        if (Uri.TryCreate(safeUrl, UriKind.Absolute, out absolute))
+        {
+            if (string.Equals(absolute.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(absolute.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+                return absolute.AbsoluteUri;
+            return fallback;
+        }
+
+        string localPath = safeUrl;
+        if (localPath.StartsWith("~/", StringComparison.Ordinal))
+            localPath = localPath.Substring(1);
+        if (!localPath.StartsWith("/", StringComparison.Ordinal))
+            localPath = "/" + localPath;
+
+        if (IsMissingUploadFile(localPath))
+            return fallback;
+
+        return localPath;
+    }
+
+    private bool IsMissingUploadFile(string relativeUrl)
+    {
+        return Helper_cl.IsMissingUploadFile(relativeUrl);
+    }
+
+    private string SanitizeContentHtml(string rawHtml)
+    {
+        if (string.IsNullOrEmpty(rawHtml))
+            return "";
+
+        string sanitized = Regex.Replace(
+            rawHtml,
+            "src\\s*=\\s*([\\\"'])(?<url>[^\\\"']+)\\1",
+            delegate(Match match)
+            {
+                Group urlGroup = match.Groups["url"];
+                if (!urlGroup.Success)
+                    return match.Value;
+
+                string resolved = ResolveMediaUrlOrFallback(urlGroup.Value, "/uploads/images/macdinh.jpg");
+                return "src=\"" + HttpUtility.HtmlAttributeEncode(resolved) + "\"";
+            },
+            RegexOptions.IgnoreCase);
+
+        sanitized = Regex.Replace(
+            sanitized,
+            "href\\s*=\\s*([\\\"'])(?<url>[^\\\"']+)\\1",
+            delegate(Match match)
+            {
+                Group urlGroup = match.Groups["url"];
+                if (!urlGroup.Success)
+                    return match.Value;
+
+                string resolved = ResolveMediaUrlOrFallback(urlGroup.Value, "");
+                if (string.IsNullOrEmpty(resolved))
+                    resolved = "#";
+                return "href=\"" + HttpUtility.HtmlAttributeEncode(resolved) + "\"";
+            },
+            RegexOptions.IgnoreCase);
+
+        return sanitized;
+    }
+
+    protected string ResolveSafeImage(object imageRaw)
+    {
+        return ResolveMediaUrlOrFallback((imageRaw ?? "").ToString(), "/uploads/images/macdinh.jpg");
     }
 
     protected void Page_Load(object sender, EventArgs e)
@@ -80,7 +171,7 @@ public partial class home_page_chi_tiet_bai_viet : System.Web.UI.Page
 
             using (dbDataContext db = new dbDataContext())
             {
-                var q = db.BaiViet_tbs.FirstOrDefault(p => p.id.ToString() == ViewState["idsp"].ToString() && p.bin == false);
+                var q = AccountVisibility_cl.FindVisibleProductById(db, ViewState["idsp"].ToString());
                 if (q == null)
                 {
                     Response.Redirect("/");
@@ -100,16 +191,16 @@ public partial class home_page_chi_tiet_bai_viet : System.Web.UI.Page
                 Label1.Text = q.description;
 
                 string thanhPho = string.IsNullOrWhiteSpace(q.ThanhPho) ? "Không có" : q.ThanhPho;
-                Label2.Text = $"<a href='{q.LinkMap}' target='_blank' class='text-muted'>" +
-                              $"<i class='ti ti-map-pin'></i> {thanhPho}</a>";
+                Label2.Text = string.Format("<a href='{0}' target='_blank' class='text-muted'>", q.LinkMap) +
+                              string.Format("<i class='ti ti-map-pin'></i> {0}</a>", thanhPho);
 
                 TimeSpan timeAgo = AhaTime_cl.Now - q.ngaytao.Value;
                 if (timeAgo.TotalDays >= 1)
-                    Label6.Text = $"Tạo {(int)timeAgo.TotalDays} ngày trước";
+                    Label6.Text = string.Format("Tạo {0} ngày trước", (int)timeAgo.TotalDays);
                 else if (timeAgo.TotalHours >= 1)
-                    Label6.Text = $"Tạo {(int)timeAgo.TotalHours} giờ trước";
+                    Label6.Text = string.Format("Tạo {0} giờ trước", (int)timeAgo.TotalHours);
                 else if (timeAgo.TotalMinutes >= 1)
-                    Label6.Text = $"Tạo {(int)timeAgo.TotalMinutes} phút trước";
+                    Label6.Text = string.Format("Tạo {0} phút trước", (int)timeAgo.TotalMinutes);
                 else
                     Label6.Text = "Vừa xong";
 
@@ -136,7 +227,7 @@ public partial class home_page_chi_tiet_bai_viet : System.Web.UI.Page
                 // ✅ GIÁ BÁN VNĐ
                 Label5.Text = q.giaban.Value.ToString("#,##0.##");
 
-                Label4.Text = q.content_post;
+                Label4.Text = SanitizeContentHtml(q.content_post);
                 ViewState["giaban"] = q.giaban;
                 ViewState["idmn"] = q.id_DanhMuc;
                 ViewState["nguoiban"] = q.nguoitao;
@@ -148,21 +239,21 @@ public partial class home_page_chi_tiet_bai_viet : System.Web.UI.Page
                 string imageRelativePath = listAnh.FirstOrDefault(p => MediaFile_cl.IsImage(p));
                 if (string.IsNullOrEmpty(imageRelativePath))
                     imageRelativePath = "/uploads/images/macdinh.jpg";
-                string imageUrl = $"{Request.Url.Scheme}://{Request.Url.Authority}{imageRelativePath}";
+                string imageUrl = string.Format("{0}://{1}{2}", Request.Url.Scheme, Request.Url.Authority, imageRelativePath);
 
-                string metaTags = $@"
-                    <title>{title}</title>
-                    <meta name='description' content='{description}' />
-                    <meta property='og:title' content='{title}' />
-                    <meta property='og:description' content='{description}' />
-                    <meta property='og:image' content='{imageUrl}' />
+                string metaTags = string.Format(@"
+                    <title>{0}</title>
+                    <meta name='description' content='{1}' />
+                    <meta property='og:title' content='{2}' />
+                    <meta property='og:description' content='{3}' />
+                    <meta property='og:image' content='{4}' />
                     <meta property='og:type' content='website' />
-                    <meta property='og:url' content='{Request.Url.AbsoluteUri}' />
+                    <meta property='og:url' content='{5}' />
                     <meta name='twitter:card' content='summary_large_image' />
-                    <meta name='twitter:title' content='{title}' />
-                    <meta name='twitter:description' content='{description}' />
-                    <meta name='twitter:image' content='{imageUrl}' />
-                ";
+                    <meta name='twitter:title' content='{6}' />
+                    <meta name='twitter:description' content='{7}' />
+                    <meta name='twitter:image' content='{8}' />
+                ", title, description, title, description, imageUrl, Request.Url.AbsoluteUri, title, description, imageUrl);
                 literal_meta.Text = metaTags;
                 #endregion
 
@@ -174,7 +265,7 @@ public partial class home_page_chi_tiet_bai_viet : System.Web.UI.Page
                 if (!string.IsNullOrEmpty(_tk_ban))
                 {
                     var q_check = db.BanSanPhamNay_tbs.FirstOrDefault(p => p.taikhoan_ban == _tk_ban && p.idsp == ViewState["idsp"].ToString());
-                    if (q_check != null)
+                    if (q_check != null && AccountVisibility_cl.IsSellerVisible(db, _tk_ban))
                     {
                         ViewState["nguoiban"] = _tk_ban;
                         ViewState["user_bancheo"] = _tk_ban;
@@ -184,7 +275,7 @@ public partial class home_page_chi_tiet_bai_viet : System.Web.UI.Page
                 var q_tk = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == ViewState["nguoiban"].ToString());
                 if (q_tk != null)
                 {
-                    ViewState["avt_query"] = q_tk.anhdaidien;
+                    ViewState["avt_query"] = ResolveMediaUrlOrFallback(q_tk.anhdaidien, "/uploads/images/macdinh.jpg");
                     ViewState["hoten_query"] = q_tk.hoten;
                     ViewState["sdt_query"] = q_tk.dienthoai;
                     ViewState["link_nguoiban"] = ShopSlug_cl.GetPublicUrl(db, q_tk);
@@ -271,6 +362,29 @@ public partial class home_page_chi_tiet_bai_viet : System.Web.UI.Page
         LoadDanhGia(pageIndex);
     }
 
+    private bool HasAnyOrderForBuyer(dbDataContext db, string taiKhoanMua)
+    {
+        if (db == null) return false;
+        string tk = (taiKhoanMua ?? "").Trim();
+        if (tk == "") return false;
+
+        try
+        {
+            // Dùng SQL tối giản để tương thích DB cũ chưa có cột order_status/exchange_status.
+            var found = db.ExecuteQuery<OneFlagRow>(
+                @"SELECT TOP 1 CAST(1 AS INT) AS Flag
+                  FROM dbo.DonHang_tb dh
+                  INNER JOIN dbo.DonHang_ChiTiet_tb ct ON CAST(dh.id AS NVARCHAR(50)) = ct.id_donhang
+                  WHERE ISNULL(dh.nguoimua,'') = {0}",
+                tk).FirstOrDefault();
+            return found != null && found.Flag == 1;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     private void LoadDanhGia(int page)
     {
         using (dbDataContext db = new dbDataContext())
@@ -329,17 +443,13 @@ public partial class home_page_chi_tiet_bai_viet : System.Web.UI.Page
             if (ViewState["taikhoan"] != null)
             {
                 string taikhoan = ViewState["taikhoan"].ToString();
-
-                var duocanhGia = (from dh in db.DonHang_tbs
-                                  join ct in db.DonHang_ChiTiet_tbs on dh.id.ToString() equals ct.id_donhang
-                                  where dh.nguoimua == taikhoan
-                                  select dh).FirstOrDefault();
+                bool duocanhGia = HasAnyOrderForBuyer(db, taikhoan);
 
                 bool daDanhGia = false;
-                if (duocanhGia != null)
+                if (duocanhGia)
                 {
-                    string taiKhoanDanhGia = ViewState["taikhoan"]?.ToString() ?? "";
-                    string nguoiBan = ViewState["nguoiban"]?.ToString() ?? "";
+                    string taiKhoanDanhGia = Convert.ToString(ViewState["taikhoan"]) ?? "";
+                    string nguoiBan = Convert.ToString(ViewState["nguoiban"]) ?? "";
 
                     daDanhGia = danhSachDanhGiaVaAnh.Any(x =>
                         x.TaiKhoanDanhGia == taiKhoanDanhGia ||
@@ -380,14 +490,15 @@ public partial class home_page_chi_tiet_bai_viet : System.Web.UI.Page
 
     protected void btnGuiDanhGia_Click(object sender, EventArgs e)
     {
-        int diem = int.TryParse(hdDiem.Value, out int result) ? result : 0;
+        int result;
+        int diem = int.TryParse(hdDiem.Value, out result) ? result : 0;
         var danhGia = new DanhGiaBaiViet
         {
-            idBaiViet = ViewState["idsp"]?.ToString(),
+            idBaiViet = Convert.ToString(ViewState["idsp"]),
             NoiDung = txtNoiDung.Text.Trim(),
             Diem = diem,
-            TaiKhoanDanhGia = ViewState["taikhoan"]?.ToString(),
-            ThuocTaiKhoan = ViewState["nguoiban"]?.ToString(),
+            TaiKhoanDanhGia = Convert.ToString(ViewState["taikhoan"]),
+            ThuocTaiKhoan = Convert.ToString(ViewState["nguoiban"]),
             NgayDang = AhaTime_cl.Now,
             UrlAnh = TxtIcon.Text
         };
@@ -415,7 +526,13 @@ public partial class home_page_chi_tiet_bai_viet : System.Web.UI.Page
                 _ob.ban_ngungban = true;
                 _ob.ngaythem = AhaTime_cl.Now;
                 _ob.taikhoan_ban = ViewState["taikhoan"].ToString();
-                _ob.taikhoan_goc = db.BaiViet_tbs.First(p => p.id.ToString() == ViewState["idsp"].ToString()).nguoitao;
+                var sp = AccountVisibility_cl.FindVisibleProductById(db, ViewState["idsp"].ToString());
+                if (sp == null)
+                {
+                    Helper_Tabler_cl.ShowModal(this.Page, "Sản phẩm đã ngừng bán hoặc tài khoản đã bị khóa.", "Thông báo", true, "warning");
+                    return;
+                }
+                _ob.taikhoan_goc = sp.nguoitao;
                 db.BanSanPhamNay_tbs.InsertOnSubmit(_ob);
                 db.SubmitChanges();
 
@@ -432,18 +549,6 @@ public partial class home_page_chi_tiet_bai_viet : System.Web.UI.Page
 
     #region trao đổi (đặt hàng)
 
-    // ===================== SỐ LƯỢNG =====================
-    protected void txt_soluong2_TextChanged(object sender, EventArgs e)
-    {
-        int sl = Number_cl.Check_Int(txt_soluong2.Text.Trim());
-        if (sl <= 0) sl = 0;
-
-        decimal gia = 0m;
-        decimal.TryParse(ViewState["giaban"].ToString(), out gia);
-
-        Literal11.Text = (sl * gia).ToString("#,##0");
-    }
-
     protected string BuildExchangePageUrl(string idsp, int soLuong, string userBanCheo)
     {
         var query = HttpUtility.ParseQueryString(string.Empty);
@@ -452,10 +557,11 @@ public partial class home_page_chi_tiet_bai_viet : System.Web.UI.Page
         if (!string.IsNullOrWhiteSpace(userBanCheo))
             query["user_bancheo"] = userBanCheo;
         query["return_url"] = (Request.RawUrl ?? "/");
-        if (PortalRequest_cl.IsShopPortalRequest())
-            query["shop_portal"] = "1";
 
-        return "/home/trao-doi.aspx?" + query.ToString();
+        string basePath = PortalRequest_cl.IsShopPortalRequest()
+            ? "/shop/trao-doi"
+            : "/home/trao-doi.aspx";
+        return basePath + "?" + query.ToString();
     }
 
     // ===================== MỞ FORM TRAO ĐỔI =====================
@@ -474,230 +580,6 @@ public partial class home_page_chi_tiet_bai_viet : System.Web.UI.Page
         string userBanCheo = (ViewState["user_bancheo"] ?? "").ToString();
         Response.Redirect(BuildExchangePageUrl(idsp, sl, userBanCheo), true);
     }
-
-    // ===================== ĐÓNG FORM =====================
-    protected void but_close_form_dathang_Click(object sender, EventArgs e)
-    {
-        pn_dathang.Visible = false;
-        up_dathang.Update();
-    }
-
-    // ===================== ĐẶT HÀNG (FULL LOGIC 2 VÍ) =====================
-    protected void but_dathang_Click(object sender, EventArgs e)
-    {
-        using (dbDataContext db = new dbDataContext())
-        {
-            string tk = ViewState["taikhoan"]?.ToString();
-            if (string.IsNullOrEmpty(tk))
-            {
-                Helper_Tabler_cl.ShowModal(this.Page, "Bạn cần đăng nhập.", "Thông báo", true, "warning");
-                return;
-            }
-
-            int sl = Number_cl.Check_Int(txt_soluong2.Text.Trim());
-            if (sl <= 0)
-            {
-                Helper_Tabler_cl.ShowModal(this.Page, "Số lượng không hợp lệ.", "Thông báo", true, "danger");
-                return;
-            }
-
-            var q_tk = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == tk);
-            if (q_tk == null)
-            {
-                Helper_Tabler_cl.ShowModal(this.Page, "Tài khoản không tồn tại.", "Thông báo", true, "danger");
-                return;
-            }
-
-            decimal soDuA = q_tk.DongA ?? 0m;
-            decimal soDuUuDaiA = q_tk.Vi1That_Evocher_30PhanTram ?? 0m;
-
-
-            var sp = db.BaiViet_tbs.FirstOrDefault(p =>
-                p.id.ToString() == ViewState["idsp"].ToString() && p.bin == false);
-
-            if (sp == null)
-            {
-                Helper_Tabler_cl.ShowModal(this.Page, "Sản phẩm đã ngừng bán.", "Thông báo", true, "danger");
-                return;
-            }
-
-            decimal giaVND = sp.giaban ?? 0m;
-            decimal tongVND = giaVND * sl;
-
-            int phanTramUuDai = sp.PhanTram_GiamGia_ThanhToan_BangEvoucher ?? 0;
-            if (phanTramUuDai < 0) phanTramUuDai = 0;
-            if (phanTramUuDai > 50) phanTramUuDai = 50;
-
-            decimal canTraA_Tong = QuyDoi_VND_To_A(tongVND);
-
-            decimal tienUuDaiVND = tongVND * phanTramUuDai / 100m;
-            decimal A_UuDai = QuyDoi_VND_To_A(tienUuDaiVND);
-
-            bool apDungUuDai = phanTramUuDai > 0 && A_UuDai > 0 && soDuUuDaiA >= A_UuDai;
-
-            decimal A_ConLai = apDungUuDai ? canTraA_Tong - A_UuDai : canTraA_Tong;
-            if (A_ConLai < 0) A_ConLai = 0m;
-
-            if (apDungUuDai)
-            {
-                if (A_ConLai > soDuA)
-                {
-                    Helper_Tabler_cl.ShowModal(
-                        this.Page,
-                        $"Bạn đủ ví ưu đãi nhưng Đồng A không đủ.<br/>Cần <b>{A_ConLai:#,##0.##} A</b>, bạn đang có <b>{soDuA:#,##0.##} A</b>.",
-                        "Thông báo",
-                        true,
-                        "danger"
-                    );
-                    return;
-                }
-            }
-            else
-            {
-                if (canTraA_Tong > soDuA)
-                {
-                    Helper_Tabler_cl.ShowModal(
-                        this.Page,
-                        $"Quyền tiêu dùng không đủ.<br/>Cần <b>{canTraA_Tong:#,##0.##} A</b> (≈ {tongVND:#,##0}đ), bạn đang có <b>{soDuA:#,##0.##} A</b>.",
-                        "Thông báo",
-                        true,
-                        "danger"
-                    );
-                    return;
-                }
-            }
-
-            DateTime now = AhaTime_cl.Now;
-
-            // ===================== ĐƠN HÀNG =====================
-            DonHang_tb dh = new DonHang_tb();
-            dh.ngaydat = now;
-            dh.nguoimua = tk;
-            dh.nguoiban = sp.nguoitao;
-            dh.order_status = DonHangStateMachine_cl.Order_DaDat;
-            dh.exchange_status = DonHangStateMachine_cl.Exchange_ChuaTraoDoi;
-            dh.tongtien = tongVND;
-            dh.hoten_nguoinhan = txt_hoten_nguoinhan.Text.Trim();
-            dh.sdt_nguoinhan = txt_sdt_nguoinhan.Text.Trim();
-            dh.diahchi_nguoinhan = txt_diachi_nguoinhan.Text.Trim();
-            dh.online_offline = true;
-            dh.chothanhtoan = false;
-            DonHangStateMachine_cl.SyncLegacyStatus(dh);
-
-            db.DonHang_tbs.InsertOnSubmit(dh);
-            db.SubmitChanges();
-
-            string id_dh = dh.id.ToString();
-
-            // ===================== CHI TIẾT =====================
-            DonHang_ChiTiet_tb ct = new DonHang_ChiTiet_tb();
-            ct.id_donhang = id_dh;
-            ct.idsp = sp.id.ToString();
-            ct.nguoiban_goc = dh.nguoiban;
-            ct.nguoiban_danglai = ViewState["user_bancheo"].ToString();
-            ct.soluong = sl;
-            ct.giaban = giaVND;
-            ct.thanhtien = tongVND;
-            ct.PhanTram_GiamGia_ThanhToan_BangEvoucher = phanTramUuDai;
-
-            db.DonHang_ChiTiet_tbs.InsertOnSubmit(ct);
-
-            // ===================== LỊCH SỬ & TRỪ VÍ =====================
-            if (apDungUuDai)
-            {
-                db.LichSu_DongA_tbs.InsertOnSubmit(new LichSu_DongA_tb
-                {
-                    taikhoan = tk,
-                    dongA = A_UuDai,
-                    ngay = now,
-                    CongTru = false,
-                    id_donhang = id_dh,
-                    LoaiHoSo_Vi = 2,
-                    ghichu = $"Ưu đãi {phanTramUuDai}% đơn {id_dh}: {A_UuDai:#,##0.##}A"
-                });
-
-                q_tk.Vi1That_Evocher_30PhanTram -= A_UuDai;
-
-
-                db.LichSu_DongA_tbs.InsertOnSubmit(new LichSu_DongA_tb
-                {
-                    taikhoan = tk,
-                    dongA = A_ConLai,
-                    ngay = now,
-                    CongTru = false,
-                    id_donhang = id_dh,
-                    LoaiHoSo_Vi = 1,
-                    ghichu = $"Trao đổi đơn {id_dh} (còn lại): {A_ConLai:#,##0.##}A"
-                });
-
-                q_tk.DongA -= A_ConLai;
-            }
-            else
-            {
-                db.LichSu_DongA_tbs.InsertOnSubmit(new LichSu_DongA_tb
-                {
-                    taikhoan = tk,
-                    dongA = canTraA_Tong,
-                    ngay = now,
-                    CongTru = false,
-                    id_donhang = id_dh,
-                    LoaiHoSo_Vi = 1,
-                    ghichu = $"Trao đổi đơn {id_dh}: {canTraA_Tong:#,##0.##}A"
-                });
-
-                q_tk.DongA -= canTraA_Tong;
-            }
-
-            // ===================== THÔNG BÁO CHO NGƯỜI BÁN (KHÔNG TRÙNG) =====================
-            string buyerName = (q_tk != null && !string.IsNullOrEmpty(q_tk.hoten)) ? q_tk.hoten : tk;
-
-            // người nhận: người bán thực tế theo đơn (ưu tiên dh.nguoiban)
-            string nguoiNhan = dh.nguoiban;
-
-            // link người bán xem đơn
-            string linkSeller = "/home/don-ban.aspx";
-
-            // nội dung theo yêu cầu: "Họ tên vừa trao đổi sản phẩm của bạn. ID: + id"
-            string noiDungTb = buyerName + " vừa trao đổi sản phẩm của bạn. ID: " + id_dh;
-
-            // check đã có thông báo cho đúng đơn này chưa
-            bool daCoThongBao = db.ThongBao_tbs.Any(x =>
-                x.bin == false
-                && x.nguoinhan == nguoiNhan
-                && x.link == linkSeller
-                && x.noidung.Contains("ID: " + id_dh) // hoặc Contains("ID đơn hàng: " + id_dh) nếu bạn muốn format cũ
-            );
-
-            if (!daCoThongBao)
-            {
-                db.ThongBao_tbs.InsertOnSubmit(new ThongBao_tb
-                {
-                    id = Guid.NewGuid(),
-                    daxem = false,
-                    nguoithongbao = tk,   // người tạo = người mua
-                    nguoinhan = nguoiNhan,
-                    link = linkSeller,
-                    noidung = noiDungTb,
-                    thoigian = now,
-                    bin = false
-                });
-            }
-
-
-            db.SubmitChanges();
-
-            pn_dathang.Visible = false;
-
-            Helper_Tabler_cl.ShowModal(
-                this.Page,
-                $"Đặt hàng thành công.<br/>ID đơn hàng: <b>{id_dh}</b>",
-                "Thông báo",
-                true,
-                "success"
-            );
-        }
-    }
-
     #endregion
 
 
@@ -705,7 +587,11 @@ public partial class home_page_chi_tiet_bai_viet : System.Web.UI.Page
     {
         using (dbDataContext db = new dbDataContext())
         {
-            bool allStopped = !db.BaiViet_tbs.Any(p => p.id.ToString() == ViewState["idsp"].ToString() && p.bin == false);
+            bool allStopped = !db.BaiViet_tbs.Any(p =>
+                p.id.ToString() == ViewState["idsp"].ToString()
+                && p.bin == false
+                && p.phanloai == "sanpham"
+                && db.taikhoan_tbs.Any(acc => acc.taikhoan == p.nguoitao && acc.block != true));
             if (allStopped)
             {
                 Helper_Tabler_cl.ShowModal(this.Page, "Có sản phẩm đã ngừng bán", "Thông báo", true, "danger");
@@ -735,7 +621,13 @@ public partial class home_page_chi_tiet_bai_viet : System.Web.UI.Page
                 _ob.taikhoan = ViewState["taikhoan"].ToString();
                 _ob.idsp = ViewState["idsp"].ToString();
                 _ob.soluong = int.Parse(txt_soluong1.Text.Trim());
-                _ob.nguoiban_goc = db.BaiViet_tbs.First(p => p.id.ToString() == ViewState["idsp"].ToString()).nguoitao;
+                var sp = AccountVisibility_cl.FindVisibleProductById(db, ViewState["idsp"].ToString());
+                if (sp == null)
+                {
+                    Helper_Tabler_cl.ShowModal(this.Page, "Sản phẩm đã ngừng bán hoặc tài khoản đã bị khóa.", "Thông báo", true, "warning");
+                    return;
+                }
+                _ob.nguoiban_goc = sp.nguoitao;
                 _ob.nguoiban_danglai = "";
 
                 if (_ob.nguoiban_goc != ViewState["user_bancheo"].ToString())

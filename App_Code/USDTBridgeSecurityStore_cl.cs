@@ -44,10 +44,14 @@ public static class USDTBridgeSecurityStore_cl
                             sourceIp ?? ""
                         );
                     }
-                    catch (SqlException ex) when (ex.Number == 2601 || ex.Number == 2627)
+                    catch (SqlException ex)
                     {
-                        reason = "nonce_replay";
-                        return false;
+                        if (ex.Number == 2601 || ex.Number == 2627)
+                        {
+                            reason = "nonce_replay";
+                            return false;
+                        }
+                        throw;
                     }
                 }
             }

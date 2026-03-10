@@ -273,7 +273,7 @@
             font-size: 15px;
             font-weight: 800;
             line-height: 1.2;
-            margin-bottom: 4px;
+            margin-bottom: 0;
         }
 
         .bio-link-url {
@@ -282,6 +282,7 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            display: none;
         }
 
         .bio-link-arrow {
@@ -406,133 +407,23 @@
             .bio-contact-grid {
                 grid-template-columns: 1fr;
             }
+
+            .bio-link-item {
+                padding: 10px;
+            }
+
+            .bio-link-title {
+                font-size: 14px;
+            }
+
+            .bio-link-arrow {
+                font-size: 16px;
+            }
         }
     </style>
 </asp:Content>
 
 <asp:Content ID="Content2" ContentPlaceHolderID="main" runat="Server">
-
-    <!-- ===================== MODAL: XÁC NHẬN TRAO ĐỔI ===================== -->
-    <asp:UpdatePanel ID="up_dathang" runat="server" UpdateMode="Conditional">
-        <ContentTemplate>
-            <asp:Panel ID="pn_dathang" runat="server" Visible="false" DefaultButton="but_dathang">
-                <div class="modal modal-blur show" style="display:block;" tabindex="-1" role="dialog" aria-modal="true">
-                    <div class="modal-dialog modal-md modal-dialog-centered" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Xác nhận trao đổi</h5>
-                                <a href="#" class="btn-close" aria-label="Close" id="A1" runat="server" onserverclick="but_close_form_dathang_Click"></a>
-                            </div>
-                            <div class="modal-body">
-                                <div class="mb-2 fw-semibold">
-                                    <asp:Literal ID="Literal9" runat="server"></asp:Literal>
-                                </div>
-                                <div class="mb-3 text-muted">
-                                    <img src="/uploads/images/dong-a.png" style="width:14px" class="me-1" />
-                                    <asp:Literal ID="Literal10" runat="server"></asp:Literal>
-                                </div>
-                                <div class="mb-3">
-                                    <span class="text-muted">Ưu đãi:</span>
-                                    <span class="ms-2 text-warning fw-semibold">
-                                        <asp:Literal ID="LiteralUuDaiPercent" runat="server"></asp:Literal>%
-                                    </span>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label text-danger">Số lượng</label>
-                                    <asp:TextBox ID="txt_soluong2" runat="server" AutoPostBack="true" OnTextChanged="txt_soluong2_TextChanged"
-                                        CssClass="form-control" MaxLength="3" onfocus="AutoSelect(this)" oninput="format_sotien_new(this)"></asp:TextBox>
-                                </div>
-
-                                <div class="mb-3">
-                                    <span class="text-muted">Tổng phải Trao đổi:</span>
-                                    <span class="ms-2">
-                                        <img src="/uploads/images/dong-a.png" style="width:14px" class="me-1" />
-                                        <asp:Literal ID="Literal11" runat="server"></asp:Literal>
-                                    </span>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label text-danger">Người nhận</label>
-                                    <asp:TextBox ID="txt_hoten_nguoinhan" runat="server" CssClass="form-control"></asp:TextBox>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label text-danger">Điện thoại</label>
-                                    <asp:TextBox ID="txt_sdt_nguoinhan" runat="server" CssClass="form-control"></asp:TextBox>
-                                </div>
-
-                                <div class="mb-0">
-                                    <label class="form-label text-danger">Địa chỉ</label>
-                                    <asp:TextBox ID="txt_diachi_nguoinhan" runat="server" TextMode="MultiLine" Rows="3" CssClass="form-control"></asp:TextBox>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <a href="#" class="btn btn-outline-secondary" id="A1b" runat="server" onserverclick="but_close_form_dathang_Click">Đóng</a>
-                                <asp:Button ID="but_dathang" OnClick="but_dathang_Click" runat="server" Text="Xác nhận trao đổi" CssClass="btn btn-primary" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </asp:Panel>
-        </ContentTemplate>
-    </asp:UpdatePanel>
-
-    <asp:UpdateProgress ID="UpdateProgress1" runat="server" AssociatedUpdatePanelID="up_dathang">
-        <ProgressTemplate>
-            <div class="tblr-overlay">
-                <div class="text-center">
-                    <div class="spinner-border" role="status"></div>
-                    <div class="mt-3 text-white">Đang xử lý...</div>
-                </div>
-            </div>
-        </ProgressTemplate>
-    </asp:UpdateProgress>
-
-
-    <!-- ===================== MODAL: THÊM VÀO GIỎ ===================== -->
-    <asp:UpdatePanel ID="up_add_cart" runat="server" UpdateMode="Conditional">
-        <ContentTemplate>
-            <asp:Panel ID="pn_add_cart" runat="server" Visible="false" DefaultButton="but_add_cart">
-                <div class="modal modal-blur show" style="display:block;" tabindex="-1" role="dialog" aria-modal="true">
-                    <div class="modal-dialog modal-md modal-dialog-centered" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Thêm vào giỏ hàng</h5>
-                                <a href="#" class="btn-close" aria-label="Close" id="close_add" runat="server" onserverclick="but_close_form_addcart_Click"></a>
-                            </div>
-                            <div class="modal-body">
-                                <div class="mb-3 fw-semibold">
-                                    <asp:Literal ID="Literal8" runat="server"></asp:Literal>
-                                </div>
-                                <div class="mb-0">
-                                    <label class="form-label text-danger">Số lượng</label>
-                                    <asp:TextBox ID="txt_soluong1" runat="server" CssClass="form-control"
-                                        MaxLength="3" onfocus="AutoSelect(this)" oninput="format_sotien_new(this)"></asp:TextBox>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <a href="#" class="btn btn-outline-secondary" id="close_add_b" runat="server" onserverclick="but_close_form_addcart_Click">Đóng</a>
-                                <asp:Button ID="but_add_cart" OnClick="but_add_cart_Click" runat="server" Text="Thêm vào giỏ hàng" CssClass="btn btn-primary" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </asp:Panel>
-        </ContentTemplate>
-    </asp:UpdatePanel>
-
-    <asp:UpdateProgress ID="UpdateProgress5" runat="server" AssociatedUpdatePanelID="up_add_cart">
-        <ProgressTemplate>
-            <div class="tblr-overlay">
-                <div class="text-center">
-                    <div class="spinner-border" role="status"></div>
-                    <div class="mt-3 text-white">Đang xử lý...</div>
-                </div>
-            </div>
-        </ProgressTemplate>
-    </asp:UpdateProgress>
-
 
     <!-- ===================== MAIN ===================== -->
     <asp:UpdatePanel ID="up_main" runat="server" UpdateMode="Conditional">
@@ -604,13 +495,6 @@
                                         <div class="bio-contact-value"><%= ViewState["diachi_query"] %></div>
                                     </div>
                                 </div>
-                                <div class="bio-contact-item">
-                                    <i class="ti ti-coin"></i>
-                                    <div>
-                                        <div class="bio-contact-label">Hồ sơ quyền tiêu dùng</div>
-                                        <div class="bio-contact-value"><%= ViewState["DongA_query"] %></div>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </section>
@@ -626,16 +510,16 @@
                             <div class="bio-link-list">
                                 <asp:Repeater ID="rptMangXaHoiCN" runat="server">
                                     <ItemTemplate>
-                                        <a class="bio-link-item" target="_blank" href='<%# Eval("Link") %>'>
+                                        <a class="bio-link-item" target="_blank" href='<%# ResolveExternalLink(Eval("Link")) %>'>
                                             <asp:Image ID="imgIcon" runat="server"
                                                 CssClass="bio-link-icon"
-                                                ImageUrl='<%# Eval("Icon") %>'
-                                                Visible='<%# ShouldShowIcon(Eval("Icon")) %>' />
+                                                ImageUrl='<%# ResolveSocialIcon(Eval("Icon"), Eval("Link")) %>'
+                                                Visible='<%# ShouldShowIcon(Eval("Icon"), Eval("Link")) %>' />
                                             <asp:Literal ID="litIconFallback" runat="server"
-                                                Text='<%# ShouldShowIcon(Eval("Icon")) ? "" : "<span class=\"bio-link-icon empty\"><i class=\"ti ti-world\"></i></span>" %>'></asp:Literal>
+                                                Text='<%# ShouldShowIcon(Eval("Icon"), Eval("Link")) ? "" : "<span class=\"bio-link-icon empty\"><i class=\"ti ti-world\"></i></span>" %>'></asp:Literal>
                                             <span class="bio-link-body">
                                                 <span class="bio-link-title"><%# Eval("Ten") %></span>
-                                                <span class="bio-link-url"><%# Eval("Link") %></span>
+                                                <span class="bio-link-url">Nhấn để mở liên kết</span>
                                             </span>
                                             <i class="ti ti-arrow-up-right bio-link-arrow"></i>
                                         </a>
@@ -676,15 +560,15 @@
                                                 <ItemTemplate>
                                                     <div class="d-flex align-items-center mb-3">
                                                         <asp:Image ID="imgIcon" runat="server"
-                                                            ImageUrl='<%# Eval("Icon") %>'
+                                                            ImageUrl='<%# ResolveSocialIcon(Eval("Icon"), Eval("Link")) %>'
                                                             Width="42" Height="42"
                                                             Style="object-fit: cover; border-radius: 10px; margin-right: 10px;"
-                                                            Visible='<%# ShouldShowIcon(Eval("Icon")) %>' />
-                                                        <div style='<%# GetMarginStyle(Eval("Icon")) %>' class="flex-fill">
+                                                            Visible='<%# ShouldShowIcon(Eval("Icon"), Eval("Link")) %>' />
+                                                        <div style='<%# GetMarginStyle(Eval("Icon"), Eval("Link")) %>' class="flex-fill">
                                                             <div class="fw-semibold"><%# Eval("Ten") %></div>
-                                                            <div class="text-muted small text-truncate"><%# Eval("Link") %></div>
+                                                            <div class="text-muted small text-truncate"><%# ResolveExternalLinkLabel(Eval("Link")) %></div>
                                                         </div>
-                                                        <a class="btn btn-sm btn-outline-secondary" target="_blank" href='<%# Eval("Link") %>'>
+                                                        <a class="btn btn-sm btn-outline-secondary" target="_blank" href='<%# ResolveExternalLink(Eval("Link")) %>'>
                                                             <i class="ti ti-external-link"></i>
                                                         </a>
                                                     </div>
@@ -760,7 +644,7 @@
                                                         <div class="card h-100">
                                                             <a class="text-decoration-none" href="/<%#Eval("name_en") %>-<%#Eval("id") %>.html">
                                                                 <div class="square-container">
-                                                                    <img src="<%# Eval("image") %>" alt="<%# Eval("name") %>" />
+                                                                    <img src="<%# string.IsNullOrWhiteSpace((Eval("image") + "").Trim()) ? "/uploads/images/macdinh.jpg" : (Eval("image") + "").Trim() %>" alt="<%# Eval("name") %>" />
                                                                 </div>
                                                             </a>
 
@@ -832,7 +716,7 @@
                                                         <div class="card h-100">
                                                             <a class="text-decoration-none" href="/<%#Eval("name_en") %>-<%#Eval("id") %>.html">
                                                                 <div class="square-container">
-                                                                    <img src="<%# Eval("image") %>" alt="<%# Eval("name") %>" />
+                                                                    <img src="<%# string.IsNullOrWhiteSpace((Eval("image") + "").Trim()) ? "/uploads/images/macdinh.jpg" : (Eval("image") + "").Trim() %>" alt="<%# Eval("name") %>" />
                                                                 </div>
                                                             </a>
 
@@ -924,7 +808,7 @@
                                             <ItemTemplate>
                                                 <div class="bio-review-item">
                                                     <div class="bio-review-head">
-                                                        <asp:Image ID="imgAvatar" runat="server" ImageUrl='<%# Eval("AnhDaiDien") %>'
+                                                        <asp:Image ID="imgAvatar" runat="server" ImageUrl='<%# string.IsNullOrWhiteSpace((Eval("AnhDaiDien") + "").Trim()) ? "/uploads/images/macdinh.jpg" : (Eval("AnhDaiDien") + "").Trim() %>'
                                                             CssClass="bio-review-avatar" AlternateText="Ảnh đại diện" />
 
                                                         <div class="flex-fill">
@@ -939,7 +823,7 @@
                                                     <div class="bio-review-content"><%# Eval("NoiDung") %></div>
 
                                                     <asp:Image ID="imgReview" runat="server"
-                                                        ImageUrl='<%# Eval("UrlAnh") %>'
+                                                        ImageUrl='<%# string.IsNullOrWhiteSpace((Eval("UrlAnh") + "").Trim()) ? "/uploads/images/macdinh.jpg" : (Eval("UrlAnh") + "").Trim() %>'
                                                         Width="120"
                                                         CssClass="review-img"
                                                         Style="max-height:120px;"

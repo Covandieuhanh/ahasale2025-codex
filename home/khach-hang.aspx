@@ -48,7 +48,14 @@
                                     <asp:PlaceHolder ID="PlaceHolder1" runat="server">
                                         <div class="col-md-6">
                                             <label class="form-label text-danger">Mật khẩu</label>
-                                            <asp:TextBox ID="txt_matkhau" TextMode="Password" runat="server" CssClass="form-control"></asp:TextBox>
+                                            <div class="input-group input-group-flat">
+                                                <asp:TextBox ID="txt_matkhau" TextMode="Password" runat="server" CssClass="form-control js-password"></asp:TextBox>
+                                                <span class="input-group-text">
+                                                    <a href="javascript:void(0);" class="link-secondary js-toggle-password" aria-label="Hiện mật khẩu">
+                                                        <span class="aha-password-toggle-label">Hiện</span>
+                                                    </a>
+                                                </span>
+                                            </div>
                                         </div>
                                     </asp:PlaceHolder>
 

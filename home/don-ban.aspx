@@ -293,124 +293,6 @@
     </asp:UpdateProgress>
 
 
-    <!-- ===================== MODAL: CHI TIẾT ĐƠN HÀNG ===================== -->
-    <asp:UpdatePanel ID="up_chitiet" runat="server" UpdateMode="Conditional">
-        <ContentTemplate>
-            <asp:Panel ID="pn_chitiet" runat="server" Visible="false">
-
-                <div class="modal modal-blur show" style="display:block;" tabindex="-1" role="dialog" aria-modal="true">
-                    <div class="modal-dialog modal-xl modal-dialog-centered" role="document" style="max-width: 980px;">
-                        <div class="modal-content">
-
-                            <div class="modal-header">
-                                <h5 class="modal-title">Chi tiết đơn hàng</h5>
-                                <a href="#" class="btn-close" aria-label="Close" id="close_add" runat="server" onserverclick="but_close_form_chitiet_Click"></a>
-                            </div>
-
-                            <div class="modal-body">
-                                <div class="card">
-                                    <div class="table-responsive">
-                                        <table class="table card-table table-vcenter">
-                                            <thead>
-                                                <tr>
-                                                    <th style="width:1px;">ID</th>
-                                                    <th style="width:90px;">Ảnh</th>
-                                                    <th style="min-width:220px;">Tên sản phẩm</th>
-                                                    <th class="text-end" style="min-width:120px;">Giá (VNĐ)</th>
-                                                    <th class="text-end" style="min-width:90px;">Trao đổi (A)</th>
-                                                    <th class="text-end" style="min-width:90px;">Ưu đãi (%)</th>
-
-                                                    <th class="text-center" style="min-width:90px;">Số lượng</th>
-                                                    <th class="text-end" style="min-width:140px;">Trao đổi (VNĐ)</th>
-                                                    <th class="text-end" style="min-width:120px;">Trao đổi (A)</th>
-                                                </tr>
-                                            </thead>
-
-                                            <tbody>
-                                                <asp:Repeater ID="Repeater2" runat="server">
-                                                    <ItemTemplate>
-                                                        <span style="display:none">
-                                                            <asp:Label ID="lbID" runat="server" Text='<%#Eval("id") %>'></asp:Label>
-                                                        </span>
-
-                                                        <tr>
-                                                            <td class="text-center"><%# Eval("id") %></td>
-
-                                                            <td class="text-center">
-                                                                <a href="<%# Eval("image") %>" target="_blank" class="d-inline-block">
-                                                                    <img src="<%# Eval("image") %>" class="img-60" />
-                                                                </a>
-                                                            </td>
-
-                                                            <td>
-                                                                <a href="/<%# Eval("name_en") %>-<%# Eval("id") %>.html" class="text-decoration-none">
-                                                                    <div class="fw-semibold"><%# Eval("name") %></div>
-                                                                </a>
-                                                            </td>
-
-                                                            <td class="text-end money">
-                                                                <%#Eval("giaban","{0:#,##0}") %> ₫
-                                                            </td>
-
-                                                            <td class="text-end money">
-                                                                <%# (Convert.ToDecimal(Eval("giaban")) / 1000m).ToString("0.00") %> A
-                                                            </td>
-
-                                                            <td class="text-end">
-                                                                <%# (Eval("PhanTram_GiamGia_ThanhToan_BangEvoucher") == DBNull.Value || Eval("PhanTram_GiamGia_ThanhToan_BangEvoucher") == null)
-                                                                    ? "0"
-                                                                    : Eval("PhanTram_GiamGia_ThanhToan_BangEvoucher").ToString() %>%
-                                                            </td>
-
-                                                            <td class="text-center">
-                                                                <span class="badge bg-muted-lt text-muted"><%#Eval("soluong") %></span>
-                                                            </td>
-
-                                                            <td class="text-end money">
-                                                                <%#Eval("thanhtien","{0:#,##0}") %> ₫
-                                                            </td>
-
-                                                            <td class="text-end money">
-                                                                <%# (Convert.ToDecimal(Eval("thanhtien")) / 1000m).ToString("0.00") %> A
-                                                            </td>
-                                                        </tr>
-                                                    </ItemTemplate>
-                                                </asp:Repeater>
-                                            </tbody>
-
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="modal-footer">
-                                <asp:Button ID="but_huydonhang" OnClick="but_huydonhang_Click" runat="server"
-                                    Text="Hủy đơn hàng" CssClass="btn btn-outline-danger d-none" />
-                                <asp:Button ID="but_dagiaohang" OnClick="but_dagiaohang_Click" runat="server"
-                                    Text="Xác nhận đã giao hàng" CssClass="btn btn-primary d-none" />
-                                <a href="#" class="btn btn-outline-secondary" id="close_add_b" runat="server" onserverclick="but_close_form_chitiet_Click">Đóng</a>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-
-            </asp:Panel>
-        </ContentTemplate>
-    </asp:UpdatePanel>
-
-    <asp:UpdateProgress ID="UpdateProgress5" runat="server" AssociatedUpdatePanelID="up_chitiet">
-        <ProgressTemplate>
-            <div class="tblr-overlay">
-                <div class="text-center">
-                    <div class="spinner-border" role="status"></div>
-                    <div class="mt-3 text-white">Đang tải...</div>
-                </div>
-            </div>
-        </ProgressTemplate>
-    </asp:UpdateProgress>
-
-
     <!-- ===================== MAIN ===================== -->
     <asp:UpdatePanel ID="up_main" runat="server" UpdateMode="Conditional">
         <ContentTemplate>
@@ -531,10 +413,11 @@
                                                 <td>
                                                     <div class="fw-semibold"><%#Eval("ngaydat","{0:dd/MM/yyyy}") %></div>
                                                     <div class="mt-2">
-                                                        <asp:LinkButton ID="LinkButton1" OnClick="LinkButton1_Click" CommandArgument='<%# Eval("id") %>'
-                                                            runat="server" CssClass="btn btn-outline-secondary btn-sm">
+                                                        <asp:HyperLink ID="hl_chitiet" runat="server"
+                                                            NavigateUrl='<%# BuildOrderDetailUrl(Eval("id")) %>'
+                                                            CssClass="btn btn-outline-secondary btn-sm">
                                                             Chi tiết
-                                                        </asp:LinkButton>
+                                                        </asp:HyperLink>
                                                     </div>
                                                 </td>
 

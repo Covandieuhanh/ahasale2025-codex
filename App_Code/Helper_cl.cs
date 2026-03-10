@@ -20,21 +20,86 @@ public class Helper_cl
     //Helper_Tabler_cl.ShowThongBaoSession(this);//hiện thông báo nếu có
 
     #region hàm tạo phiên bản tự động cho link css và js, chống cache - OK
+    private static string NormalizeStaticAssetPath(string virtualPath)
+    {
+        if (string.IsNullOrWhiteSpace(virtualPath))
+            return virtualPath;
+
+        string path = virtualPath.Trim();
+        const string cssRoot1 = "~/css/";
+        const string cssRoot2 = "~/Css/";
+        const string cssRoot3 = "/css/";
+        const string cssRoot4 = "/Css/";
+
+        if (path.StartsWith(cssRoot1, StringComparison.OrdinalIgnoreCase))
+            return "~/assetscss/" + path.Substring(cssRoot1.Length);
+        if (path.StartsWith(cssRoot2, StringComparison.OrdinalIgnoreCase))
+            return "~/assetscss/" + path.Substring(cssRoot2.Length);
+        if (path.StartsWith(cssRoot3, StringComparison.OrdinalIgnoreCase))
+            return "~/assetscss/" + path.Substring(cssRoot3.Length);
+        if (path.StartsWith(cssRoot4, StringComparison.OrdinalIgnoreCase))
+            return "~/assetscss/" + path.Substring(cssRoot4.Length);
+
+        return path;
+    }
+
     public static string VersionedUrl(string virtualPath)
     {
+        string preferredPath = NormalizeStaticAssetPath(virtualPath);
+
         try
         {
-            string physicalPath = HttpContext.Current.Server.MapPath(virtualPath);
+            string physicalPath = HttpContext.Current.Server.MapPath(preferredPath);
             if (File.Exists(physicalPath))
             {
                 long ticks = File.GetLastWriteTime(physicalPath).Ticks;
-                return VirtualPathUtility.ToAbsolute(virtualPath) + "?v=" + ticks;
+                return VirtualPathUtility.ToAbsolute(preferredPath) + "?v=" + ticks;
+            }
+
+            // fallback: giữ tương thích nếu đường dẫn cũ còn tồn tại.
+            if (!string.Equals(preferredPath, virtualPath, StringComparison.OrdinalIgnoreCase))
+            {
+                string oldPhysicalPath = HttpContext.Current.Server.MapPath(virtualPath);
+                if (File.Exists(oldPhysicalPath))
+                {
+                    long oldTicks = File.GetLastWriteTime(oldPhysicalPath).Ticks;
+                    return VirtualPathUtility.ToAbsolute(virtualPath) + "?v=" + oldTicks;
+                }
             }
         }
         catch { }
 
         // fallback nếu file ko tồn tại
-        return VirtualPathUtility.ToAbsolute(virtualPath) + "?v=0";
+        return VirtualPathUtility.ToAbsolute(preferredPath) + "?v=0";
+    }
+    #endregion
+
+    #region upload image path guard
+    public static bool IsMissingUploadFile(string relativeUrl)
+    {
+        if (string.IsNullOrEmpty(relativeUrl))
+            return false;
+
+        string cleanPath = relativeUrl.Trim();
+        if (cleanPath.Length == 0)
+            return false;
+
+        int q = cleanPath.IndexOf('?');
+        if (q >= 0)
+            cleanPath = cleanPath.Substring(0, q);
+
+        int h = cleanPath.IndexOf('#');
+        if (h >= 0)
+            cleanPath = cleanPath.Substring(0, h);
+
+        if (!cleanPath.StartsWith("/", StringComparison.Ordinal))
+            cleanPath = "/" + cleanPath.TrimStart('/');
+
+        if (!cleanPath.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase))
+            return false;
+        // Runtime local/host có thể map path khác nhau (Docker/IIS/Mono),
+        // nên không chặn ảnh theo File.Exists để tránh fallback sai.
+        return false;
     }
     #endregion
     #region hàm Check quyền, dùng chung - OK
@@ -161,7 +226,7 @@ public class Helper_cl
     )
     {
         if (string.IsNullOrWhiteSpace(toEmail))
-            throw new ArgumentException("Email nhận không được để trống.", nameof(toEmail));
+            throw new ArgumentException("Email nhận không được để trống.", "toEmail");
 
         SendMail(
             new List<string> { toEmail },
@@ -191,7 +256,7 @@ public class Helper_cl
     )
     {
         if (toEmails == null)
-            throw new ArgumentNullException(nameof(toEmails));
+            throw new ArgumentNullException("toEmails");
 
         // Làm sạch danh sách email (trim, distinct, bỏ rỗng)
         var toList = toEmails
@@ -201,7 +266,7 @@ public class Helper_cl
             .ToList();
 
         if (!toList.Any())
-            throw new ArgumentException("Danh sách email nhận đang rỗng.", nameof(toEmails));
+            throw new ArgumentException("Danh sách email nhận đang rỗng.", "toEmails");
 
         // Đọc config
         string smtpServer = ConfigurationManager.AppSettings["SmtpServer"] ?? "";
@@ -241,7 +306,7 @@ public class Helper_cl
             }
         }
 
-        string fromEmail = $"auto{idx}@hotasoft.com";
+        string fromEmail = string.Format("auto{0}@hotasoft.com", idx);
 
         using (var message = new MailMessage())
         {

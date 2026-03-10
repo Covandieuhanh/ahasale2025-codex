@@ -1,0 +1,14 @@
+.DS_Store
+**/.DS_Store
+
+# Local-only configs
+Web.local.config
+docker-compose.override.local.yml
+docker/certs/
+
+# Generated publish output
+Bin/Debug/Publish/
+Bin/Release/Publish/
+
+# Sensitive/local export files
+account-login-data-*.csv

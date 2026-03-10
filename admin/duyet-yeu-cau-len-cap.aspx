@@ -1,4 +1,4 @@
-﻿<%@ Page Title="Duyệt yêu cầu lên cấp" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master"
+﻿<%@ Page Title="Duyệt yêu cầu xác nhận hành vi" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master"
     AutoEventWireup="true" CodeFile="duyet-yeu-cau-len-cap.aspx.cs"
     Inherits="admin_duyet_yeu_cau_len_cap" %>
 
@@ -49,7 +49,7 @@
             <div class="aha-admin-screen p-3">
                 <div class="aha-admin-head">
                     <div>
-                        <h4>DUYỆT YÊU CẦU NÂNG CẤP HỆ THỐNG SẢN PHẨM</h4>
+                        <h4>DUYỆT YÊU CẦU XÁC NHẬN HÀNH VI</h4>
                         <div class="aha-admin-meta">Tập trung xử lý theo trạng thái, tìm nhanh theo tài khoản hoặc ID.</div>
                     </div>
                     <div class="aha-admin-summary">

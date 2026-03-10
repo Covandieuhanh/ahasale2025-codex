@@ -220,15 +220,15 @@ public class Helper_DongA_cl
         db.LichSuChuyenDiem_tbs.InsertOnSubmit(tx);
 
         AddLedger(db, fromWallet, amount, false,
-            $"Trừ {amount:#,##0.##} Quyền tiêu dùng (Chuyển xuống {wTo.hoten})",
+            string.Format("Trừ {0:#,##0.##} Quyền tiêu dùng (Chuyển xuống {1})", amount, wTo.hoten),
             tx.id.ToString(),1);
 
         AddLedger(db, toWallet, amount, true,
-            $"Cộng {amount:#,##0.##} Quyền tiêu dùng (Nhận từ ví gốc ADMIN)",
+            string.Format("Cộng {0:#,##0.##} Quyền tiêu dùng (Nhận từ ví gốc ADMIN)", amount),
             tx.id.ToString(),1);
 
         AddNotify(db, fromWallet, toWallet,
-            $"ADMIN vừa chuyển {amount:#,##0.##} Quyền tiêu dùng cho bạn.",
+            string.Format("ADMIN vừa chuyển {0:#,##0.##} Quyền tiêu dùng cho bạn.", amount),
             "/admin/lich-su-chuyen-diem/default.aspx");
 
         message = "OK";
@@ -295,15 +295,15 @@ public class Helper_DongA_cl
         db.LichSuChuyenDiem_tbs.InsertOnSubmit(tx);
 
         AddLedger(db, fromWallet, amount, false,
-            $"Trừ {amount:#,##0.##} Quyền tiêu dùng (Chuyển cho {wTo.hoten})",
+            string.Format("Trừ {0:#,##0.##} Quyền tiêu dùng (Chuyển cho {1})", amount, wTo.hoten),
             tx.id.ToString(), 1);
 
         AddLedger(db, toWallet, amount, true,
-            $"Cộng {amount:#,##0.##} Quyền tiêu dùng (Nhận từ {wFrom.hoten})",
+            string.Format("Cộng {0:#,##0.##} Quyền tiêu dùng (Nhận từ {1})", amount, wFrom.hoten),
             tx.id.ToString(), 1);
 
         AddNotify(db, fromWallet, toWallet,
-            $"{wFrom.hoten} vừa chuyển {amount:#,##0.##} Quyền tiêu dùng cho bạn.",
+            string.Format("{0} vừa chuyển {1:#,##0.##} Quyền tiêu dùng cho bạn.", wFrom.hoten, amount),
             "/home/lich-su-giao-dich.aspx");
 
         message = "OK";
@@ -360,14 +360,14 @@ public class Helper_DongA_cl
         wReceive.DongA = (wReceive.DongA ?? 0) + amount;
 
         AddLedger(db, WITHDRAW_RECEIVE_WALLET, amount, true,
-            $"Cộng {amount:#,##0.##} Quyền tiêu dùng (Nhận từ lệnh rút {txId})",
+            string.Format("Cộng {0:#,##0.##} Quyền tiêu dùng (Nhận từ lệnh rút {1})", amount, txId),
             txId,1);
 
         tx.trangtrai_rut = "Hoàn thành";
-        ledUserMinus.ghichu = $"Rút điểm thành công. ID rút: {txId}";
+        ledUserMinus.ghichu = string.Format("Rút điểm thành công. ID rút: {0}", txId);
 
         AddNotify(db, GENESIS_WALLET, tx.taikhoan_chuyen,
-            $"ADMIN đã xác nhận lệnh rút điểm của bạn. ID rút: {txId}",
+            string.Format("ADMIN đã xác nhận lệnh rút điểm của bạn. ID rút: {0}", txId),
             "/home/lich-su-giao-dich.aspx");
 
         message = "OK";
@@ -428,18 +428,18 @@ public class Helper_DongA_cl
 
         // 7) Ghi ledger cộng lại (Option A)
         AddLedger(db, user, amount, true,
-            $"Hoàn tiền {amount:#,##0.##} Quyền tiêu dùng do lệnh rút bị hủy. ID rút: {txId}",
+            string.Format("Hoàn tiền {0:#,##0.##} Quyền tiêu dùng do lệnh rút bị hủy. ID rút: {1}", amount, txId),
             txId,1);
 
         // 8) Update trạng thái giao dịch
         tx.trangtrai_rut = "Bị hủy";
 
         // 9) Update ghi chú ledger trừ ban đầu
-        ledUserMinus.ghichu = $"Lệnh rút bị hủy. ID rút: {txId}";
+        ledUserMinus.ghichu = string.Format("Lệnh rút bị hủy. ID rút: {0}", txId);
 
         // 10) Notify user
         AddNotify(db, GENESIS_WALLET, user,
-            $"ADMIN đã hủy lệnh rút điểm của bạn. ID rút: {txId}. Số điểm đã được hoàn lại.",
+            string.Format("ADMIN đã hủy lệnh rút điểm của bạn. ID rút: {0}. Số điểm đã được hoàn lại.", txId),
             "/home/lich-su-giao-dich.aspx");
 
         message = "OK";

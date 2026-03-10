@@ -69,14 +69,7 @@
                             </div>
 
                             <div class="d-flex align-items-center justify-content-between mb-3">
-                                <!-- Quên PIN -->
-                                <asp:LinkButton ID="but_show_form_quenpin" runat="server"
-                                    CssClass="link-secondary"
-                                    OnClick="but_show_form_quenpin_Click">
-                                    Quên mã PIN?
-                                </asp:LinkButton>
-
-                                <!-- Đổi PIN -->
+                                <a href="/home/khoi-phuc-ma-pin.aspx" class="link-secondary">Quên mã PIN?</a>
                                 <asp:Button ID="btnDoiPin" runat="server"
                                     Text="Đổi mã PIN"
                                     OnClick="btnDoiPin_Click"
@@ -87,44 +80,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Modal: Quên PIN (Tabler/Bootstrap) -->
-            <asp:Panel ID="pn_quenpin" runat="server" Visible="false">
-                <div class="modal fade show" style="display:block;" tabindex="-1" role="dialog" aria-modal="true">
-                    <div class="modal-dialog modal-dialog-centered" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Quên mã PIN</h5>
-                                <asp:LinkButton ID="but_close_form_quenpin" runat="server"
-                                    CssClass="btn-close"
-                                    OnClick="but_close_form_quenpin_Click"
-                                    aria-label="Close" />
-                            </div>
-
-                            <div class="modal-body">
-                                <div class="mb-3">
-                                    <label class="form-label">Nhập email khôi phục của bạn</label>
-                                    <asp:TextBox ID="txt_email_quenpin" runat="server"
-                                        CssClass="form-control"
-                                        MaxLength="100"
-                                        placeholder="email@domain.com"></asp:TextBox>
-                                    <div class="text-secondary mt-2">
-                                        <small>Hệ thống sẽ gửi mã PIN mới vào email của bạn. (Giới hạn mỗi 5 phút 1 lần)</small>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="modal-footer">
-                                <asp:Button ID="but_gui_pin_moi" runat="server"
-                                    Text="Gửi PIN mới về email"
-                                    CssClass="btn btn-success"
-                                    OnClick="but_gui_pin_moi_Click" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-backdrop fade show"></div>
-            </asp:Panel>
 
         </ContentTemplate>
     </asp:UpdatePanel>
@@ -143,23 +98,9 @@
 
 <asp:Content ID="Content5" ContentPlaceHolderID="foot_sau" runat="Server">
     <script type="text/javascript">
-        // Toggle password / pin (giống login)
         (function () {
-            function wireToggle() {
-                document.querySelectorAll('.js-toggle-password').forEach(function (btn) {
-                    btn.onclick = function () {
-                        var input = btn.closest('.input-group').querySelector('.js-password');
-                        if (!input) return;
-                        input.type = (input.type === 'password') ? 'text' : 'password';
-                    };
-                });
-            }
-
-            wireToggle();
-
             if (window.Sys && Sys.WebForms) {
                 Sys.WebForms.PageRequestManager.getInstance().add_endRequest(function () {
-                    wireToggle();
                     const pinBox = document.getElementById('<%= txt_PinCu.ClientID %>');
                     if (pinBox) pinBox.focus();
                 });

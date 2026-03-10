@@ -104,6 +104,24 @@
                                         <div class="text-muted small mt-1">Mặc định 0%. Sẽ được trừ tại hồ sơ ưu đãi của người mua.</div>
                                     </div>
 
+                                    <asp:PlaceHolder ID="ph_company_shop_options" runat="server" Visible="false">
+                                        <div class="col-lg-6">
+                                            <label class="form-label">Kênh hiển thị sản phẩm</label>
+                                            <asp:DropDownList ID="ddl_kenh_hienthi" runat="server" CssClass="form-select">
+                                                <asp:ListItem Value="public">Công khai (hiển thị ngoài Home)</asp:ListItem>
+                                                <asp:ListItem Value="internal">Nội bộ (chỉ shop công ty tự bán)</asp:ListItem>
+                                            </asp:DropDownList>
+                                        </div>
+
+                                        <div class="col-lg-6">
+                                            <label class="form-label">% chiết khấu cho sàn (0 - 100%)</label>
+                                            <asp:TextBox ID="txt_phantram_san" runat="server"
+                                                CssClass="form-control" Text="0" MaxLength="3"
+                                                oninput="clamp_percent_0_100(this)"></asp:TextBox>
+                                            <div class="text-muted small mt-1">Áp dụng cho luồng bán sản phẩm của shop công ty.</div>
+                                        </div>
+                                    </asp:PlaceHolder>
+
                                     <div class="col-lg-6">
                                         <label class="form-label">Thành phố</label>
                                         <asp:DropDownList ID="DanhSachTP" runat="server" CssClass="form-select"></asp:DropDownList>
@@ -243,6 +261,8 @@
         <th class="text-end" style="min-width: 120px;">Giá (VNĐ)</th>
         <!-- ✅ NEW -->
         <th class="text-end" style="width: 110px; min-width: 110px;">Ưu đãi (%)</th>
+        <th class="text-end" style="width: 140px; min-width: 140px;">Chiết khấu sàn (%)</th>
+        <th class="text-center" style="width: 110px; min-width: 110px;">Kênh</th>
 
         <th class="text-start" style="min-width: 220px;">Danh mục</th>
         <th style="width: 110px; min-width: 110px;">Ngày tạo</th>
@@ -294,6 +314,18 @@
         : Eval("PhanTram_GiamGia_ThanhToan_BangEvoucher").ToString() %>
 </td>
 
+<td class="text-end">
+    <%# (Eval("PhanTram_ChiTra_ChoSan") == DBNull.Value || Eval("PhanTram_ChiTra_ChoSan") == null)
+        ? "0"
+        : Eval("PhanTram_ChiTra_ChoSan").ToString() %>
+</td>
+
+<td class="text-center">
+    <%# ((Eval("KenhRaw") ?? "").ToString().ToLower() == "sanpham_noibo")
+        ? "<span class='badge bg-orange-lt'>Nội bộ</span>"
+        : "<span class='badge bg-blue-lt'>Công khai</span>" %>
+</td>
+
 
                                                 <td class="text-start">
                                                     <%# Eval("TenMenu") %><br />
@@ -338,6 +370,16 @@
             if (isNaN(v)) { el.value = ""; return; }
             if (v < 0) v = 0;
             if (v > 50) v = 50; // UI clamp, server vẫn validate & báo
+            el.value = v.toString();
+        }
+
+        function clamp_percent_0_100(el) {
+            el.value = (el.value || "").replace(/[^\d]/g, "");
+            if (el.value === "") return;
+            var v = parseInt(el.value, 10);
+            if (isNaN(v)) { el.value = ""; return; }
+            if (v < 0) v = 0;
+            if (v > 100) v = 100;
             el.value = v.toString();
         }
 

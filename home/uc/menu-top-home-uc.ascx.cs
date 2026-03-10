@@ -9,6 +9,54 @@ public partial class home_uc_menu_top_home_uc : System.Web.UI.UserControl
 {
     public string show_menu;
 
+    private void ClearHomeLoginState()
+    {
+        Session["taikhoan_home"] = "";
+        Session["matkhau_home"] = "";
+        if (Request.Cookies["cookie_userinfo_home_bcorn"] != null)
+        {
+            HttpCookie cookie = new HttpCookie("cookie_userinfo_home_bcorn");
+            cookie.Expires = AhaTime_cl.Now.AddDays(-1);
+            cookie.Path = "/";
+            Response.Cookies.Add(cookie);
+        }
+    }
+
+    private void ShowSuccessThenRedirectToLogin(string message)
+    {
+        Helper_Tabler_cl.ShowModal(this.Page, message, "Thông báo", false, "success");
+
+        string js = @"
+(function() {
+    function bindRedirect() {
+        var modal = document.getElementById('dynamicModal');
+        if (!modal) {
+            setTimeout(bindRedirect, 100);
+            return;
+        }
+
+        function redirectToLogin() {
+            window.location.replace('/dang-nhap');
+        }
+
+        var okButton = modal.querySelector('.btn-ok');
+        var closeButton = modal.querySelector('.btn-close');
+
+        if (okButton) okButton.addEventListener('click', redirectToLogin, { once: true });
+        if (closeButton) closeButton.addEventListener('click', redirectToLogin, { once: true });
+    }
+
+    bindRedirect();
+})();";
+
+        ScriptManager.RegisterStartupScript(
+            this.Page,
+            this.GetType(),
+            "home_menu_password_changed_redirect_" + Guid.NewGuid().ToString("N"),
+            js,
+            true);
+    }
+
     private string GetCurrentHomeAccount()
     {
         string taiKhoanMaHoa = Session["taikhoan_home"] as string;
@@ -164,7 +212,7 @@ public partial class home_uc_menu_top_home_uc : System.Web.UI.UserControl
                                     : (ob1.link.Contains("?") ? ob1.link + "&" : ob1.link + "?")
                             }).AsQueryable();
 
-            if (ViewState["sapxep_thongbao"]?.ToString() == "2")//lọc ra chưa đọc, mới nhất lên đầu
+            if (Convert.ToString(ViewState["sapxep_thongbao"]) == "2")//lọc ra chưa đọc, mới nhất lên đầu
                 list_all = list_all.Where(p => p.daxem == false).OrderByDescending(p => p.thoigian);
             else//sx theo mới nhất lên đầu
                 list_all = list_all.OrderByDescending(p => p.thoigian);
@@ -338,13 +386,16 @@ public partial class home_uc_menu_top_home_uc : System.Web.UI.UserControl
                 }
                 taikhoan_tb _ob = q;
                 _ob.matkhau = _pass_1;
+                string clearError;
+                if (PortalRequest_cl.IsShopPortalRequest())
+                    AccountResetSecurity_cl.ClearForceShopPassword(db, _ob.taikhoan, out clearError);
+                else
+                    AccountResetSecurity_cl.ClearForceHomePassword(db, _ob.taikhoan, out clearError);
                 db.SubmitChanges();
-                Session["taikhoan_home"] = "";
-                Session["matkhau_home"] = "";
-                if (Request.Cookies["cookie_userinfo_home_bcorn"] != null)
-                    Response.Cookies["cookie_userinfo_home_bcorn"].Expires = AhaTime_cl.Now.AddDays(-1);
-                Session["thongbao_home"] = thongbao_class.metro_notifi_onload("Thông báo", "Đổi mật khẩu thành công. Vui lòng đăng nhập lại.", "1000", "warning");
-                Response.Redirect("/dang-nhap");
+                ClearHomeLoginState();
+                pn_doimatkhau.Visible = false;
+                up_doimatkhau.Update();
+                ShowSuccessThenRedirectToLogin("Đổi mật khẩu thành công. Vui lòng đăng nhập lại.");
             }
             else
                 ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Vui lòng tải lại trang.", "1000", "warning"), true);
@@ -367,55 +418,9 @@ public partial class home_uc_menu_top_home_uc : System.Web.UI.UserControl
 
     protected void but_restpin_Click(object sender, EventArgs e)
     {
-        using (dbDataContext db = new dbDataContext())
-        {
-            var q = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan.Trim().ToLower() == ViewState["taikhoan"].ToString().ToLower());
-            if (q != null)
-            {
-                #region THÔNG BÁO QUA EMAIL
-                // Lấy danh sách email từ bảng taikhoan_tb
-                //var emailAddresses = db.taikhoan_tbs
-                //    .Where(tk => tk.taikhoan == "admin" /*|| tk.username == "bonbap"*/)
-                //    .Select(tk => tk.email)
-                //    .ToList();
-                //gán mail trực tiếp
-
-                List<string> emailAddresses = new List<string>
-                {
-                    q.email//,email_khác
-                };
-
-                string _tenmien = HttpContext.Current.Request.Url.Host.ToUpper();
-                string _tieude = "Khôi phục mã pin";
-
-                string _ma = Guid.NewGuid().ToString().ToLower();
-                string _link_khoiphuc = $"{Request.Url.Scheme}://{Request.Url.Authority}{"/home/khoi-phuc-ma-pin.aspx?code=" + _ma}";
-                DateTime _hsd = AhaTime_cl.Now.AddMinutes(5);
-
-                string _noidung = "<div style='color:red'>Ai đó đã yêu cầu đặt lại mã pin của bạn tại " + _tenmien + "</div>";
-                _noidung = _noidung + "<div style='color:red'>Nếu không phải là bạn, vui lòng bỏ qua email này và không phải làm gì cả. Tài khoản của bạn vẫn được an toàn.<hr/></div>";
-                _noidung = _noidung + "<div>Tài khoản của bạn: <b>" + q.taikhoan + "</b></div>";
-                _noidung = _noidung + "<div><a href='" + _link_khoiphuc + "'><b>Nhấp vào đây</b></a> để đặt lại mã pin của bạn.</div>";
-                _noidung = _noidung + "<div>Thời gian hết hạn: " + _hsd.ToString("dd/MM/yyyy HH:mm") + "'</div>";
-                string _ten_nguoigui = _tenmien;
-                string _link_dinhkem = "";
-
-                if (q.hsd_makhoiphuc == null || q.hsd_makhoiphuc.Value < AhaTime_cl.Now)
-                {  
-                    q.makhoiphuc = _ma;
-                    q.hansudung = null;
-                    q.hsd_makhoiphuc = _hsd;
-                    db.SubmitChanges();
-                    foreach (var _email_nhan in emailAddresses)
-                    {
-                        guiEmail_cl.SendEmail(_email_nhan, _tieude, _noidung, _ten_nguoigui, _link_dinhkem);
-                    }
-                }
-                pn_doipin.Visible = !pn_doipin.Visible;
-                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Chúng tôi đã gửi yêu cầu khôi phục vào email của bạn. Vui lòng kiểm tra kỹ Hộp thử đến hoặc Hộp thư rác và làm theo hướng dẫn.", "false", "false", "OK", "alert", ""), true);
-                #endregion
-            }
-        }
+        string url = "/home/khoi-phuc-ma-pin.aspx";
+        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+            "window.location='" + url + "';", true);
     }
     #region ĐỔI PIN
     protected void but_doipin_Click(object sender, EventArgs e)
@@ -450,6 +455,8 @@ public partial class home_uc_menu_top_home_uc : System.Web.UI.UserControl
                 }
                 taikhoan_tb _ob = q;
                 _ob.mapin_thanhtoan = PinSecurity_cl.HashPin(_pass_1);
+                string clearError;
+                AccountResetSecurity_cl.ClearForceHomePin(db, _ob.taikhoan, out clearError);
                 db.SubmitChanges();
                 TextBox4.Text = ""; TextBox5.Text = ""; TextBox6.Text = "";
                 pn_doipin.Visible = !pn_doipin.Visible;

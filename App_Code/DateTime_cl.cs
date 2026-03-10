@@ -59,7 +59,8 @@ public class DateTime_cl
 
     public bool check_date(string _date)
     {
-        return DateTime.TryParse(_date, out _);
+        DateTime parsed;
+        return DateTime.TryParse(_date, out parsed);
     }
 
     public DateTime return_ngaydautuan()

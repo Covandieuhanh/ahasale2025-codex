@@ -62,7 +62,7 @@ public partial class admin_yeu_cau_tu_van_Default : System.Web.UI.Page
         check_list_page.Items.Clear();
         for (int i = 1; i <= int.Parse(ViewState["total_page"].ToString()); i++)
         {
-            ListItem item = new ListItem($"Trang {i}", i.ToString());
+            ListItem item = new ListItem(string.Format("Trang {0}", i), i.ToString());
             check_list_page.Items.Add(item);
             item.Selected = true;
         }
@@ -1301,7 +1301,7 @@ public partial class admin_yeu_cau_tu_van_Default : System.Web.UI.Page
             string url = "/admin/yeu-cau-tu-van/in.aspx";
 
             // Script để mở trang mới trong tab mới
-            string script = $"window.open('{url}', '_blank');";
+            string script = string.Format("window.open('{0}', '_blank');", url);
 
             // Đăng ký script để thực thi sau khi UpdatePanel postback hoàn thành
             ScriptManager.RegisterStartupScript(this, GetType(), "OpenNewTab", script, true);

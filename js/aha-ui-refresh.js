@@ -108,37 +108,8 @@
             selects[p].classList.add("aha-admin-select");
         }
 
-        var modalHeads = scope.querySelectorAll("div[style*='z-index: 1041'][style*='height: 52px']");
-        for (var q = 0; q < modalHeads.length; q++) {
-            var headWrap = modalHeads[q];
-            headWrap.classList.add("aha-admin-modal-head-wrap");
-
-            var headCard = headWrap.querySelector("div[style*='max-width']");
-            if (headCard) {
-                headCard.classList.add("aha-admin-modal-head-card");
-            }
-
-            var closeButton = headWrap.querySelector("a[title='Đóng']");
-            if (closeButton) {
-                closeButton.classList.add("aha-admin-modal-close");
-            }
-        }
-
-        var modalOverlays = scope.querySelectorAll("div[style*='z-index: 1040'][style*='background-image: url']");
-        for (var r = 0; r < modalOverlays.length; r++) {
-            var overlay = modalOverlays[r];
-            overlay.classList.add("aha-admin-modal-overlay");
-
-            var dialog = overlay.querySelector("div[style*='max-width']");
-            if (dialog) {
-                dialog.classList.add("aha-admin-modal-dialog");
-            }
-
-            var body = overlay.querySelector(".bg-white.border.bd-transparent");
-            if (body) {
-                body.classList.add("aha-admin-modal-body");
-            }
-        }
+        // Disabled: legacy popup/lightbox structures are too broad and can cause
+        // accidental full-page overlay capture in admin list screens.
 
         var progressMasks = scope.querySelectorAll("div[id*='UpdateProgress'] .bg-dark.fixed-top.h-100.w-100");
         for (var s = 0; s < progressMasks.length; s++) {
@@ -468,11 +439,126 @@
         applyAdminCompactMode();
     }
 
+    function ensurePasswordToggleStyles() {
+        if (document.getElementById("aha-password-toggle-style")) {
+            return;
+        }
+
+        var style = document.createElement("style");
+        style.id = "aha-password-toggle-style";
+        style.textContent = [
+            ".aha-password-field{display:flex;align-items:stretch;width:100%;}",
+            ".aha-password-field>input,.aha-password-field>.input,.aha-password-field>.form-control{flex:1 1 auto;min-width:0;}",
+            ".aha-password-toggle{display:inline-flex;align-items:center;justify-content:center;min-width:72px;padding:0 14px;border:1px solid var(--aha-border,#d8e4ec);background:#fff;color:var(--aha-ink-700,#2f4f67);font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap;box-shadow:none;}",
+            ".aha-password-toggle:hover,.aha-password-toggle:focus{background:var(--aha-surface-1,#f7fbf8);color:var(--aha-ink-900,#102a43);text-decoration:none;outline:none;}",
+            ".aha-password-field>.aha-password-toggle{border-left:0;border-radius:0 10px 10px 0;}",
+            ".aha-password-field>input,.aha-password-field>.form-control{border-radius:10px 0 0 10px!important;}",
+            ".aha-password-field .input,.aha-password-field .input input{border-radius:10px 0 0 10px!important;}",
+            ".admin-login-input-group .aha-password-toggle{border:0;border-left:1px solid rgba(16,42,67,.12);background:transparent;color:#4c6378;min-width:68px;border-radius:0 16px 16px 0;}",
+            ".admin-login-input-group .aha-password-toggle:hover,.admin-login-input-group .aha-password-toggle:focus{background:rgba(255,255,255,.12);color:#17324d;}",
+            ".wait-pin .aha-password-toggle{border:0;border-left:1px solid rgba(15,23,42,.14);background:#fff;color:#0f172a;min-width:72px;border-radius:0;align-self:stretch;}",
+            ".wait-pin .aha-password-toggle:hover,.wait-pin .aha-password-toggle:focus{background:#f8fafc;color:#0f172a;}",
+            ".input-group-text .js-toggle-password{display:inline-flex;align-items:center;justify-content:center;min-width:28px;color:inherit;text-decoration:none;}",
+            ".input-group-text .js-toggle-password:hover,.input-group-text .js-toggle-password:focus{text-decoration:none;}",
+            ".js-toggle-password .aha-password-toggle-label{pointer-events:none;}"
+        ].join("");
+
+        document.head.appendChild(style);
+    }
+
+    function syncPasswordToggleState(toggle, input) {
+        if (!toggle || !input) return;
+
+        var inputType = ((input.getAttribute("type") || input.type || "") + "").toLowerCase();
+        var isVisible = inputType === "text";
+        var icon = toggle.querySelector("i");
+        var label = toggle.querySelector(".aha-password-toggle-label");
+
+        toggle.setAttribute("aria-label", isVisible ? "Ẩn mật khẩu" : "Hiện mật khẩu");
+        toggle.setAttribute("title", isVisible ? "Ẩn" : "Hiện");
+
+        if (icon) {
+            icon.classList.toggle("ti-eye", !isVisible);
+            icon.classList.toggle("ti-eye-off", isVisible);
+        }
+
+        if (label) {
+            label.textContent = isVisible ? "Ẩn" : "Hiện";
+        } else if (!icon) {
+            toggle.textContent = isVisible ? "Ẩn" : "Hiện";
+        }
+    }
+
+    function resolvePasswordField(toggle) {
+        if (!toggle) return null;
+
+        var selector = toggle.getAttribute("data-target");
+        if (selector) {
+            if (selector.charAt(0) === "#") {
+                return document.querySelector(selector);
+            }
+            return document.getElementById(selector);
+        }
+
+        var group = toggle.closest(".input-group, .aha-password-field, .admin-login-input-group, .wait-pin");
+        if (!group) return null;
+
+        return group.querySelector("input.js-password, input[type='password'], input[type='text'].js-password");
+    }
+
+    function initPasswordToggles(root) {
+        ensurePasswordToggleStyles();
+
+        var scope = root || document;
+        var toggles = scope.querySelectorAll(".js-toggle-password");
+        for (var i = 0; i < toggles.length; i++) {
+            var toggle = toggles[i];
+            var input = resolvePasswordField(toggle);
+            if (!input) continue;
+            input.classList.add("js-password");
+            syncPasswordToggleState(toggle, input);
+        }
+    }
+
+    function bindPasswordToggleOnce() {
+        if (window.__ahaPasswordToggleBound === true) {
+            return;
+        }
+
+        window.__ahaPasswordToggleBound = true;
+
+        document.addEventListener("click", function (event) {
+            var toggle = event.target.closest(".js-toggle-password");
+            if (!toggle) return;
+
+            event.preventDefault();
+
+            var input = resolvePasswordField(toggle);
+            if (!input) return;
+
+            var currentType = ((input.getAttribute("type") || input.type || "") + "").toLowerCase();
+            if (currentType !== "password" && currentType !== "text") {
+                return;
+            }
+
+            var nextType = currentType === "password" ? "text" : "password";
+            input.setAttribute("type", nextType);
+            try {
+                input.type = nextType;
+            } catch (err) {
+            }
+
+            syncPasswordToggleState(toggle, input);
+        });
+    }
+
     function init(root) {
         setVhUnit();
         markDeviceInput();
         syncSearchInputs(root);
         bindEnterToAction(root);
+        bindPasswordToggleOnce();
+        initPasswordToggles(root);
         initAdminSmartLayout(root);
         normalizeAdminComponents(root);
         normalizeAdminStatusPills(root);
@@ -487,6 +573,8 @@
         markDeviceInput();
         syncSearchInputs(root);
         bindEnterToAction(root);
+        bindPasswordToggleOnce();
+        initPasswordToggles(root);
         initAdminSmartLayout(root);
         normalizeAdminComponents(root);
         normalizeAdminStatusPills(root);

@@ -5,78 +5,44 @@
 
 <asp:Content ID="Content2" ContentPlaceHolderID="main" runat="Server">
 
-    <!-- POPUP THÊM MỚI -->
-    <asp:UpdatePanel ID="up_add" runat="server" UpdateMode="Conditional">
-        <ContentTemplate>
+    <!-- FORM PHÁT HÀNH (TRANG RIÊNG) -->
+    <asp:Panel ID="pn_add" runat="server" Visible="false" DefaultButton="but_tao_the">
+        <div class="p-3">
+            <div class="bg-white p-4 shadow-2 rounded" style="max-width: 760px;">
+                <div class="d-flex flex-justify-between flex-align-center mb-3">
+                    <h4 class="m-0 text-bold">PHÁT HÀNH THẺ</h4>
+                    <asp:HyperLink ID="lnk_back_list" runat="server" CssClass="button light">Quay lại danh sách</asp:HyperLink>
+                </div>
+                <hr class="mt-0 mb-4" />
 
-            <asp:Panel ID="pn_add" runat="server" Visible="false" DefaultButton="but_tao_the">
-
-                <!-- header fixed -->
-                <div style="position: fixed; width: 100%; height: 52px; top: 0; left: 0; z-index: 1041!important;">
-                    <div style='margin: 0 auto; max-width: 520px; opacity: 1;'>
-                        <div style='position: absolute; right: 18px; top: 14px; z-index: 1040!important'>
-                            <a href='#' class='fg-white d-inline' runat="server" id="close_add"
-                                onserverclick="but_close_add_Click" title='Đóng'>
-                                <span class='mif mif-cross mif-2x fg-red fg-lightRed-hover'></span>
-                            </a>
-                        </div>
-                        <div class="bg-white pl-4 pr-4" style="height: 52px;">
-                            <div class="pt-4 text-upper text-bold">PHÁT HÀNH THẺ</div>
-                            <hr />
-                        </div>
+                <div class="mt-3">
+                    <label class="fw-600 fg-red">Chọn tài khoản</label>
+                    <div>
+                        <asp:DropDownList ID="ddl_taikhoan" runat="server" data-role="select" data-filter="true"></asp:DropDownList>
                     </div>
                 </div>
 
-                <!-- overlay -->
-                <div style="position: fixed; width: 100%; height: 100%; top: 0; left: 0; overflow: auto; z-index: 1040!important; background-image: url('/uploads/images/bg1.png');">
-                    <div style='margin: 0 auto; max-width: 526px; opacity: 1;'>
-                        <div class="bg-white border bd-transparent pl-4 pr-4" style="padding-top: 52px">
-
-                            <div class="mt-3">
-                                <label class="fw-600 fg-red">Chọn tài khoản</label>
-                                <div>
-                                    <asp:DropDownList ID="ddl_taikhoan" runat="server" data-role="select"></asp:DropDownList>
-                                </div>
-                            </div>
-
-                            <div class="mt-3">
-                                <label class="fw-600 fg-red">Loại thẻ</label>
-                                <div>
-                                    <asp:DropDownList ID="ddl_loaithe" runat="server" data-role="select">
-                                        <asp:ListItem Value="1" Text="Thẻ ưu đãi"></asp:ListItem>
-                                        <asp:ListItem Value="2" Text="Thẻ tiêu dùng"></asp:ListItem>
-                                        <asp:ListItem Value="3" Text="Thẻ gian hàng đối tác"></asp:ListItem>
-                                        <asp:ListItem Value="4" Text="Thẻ đồng hành hệ sinh thái"></asp:ListItem>
-                                    </asp:DropDownList>
-                                </div>
-                            </div>
-
-                            <div class="mt-6 mb-20 text-right">
-                                <asp:Button ID="but_tao_the" runat="server" Text="PHÁT HÀNH"
-                                    CssClass="button success" OnClick="but_tao_the_Click" />
-                            </div>
-
-                            <div class="mb-20"></div>
-                        </div>
+                <div class="mt-3">
+                    <label class="fw-600 fg-red">Loại thẻ</label>
+                    <div>
+                        <asp:DropDownList ID="ddl_loaithe" runat="server" CssClass="input-large">
+                            <asp:ListItem Value="" Text="-- Chọn tài khoản trước --"></asp:ListItem>
+                            <asp:ListItem Value="1" Text="Thẻ ưu đãi"></asp:ListItem>
+                            <asp:ListItem Value="2" Text="Thẻ tiêu dùng"></asp:ListItem>
+                            <asp:ListItem Value="5" Text="Thẻ lao động"></asp:ListItem>
+                            <asp:ListItem Value="4" Text="Thẻ đồng hành hệ sinh thái"></asp:ListItem>
+                            <asp:ListItem Value="3" Text="Thẻ gian hàng đối tác"></asp:ListItem>
+                        </asp:DropDownList>
                     </div>
                 </div>
 
-            </asp:Panel>
-
-        </ContentTemplate>
-    </asp:UpdatePanel>
-
-    <asp:UpdateProgress ID="UpdateProgress_add" runat="server" AssociatedUpdatePanelID="up_add">
-        <ProgressTemplate>
-            <div class="bg-dark fixed-top h-100 w-100" style="opacity: 0.9; z-index: 99999!important">
-                <div style="padding-top: 45vh;">
-                    <div class="mx-auto color-style activity-atom" data-role="activity" data-type="atom" data-style="color">
-                        <span class="electron"></span><span class="electron"></span><span class="electron"></span>
-                    </div>
+                <div class="mt-6 mb-2 text-right">
+                    <asp:Button ID="but_tao_the" runat="server" Text="PHÁT HÀNH"
+                        CssClass="button success" OnClick="but_tao_the_Click" />
                 </div>
             </div>
-        </ProgressTemplate>
-    </asp:UpdateProgress>
+        </div>
+    </asp:Panel>
 
     <!-- MAIN LIST -->
     <asp:UpdatePanel ID="up_main" runat="server" UpdateMode="Conditional">
@@ -85,9 +51,9 @@
             <div class="pos-relative pb-11">
                 <div id="menutop-tool-bc" style="position: fixed; top: 52px; width: 100%; z-index: 4">
                     <ul class="h-menu bg-white">
-                        <li data-role="hint" data-hint-position="top" data-hint-text="Thêm mới">
-                            <asp:HyperLink ID="but_show_add" runat="server">
-                                <span class="mif-plus"></span>
+                        <li data-role="hint" data-hint-position="top" data-hint-text="Phát hành thẻ">
+                            <asp:HyperLink ID="but_show_add" runat="server" CssClass="button primary">
+                                <span class="mif-plus mr-1"></span>Phát hành thẻ
                             </asp:HyperLink>
                         </li>
 
@@ -197,6 +163,48 @@
 
 <asp:Content ID="Content3" ContentPlaceHolderID="foot" runat="Server">
   <script>
+      function getAllowedCardValuesByScope(scope) {
+          var s = (scope || "").toLowerCase();
+          if (s === "portal_shop") {
+              return { "3": true };
+          }
+          if (s === "portal_home") {
+              return { "1": true, "2": true, "5": true, "4": true };
+          }
+          return {};
+      }
+
+      function refillCardTypeOptions() {
+          var accountDdl = document.getElementById("<%= ddl_taikhoan.ClientID %>");
+          var cardDdl = document.getElementById("<%= ddl_loaithe.ClientID %>");
+          if (!accountDdl || !cardDdl) return;
+
+          var selected = accountDdl.options[accountDdl.selectedIndex];
+          var scope = selected ? (selected.getAttribute("data-scope") || "") : "";
+          var allowed = getAllowedCardValuesByScope(scope);
+          var hasAllowed = false;
+
+          for (var i = 1; i < cardDdl.options.length; i++) {
+              var op = cardDdl.options[i];
+              var ok = !!allowed[op.value];
+              op.disabled = !ok;
+              op.hidden = !ok;
+              if (ok) hasAllowed = true;
+          }
+
+          if (!hasAllowed || !allowed[cardDdl.value]) {
+              cardDdl.value = "";
+          }
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+          var accountDdl = document.getElementById("<%= ddl_taikhoan.ClientID %>");
+          if (accountDdl) {
+              accountDdl.addEventListener("change", refillCardTypeOptions);
+          }
+          refillCardTypeOptions();
+      });
+
       function copyNfcLink(idGuide) {
           var link = window.location.origin + "/home/taikhoan.aspx?key=" + encodeURIComponent(idGuide);
 

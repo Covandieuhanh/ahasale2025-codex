@@ -1,111 +1,88 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.Linq;
-using System.Web;
 using System.Web.UI;
-using System.Web.UI.WebControls;
 
-public partial class admin_khoi_phuc_mat_khau : System.Web.UI.Page
+public partial class home_khoi_phuc_mat_khau : System.Web.UI.Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
         if (!IsPostBack)
         {
-            if (string.IsNullOrWhiteSpace(Request.QueryString["code"]))
-            {
-                Label2.Text = "Trang bạn yêu cầu không hợp lệ.";
-                return;
-            }
-            string _code = Request.QueryString["code"].ToString().ToLower();
-
-            using (dbDataContext db = new dbDataContext())
-            {
-                var q = db.taikhoan_tbs.FirstOrDefault(p => p.makhoiphuc == _code);
-                if (q == null)
-                {
-                    Label2.Text = "Trang bạn yêu cầu không hợp lệ.";
-                    return;
-                }
-                if (q.hsd_makhoiphuc.Value < AhaTime_cl.Now)
-                {
-                    Label2.Text = "Mã này đã hết hạn.";
-                    return;
-                }
-                ViewState["taikhoan"] = q.taikhoan;
-
-                PlaceHolder1.Visible = false;
-                UpdatePanel1.Visible = true;
-                Label1.Text = "Đặt lại mật khẩu cho <b>" + q.taikhoan + "</b><div>Thời gian hết hạn: <b>" + q.hsd_makhoiphuc.Value.ToString("dd/MM/yyyy HH:mm") + "'</b></div>";
-            }
-
+            PortalActiveMode_cl.SetMode(PortalActiveMode_cl.ModeHome);
+            txt_phone.Focus();
         }
     }
-    protected void Button1_Click(object sender, EventArgs e)
+
+    protected void btnSendOtp_Click(object sender, EventArgs e)
     {
-        string _pass = txt_pass.Text.Trim();
-        if (_pass == "")
-        {
-            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng nhập mật khẩu mới.", "false", "false", "OK", "alert", ""), true);
-            return;
-        }
         using (dbDataContext db = new dbDataContext())
         {
-            var q = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == ViewState["taikhoan"].ToString());
-            if (q != null)
+            string rawPhone = txt_phone.Text ?? "";
+            string phone = AccountAuth_cl.NormalizePhone(rawPhone);
+
+            if (string.IsNullOrEmpty(phone))
             {
-                if (q.hsd_makhoiphuc.Value < AhaTime_cl.Now)
-                {
-                    Label2.Text = "Mã này đã hết hạn.";
-                    PlaceHolder1.Visible = true;
-                    UpdatePanel1.Visible = false;
-                    return;
-                }
-                q.matkhau = _pass;
-                q.hsd_makhoiphuc = q.hsd_makhoiphuc.Value.AddYears(-1);
-                db.SubmitChanges();
-
-                #region xóa cũ
-                Session["taikhoan"] = "";
-                Session["matkhau"] = "";
-                if (Request.Cookies["cookie_userinfo_admin_bcorn"] != null)
-                    Response.Cookies["cookie_userinfo_admin_bcorn"].Expires = AhaTime_cl.Now.AddDays(-1);
-                #endregion
-
-                #region lưu mới và tự động đăng nhập
-                string _taikhoan_mahoa = mahoa_cl.mahoa_Bcorn(ViewState["taikhoan"].ToString());
-                string _matkhau_mahoa = mahoa_cl.mahoa_Bcorn(_pass);
-                //lưu cookier với thông tin tài khoản để lưu giữ đăng nhập trong 7 ngày;
-                HttpCookie _ck = new HttpCookie("cookie_userinfo_home_bcorn");
-                _ck["taikhoan"] = _taikhoan_mahoa;
-                _ck["matkhau"] = _matkhau_mahoa;
-                _ck.Expires = AhaTime_cl.Now.AddDays(7);
-                // Đặt thuộc tính HttpOnly để ngăn chặn truy cập từ mã JavaScript
-                _ck.HttpOnly = true;
-                // Đặt thuộc tính Secure để chỉ cho phép truyền cookie qua kết nối an toàn
-                _ck.Secure = true;
-                //chỉ định tên miền mà cookie được áp dụng. Bằng cách này, cookie chỉ được gửi đến máy chủ từ tên miền đã chỉ định, các miền con sẽ đc áp dụng theo
-                //_ck.Domain = "https://bcorn.net";//bị ảnh hưởng khi ở localhost
-                Response.Cookies.Add(_ck);
-
-                //lưu session
-                Session["taikhoan_home"] = _taikhoan_mahoa;
-                Session["matkhau_home"] = _matkhau_mahoa;
-                Session["thongbao_home"] = thongbao_class.metro_notifi_onload("Thông báo", "Đăng nhập thành công.", "1000", "warning");
-
-                string _url_back = Session["url_back_home"]?.ToString();
-
-                if (!string.IsNullOrEmpty(_url_back))
-                {
-                    Response.Redirect(_url_back, false);
-                }
-                else
-                {
-                    Response.Redirect("/home/default.aspx", false);
-                }
-
-                Context.ApplicationInstance.CompleteRequest();
-                #endregion
+                Helper_Tabler_cl.ShowModal(this.Page, "Vui lòng nhập số điện thoại.", "Thông báo", true, "warning");
+                return;
             }
+
+            if (!AccountAuth_cl.IsValidPhone(phone))
+            {
+                Helper_Tabler_cl.ShowModal(this.Page, "Số điện thoại không hợp lệ.", "Thông báo", true, "warning");
+                return;
+            }
+
+            AccountLoginInfo account = AccountAuth_cl.FindHomeAccountByPhone(db, phone);
+            if (account != null && account.IsAmbiguous)
+            {
+                Helper_Tabler_cl.ShowModal(this.Page, "Số điện thoại đang trùng nhiều tài khoản home. Vui lòng liên hệ admin.", "Thông báo", true, "warning");
+                return;
+            }
+
+            if (account == null || string.IsNullOrEmpty(account.TaiKhoan))
+            {
+                Helper_Tabler_cl.ShowModal(this.Page, "Số điện thoại không tồn tại trong hệ thống.", "Thông báo", true, "warning");
+                return;
+            }
+
+            taikhoan_tb q = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == account.TaiKhoan);
+            if (q == null || !PortalScope_cl.CanLoginHome(q.taikhoan, q.phanloai, q.permission))
+            {
+                Helper_Tabler_cl.ShowModal(this.Page, "Tài khoản này không thuộc hệ home.", "Thông báo", true, "warning");
+                return;
+            }
+
+            if (q.block == true)
+            {
+                Helper_Tabler_cl.ShowModal(this.Page, "Tài khoản đã bị khóa.", "Thông báo", true, "warning");
+                return;
+            }
+
+            int requestId;
+            string error;
+            bool usedFallback;
+            string devOtp;
+
+            bool sent = HomeOtp_cl.TrySendOtp(db, phone, q.taikhoan, HomeOtp_cl.TypePassword,
+                out requestId, out error, out usedFallback, out devOtp);
+
+            if (!sent)
+            {
+                Helper_Tabler_cl.ShowModal(this.Page, error, "Thông báo", true, "warning");
+                return;
+            }
+
+            if (requestId <= 0)
+            {
+                Helper_Tabler_cl.ShowModal(this.Page, "Không tạo được yêu cầu OTP. Vui lòng thử lại.", "Thông báo", true, "warning");
+                return;
+            }
+
+            Session["home_otp_dev_code"] = usedFallback ? devOtp : "";
+            Session["home_otp_dev_type"] = HomeOtp_cl.TypePassword;
+
+            Response.Redirect("/home/xac-nhan-otp.aspx?type=password&id=" + requestId, false);
+            Context.ApplicationInstance.CompleteRequest();
         }
     }
 }

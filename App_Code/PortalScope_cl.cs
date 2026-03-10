@@ -7,6 +7,8 @@ public static class PortalScope_cl
     public const string ScopeAdmin = "portal_admin";
     public const string ScopeHome = "portal_home";
     public const string ScopeShop = "portal_shop";
+    private const string AccountTypeAdminStaff = "Nhân viên admin";
+    private const string AccountTypeShopPartner = "Gian hàng đối tác";
 
     private static bool IsRootAdmin(string taikhoan)
     {
@@ -79,6 +81,16 @@ public static class PortalScope_cl
         return SplitPermissionTokens(permissionRaw).Any(IsAdminPermissionToken);
     }
 
+    private static bool IsShopPartnerType(string phanloai)
+    {
+        return string.Equals((phanloai ?? "").Trim(), AccountTypeShopPartner, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsAdminStaffType(string phanloai)
+    {
+        return string.Equals((phanloai ?? "").Trim(), AccountTypeAdminStaff, StringComparison.OrdinalIgnoreCase);
+    }
+
     public static bool ContainsAnyAdminPermission(string permissionRaw)
     {
         return HasAnyAdminPermission(permissionRaw);
@@ -86,16 +98,23 @@ public static class PortalScope_cl
 
     public static string InferLegacyScope(string taikhoan, string phanloai, string permissionRaw)
     {
-        // Không dùng phanloai legacy để quyết định cổng đăng nhập.
-        // Cổng đăng nhập được quyết định bởi scope token trong permission.
-        // Fallback legacy chỉ dùng cho dữ liệu rất cũ chưa có scope.
+        // Fallback cho dữ liệu rất cũ chưa có scope token.
         if (IsRootAdmin(taikhoan)) return ScopeAdmin;
         if (HasAnyAdminPermission(permissionRaw)) return ScopeAdmin;
+        if (IsShopPartnerType(phanloai)) return ScopeShop;
+        if (AccountType_cl.IsTreasury(phanloai) || IsAdminStaffType(phanloai)) return ScopeAdmin;
         return ScopeHome;
     }
 
     public static string ResolveScope(string taikhoan, string phanloai, string permissionRaw)
     {
+        // Chuẩn hóa mạnh cho dữ liệu cũ:
+        // - Gian hàng đối tác luôn đi hệ shop (trừ khi là admin theo quyền/root).
+        // - Admin quyền/root luôn đi hệ admin.
+        if (IsRootAdmin(taikhoan)) return ScopeAdmin;
+        if (HasAnyAdminPermission(permissionRaw)) return ScopeAdmin;
+        if (IsShopPartnerType(phanloai)) return ScopeShop;
+
         string explicitScope = GetExplicitScope(permissionRaw);
         if (explicitScope != "") return explicitScope;
         return InferLegacyScope(taikhoan, phanloai, permissionRaw);
@@ -134,12 +153,53 @@ public static class PortalScope_cl
     {
         if (account == null) return false;
 
+        bool changed = false;
         string current = account.permission ?? "";
         string next = NormalizePermissionWithScope(current, scope);
-        if (string.Equals(current, next, StringComparison.Ordinal))
-            return false;
+        if (!string.Equals(current, next, StringComparison.Ordinal))
+        {
+            account.permission = next;
+            changed = true;
+        }
 
-        account.permission = next;
-        return true;
+        string targetScope = NormalizeScope(scope);
+        if (targetScope == "")
+            targetScope = ResolveScope(account.taikhoan, account.phanloai, next);
+
+        if (!string.Equals(targetScope, ScopeShop, StringComparison.OrdinalIgnoreCase))
+        {
+            if (CleanupShopDataOutsideShopScope(account))
+                changed = true;
+        }
+
+        return changed;
+    }
+
+    public static bool CleanupShopDataOutsideShopScope(taikhoan_tb account)
+    {
+        if (account == null) return false;
+
+        bool changed = false;
+
+        if (!string.IsNullOrEmpty(account.logo_shop)) { account.logo_shop = null; changed = true; }
+        if (!string.IsNullOrEmpty(account.anhbia_shop)) { account.anhbia_shop = null; changed = true; }
+        if (!string.IsNullOrEmpty(account.ten_shop)) { account.ten_shop = null; changed = true; }
+        if (!string.IsNullOrEmpty(account.sdt_shop)) { account.sdt_shop = null; changed = true; }
+        if (!string.IsNullOrEmpty(account.email_shop)) { account.email_shop = null; changed = true; }
+        if (!string.IsNullOrEmpty(account.link_zalo_shop)) { account.link_zalo_shop = null; changed = true; }
+        if (!string.IsNullOrEmpty(account.motangan_shop)) { account.motangan_shop = null; changed = true; }
+        if (!string.IsNullOrEmpty(account.diachi_shop)) { account.diachi_shop = null; changed = true; }
+        if (!string.IsNullOrEmpty(account.linkfb_shop)) { account.linkfb_shop = null; changed = true; }
+        if (!string.IsNullOrEmpty(account.youtube_shop)) { account.youtube_shop = null; changed = true; }
+        if (!string.IsNullOrEmpty(account.tiktok_shop)) { account.tiktok_shop = null; changed = true; }
+        if (!string.IsNullOrEmpty(account.Ten_FB_Shop)) { account.Ten_FB_Shop = null; changed = true; }
+        if (!string.IsNullOrEmpty(account.Ten_Youtube_Shop)) { account.Ten_Youtube_Shop = null; changed = true; }
+        if (!string.IsNullOrEmpty(account.Ten_TikTok_Shop)) { account.Ten_TikTok_Shop = null; changed = true; }
+        if (!string.IsNullOrEmpty(account.Ten_Zalo_Shop)) { account.Ten_Zalo_Shop = null; changed = true; }
+        if ((account.HoSo_TieuDung_ShopOnly ?? 0m) != 0m) { account.HoSo_TieuDung_ShopOnly = 0m; changed = true; }
+        if ((account.HoSo_UuDai_ShopOnly ?? 0m) != 0m) { account.HoSo_UuDai_ShopOnly = 0m; changed = true; }
+        if ((account.ChiPhanTram_BanDichVu_ChoSan ?? 0) != 0) { account.ChiPhanTram_BanDichVu_ChoSan = 0; changed = true; }
+
+        return changed;
     }
 }

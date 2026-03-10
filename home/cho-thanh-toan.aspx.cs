@@ -28,6 +28,146 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
         return IsShopPortal() ? "/shop/login.aspx" : "/dang-nhap";
     }
 
+    private void EnsurePortalLogin()
+    {
+        if (IsShopPortal())
+            check_login_cl.check_login_shop("none", "none", true);
+        else
+            check_login_cl.check_login_home("none", "none", true);
+    }
+
+    private void EnsureStableFormAction()
+    {
+        if (form1 == null) return;
+        form1.Action = ChoThanhToanUrl();
+    }
+
+    private string GetCurrentSellerAccount()
+    {
+        string encryptedSeller = PortalRequest_cl.GetCurrentAccountEncrypted();
+        if (string.IsNullOrEmpty(encryptedSeller))
+        {
+            return string.Empty;
+        }
+
+        try
+        {
+            return (mahoa_cl.giaima_Bcorn(encryptedSeller) ?? "").Trim();
+        }
+        catch
+        {
+            return string.Empty;
+        }
+    }
+
+    private DonHang_tb ResolveOrderForCancel(dbDataContext db, string sellerAccount, int? requestedOrderId, bool requireExactOrderId)
+    {
+        if (db == null || string.IsNullOrEmpty(sellerAccount))
+        {
+            return null;
+        }
+
+        DonHang_tb order = null;
+        if (requestedOrderId.HasValue)
+        {
+            int id = requestedOrderId.Value;
+            order = db.DonHang_tbs.FirstOrDefault(p => p.id == id && p.nguoiban == sellerAccount);
+            if (order == null && requireExactOrderId)
+            {
+                return null;
+            }
+        }
+
+        if (order == null)
+        {
+            order = QueryDonChoTraoDoiBySeller(db, sellerAccount)
+                .OrderByDescending(p => p.id)
+                .FirstOrDefault();
+        }
+
+        return order;
+    }
+
+    private void ConfigureWaitActions(string orderId)
+    {
+        lnk_refresh_wait.NavigateUrl = ChoThanhToanUrl();
+    }
+
+    private void SetCardNotice(string htmlMessage)
+    {
+        bool hasMessage = !string.IsNullOrEmpty(htmlMessage);
+        lb_thongbao_the.Visible = hasMessage;
+        lb_thongbao_the.Text = hasMessage ? htmlMessage : string.Empty;
+        box_alert_the.Visible = hasMessage;
+    }
+
+    private bool CancelOrderIfAllowed(dbDataContext db, DonHang_tb order)
+    {
+        if (order == null) return false;
+        DonHangStateMachine_cl.EnsureStateFields(order);
+        if (!DonHangStateMachine_cl.CanCancelChoTraoDoi(order)) return false;
+
+        DonHangStateMachine_cl.SetExchangeStatus(order, DonHangStateMachine_cl.Exchange_ChuaTraoDoi);
+        order.chothanhtoan = false;
+        db.SubmitChanges();
+        ClearPaymentSession();
+        return true;
+    }
+
+    private bool TryHandleCancelWaitRequest(dbDataContext db)
+    {
+        if (!string.Equals((Request.QueryString["cancel_wait"] ?? "").Trim(), "1", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        string sellerAccount = GetCurrentSellerAccount();
+        if (string.IsNullOrEmpty(sellerAccount))
+        {
+            Response.Redirect(LoginUrl());
+            return true;
+        }
+
+        string requestedOrderId = (Request.QueryString["id"] ?? "").Trim();
+        int orderIdInt;
+        if (!int.TryParse(requestedOrderId, out orderIdInt))
+        {
+            Session["thongbao_home"] = thongbao_class.metro_dialog_onload(
+                "Thông báo",
+                "Thiếu mã đơn hợp lệ để hủy chờ Trao đổi.",
+                "false", "false", "OK", "alert", ""
+            );
+            Response.Redirect(ChoThanhToanUrl());
+            return true;
+        }
+
+        DonHang_tb donCho = ResolveOrderForCancel(db, sellerAccount, orderIdInt, true);
+        if (donCho == null)
+        {
+            Session["thongbao_home"] = thongbao_class.metro_dialog_onload(
+                "Thông báo",
+                "Không tìm thấy đơn hàng cần hủy hoặc bạn không có quyền thao tác đơn này.",
+                "false", "false", "OK", "alert", ""
+            );
+            Response.Redirect(ChoThanhToanUrl());
+            return true;
+        }
+
+        if (!CancelOrderIfAllowed(db, donCho))
+        {
+            Session["thongbao_home"] = thongbao_class.metro_dialog_onload(
+                "Thông báo",
+                "Đơn hàng không còn ở trạng thái chờ Trao đổi.",
+                "false", "false", "OK", "alert", ""
+            );
+            Response.Redirect(ChoThanhToanUrl());
+            return true;
+        }
+
+        Response.Redirect(SellerDonBanUrl());
+        return true;
+    }
+
     private IQueryable<DonHang_tb> QueryDonChoTraoDoiBySeller(dbDataContext db, string sellerAccount)
     {
         return db.DonHang_tbs.Where(p =>
@@ -59,7 +199,7 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
 
     protected override void OnInit(EventArgs e)
     {
-        // Ràng buộc ViewState theo session để giảm rủi ro CSRF với postback thanh toán.
+        // Ràng buộc ViewState theo session để giảm rủi ro CSRF với postback trao đổi.
         if (Context != null && Session != null)
         {
             ViewStateUserKey = Session.SessionID;
@@ -168,23 +308,33 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
     private string BuildContextErrorMessage(string contextError)
     {
         if (contextError == "expired_key")
-            return "Phiên thanh toán đã hết hạn. Vui lòng quét link thanh toán lại.";
+            return "Phiên trao đổi đã hết hạn. Vui lòng quét link trao đổi lại.";
         if (contextError == "invalid_key")
-            return "Link thanh toán không còn hợp lệ. Vui lòng quét lại thẻ.";
+            return "Link trao đổi không còn hợp lệ. Vui lòng quét lại thẻ.";
         if (contextError == "missing_payer")
-            return "Tài khoản thanh toán không tồn tại. Vui lòng kiểm tra lại thẻ.";
+            return "Tài khoản trao đổi không tồn tại. Vui lòng kiểm tra lại thẻ.";
         if (contextError == "order_mismatch")
-            return "Đơn chờ thanh toán đã thay đổi. Vui lòng quét lại link thanh toán.";
-        return "Vui lòng quét link thanh toán để tiếp tục.";
+            return "Đơn chờ trao đổi đã thay đổi. Vui lòng quét lại link trao đổi.";
+        return "Vui lòng quét link trao đổi để tiếp tục.";
     }
 
     protected void Page_Load(object sender, EventArgs e)
     {
-        if (!IsPostBack)
+        Response.Cache.SetCacheability(System.Web.HttpCacheability.NoCache);
+        Response.Cache.SetNoStore();
+        Response.Cache.SetRevalidation(System.Web.HttpCacheRevalidation.AllCaches);
+        EnsureStableFormAction();
+
+        ph_shop_home.Visible = IsShopPortal();
+        EnsurePortalLogin();
+        using (dbDataContext db = new dbDataContext())
         {
-            ph_shop_home.Visible = IsShopPortal();
-            check_login_cl.check_login_home("none", "none", true);
-            using (dbDataContext db = new dbDataContext())
+            if (TryHandleCancelWaitRequest(db))
+            {
+                return;
+            }
+
+            if (!IsPostBack)
             {
                 check(db);
             }
@@ -193,7 +343,7 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
 
     public void check(dbDataContext db)
     {
-        check_login_cl.check_login_home("none", "none", true);
+        EnsurePortalLogin();
 
         string _tk = PortalRequest_cl.GetCurrentAccountEncrypted();
         if (string.IsNullOrEmpty(_tk))
@@ -217,6 +367,7 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
 
         ViewState["id_donhang"] = q1.id.ToString();
         Label4.Text = q1.id.ToString();
+        ConfigureWaitActions(q1.id.ToString());
 
         // Bind chi tiết
         var q_ct =
@@ -261,8 +412,9 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
 
             txt_mapin.Enabled = true;
             Button3.Enabled = true;
-            lb_thongbao_the.Visible = !string.IsNullOrEmpty(contextError) && contextError != "missing_key";
-            lb_thongbao_the.Text = lb_thongbao_the.Visible ? BuildContextErrorMessage(contextError) : "";
+            SetCardNotice((!string.IsNullOrEmpty(contextError) && contextError != "missing_key")
+                ? BuildContextErrorMessage(contextError)
+                : string.Empty);
 
             Timer1.Enabled = true;
             return;
@@ -288,8 +440,7 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
             txt_mapin.Enabled = false;
             Button3.Enabled = false;
 
-            lb_thongbao_the.Visible = true;
-            lb_thongbao_the.Text = "Thẻ này đã bị khóa. Vui lòng liên hệ quản trị hoặc sử dụng thẻ khác.";
+            SetCardNotice("Thẻ này đã bị khóa. Vui lòng liên hệ quản trị hoặc sử dụng thẻ khác.");
 
             Timer1.Enabled = false;
             return;
@@ -303,8 +454,7 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
             txt_mapin.Enabled = false;
             Button3.Enabled = false;
 
-            lb_thongbao_the.Visible = true;
-            lb_thongbao_the.Text = "Hiện tại chưa Trao đổi được bằng loại thẻ này.";
+            SetCardNotice("Hiện tại chưa Trao đổi được bằng loại thẻ này.");
 
             Timer1.Enabled = false;
             return;
@@ -354,8 +504,7 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
                 txt_mapin.Enabled = false;
                 Button3.Enabled = false;
 
-                lb_thongbao_the.Visible = true;
-                lb_thongbao_the.Text = "Thẻ ưu đãi chỉ áp dụng cho đơn có ưu đãi. Đơn này không có ưu đãi nên không thể Trao đổi bằng thẻ ưu đãi.";
+                SetCardNotice("Thẻ ưu đãi chỉ áp dụng cho đơn có ưu đãi. Đơn này không có ưu đãi nên không thể Trao đổi bằng thẻ ưu đãi.");
 
                 Timer1.Enabled = false;
                 return;
@@ -369,10 +518,10 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
             txt_mapin.Enabled = true;
             Button3.Enabled = true;
 
-            lb_thongbao_the.Visible = true;
-            lb_thongbao_the.Text =
+            SetCardNotice(
                 "Trao đổi bằng <b>Thẻ ưu đãi</b>: <b>" + quyenUuDai.ToString("#,##0.##") + " Quyền</b>."
-                + "<br/>Phần còn lại: <b>" + quyenConLai.ToString("#,##0.##") + " Quyền</b> (thanh toán tiền mặt theo quy đổi).";
+                + "<br/>Phần còn lại: <b>" + quyenConLai.ToString("#,##0.##") + " Quyền</b> (trao đổi tiền mặt theo quy đổi)."
+            );
 
             Timer1.Enabled = false;
             return;
@@ -415,8 +564,7 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
             html += "<br/><b>Sẽ trừ:</b> <b>-" + tongQuyen.ToString("#,##0.##") + " Quyền tiêu dùng</b>.";
         }
 
-        lb_thongbao_the.Visible = true;
-        lb_thongbao_the.Text = html;
+        SetCardNotice(html);
 
         Timer1.Enabled = false;
     }
@@ -433,26 +581,57 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
     {
         using (dbDataContext db = new dbDataContext())
         {
-            var q = db.DonHang_tbs.FirstOrDefault(p => p.id.ToString() == ViewState["id_donhang"].ToString());
-            if (q != null)
+            string orderId = ViewState["id_donhang"] != null ? ViewState["id_donhang"].ToString() : string.Empty;
+            var q = string.IsNullOrEmpty(orderId)
+                ? null
+                : db.DonHang_tbs.FirstOrDefault(p => p.id.ToString() == orderId);
+            CancelOrderIfAllowed(db, q);
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), "redirectScript",
+                "window.location.href='" + SellerDonBanUrl() + "';", true);
+        }
+    }
+
+    protected void btn_huy_cho_Click(object sender, EventArgs e)
+    {
+        EnsurePortalLogin();
+
+        string sellerAccount = GetCurrentSellerAccount();
+        if (string.IsNullOrEmpty(sellerAccount))
+        {
+            Response.Redirect(LoginUrl(), false);
+            Context.ApplicationInstance.CompleteRequest();
+            return;
+        }
+
+        int parsedOrderId;
+        int? requestOrderId = null;
+        if (ViewState["id_donhang"] != null && int.TryParse(ViewState["id_donhang"].ToString(), out parsedOrderId))
+        {
+            requestOrderId = parsedOrderId;
+        }
+
+        using (dbDataContext db = new dbDataContext())
+        {
+            DonHang_tb donCho = ResolveOrderForCancel(db, sellerAccount, requestOrderId, false);
+            if (donCho == null)
             {
-                DonHangStateMachine_cl.EnsureStateFields(q);
-                if (!DonHangStateMachine_cl.CanCancelChoTraoDoi(q))
-                {
-                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), "redirectScript",
-                        "window.location.href='" + SellerDonBanUrl() + "';", true);
-                    return;
-                }
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                    thongbao_class.metro_dialog("Thông báo", "Không tìm thấy đơn hàng chờ Trao đổi để hủy.", "false", "false", "OK", "alert", ""),
+                    true);
+                return;
+            }
 
-                DonHangStateMachine_cl.SetExchangeStatus(q, DonHangStateMachine_cl.Exchange_ChuaTraoDoi);
-                q.chothanhtoan = false;
-                db.SubmitChanges();
-                ClearPaymentSession();
-
-                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), "redirectScript",
-                    "window.location.href='" + SellerDonBanUrl() + "';", true);
+            if (!CancelOrderIfAllowed(db, donCho))
+            {
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                    thongbao_class.metro_dialog("Thông báo", "Đơn hàng không còn ở trạng thái chờ Trao đổi.", "false", "false", "OK", "alert", ""),
+                    true);
+                return;
             }
         }
+
+        Response.Redirect(SellerDonBanUrl(), false);
+        Context.ApplicationInstance.CompleteRequest();
     }
 
     protected void Button2_Click(object sender, EventArgs e)
@@ -464,7 +643,7 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
 
     protected void Button3_Click(object sender, EventArgs e)
     {
-        check_login_cl.check_login_home("none", "none", true);
+        EnsurePortalLogin();
 
         string _tk = PortalRequest_cl.GetCurrentAccountEncrypted();
         if (!string.IsNullOrEmpty(_tk))
@@ -522,7 +701,7 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
             if (ViewState["id_donhang"] == null || !string.Equals(ViewState["id_donhang"].ToString(), donCho.id.ToString(), StringComparison.Ordinal))
             {
                 ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                    thongbao_class.metro_dialog("Thông báo", "Đơn chờ thanh toán đã thay đổi. Vui lòng quét lại link thanh toán.", "false", "false", "OK", "alert", ""),
+                    thongbao_class.metro_dialog("Thông báo", "Đơn chờ trao đổi đã thay đổi. Vui lòng quét lại link trao đổi.", "false", "false", "OK", "alert", ""),
                     true);
                 return;
             }
@@ -567,14 +746,14 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
 
                 if (shouldBlockAccount)
                 {
-                    // khóa chính tài khoản thanh toán (payer), không khóa nhầm tài khoản người bán
+                    // khóa chính tài khoản trao đổi (payer), không khóa nhầm tài khoản người bán
                     q_tk_mua.block = true;
                     db.SubmitChanges();
                     PinAttemptGuard_cl.Reset(payer, clientIp);
 
                     Session["thongbao_home"] = thongbao_class.metro_dialog_onload(
                         "Mã pin không đúng",
-                        "Bạn đã nhập sai " + failCount + " lần. Tài khoản thanh toán đã bị khóa. Vui lòng liên hệ với chúng tôi để xác thực.",
+                        "Bạn đã nhập sai " + failCount + " lần. Tài khoản trao đổi đã bị khóa. Vui lòng liên hệ với chúng tôi để xác thực.",
                         "false", "false", "OK", "alert", ""
                     );
 
@@ -614,7 +793,7 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
                 if (!WalletPaymentSession_cl.TryGetCardKey(Session, out keyGuid))
                 {
                     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                        thongbao_class.metro_dialog("Thông báo", "Phiên thanh toán không hợp lệ. Vui lòng quét lại link thanh toán.", "false", "false", "OK", "alert", ""),
+                        thongbao_class.metro_dialog("Thông báo", "Phiên trao đổi không hợp lệ. Vui lòng quét lại link trao đổi.", "false", "false", "OK", "alert", ""),
                         true);
                     return;
                 }
@@ -631,7 +810,7 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
                 if (!string.Equals((cardTx.taikhoan ?? "").Trim(), payer, StringComparison.OrdinalIgnoreCase))
                 {
                     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                        thongbao_class.metro_dialog("Thông báo", "Thông tin tài khoản thanh toán đã thay đổi. Vui lòng quét lại link thanh toán.", "false", "false", "OK", "alert", ""),
+                        thongbao_class.metro_dialog("Thông báo", "Thông tin tài khoản trao đổi đã thay đổi. Vui lòng quét lại link trao đổi.", "false", "false", "OK", "alert", ""),
                         true);
                     return;
                 }
@@ -642,7 +821,7 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
                 if (q_tk_mua == null || q_tk_mua.block == true)
                 {
                     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                        thongbao_class.metro_dialog("Thông báo", "Tài khoản thanh toán không hợp lệ hoặc đã bị khóa.", "false", "false", "OK", "alert", ""),
+                        thongbao_class.metro_dialog("Thông báo", "Tài khoản trao đổi không hợp lệ hoặc đã bị khóa.", "false", "false", "OK", "alert", ""),
                         true);
                     return;
                 }
@@ -823,7 +1002,7 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
 
                 Session["thongbao_home"] = thongbao_class.metro_dialog_onload(
                     "Thông báo",
-                    "Trao đổi thành công (Thẻ ưu đãi). Phần còn lại thanh toán tiền mặt theo quy đổi.",
+                    "Trao đổi thành công (Thẻ ưu đãi). Phần còn lại trao đổi tiền mặt theo quy đổi.",
                     "false", "false", "OK", "alert", ""
                 );
 
@@ -1066,7 +1245,7 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
             {
                 Log_cl.Add_Log(ex.Message, _tk, ex.StackTrace);
                 ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                    thongbao_class.metro_dialog("Thông báo", "Có lỗi xảy ra trong quá trình xử lý thanh toán. Vui lòng thử lại.", "false", "false", "OK", "alert", ""),
+                    thongbao_class.metro_dialog("Thông báo", "Có lỗi xảy ra trong quá trình xử lý trao đổi. Vui lòng thử lại.", "false", "false", "OK", "alert", ""),
                     true);
             }
             finally

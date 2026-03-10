@@ -1,5 +1,7 @@
 using System;
+using System.Data.SqlClient;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Web;
 
@@ -44,6 +46,11 @@ public partial class shop_public : System.Web.UI.Page
                 RedirectToRoot();
                 return;
             }
+            if (shop.block == true)
+            {
+                RedirectToRoot();
+                return;
+            }
 
             string canonicalPath = ShopSlug_cl.GetPublicUrl(db, shop);
             string requestPath = (Request.Url.AbsolutePath ?? "").Trim().ToLowerInvariant();
@@ -78,6 +85,8 @@ public partial class shop_public : System.Web.UI.Page
 
     private void BindShopSummary(dbDataContext db, taikhoan_tb shop, string canonicalPath, string currentHomeAccount)
     {
+        ViewState["shop_taikhoan"] = (shop.taikhoan ?? "").Trim().ToLowerInvariant();
+
         string displayName = (shop.ten_shop ?? "").Trim();
         if (string.IsNullOrEmpty(displayName))
             displayName = (shop.hoten ?? "").Trim();
@@ -96,9 +105,12 @@ public partial class shop_public : System.Web.UI.Page
         if (string.IsNullOrEmpty(slug))
             slug = (shop.taikhoan ?? "").Trim().ToLowerInvariant();
 
-        int totalProducts = db.BaiViet_tbs.Count(p => p.nguoitao == shop.taikhoan && p.bin == false && p.phanloai == "sanpham");
-        int totalViews = db.BaiViet_tbs
-            .Where(p => p.nguoitao == shop.taikhoan && p.bin == false && p.phanloai == "sanpham")
+        var visibleProducts = AccountVisibility_cl.FilterVisibleProducts(
+            db,
+            db.BaiViet_tbs.Where(p => p.nguoitao == shop.taikhoan));
+
+        int totalProducts = visibleProducts.Count();
+        int totalViews = visibleProducts
             .Select(p => (int?)p.LuotTruyCap)
             .ToList()
             .Sum() ?? 0;
@@ -109,12 +121,7 @@ public partial class shop_public : System.Web.UI.Page
             .ToList()
             .Sum() ?? 0;
 
-        int pendingOrders = db.DonHang_tbs.Count(p =>
-            p.nguoiban == shop.taikhoan &&
-            (
-                p.exchange_status == DonHangStateMachine_cl.Exchange_ChoTraoDoi
-                || (p.exchange_status == null && p.trangthai == DonHangStateMachine_cl.Exchange_ChoTraoDoi)
-            ));
+        int pendingOrders = GetPendingOrdersCompat(db, shop.taikhoan);
 
         img_avatar.ImageUrl = avatar;
         lb_shop_name.Text = displayName;
@@ -143,7 +150,9 @@ public partial class shop_public : System.Web.UI.Page
     private void BindShopProducts(dbDataContext db, string taiKhoanShop)
     {
         var products = db.BaiViet_tbs
-            .Where(p => p.nguoitao == taiKhoanShop && p.bin == false && p.phanloai == "sanpham")
+            .Where(p => p.nguoitao == taiKhoanShop)
+            .Where(p => db.taikhoan_tbs.Any(acc => acc.taikhoan == p.nguoitao && acc.block != true))
+            .Where(p => p.bin == false && p.phanloai == "sanpham")
             .OrderByDescending(p => p.ngaytao)
             .Select(p => new
             {
@@ -152,7 +161,8 @@ public partial class shop_public : System.Web.UI.Page
                 p.name_en,
                 p.image,
                 p.giaban,
-                p.ngaytao
+                p.ngaytao,
+                LuotTruyCap = (p.LuotTruyCap ?? 0)
             })
             .ToList();
 
@@ -242,6 +252,8 @@ public partial class shop_public : System.Web.UI.Page
         taikhoan_tb acc = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == tk);
         if (acc == null)
             return "";
+        if (acc.block == true)
+            return "";
 
         if (!PortalScope_cl.CanLoginHome(acc.taikhoan, acc.phanloai, acc.permission))
             return "";
@@ -249,12 +261,91 @@ public partial class shop_public : System.Web.UI.Page
         return acc.taikhoan;
     }
 
+    private int GetPendingOrdersCompat(dbDataContext db, string tk)
+    {
+        try
+        {
+            return db.DonHang_tbs.Count(p =>
+                p.nguoiban == tk &&
+                (
+                    p.exchange_status == DonHangStateMachine_cl.Exchange_ChoTraoDoi
+                    || (p.exchange_status == null && p.trangthai == DonHangStateMachine_cl.Exchange_ChoTraoDoi)
+                ));
+        }
+        catch (SqlException ex)
+        {
+            if (!IsMissingDonHangStatusColumnError(ex))
+                throw;
+
+            return db.DonHang_tbs.Count(p =>
+                p.nguoiban == tk &&
+                p.trangthai == DonHangStateMachine_cl.Exchange_ChoTraoDoi);
+        }
+    }
+
+    private static bool IsMissingDonHangStatusColumnError(SqlException ex)
+    {
+        if (ex == null)
+            return false;
+
+        string message = ex.Message ?? "";
+        return message.IndexOf("Invalid column name 'exchange_status'", StringComparison.OrdinalIgnoreCase) >= 0
+            || message.IndexOf("Invalid column name 'order_status'", StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
     protected string ResolveProductImage(object imageRaw)
     {
+        const string fallback = "/uploads/images/macdinh.jpg";
         string image = (imageRaw ?? "").ToString().Trim();
         if (string.IsNullOrEmpty(image))
-            return "/uploads/images/macdinh.jpg";
+            return fallback;
+
+        if (image.StartsWith("javascript:", StringComparison.OrdinalIgnoreCase))
+            return fallback;
+
+        Uri absolute;
+        if (Uri.TryCreate(image, UriKind.Absolute, out absolute))
+        {
+            if (string.Equals(absolute.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(absolute.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+                return absolute.AbsoluteUri;
+            return fallback;
+        }
+
+        if (image.StartsWith("~/", StringComparison.Ordinal))
+            image = image.Substring(1);
+        if (!image.StartsWith("/", StringComparison.Ordinal))
+            image = "/" + image;
+
+        if (IsMissingUploadFile(image))
+            return fallback;
+
         return image;
+    }
+
+    private bool IsMissingUploadFile(string relativeUrl)
+    {
+        if (string.IsNullOrEmpty(relativeUrl))
+            return false;
+        if (!relativeUrl.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        string cleanPath = relativeUrl;
+        int q = cleanPath.IndexOf('?');
+        if (q >= 0)
+            cleanPath = cleanPath.Substring(0, q);
+
+        try
+        {
+            string physical = Server.MapPath("~" + cleanPath);
+            if (string.IsNullOrEmpty(physical))
+                return false;
+            return !File.Exists(physical);
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     protected string ResolveProductUrl(object idRaw, object nameEnRaw)
@@ -270,11 +361,65 @@ public partial class shop_public : System.Web.UI.Page
         return "/" + slug + "-" + id.ToString() + ".html";
     }
 
+    protected string BuildExchangeActionUrl(object idRaw)
+    {
+        int id;
+        int.TryParse((idRaw ?? "").ToString(), out id);
+        if (id <= 0)
+            return "#";
+
+        var query = HttpUtility.ParseQueryString(string.Empty);
+        query["idsp"] = id.ToString();
+        query["qty"] = "1";
+
+        string shopAccount = (ViewState["shop_taikhoan"] ?? "").ToString().Trim();
+        if (!string.IsNullOrEmpty(shopAccount))
+            query["user_bancheo"] = shopAccount;
+
+        query["return_url"] = (Request.RawUrl ?? "/");
+        return "/home/trao-doi.aspx?" + query.ToString();
+    }
+
+    protected string BuildAddCartActionUrl(object idRaw)
+    {
+        int id;
+        int.TryParse((idRaw ?? "").ToString(), out id);
+        if (id <= 0)
+            return "#";
+
+        var query = HttpUtility.ParseQueryString(string.Empty);
+        query["idsp"] = id.ToString();
+        query["qty"] = "1";
+
+        string shopAccount = (ViewState["shop_taikhoan"] ?? "").ToString().Trim();
+        if (!string.IsNullOrEmpty(shopAccount))
+            query["user_bancheo"] = shopAccount;
+
+        query["return_url"] = (Request.RawUrl ?? "/");
+        return "/home/them-vao-gio.aspx?" + query.ToString();
+    }
+
     protected string FormatCurrency(object valueRaw)
     {
-        decimal value;
-        decimal.TryParse(Convert.ToString(valueRaw, CultureInfo.InvariantCulture), out value);
-        return value.ToString("#,##0.##");
+        decimal value = 0m;
+        if (valueRaw != null && valueRaw != DBNull.Value)
+        {
+            try
+            {
+                value = Convert.ToDecimal(valueRaw, CultureInfo.InvariantCulture);
+            }
+            catch
+            {
+                string raw = Convert.ToString(valueRaw, CultureInfo.InvariantCulture);
+                if (!decimal.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out value)
+                    && !decimal.TryParse(raw, NumberStyles.Any, CultureInfo.CurrentCulture, out value))
+                {
+                    value = 0m;
+                }
+            }
+        }
+
+        return value.ToString("#,##0.##", CultureInfo.GetCultureInfo("vi-VN"));
     }
 
     protected string FormatDate(object dateRaw)

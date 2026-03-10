@@ -133,7 +133,7 @@ public partial class admin_Default : System.Web.UI.Page
         check_list_page.Items.Clear();
         for (int i = 1; i <= int.Parse(ViewState["total_page"].ToString()); i++)
         {
-            ListItem item = new ListItem($"Trang {i}", i.ToString());
+            ListItem item = new ListItem(string.Format("Trang {0}", i), i.ToString());
             check_list_page.Items.Add(item);
             item.Selected = true;
         }
@@ -1736,8 +1736,8 @@ public partial class admin_Default : System.Web.UI.Page
         try
         {
             check_login_cl.check_login_admin("none", "none");
-            // Tạo một danh sách để lưu trữ các cập nhật cần thực hiện
-            var updates = new List<(int id, int rank)>();
+            // Tạo một từ điển để lưu trữ các cập nhật cần thực hiện (tương thích C# cũ trên host)
+            var updates = new Dictionary<int, int>();
             // Lấy thông tin từ Repeater1
             foreach (RepeaterItem item in Repeater1.Items)
             {
@@ -1761,8 +1761,12 @@ public partial class admin_Default : System.Web.UI.Page
                         // Kiểm tra nếu rank lớn hơn 0
                         if (_r1 > 0)
                         {
-                            // Thêm thông tin vào danh sách cập nhật
-                            updates.Add((id: int.Parse(_id), rank: _r1));
+                            int parsedId;
+                            if (int.TryParse(_id, out parsedId))
+                            {
+                                // Ghi đè theo ID để tránh trùng key nếu repeater có bản ghi lặp
+                                updates[parsedId] = _r1;
+                            }
                         }
                     }
                 }
@@ -1772,14 +1776,16 @@ public partial class admin_Default : System.Web.UI.Page
             {
                 // Truy vấn và lấy tất cả các mục cần cập nhật trong một lần
                 var danhMucsToUpdate = db.DanhMuc_tbs
-                    .Where(d => updates.Select(u => u.id).Contains(d.id))
+                    .Where(d => updates.Keys.Contains(d.id))
                     .ToList();
 
                 // Cập nhật giá trị rank cho tất cả các mục trong danh sách danhMucsToUpdate
                 foreach (var dm in danhMucsToUpdate)
                 {
-                    var update = updates.First(u => u.id == dm.id);
-                    dm.rank = update.rank;
+                    if (updates.ContainsKey(dm.id))
+                    {
+                        dm.rank = updates[dm.id];
+                    }
                 }
 
                 // Lưu các thay đổi vào cơ sở dữ liệu một lần
@@ -1892,7 +1898,7 @@ public partial class admin_Default : System.Web.UI.Page
             string url = "/admin/quan-ly-menu/in.aspx";
 
             // Script để mở trang mới trong tab mới
-            string script = $"window.open('{url}', '_blank');";
+            string script = string.Format("window.open('{0}', '_blank');", url);
 
             // Đăng ký script để thực thi sau khi UpdatePanel postback hoàn thành
             ScriptManager.RegisterStartupScript(this, GetType(), "OpenNewTab", script, true);

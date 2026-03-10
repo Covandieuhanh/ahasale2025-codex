@@ -73,6 +73,7 @@ public partial class home_trao_doi : System.Web.UI.Page
 
         decimal tongVND = giaVND * sl;
         lb_tong_vnd.Text = tongVND.ToString("#,##0");
+        lb_tong_vnd_footer.Text = tongVND.ToString("#,##0");
         lb_tong_a.Text = QuyDoi_VND_To_A(tongVND).ToString("#,##0.##");
     }
 
@@ -85,6 +86,9 @@ public partial class home_trao_doi : System.Web.UI.Page
         if (string.Equals(requested, sp.nguoitao ?? "", StringComparison.OrdinalIgnoreCase))
             return "";
 
+        if (!AccountVisibility_cl.IsSellerVisible(db, requested))
+            return "";
+
         bool isValid = db.BanSanPhamNay_tbs.Any(x => x.taikhoan_ban == requested && x.idsp == sp.id.ToString());
         return isValid ? requested : "";
     }
@@ -94,7 +98,7 @@ public partial class home_trao_doi : System.Web.UI.Page
         using (dbDataContext db = new dbDataContext())
         {
             string idsp = (ViewState["idsp"] ?? "").ToString();
-            var sp = db.BaiViet_tbs.FirstOrDefault(p => p.id.ToString() == idsp && p.bin == false);
+            var sp = AccountVisibility_cl.FindVisibleProductById(db, idsp);
             if (sp == null)
             {
                 but_xacnhan.Enabled = false;
@@ -193,7 +197,7 @@ public partial class home_trao_doi : System.Web.UI.Page
 
         using (dbDataContext db = new dbDataContext())
         {
-            var sp = db.BaiViet_tbs.FirstOrDefault(p => p.id.ToString() == idsp && p.bin == false);
+            var sp = AccountVisibility_cl.FindVisibleProductById(db, idsp);
             if (sp == null)
             {
                 Helper_Tabler_cl.ShowModal(this.Page, "Sản phẩm đã ngừng bán hoặc không tồn tại.", "Thông báo", true, "warning");

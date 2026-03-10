@@ -278,7 +278,7 @@
                         </div>
                         <div class="col-lg-6 col-md-6">
                             <div class="metric-card">
-                                <div class="metric-label">Đã ghi nhận</div>
+                                <div class="metric-label">Đã ghi nhận (chờ chi trả)</div>
                                 <div class="metric-value">
                                     <asp:Label ID="lb_so_du_da_ghi_nhan" runat="server" Text="0"></asp:Label>
                                     <img src="/uploads/images/dong-a.png" style="width:18px" class="ms-1" />
@@ -370,6 +370,9 @@
                                                     </asp:PlaceHolder>
                                                     <asp:PlaceHolder ID="ph_status_rejected" runat="server" Visible='<%# Eval("TrangThaiCode").ToString()=="2" %>'>
                                                         <span class="status-badge" style="background:#fff0f0;border-color:#f3c1c1;color:#b83232;">Từ chối</span>
+                                                    </asp:PlaceHolder>
+                                                    <asp:PlaceHolder ID="ph_status_paid" runat="server" Visible='<%# Eval("TrangThaiCode").ToString()=="3" %>'>
+                                                        <span class="status-badge" style="background:#edf4ff;border-color:#c7d9ff;color:#1f4a93;">Đã chi trả</span>
                                                     </asp:PlaceHolder>
                                                 </td>
                                                 <td><%# Eval("NguoiDuyet") %></td>

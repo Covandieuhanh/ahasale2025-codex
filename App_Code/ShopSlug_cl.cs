@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Web;
 
 public static class ShopSlug_cl
 {
@@ -27,7 +28,7 @@ public static class ShopSlug_cl
     public static string ToSlug(string raw)
     {
         string s = RemoveDiacritics((raw ?? "").Trim().ToLower());
-        s = s.Replace('đ', 'd');
+        s = s.Replace('\u0111', 'd');
         s = Regex.Replace(s, @"[^a-z0-9]+", "-");
         s = Regex.Replace(s, @"-+", "-").Trim('-');
         if (string.IsNullOrEmpty(s)) s = "shop";
@@ -179,9 +180,16 @@ public static class ShopSlug_cl
 
         if (IsShopAccount(db, acc))
         {
-            string slug = EnsureSlugForShop(db, acc);
-            if (!string.IsNullOrEmpty(slug))
-                return "/shop/cong-khai/" + slug;
+            if (HasSlugShopColumn(db))
+            {
+                string slug = EnsureSlugForShop(db, acc);
+                if (!string.IsNullOrEmpty(slug))
+                    return "/shop/cong-khai/" + slug;
+            }
+
+            // Fallback an toàn khi host chưa có cột slug_shop hoặc chưa đồng bộ dữ liệu slug.
+            // Tránh trả về /{shop}.info vì có thể tạo vòng lặp redirect với route hồ sơ cũ.
+            return "/shop/public.aspx?user=" + HttpUtility.UrlEncode((acc.taikhoan ?? "").Trim().ToLowerInvariant());
         }
 
         return "/" + (acc.taikhoan ?? "").Trim().ToLower() + ".info";

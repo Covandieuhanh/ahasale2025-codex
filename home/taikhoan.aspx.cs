@@ -9,7 +9,22 @@ public partial class home_taikhoan : System.Web.UI.Page
         WalletPaymentSession_cl.Clear(Session);
     }
 
-    private string ResolveCurrentLoginAccount()
+    private static string DecryptAccount(string encrypted)
+    {
+        if (string.IsNullOrEmpty(encrypted))
+            return "";
+
+        try
+        {
+            return (mahoa_cl.giaima_Bcorn(encrypted) ?? "").Trim().ToLowerInvariant();
+        }
+        catch
+        {
+            return "";
+        }
+    }
+
+    private string ReadHomeEncryptedAccount()
     {
         string tkEncrypted = Session["taikhoan_home"] as string;
         if (string.IsNullOrEmpty(tkEncrypted))
@@ -19,28 +34,61 @@ public partial class home_taikhoan : System.Web.UI.Page
                 tkEncrypted = ckHome["taikhoan"];
         }
 
+        return tkEncrypted ?? "";
+    }
+
+    private string ReadShopEncryptedAccount()
+    {
+        string tkEncrypted = Session["taikhoan_shop"] as string;
         if (string.IsNullOrEmpty(tkEncrypted))
         {
-            tkEncrypted = Session["taikhoan_shop"] as string;
-            if (string.IsNullOrEmpty(tkEncrypted))
-            {
-                HttpCookie ckShop = Request.Cookies["cookie_userinfo_shop_bcorn"];
-                if (ckShop != null && !string.IsNullOrEmpty(ckShop["taikhoan"]))
-                    tkEncrypted = ckShop["taikhoan"];
-            }
+            HttpCookie ckShop = Request.Cookies["cookie_userinfo_shop_bcorn"];
+            if (ckShop != null && !string.IsNullOrEmpty(ckShop["taikhoan"]))
+                tkEncrypted = ckShop["taikhoan"];
         }
 
-        if (string.IsNullOrEmpty(tkEncrypted))
-            return "";
+        return tkEncrypted ?? "";
+    }
 
-        try
+    private string ResolveCurrentLoginAccount(bool preferShopAccount)
+    {
+        if (preferShopAccount)
         {
-            return (mahoa_cl.giaima_Bcorn(tkEncrypted) ?? "").Trim().ToLowerInvariant();
+            string shopAccount = DecryptAccount(ReadShopEncryptedAccount());
+            if (!string.IsNullOrEmpty(shopAccount))
+                return shopAccount;
+
+            return DecryptAccount(ReadHomeEncryptedAccount());
         }
-        catch
-        {
-            return "";
-        }
+
+        string homeAccount = DecryptAccount(ReadHomeEncryptedAccount());
+        if (!string.IsNullOrEmpty(homeAccount))
+            return homeAccount;
+
+        return DecryptAccount(ReadShopEncryptedAccount());
+    }
+
+    private bool IsShopModeWithLogin()
+    {
+        return PortalActiveMode_cl.IsShopActive() && PortalActiveMode_cl.HasShopCredential();
+    }
+
+    private bool IsShopFlowReferrer()
+    {
+        if (Request == null || Request.UrlReferrer == null)
+            return false;
+
+        string refPath = (Request.UrlReferrer.AbsolutePath ?? "").Trim();
+        if (string.IsNullOrEmpty(refPath))
+            return false;
+
+        return refPath.StartsWith("/shop/", StringComparison.OrdinalIgnoreCase)
+            || refPath.StartsWith("/admin/he-thong-san-pham/ban-san-pham.aspx", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private string ResolveChoThanhToanTarget(bool isShopModeWithLogin)
+    {
+        return isShopModeWithLogin ? "/shop/cho-thanh-toan" : "/home/cho-thanh-toan.aspx";
     }
 
     private string ResolveFallbackUrl(dbDataContext db, string payer, int loaiThe)
@@ -58,12 +106,15 @@ public partial class home_taikhoan : System.Web.UI.Page
         return "/" + payer + ".info";
     }
 
-    private string ResolveSelfScanTarget(int loaiThe, string fallbackUrl)
+    private string ResolveSelfScanTarget(int loaiThe, string fallbackUrl, bool isShopModeWithLogin)
     {
-        if (loaiThe == 1) return "/home/lich-su-quyen-uu-dai.aspx";
-        if (loaiThe == 2) return "/home/lich-su-giao-dich.aspx";
+        if (loaiThe == 1)
+            return isShopModeWithLogin ? "/shop/ho-so-uu-dai" : "/home/lich-su-quyen-uu-dai.aspx";
+        if (loaiThe == 2)
+            return isShopModeWithLogin ? "/shop/ho-so-tieu-dung" : "/home/lich-su-giao-dich.aspx";
         if (loaiThe == 3) return "/shop/ho-so-tieu-dung";
         if (loaiThe == 4) return "/home/lich-su-quyen-gan-ket.aspx";
+        if (loaiThe == 5) return "/home/lich-su-quyen-lao-dong.aspx";
         return fallbackUrl;
     }
 
@@ -73,7 +124,7 @@ public partial class home_taikhoan : System.Web.UI.Page
 
         check_login_cl.check_login_home("none", "none", false);
 
-        // ✅ reset phiên thanh toán cũ để không dính thẻ trước đó
+        // ✅ reset phiên trao đổi cũ để không dính thẻ trước đó
         ClearPaymentSession();
 
         // 1) BẮT BUỘC có key
@@ -85,7 +136,8 @@ public partial class home_taikhoan : System.Web.UI.Page
         }
 
         // 2) key phải parse được Guid
-        if (!Guid.TryParse(keyStr, out Guid keyGuid))
+        Guid keyGuid;
+        if (!Guid.TryParse(keyStr, out keyGuid))
         {
             Response.Redirect("/", true);
             return;
@@ -126,14 +178,35 @@ public partial class home_taikhoan : System.Web.UI.Page
             }
 
             // 4) Xác định người đang login (home hoặc shop bridge)
-            string tkB = ResolveCurrentLoginAccount();
+            bool isShopModeWithLogin = IsShopModeWithLogin();
+            if (!isShopModeWithLogin && PortalActiveMode_cl.HasShopCredential() && IsShopFlowReferrer())
+            {
+                PortalActiveMode_cl.SetMode(PortalActiveMode_cl.ModeShop);
+                isShopModeWithLogin = IsShopModeWithLogin();
+            }
+            string tkB = ResolveCurrentLoginAccount(isShopModeWithLogin);
             string fallbackUrl = ResolveFallbackUrl(db, payer, loaiThe);
+
+            // Thẻ gian hàng đối tác:
+            // - Chưa đăng nhập shop => về trang công khai shop.
+            // - Đã đăng nhập shop (đang ở mode shop) => vào lịch sử hồ sơ tiêu dùng shop.
+            if (loaiThe == 3)
+            {
+                if (isShopModeWithLogin)
+                {
+                    Response.Redirect("/shop/ho-so-tieu-dung", true);
+                    return;
+                }
+
+                Response.Redirect(fallbackUrl, true);
+                return;
+            }
 
             // 5) Self-scan: điều hướng theo loại thẻ
             if (!string.IsNullOrEmpty(tkB) &&
                 string.Equals(payer, tkB, StringComparison.OrdinalIgnoreCase))
             {
-                Response.Redirect(ResolveSelfScanTarget(loaiThe, fallbackUrl), true);
+                Response.Redirect(ResolveSelfScanTarget(loaiThe, fallbackUrl, isShopModeWithLogin), true);
                 return;
             }
 
@@ -152,8 +225,9 @@ public partial class home_taikhoan : System.Web.UI.Page
             }
 
             // 8) B phải có đơn "Chờ Trao đổi"
+            string tkBLower = (tkB ?? "").Trim().ToLowerInvariant();
             var qWait = db.DonHang_tbs.FirstOrDefault(p =>
-                p.nguoiban == tkB &&
+                (p.nguoiban ?? "").ToLower() == tkBLower &&
                 (
                     p.exchange_status == DonHangStateMachine_cl.Exchange_ChoTraoDoi
                     || (p.exchange_status == null && p.trangthai == DonHangStateMachine_cl.Exchange_ChoTraoDoi)
@@ -175,7 +249,7 @@ public partial class home_taikhoan : System.Web.UI.Page
                 qWait.id.ToString()
             );
 
-            Response.Redirect("/home/cho-thanh-toan.aspx", true);
+            Response.Redirect(ResolveChoThanhToanTarget(isShopModeWithLogin), true);
             return;
         }
     }

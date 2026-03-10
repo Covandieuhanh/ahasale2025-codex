@@ -1,7 +1,7 @@
 ﻿<%@ Control Language="C#" AutoEventWireup="true" CodeFile="DanhChoBan_MoiNhat_UC.ascx.cs" Inherits="Uc_Home_DanhChoBan_MoiNhat_UC" %>
 
 <style>
-    /* ===== Grid 5 (desktop), 3 (md), 2 (mobile) ===== */
+    /* ===== Grid 5 (desktop), 3 (md), 1 (mobile) ===== */
     .grid-5 {
         display: flex;
         flex-wrap: wrap;
@@ -14,7 +14,7 @@
 
     @media (max-width: 767.98px) {
         .grid-5-item {
-            width: calc((100% - 16px) / 2);
+            width: 100%;
         }
     }
 
@@ -249,16 +249,42 @@
         gap: 8px;
     }
 
-        .sp-actions .btn {
-            width: 100%;
-            min-height: 34px;
-            padding: 6px 10px;
-            font-size: 13px;
+    .sp-actions .btn {
+        width: 100%;
+        min-height: 34px;
+        padding: 6px 10px;
+        font-size: 13px;
             display: flex;
             align-items: center;
             justify-content: center;
-            white-space: nowrap;
-        }
+        white-space: nowrap;
+    }
+
+    .sp-actions .btn-outline-info {
+        background: #0f8f5d;
+        border-color: #0f8f5d;
+        color: #fff;
+    }
+
+    .sp-actions .btn-outline-info:hover,
+    .sp-actions .btn-outline-info:focus {
+        background: #0d7b50;
+        border-color: #0d7b50;
+        color: #fff;
+    }
+
+    .sp-actions .btn-outline-success {
+        background: #eef6ff;
+        border-color: #bfd7f5;
+        color: #0f4c81;
+    }
+
+    .sp-actions .btn-outline-success:hover,
+    .sp-actions .btn-outline-success:focus {
+        background: #e1efff;
+        border-color: #a9c8ee;
+        color: #0b3f66;
+    }
 
     .sp-card a, .sp-card a:hover {
         color: inherit;
@@ -308,6 +334,119 @@
         line-height: 1;
         color: #98a2b3;
     }
+
+    .ct-guest-auth-wrap {
+        display: none;
+    }
+
+    :root {
+        --aha-home-root-search-height: 88px;
+    }
+
+    body.aha-home-root-pinned-search .page-wrapper {
+        padding-top: var(--aha-home-root-search-height) !important;
+    }
+
+    .search-wrap.is-root-pinned.is-sticky-fixed {
+        z-index: 1040;
+        padding: 6px 0 8px;
+        background: linear-gradient(180deg, rgba(248, 251, 255, .98) 0%, rgba(248, 251, 255, .90) 100%);
+        border-bottom: 1px solid #dce8f4;
+    }
+
+    .search-wrap.is-root-pinned.is-sticky-fixed .ct-shell {
+        padding: 0 12px;
+    }
+
+    @media (max-width: 991.98px) {
+        :root {
+            --aha-home-root-search-height: 98px;
+        }
+
+        .search-wrap.is-root-pinned.is-sticky-fixed .ct-shell {
+            padding: 0 10px;
+        }
+
+        .search-wrap.is-root-pinned.is-sticky-fixed .ct-guest-auth-wrap {
+            margin-bottom: 6px;
+            padding-top: 1px;
+        }
+
+        .search-wrap .ct-guest-auth-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            max-width: 1000px;
+            margin: 0 auto 8px;
+            padding: 0 4px;
+        }
+
+        .search-wrap.is-sticky-fixed .ct-guest-auth-wrap {
+            margin-bottom: 6px;
+            padding-top: 2px;
+        }
+
+        .ct-guest-auth-btn {
+            min-height: 36px;
+            padding: 0 14px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none !important;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+        }
+
+        .ct-guest-auth-btn.ct-login {
+            background: #0f172a;
+            border: 1px solid #0f172a;
+            color: #ffffff !important;
+        }
+
+        .ct-guest-auth-btn.ct-register {
+            background: #e9f7ef;
+            border: 1px solid rgba(25, 135, 84, .45);
+            color: #146c43 !important;
+        }
+
+        .search-wrap.is-compact .ct-guest-auth-wrap {
+            margin-bottom: 4px;
+            padding-top: 0;
+            gap: 6px;
+        }
+
+        .search-wrap.is-root-pinned.is-compact {
+            padding: 4px 0 6px;
+        }
+
+        .search-wrap.is-compact .ct-guest-auth-btn {
+            min-height: 32px;
+            padding: 0 12px;
+            font-size: 12px;
+        }
+
+        .search-wrap.is-compact .ct-bar {
+            height: 54px !important;
+            padding: 5px !important;
+            border-radius: 16px !important;
+        }
+
+        .search-wrap.is-compact .ct-cat,
+        .search-wrap.is-compact .ct-q,
+        .search-wrap.is-compact .ct-bar .choices__inner,
+        .search-wrap.is-compact .ct-input,
+        .search-wrap.is-compact .ct-btn-icon {
+            height: 40px !important;
+            min-height: 40px !important;
+        }
+
+        .search-wrap.is-compact .ct-input {
+            font-size: 13px !important;
+        }
+    }
 </style>
 
 <asp:UpdatePanel ID="up_all" runat="server" UpdateMode="Conditional" ChildrenAsTriggers="true">
@@ -320,6 +459,12 @@
 
         <asp:Panel ID="pnlSearch" runat="server" DefaultButton="btn_Search">
             <section class="search-wrap">
+                <asp:PlaceHolder ID="phGuestMobileQuickAuth" runat="server" Visible="false">
+                    <div class="ct-guest-auth-wrap">
+                        <a href="/dang-nhap" class="ct-guest-auth-btn ct-login">Đăng nhập</a>
+                        <a href="/home/dangky.aspx" class="ct-guest-auth-btn ct-register">Đăng ký</a>
+                    </div>
+                </asp:PlaceHolder>
                 <div class="ct-shell">
                     <div class="ct-bar">
 
@@ -370,11 +515,87 @@
                 });
             }
 
+            function ensureHomeSearchSticky() {
+                if (window.__ahaHomeSearchStickyBound) {
+                    return;
+                }
+                window.__ahaHomeSearchStickyBound = true;
+
+                var ticking = false;
+                var wrap = document.querySelector('.search-wrap');
+                if (!wrap) return;
+                var body = document.body;
+                var html = document.documentElement;
+
+                var spacer = document.createElement('div');
+                spacer.className = 'search-wrap-spacer';
+                wrap.parentNode.insertBefore(spacer, wrap.nextSibling);
+
+                function setPinnedLayoutClass(enabled, wrapHeight) {
+                    if (!body || !html) return;
+                    body.classList.toggle('aha-home-root-pinned-search', !!enabled);
+                    if (enabled && wrapHeight > 0) {
+                        html.style.setProperty('--aha-home-root-search-height', (wrapHeight + 12) + 'px');
+                    } else {
+                        html.style.removeProperty('--aha-home-root-search-height');
+                    }
+                }
+
+                function updateStickyState() {
+                    ticking = false;
+                    var header = document.querySelector('.site-header');
+                    var headerHeight = header ? Math.round(header.getBoundingClientRect().height) : 56;
+                    var stickyTop = Math.max(48, headerHeight + 6);
+                    document.documentElement.style.setProperty('--aha-home-sticky-top', stickyTop + 'px');
+
+                    var path = (window.location.pathname || '').toLowerCase();
+                    var isRootHomePath = (path === '/' || path === '/default.aspx');
+                    var isMobile = window.matchMedia('(max-width: 991.98px)').matches;
+                    var forcePinnedAtTop = isRootHomePath;
+
+                    var isFixed = wrap.classList.contains('is-sticky-fixed');
+                    var triggerTop = isFixed
+                        ? spacer.getBoundingClientRect().top
+                        : wrap.getBoundingClientRect().top;
+                    var shouldStick = forcePinnedAtTop || (triggerTop <= stickyTop);
+                    var keepSpacer = shouldStick && !forcePinnedAtTop;
+                    spacer.style.height = keepSpacer ? (wrap.offsetHeight + 'px') : '0px';
+
+                    wrap.classList.toggle('is-sticky-fixed', shouldStick);
+                    wrap.classList.toggle('is-sticky', shouldStick);
+                    wrap.classList.toggle('is-root-pinned', forcePinnedAtTop && shouldStick);
+                    wrap.classList.toggle('is-compact', shouldStick && isMobile && (window.scrollY > (forcePinnedAtTop ? 32 : 8)));
+                    setPinnedLayoutClass(forcePinnedAtTop && shouldStick, wrap.offsetHeight);
+                }
+
+                function queueUpdate() {
+                    if (ticking) return;
+                    ticking = true;
+                    window.requestAnimationFrame(updateStickyState);
+                }
+
+                window.addEventListener('scroll', queueUpdate, { passive: true });
+                document.addEventListener('scroll', queueUpdate, true);
+                window.addEventListener('resize', queueUpdate);
+                document.addEventListener('visibilitychange', queueUpdate);
+                queueUpdate();
+
+                window.__ahaHomeSearchStickyRefresh = function () {
+                    queueUpdate();
+                };
+            }
+
             document.addEventListener('DOMContentLoaded', initChoices);
+            document.addEventListener('DOMContentLoaded', ensureHomeSearchSticky);
 
             if (window.Sys && Sys.WebForms) {
                 Sys.WebForms.PageRequestManager.getInstance().add_endRequest(function () {
                     initChoices();
+                    if (window.__ahaHomeSearchStickyRefresh) {
+                        window.__ahaHomeSearchStickyRefresh();
+                    } else {
+                        ensureHomeSearchSticky();
+                    }
                 });
             }
         </script>
@@ -574,7 +795,7 @@
                                         <div class="sp-body">
                                             <div class="thumb-wrap position-relative">
                                                 <a href="/<%# Eval("name_en") %>-<%# Eval("id") %>.html" class="text-decoration-none">
-                                                    <asp:Literal ID="litCardMedia" runat="server"></asp:Literal>
+                                                    <img class="sp-thumb" src="<%# string.IsNullOrWhiteSpace((Eval("image") + "").Trim()) ? "/uploads/images/macdinh.jpg" : (Eval("image") + "").Trim() %>" alt="<%# Eval("name") %>" />
                                                 </a>
                                              <asp:UpdatePanel ID="upHeart" runat="server" UpdateMode="Conditional">
                                                 <ContentTemplate>

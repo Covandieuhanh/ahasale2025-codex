@@ -30,9 +30,9 @@
     <%--icon--%>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler-flags.min.css">
     <%--icon cờ quốc kỳ--%>
-    <link rel="stylesheet" href="<%= Helper_cl.VersionedUrl("~/Css/Tabler-Hota.css") %>" />
-    <link rel="stylesheet" href="<%= Helper_cl.VersionedUrl("~/Css/header_tabler_UI.css") %>" />
-    <link rel="stylesheet" href="<%= Helper_cl.VersionedUrl("~/css/aha-ui-refresh.css") %>" />
+    <link rel="stylesheet" href="<%= Helper_cl.VersionedUrl("~/assetscss/Tabler-Hota.css") %>" />
+    <link rel="stylesheet" href="<%= Helper_cl.VersionedUrl("~/assetscss/header_tabler_UI.css") %>" />
+    <link rel="stylesheet" href="<%= Helper_cl.VersionedUrl("~/assetscss/aha-ui-refresh.css") %>" />
     <asp:ContentPlaceHolder ID="head_sau" runat="server"></asp:ContentPlaceHolder>
     <style>
         :root {

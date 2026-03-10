@@ -21,27 +21,27 @@ public partial class dt : System.Web.UI.Page
 
                 if (q != null)
                 {
-                    string baseUrl = $"{Request.Url.Scheme}://{Request.Url.Authority}";
+                    string baseUrl = string.Format("{0}://{1}", Request.Url.Scheme, Request.Url.Authority);
 
-                    string iconUrl = $"{baseUrl}{q.thongtin_icon}";
-                    string appleTouchIconUrl = $"{baseUrl}{q.thongtin_apple_touch_icon}";
+                    string iconUrl = string.Format("{0}{1}", baseUrl, q.thongtin_icon);
+                    string appleTouchIconUrl = string.Format("{0}{1}", baseUrl, q.thongtin_apple_touch_icon);
 
-                    string iconsHtml = $@"
+                    string iconsHtml = string.Format(@"
                 <!-- Favicon -->
-                <link rel='icon' href='{iconUrl}' sizes='16x16' type='image/x-icon'>
-                <link rel='icon' href='{iconUrl}' sizes='32x32' type='image/x-icon'>
-                <link rel='icon' href='{iconUrl}' sizes='48x48' type='image/x-icon'>
+                <link rel='icon' href='{0}' sizes='16x16' type='image/x-icon'>
+                <link rel='icon' href='{1}' sizes='32x32' type='image/x-icon'>
+                <link rel='icon' href='{2}' sizes='48x48' type='image/x-icon'>
 
                 <!-- Apple Touch Icon -->
-                <link rel='apple-touch-icon' href='{appleTouchIconUrl}' sizes='180x180'>
-                <link rel='apple-touch-icon' href='{appleTouchIconUrl}' sizes='167x167'>
-                <link rel='apple-touch-icon' href='{appleTouchIconUrl}' sizes='152x152'>
-                <link rel='apple-touch-icon' href='{appleTouchIconUrl}' sizes='120x120'>
+                <link rel='apple-touch-icon' href='{3}' sizes='180x180'>
+                <link rel='apple-touch-icon' href='{4}' sizes='167x167'>
+                <link rel='apple-touch-icon' href='{5}' sizes='152x152'>
+                <link rel='apple-touch-icon' href='{6}' sizes='120x120'>
 
                 <!-- Android Icons -->
-                <link rel='icon' href='{iconUrl}' sizes='192x192'>
-                <link rel='icon' href='{iconUrl}' sizes='144x144'>
-                ";
+                <link rel='icon' href='{7}' sizes='192x192'>
+                <link rel='icon' href='{8}' sizes='144x144'>
+                ", iconUrl, iconUrl, iconUrl, appleTouchIconUrl, appleTouchIconUrl, appleTouchIconUrl, appleTouchIconUrl, iconUrl, iconUrl);
 
                     literal_fav_icon.Text = iconsHtml;
                 }

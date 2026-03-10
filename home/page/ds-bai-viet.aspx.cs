@@ -35,21 +35,21 @@ public partial class home_page_ds_bai_viet : System.Web.UI.Page
                 string title = dm.name;
                 string description = dm.description;
                 string imageRelativePath = dm.image;
-                string imageUrl = $"{Request.Url.Scheme}://{Request.Url.Authority}{imageRelativePath}";
+                string imageUrl = string.Format("{0}://{1}{2}", Request.Url.Scheme, Request.Url.Authority, imageRelativePath);
 
-                literal_meta.Text = $@"
-                    <title>{title}</title>
-                    <meta name='description' content='{description}' />
-                    <meta property='og:title' content='{title}' />
-                    <meta property='og:description' content='{description}' />
-                    <meta property='og:image' content='{imageUrl}' />
+                literal_meta.Text = string.Format(@"
+                    <title>{0}</title>
+                    <meta name='description' content='{1}' />
+                    <meta property='og:title' content='{2}' />
+                    <meta property='og:description' content='{3}' />
+                    <meta property='og:image' content='{4}' />
                     <meta property='og:type' content='website' />
-                    <meta property='og:url' content='{Request.Url.AbsoluteUri}' />
+                    <meta property='og:url' content='{5}' />
                     <meta name='twitter:card' content='summary_large_image' />
-                    <meta name='twitter:title' content='{title}' />
-                    <meta name='twitter:description' content='{description}' />
-                    <meta name='twitter:image' content='{imageUrl}' />
-                ";
+                    <meta name='twitter:title' content='{6}' />
+                    <meta name='twitter:description' content='{7}' />
+                    <meta name='twitter:image' content='{8}' />
+                ", title, description, title, description, imageUrl, Request.Url.AbsoluteUri, title, description, imageUrl);
 
                 // ✅ truyền idmn vào UC để UC lọc dữ liệu
                 UcDanhChoBanMoiNhat.Idmn = idmn;

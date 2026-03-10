@@ -229,11 +229,11 @@
                                                                 <a href='<%# Eval("Link") %>' target="_blank" class="text-decoration-none text-reset">
                                                                     <div class="d-flex align-items-center">
                                                                         <asp:Image ID="imgIcon" runat="server"
-                                                                            ImageUrl='<%# Eval("Icon") %>'
+                                                                            ImageUrl='<%# ResolveSocialIcon(Eval("Icon"), Eval("Link")) %>'
                                                                             Width="50" Height="50"
                                                                             Style="object-fit: cover; border-radius: 8px; margin-right: 10px;"
-                                                                            Visible='<%# !string.IsNullOrEmpty(Eval("Icon") as string) %>' />
-                                                                        <div style='<%# string.IsNullOrEmpty(Eval("Icon") as string) ? "margin-left:60px;" : "" %>'>
+                                                                            Visible='<%# ShouldShowSocialIcon(Eval("Icon"), Eval("Link")) %>' />
+                                                                        <div style='<%# GetSocialIconMarginStyle(Eval("Icon"), Eval("Link")) %>'>
                                                                             <div class="fw-bold"><small><%# Eval("Ten") %></small></div>
                                                                             <div class="small text-muted" style="font-style: italic;"><%# Eval("Link") %></div>
                                                                         </div>
@@ -343,12 +343,12 @@
                                                                     <a href='<%# Eval("Link") %>' target="_blank" class="text-decoration-none text-reset">
                                                                         <div class="d-flex align-items-center">
                                                                             <asp:Image ID="imgIcon" runat="server"
-                                                                                ImageUrl='<%# Eval("Icon") %>'
+                                                                                ImageUrl='<%# ResolveSocialIcon(Eval("Icon"), Eval("Link")) %>'
                                                                                 Width="50" Height="50"
                                                                                 Style="object-fit: cover; border-radius: 8px; margin-right: 10px;"
-                                                                                Visible='<%# !string.IsNullOrEmpty(Eval("Icon") as string) %>' />
+                                                                                Visible='<%# ShouldShowSocialIcon(Eval("Icon"), Eval("Link")) %>' />
 
-                                                                            <div style='<%# string.IsNullOrEmpty(Eval("Icon") as string) ? "margin-left:60px;" : "" %>'>
+                                                                            <div style='<%# GetSocialIconMarginStyle(Eval("Icon"), Eval("Link")) %>'>
                                                                                 <div class="fw-bold"><small><%# Eval("Ten") %></small></div>
                                                                                 <div class="small text-muted" style="font-style: italic;"><%# Eval("Link") %></div>
                                                                             </div>

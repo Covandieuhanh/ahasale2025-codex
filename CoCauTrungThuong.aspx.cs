@@ -13,7 +13,7 @@ public partial class CoCauTrungThuong : System.Web.UI.Page
             // Lưu toàn cục cho toàn site, sẽ bị tiêu thụ ở lượt quay tiếp theo
             Application["ForcedWinnerIndex"] = idx;
 
-            ltStatus.Text = $"<div class='ok'>✅ Đã đặt cơ cấu: vị trí <strong>{idx}</strong> cho lượt quay kế tiếp.</div>";
+            ltStatus.Text = string.Format("<div class='ok'>✅ Đã đặt cơ cấu: vị trí <strong>{0}</strong> cho lượt quay kế tiếp.</div>", idx);
         }
         else
         {

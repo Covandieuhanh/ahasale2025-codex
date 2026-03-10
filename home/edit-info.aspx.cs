@@ -35,6 +35,12 @@ public partial class home_edit_info : System.Web.UI.Page
         if (string.IsNullOrEmpty(tk)) return false;
 
         var user = db.taikhoan_tbs.FirstOrDefault(x => x.taikhoan == tk);
+        if (user == null) return true;
+
+        // Không thuộc scope shop thì không được chỉnh dữ liệu cửa hàng.
+        if (!PortalScope_cl.CanLoginShop(user.taikhoan, user.phanloai, user.permission))
+            return true;
+
         if (user != null && user.phanloai == "Gian hàng đối tác")
             return true;
 
@@ -51,7 +57,7 @@ public partial class home_edit_info : System.Web.UI.Page
 
     public void show_main(dbDataContext db)
     {
-        string tk = ViewState["taikhoan"]?.ToString() ?? "";
+        string tk = Convert.ToString(ViewState["taikhoan"]) ?? "";
         var q_tk = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == tk);
         if (q_tk == null)
         {
@@ -75,10 +81,10 @@ public partial class home_edit_info : System.Web.UI.Page
         rptMangXaHoiCN.DataBind();
         rptMangXaHoiCH.DataBind();
 
-        string metaTags = $@"
+        string metaTags = string.Format(@"
             <!-- Title -->
-            <title>Chỉnh sửa thông tin {q_tk.hoten}</title>
-        ";
+            <title>Chỉnh sửa thông tin {0}</title>
+        ", q_tk.hoten);
         literal_meta.Text = metaTags;
 
         ViewState["avt_query"] = q_tk.anhdaidien;
@@ -374,8 +380,19 @@ public partial class home_edit_info : System.Web.UI.Page
             }
 
             m.Ten = txtTen.Text;
-            m.Link = txtLink.Text;
-            m.Icon = TxtIcon.Text;
+            m.Link = SocialLinkIcon_cl.NormalizeExternalLink(txtLink.Text);
+            if (string.IsNullOrEmpty(m.Link))
+            {
+                lblLinkError.Text = "Link chưa hợp lệ. Vui lòng nhập đúng định dạng http/https.";
+                lblLinkError.Visible = true;
+                return;
+            }
+
+            m.Icon = SocialLinkIcon_cl.ResolveIconForSave(
+                m.Link,
+                TxtIcon.Text,
+                m.Icon
+            );
             m.Kieu = txtKieu.Text;
 
             db.SubmitChanges();
@@ -394,6 +411,24 @@ public partial class home_edit_info : System.Web.UI.Page
         up_themlink.Update();
 
         Helper_Tabler_cl.ShowToast(this.Page, "Lưu thành công!", null, true, 2000, "Thông báo");
+    }
+
+    protected string ResolveSocialIcon(object iconRaw, object linkRaw)
+    {
+        return SocialLinkIcon_cl.ResolveIconForDisplay(
+            Convert.ToString(iconRaw) ?? "",
+            Convert.ToString(linkRaw) ?? ""
+        );
+    }
+
+    protected bool ShouldShowSocialIcon(object iconRaw, object linkRaw)
+    {
+        return !string.IsNullOrEmpty(ResolveSocialIcon(iconRaw, linkRaw));
+    }
+
+    protected string GetSocialIconMarginStyle(object iconRaw, object linkRaw)
+    {
+        return ShouldShowSocialIcon(iconRaw, linkRaw) ? "" : "margin-left:60px;";
     }
 
     protected void but_capnhat_Click(object sender, EventArgs e)

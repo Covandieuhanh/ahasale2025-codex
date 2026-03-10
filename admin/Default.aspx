@@ -74,6 +74,31 @@
             </div>
         </asp:Panel>
 
+        <asp:Panel ID="pn_bridge_config" runat="server" CssClass="bridge-summary-card mt-3">
+            <div class="text-bold mb-2">Cập nhật ví/token (root admin)</div>
+            <div class="row">
+                <div class="cell-lg-6">
+                    <div class="bridge-kv">Ví BSC theo dõi</div>
+                    <asp:TextBox ID="txt_bridge_deposit_address" runat="server" data-role="input" Style="width: 100%;"></asp:TextBox>
+                </div>
+                <div class="cell-lg-6">
+                    <div class="bridge-kv">Token contract (BEP20)</div>
+                    <asp:TextBox ID="txt_bridge_token_contract" runat="server" data-role="input" Style="width: 100%;"></asp:TextBox>
+                </div>
+                <div class="cell-lg-6 mt-2">
+                    <div class="bridge-kv">Tài khoản ví tổng (cộng điểm)</div>
+                    <asp:TextBox ID="txt_bridge_treasury_account" runat="server" data-role="input" Style="width: 100%;"></asp:TextBox>
+                </div>
+            </div>
+            <div class="mt-2">
+                <asp:LinkButton ID="but_save_bridge_config" runat="server" CssClass="button small success" OnClick="but_save_bridge_config_Click">Lưu cấu hình</asp:LinkButton>
+                <span class="text-secondary ml-2">Lưu xong cần khởi động lại watcher để áp dụng ví/token mới.</span>
+                <div class="mt-1">
+                    <asp:Label ID="lb_bridge_config_notice" runat="server"></asp:Label>
+                </div>
+            </div>
+        </asp:Panel>
+
         <div class="mt-3">
             <a href="/admin/lich-su-chuyen-diem/default.aspx" class="button small light">
                 Mở trang Lịch sử chuyển điểm

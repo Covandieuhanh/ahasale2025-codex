@@ -65,7 +65,7 @@ public class Log_cl
         //            //gán mail trực tiếp
         //            //List<string> emailAddresses = new List<string>
         //            //{
-        //            //    "bcorn.net@gmail.com","mail khác",...
+        //            //    "ahasale.vn@gmail.com","mail khác",...
         //            //};
         //            foreach (var _email_nhan in emailAddresses)
         //            {

@@ -201,7 +201,7 @@ public class DanhMuc_cl
         else
         {
             // Kiểm tra giá trị của q.other_url
-            string url = string.IsNullOrEmpty(q.url_other) ? $"/{q.name_en}-{q.id}" : q.url_other;
+            string url = string.IsNullOrEmpty(q.url_other) ? string.Format("/{0}-{1}", q.name_en, q.id) : q.url_other;
             _kq.AppendFormat("<li><a style=\"color:#eaecef\" class='fg-yellow-hover' href='{0}'>{1}</a></li>", url, q.name);
         }    
 

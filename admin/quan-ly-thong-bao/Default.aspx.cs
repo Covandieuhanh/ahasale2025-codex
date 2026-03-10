@@ -66,7 +66,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
         check_list_page.Items.Clear();
         for (int i = 1; i <= int.Parse(ViewState["total_page"].ToString()); i++)
         {
-            ListItem item = new ListItem($"Trang {i}", i.ToString());
+            ListItem item = new ListItem(string.Format("Trang {0}", i), i.ToString());
             check_list_page.Items.Add(item);
             item.Selected = true;
         }
@@ -289,7 +289,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
                 }
 
                 //sắp xếp
-                if (ViewState["sapxep_thongbao"]?.ToString() == "2")//lọc ra chưa đọc, mới nhất lên đầu
+                if (Convert.ToString(ViewState["sapxep_thongbao"]) == "2")//lọc ra chưa đọc, mới nhất lên đầu
                     list_all = list_all.Where(p => p.daxem == false).OrderByDescending(p => p.thoigian);
                 else//sx theo mới nhất lên đầu
                     list_all = list_all.OrderByDescending(p => p.thoigian);
@@ -635,7 +635,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
                 }
 
                 //sắp xếp
-                if (ViewState["sapxep_thongbao"]?.ToString() == "2")//lọc ra chưa đọc, mới nhất lên đầu
+                if (Convert.ToString(ViewState["sapxep_thongbao"]) == "2")//lọc ra chưa đọc, mới nhất lên đầu
                     list_all = list_all.Where(p => p.daxem == false).OrderByDescending(p => p.thoigian);
                 else//sx theo mới nhất lên đầu
                     list_all = list_all.OrderByDescending(p => p.thoigian);
@@ -1466,7 +1466,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
             string url = "/admin/quan-ly-thong-bao/in.aspx";
 
             // Script để mở trang mới trong tab mới
-            string script = $"window.open('{url}', '_blank');";
+            string script = string.Format("window.open('{0}', '_blank');", url);
 
             // Đăng ký script để thực thi sau khi UpdatePanel postback hoàn thành
             ScriptManager.RegisterStartupScript(this, GetType(), "OpenNewTab", script, true);

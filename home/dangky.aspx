@@ -292,26 +292,6 @@
 
 <asp:Content ID="cFootSau" ContentPlaceHolderID="foot_sau" runat="Server">
     <script type="text/javascript">
-        // Toggle password + rewire sau UpdatePanel
-        (function () {
-            function wireToggle() {
-                document.querySelectorAll('.js-toggle-password').forEach(function (btn) {
-                    btn.onclick = function () {
-                        var input = btn.closest('.input-group').querySelector('.js-password');
-                        if (!input) return;
-                        input.type = (input.type === 'password') ? 'text' : 'password';
-                    };
-                });
-            }
-            wireToggle();
-
-            if (window.Sys && Sys.WebForms) {
-                Sys.WebForms.PageRequestManager.getInstance().add_endRequest(function () {
-                    wireToggle();
-                });
-            }
-        })();
-
         // Upload handler GIỮ nguyên logic của bạn
         function uploadFile() {
             var fileInput = document.getElementById("fileInput");

@@ -299,7 +299,7 @@ public partial class home_khach_hang : System.Web.UI.Page
                 string tk_ref = ViewState["taikhoan"].ToString();
                 taikhoan_tb refAcc = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == tk_ref);
 
-                string _link_qr = $"https://ahasale.vn/{_user}.info";
+                string _link_qr = string.Format("https://ahasale.vn/{0}.info", _user);
                 string directoryPath = Server.MapPath("~/uploads/images/qr-user/");
                 if (!Directory.Exists(directoryPath)) Directory.CreateDirectory(directoryPath);
 
@@ -358,19 +358,25 @@ public partial class home_khach_hang : System.Web.UI.Page
 
                 if (refAcc == null)
                 {
-                    _ob.Affiliate_tai_khoan_cap_tren = "";
-                    _ob.Affiliate_duong_dan_tuyen_tren = ",";
-                    _ob.Affiliate_cap_tuyen = 0;
+                    bool taoMoiHomeRoot;
+                    refAcc = HomeRoot_cl.GetOrCreate(db, out taoMoiHomeRoot);
+                    if (refAcc == null
+                        || string.IsNullOrWhiteSpace(refAcc.taikhoan)
+                        || !PortalScope_cl.CanLoginHome(refAcc.taikhoan, refAcc.phanloai, refAcc.permission))
+                    {
+                        Helper_Tabler_cl.ShowModal(this.Page,
+                            "Không thể xác định tài khoản ref mặc định home_root. Vui lòng thử lại.",
+                            "Thông báo", true, "warning");
+                        return;
+                    }
                 }
-                else
-                {
-                    string refPath = string.IsNullOrEmpty(refAcc.Affiliate_duong_dan_tuyen_tren) ? "," : refAcc.Affiliate_duong_dan_tuyen_tren;
-                    int refLevel = (refAcc.Affiliate_cap_tuyen == null) ? 0 : refAcc.Affiliate_cap_tuyen.Value;
 
-                    _ob.Affiliate_tai_khoan_cap_tren = refAcc.taikhoan;
-                    _ob.Affiliate_cap_tuyen = refLevel + 1;
-                    _ob.Affiliate_duong_dan_tuyen_tren = refPath + refAcc.taikhoan + ",";
-                }
+                string refPath = string.IsNullOrEmpty(refAcc.Affiliate_duong_dan_tuyen_tren) ? "," : refAcc.Affiliate_duong_dan_tuyen_tren;
+                int refLevel = (refAcc.Affiliate_cap_tuyen == null) ? 0 : refAcc.Affiliate_cap_tuyen.Value;
+
+                _ob.Affiliate_tai_khoan_cap_tren = refAcc.taikhoan;
+                _ob.Affiliate_cap_tuyen = refLevel + 1;
+                _ob.Affiliate_duong_dan_tuyen_tren = refPath + refAcc.taikhoan + ",";
                 _ob.HeThongSanPham_Cap123 = 1;
                 _ob.HeThongSanPham_QuyenLoi_MoVi_Cap1_15_9_6 = 15;
                 db.taikhoan_tbs.InsertOnSubmit(_ob);

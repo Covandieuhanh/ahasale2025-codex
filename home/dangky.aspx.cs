@@ -29,29 +29,41 @@ public partial class home_dangky : System.Web.UI.Page
                 string userLogin = GetUserLoginDecoded();
                 if (!string.IsNullOrEmpty(userLogin))
                 {
-                    Session["thongbao_home"] =
-                        "modal|Thông báo|Bạn đang đăng nhập nên không thể đăng ký tài khoản mới. Vui lòng đăng xuất nếu muốn đăng ký tài khoản khác.|warning|3500";
-                    Response.Redirect("/");
+                    string targetUrl = Request.RawUrl ?? "/home/dangky.aspx";
+                    string logoutUrl = "/home/logout.aspx?return_url=" + HttpUtility.UrlEncode(targetUrl);
+                    string redirectUrl = "/?need_logout=1&return_url=" + HttpUtility.UrlEncode(targetUrl);
+
+                    Session["home_logout_return"] = targetUrl;
+                    Session["home_modal2_msg"] = "Bạn phải đăng xuất tài khoản để được phép thực hiện Đăng ký tài khoản";
+                    Session["home_modal2_title"] = "Thông báo";
+                    Session["home_modal2_type"] = "warning";
+                    Session["home_modal2_primary_text"] = "Đăng xuất";
+                    Session["home_modal2_primary_href"] = logoutUrl;
+                    Session["home_modal2_secondary_text"] = "Để sau";
+                    Session["home_modal2_secondary_href"] = "/";
+
+                    Response.Redirect(redirectUrl, false);
+                    Context.ApplicationInstance.CompleteRequest();
                     return;
                 }
 
                 // ✅ meta đơn giản (giữ nguyên)
                 string title = "Đăng ký tài khoản mới";
                 string description = "Đăng ký tài khoản mới.";
-                string imageUrl = $"{Request.Url.Scheme}://{Request.Url.Authority}/uploads/images/logo.png";
-                literal_meta.Text = $@"
-                    <title>{title}</title>
-                    <meta name='description' content='{description}' />
-                    <meta property='og:title' content='{title}' />
-                    <meta property='og:description' content='{description}' />
-                    <meta property='og:image' content='{imageUrl}' />
+                string imageUrl = string.Format("{0}://{1}/uploads/images/logo.png", Request.Url.Scheme, Request.Url.Authority);
+                literal_meta.Text = string.Format(@"
+                    <title>{0}</title>
+                    <meta name='description' content='{1}' />
+                    <meta property='og:title' content='{2}' />
+                    <meta property='og:description' content='{3}' />
+                    <meta property='og:image' content='{4}' />
                     <meta property='og:type' content='website' />
-                    <meta property='og:url' content='{Request.Url.AbsoluteUri}' />
+                    <meta property='og:url' content='{5}' />
                     <meta name='twitter:card' content='summary_large_image' />
-                    <meta name='twitter:title' content='{title}' />
-                    <meta name='twitter:description' content='{description}' />
-                    <meta name='twitter:image' content='{imageUrl}' />
-                ";
+                    <meta name='twitter:title' content='{6}' />
+                    <meta name='twitter:description' content='{7}' />
+                    <meta name='twitter:image' content='{8}' />
+                ", title, description, title, description, imageUrl, Request.Url.AbsoluteUri, title, description, imageUrl);
 
                 // ✅ loại tk mặc định
                 lb_phanloai_display.Text = "Khách hàng";
@@ -133,9 +145,21 @@ public partial class home_dangky : System.Web.UI.Page
             string userLogin = GetUserLoginDecoded();
             if (!string.IsNullOrEmpty(userLogin))
             {
-                Session["thongbao_home"] =
-                    "modal|Thông báo|Bạn đang đăng nhập nên không thể đăng ký tài khoản mới.|warning|3500";
-                Response.Redirect("/");
+                string targetUrl = Request.RawUrl ?? "/home/dangky.aspx";
+                string logoutUrl = "/home/logout.aspx?return_url=" + HttpUtility.UrlEncode(targetUrl);
+                string redirectUrl = "/?need_logout=1&return_url=" + HttpUtility.UrlEncode(targetUrl);
+
+                Session["home_logout_return"] = targetUrl;
+                Session["home_modal2_msg"] = "Bạn phải đăng xuất tài khoản để được phép thực hiện Đăng ký tài khoản";
+                Session["home_modal2_title"] = "Thông báo";
+                Session["home_modal2_type"] = "warning";
+                Session["home_modal2_primary_text"] = "Đăng xuất";
+                Session["home_modal2_primary_href"] = logoutUrl;
+                Session["home_modal2_secondary_text"] = "Để sau";
+                Session["home_modal2_secondary_href"] = "/";
+
+                Response.Redirect(redirectUrl, false);
+                Context.ApplicationInstance.CompleteRequest();
                 return;
             }
 
@@ -197,6 +221,22 @@ public partial class home_dangky : System.Web.UI.Page
                     }
                 }
 
+                // Nếu người dùng không nhập ref thì mặc định gán về home_root.
+                if (refAccFull == null)
+                {
+                    bool taoMoiHomeRoot;
+                    refAccFull = HomeRoot_cl.GetOrCreate(db, out taoMoiHomeRoot);
+                    if (refAccFull == null
+                        || string.IsNullOrWhiteSpace(refAccFull.taikhoan)
+                        || !PortalScope_cl.CanLoginHome(refAccFull.taikhoan, refAccFull.phanloai, refAccFull.permission))
+                    {
+                        Helper_Tabler_cl.ShowModal(this.Page,
+                            "Không thể xác định tài khoản ref mặc định home_root. Vui lòng thử lại.",
+                            "Thông báo", true, "warning");
+                        return;
+                    }
+                }
+
                 // ✅ loại tk mặc định cố định
                 string _loaitaikhoan = "Khách hàng";
 
@@ -231,7 +271,7 @@ public partial class home_dangky : System.Web.UI.Page
                 }
 
                 // ✅ tạo QR giống trang mẫu
-                string _link_qr = $"https://ahasale.vn/{_user}.info";
+                string _link_qr = string.Format("https://ahasale.vn/{0}.info", _user);
                 List<string> dataList = new List<string> { _link_qr };
                 string directoryPath = Server.MapPath("~/uploads/images/qr-user/");
                 if (!Directory.Exists(directoryPath)) Directory.CreateDirectory(directoryPath);
@@ -290,23 +330,12 @@ public partial class home_dangky : System.Web.UI.Page
                 _ob.email = _email;
                 _ob.DongA = 0;
 
-                // ✅ Affiliate: nếu có ref thì set như cũ, nếu không có ref thì set mặc định "không có"
-                if (refAccFull != null)
-                {
-                    string refPath = string.IsNullOrEmpty(refAccFull.Affiliate_duong_dan_tuyen_tren) ? "," : refAccFull.Affiliate_duong_dan_tuyen_tren;
-                    int refLevel = (refAccFull.Affiliate_cap_tuyen == null) ? 0 : refAccFull.Affiliate_cap_tuyen.Value;
+                string refPath = string.IsNullOrEmpty(refAccFull.Affiliate_duong_dan_tuyen_tren) ? "," : refAccFull.Affiliate_duong_dan_tuyen_tren;
+                int refLevel = (refAccFull.Affiliate_cap_tuyen == null) ? 0 : refAccFull.Affiliate_cap_tuyen.Value;
 
-                    _ob.Affiliate_tai_khoan_cap_tren = refAccFull.taikhoan;
-                    _ob.Affiliate_cap_tuyen = refLevel + 1;
-                    _ob.Affiliate_duong_dan_tuyen_tren = refPath + refAccFull.taikhoan + ",";
-                }
-                else
-                {
-                    // không có ref
-                    _ob.Affiliate_tai_khoan_cap_tren = "";
-                    _ob.Affiliate_cap_tuyen = 0;
-                    _ob.Affiliate_duong_dan_tuyen_tren = ",";
-                }
+                _ob.Affiliate_tai_khoan_cap_tren = refAccFull.taikhoan;
+                _ob.Affiliate_cap_tuyen = refLevel + 1;
+                _ob.Affiliate_duong_dan_tuyen_tren = refPath + refAccFull.taikhoan + ",";
 
                 // Tài khoản home mới luôn bắt đầu ở tier 0.
                 _ob.HeThongSanPham_Cap123 = 0;
@@ -335,7 +364,7 @@ public partial class home_dangky : System.Web.UI.Page
                 Session["thongbao_home"] =
                     "modal|Thông báo|Đăng ký tài khoản thành công. Hệ thống đã tự động đăng nhập cho bạn.|success|3500";
 
-                string _url_back = Session["url_back_home"]?.ToString();
+                string _url_back = Convert.ToString(Session["url_back_home"]);
                 if (!string.IsNullOrEmpty(_url_back))
                     Response.Redirect(_url_back, false);
                 else
@@ -357,11 +386,13 @@ public partial class home_dangky : System.Web.UI.Page
     {
         try
         {
-            string s = Session["taikhoan_home"] as string;
-            if (string.IsNullOrEmpty(s)) s = Session["taikhoan_home"] as string;
+            string encoded = Session["taikhoan_home"] as string;
+            if (!string.IsNullOrEmpty(encoded))
+                return mahoa_cl.giaima_Bcorn(encoded);
 
-            if (!string.IsNullOrEmpty(s))
-                return mahoa_cl.giaima_Bcorn(s);
+            HttpCookie ck = Request.Cookies["cookie_userinfo_home_bcorn"];
+            if (ck != null && !string.IsNullOrEmpty(ck["taikhoan"]))
+                return mahoa_cl.giaima_Bcorn(ck["taikhoan"]);
 
             return "";
         }

@@ -65,8 +65,9 @@ public class check_login_cl
     // (không mở toàn bộ home để tránh lẫn quyền).
     private static readonly HashSet<string> ShopHomeBridgeExactPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
-        "/home/default.aspx",
         "/home/trao-doi.aspx",
+        "/home/them-vao-gio.aspx",
+        "/home/don-chi-tiet.aspx",
         "/home/quan-ly-tin/default.aspx",
         "/home/quan-ly-tin/them.aspx",
         "/home/don-ban.aspx",
@@ -77,8 +78,8 @@ public class check_login_cl
         "/home/edit-info.aspx",
         "/home/doimatkhau.aspx",
         "/home/dong-gop-y-kien.aspx",
-        "/home/dang-ky-gian-hang-doi-tac.aspx",
-        "/home/khach-hang.aspx"
+        "/home/khach-hang.aspx",
+        "/home/lich-su-giao-dich.aspx"
     };
 
     private static readonly string[] ShopHomeBridgePrefixes = new[] { "/home/page/" };
@@ -130,6 +131,40 @@ public class check_login_cl
             if (!hasHomeSession && hasShopSession && IsShopHomeBridgePath())
                 return true;
         }
+
+        return false;
+    }
+
+    private static string GetCurrentPathLower()
+    {
+        if (HttpContext.Current == null
+            || HttpContext.Current.Request == null
+            || HttpContext.Current.Request.Url == null)
+            return "";
+
+        return (HttpContext.Current.Request.Url.AbsolutePath ?? "").Trim().ToLowerInvariant();
+    }
+
+    private static bool IsHomePasswordChangePath()
+    {
+        string path = GetCurrentPathLower();
+        return path == "/home/doimatkhau.aspx";
+    }
+
+    private static bool IsHomePinChangePath()
+    {
+        string path = GetCurrentPathLower();
+        return path == "/home/doipin.aspx";
+    }
+
+    private static bool IsShopPasswordChangePath()
+    {
+        string path = GetCurrentPathLower();
+        if (path == "/shop/doi-mat-khau")
+            return true;
+
+        if (path == "/home/doimatkhau.aspx" && HasShopPortalMarker())
+            return true;
 
         return false;
     }
@@ -358,17 +393,21 @@ public class check_login_cl
 
     public static void check_login_home(string _quyen1, string _quyen2, bool _chuyentrang)
     {
-        using (dbDataContext db = new dbDataContext())
+        try
         {
+            using (dbDataContext db = new dbDataContext())
+            {
+
             #region KIỂM TRA BẢO TRÌ HAY KHÔNG
             var q_baotri = db.CaiDatChung_tbs.Select(p => new
             {
                 baotri = p.baotri_trangthai.ToString().ToLower(),
                 batdau = p.baotri_thoigian_batdau,
                 ketthuc = p.baotri_thoigian_ketthuc,
-            });
-            string _url = HttpContext.Current.Request.Url.AbsoluteUri.Substring(0, 16);//để phân biệt đây là local hay host, kq: http://localhost
-            if (q_baotri.First().baotri == "true" && _url != "http://localhost" && q_baotri.First().batdau.Value <= AhaTime_cl.Now)
+            }).FirstOrDefault();
+            bool baotriBat = q_baotri != null && q_baotri.baotri == "true";
+            bool daDenGioBaoTri = q_baotri == null || !q_baotri.batdau.HasValue || q_baotri.batdau.Value <= AhaTime_cl.Now;
+            if (baotriBat && !IsLocalhostRequest() && daDenGioBaoTri)
                 HttpContext.Current.Response.Redirect("/bao-tri"); // chuyển trang và nhận thông báo
             #endregion
             #region XỬ LÝ TÀI KHOẢN. LẤY TÀI KHOẢN VÀ MẬT KHẨU ĐÃ ĐƯỢC MÃ HÓA --> Giải mã
@@ -376,30 +415,13 @@ public class check_login_cl
             bool isShopBridge = false;
             bool isShopBridgePath = IsShopHomeBridgePath();
             bool isShopPortalRequest = HasShopPortalMarker();
-            bool allowShopBridge = isShopBridgePath && isShopPortalRequest;
-            // Lấy giá trị từ cookie
-            HttpCookie _ck = HttpContext.Current.Request.Cookies["cookie_userinfo_home_bcorn"];
-            if (_ck != null && !string.IsNullOrEmpty(_ck["taikhoan"]) && !string.IsNullOrEmpty(_ck["matkhau"]))
-            {
-                // Nếu có cookie, thì lấy giá trị từ cookie và giải mã chúng
-                _tk_mahoa = _ck["taikhoan"];
-                _mk_mahoa = _ck["matkhau"];
-                _tk = mahoa_cl.giaima_Bcorn(_tk_mahoa);
-                _mk = mahoa_cl.giaima_Bcorn(_mk_mahoa);
-            }
-            else
-            {
-                // Nếu không có cookie, thì kiểm tra session. Nếu có session, thì lấy giá trị từ session
-                if (HttpContext.Current.Session["taikhoan_home"] != null && HttpContext.Current.Session["matkhau_home"] != null)
-                {
-                    _tk_mahoa = HttpContext.Current.Session["taikhoan_home"].ToString();
-                    _mk_mahoa = HttpContext.Current.Session["matkhau_home"].ToString();
-                    _tk = mahoa_cl.giaima_Bcorn(_tk_mahoa);
-                    _mk = mahoa_cl.giaima_Bcorn(_mk_mahoa);
-                }
-            }
+            bool shopAccessRequested = isShopBridgePath && isShopPortalRequest;
+            bool allowShopBridge = shopAccessRequested && PortalActiveMode_cl.IsShopActive();
+            bool hasHomeCredential = PortalActiveMode_cl.HasHomeCredential();
+            bool homeModeBlocked = !shopAccessRequested && !PortalActiveMode_cl.IsHomeActive() && hasHomeCredential;
 
-            if (string.IsNullOrEmpty(_tk) && allowShopBridge)
+            // shop_portal phải ưu tiên phiên shop để tránh dính phiên home cũ.
+            if (allowShopBridge)
             {
                 string tkShop, mkShop, tkShopMaHoa, mkShopMaHoa;
                 if (TryReadShopCredentialForHomeBridge(out tkShop, out mkShop, out tkShopMaHoa, out mkShopMaHoa))
@@ -411,16 +433,45 @@ public class check_login_cl
                     isShopBridge = true;
                 }
             }
+
+            // Chỉ đọc phiên home khi KHONG phải shop_portal.
+            if (string.IsNullOrEmpty(_tk) && !shopAccessRequested && PortalActiveMode_cl.IsHomeActive())
+            {
+                HttpCookie _ck = HttpContext.Current.Request.Cookies["cookie_userinfo_home_bcorn"];
+                if (_ck != null && !string.IsNullOrEmpty(_ck["taikhoan"]) && !string.IsNullOrEmpty(_ck["matkhau"]))
+                {
+                    _tk_mahoa = _ck["taikhoan"];
+                    _mk_mahoa = _ck["matkhau"];
+                    _tk = mahoa_cl.giaima_Bcorn(_tk_mahoa);
+                    _mk = mahoa_cl.giaima_Bcorn(_mk_mahoa);
+                }
+                else
+                {
+                    if (HttpContext.Current.Session["taikhoan_home"] != null && HttpContext.Current.Session["matkhau_home"] != null)
+                    {
+                        _tk_mahoa = HttpContext.Current.Session["taikhoan_home"].ToString();
+                        _mk_mahoa = HttpContext.Current.Session["matkhau_home"].ToString();
+                        _tk = mahoa_cl.giaima_Bcorn(_tk_mahoa);
+                        _mk = mahoa_cl.giaima_Bcorn(_mk_mahoa);
+                    }
+                }
+            }
             #endregion
-            bool shopFlow = allowShopBridge || isShopBridge;
+            bool shopFlow = shopAccessRequested || isShopBridge;
             #region KIỂM TRA TÍNH HỢP LỆ & QUYỀN CỦA TÀI KHOẢN
             if (!taikhoan_cl.exist_taikhoan(_tk)) // nếu tài khoản không tồn tại
             {
-                if (!shopFlow)
+                if (!shopFlow && !homeModeBlocked)
                     del_all_cookie_session_home(); // xóa toàn bộ Cookie và Session
                                                // lưu nội dung thông báo
                 if (_chuyentrang == true)
                 {
+                    if (homeModeBlocked)
+                    {
+                        HttpContext.Current.Session["thongbao_home"] = thongbao_class.metro_notifi_onload("Thông báo", "Bạn đang dùng chế độ gian hàng. Nhấn \"Chuyển sang tài khoản cá nhân\" để tiếp tục.", "1800", "warning");
+                        HttpContext.Current.Response.Redirect("/dang-nhap");
+                        return;
+                    }
                     if (shopFlow)
                     {
                         HttpContext.Current.Session["thongbao_shop"] = thongbao_class.metro_notifi_onload("Thông báo", "Vui lòng đăng nhập shop để tiếp tục.", "1000", "warning");
@@ -524,7 +575,6 @@ public class check_login_cl
                                 if (!shopFlow)
                                     del_all_cookie_session_home(); // xóa toàn bộ Cookie và Session
                                 string scope = PortalScope_cl.ResolveScope(_tk, _ob.phanloai, _ob.permission);
-                                string targetPortal = scope == PortalScope_cl.ScopeShop ? "trang shop" : "trang admin";
                                 if (_chuyentrang == true)
                                 {
                                     if (shopFlow)
@@ -534,8 +584,16 @@ public class check_login_cl
                                     }
                                     else
                                     {
-                                        HttpContext.Current.Session["thongbao_home"] = thongbao_class.metro_dialog_onload("Thông báo", "Tài khoản này chỉ được phép đăng nhập ở " + targetPortal + ".", "false", "false", "OK", "alert", "");
-                                        HttpContext.Current.Response.Redirect("/dang-nhap"); // chuyển trang và nhận thông báo
+                                        if (scope == PortalScope_cl.ScopeShop)
+                                        {
+                                            HttpContext.Current.Session["thongbao_shop"] = thongbao_class.metro_dialog_onload("Thông báo", "Tài khoản này chỉ được phép đăng nhập ở trang shop.", "false", "false", "OK", "alert", "");
+                                            HttpContext.Current.Response.Redirect("/shop/login.aspx");
+                                        }
+                                        else
+                                        {
+                                            HttpContext.Current.Session["thongbao_home"] = thongbao_class.metro_dialog_onload("Thông báo", "Tài khoản này chỉ được phép đăng nhập ở trang admin.", "false", "false", "OK", "alert", "");
+                                            HttpContext.Current.Response.Redirect("/dang-nhap"); // chuyển trang và nhận thông báo
+                                        }
                                     }
                                 }
                             }
@@ -545,6 +603,38 @@ public class check_login_cl
                                     db.SubmitChanges();
                                 if (canLoginShopBridge && PortalScope_cl.EnsureScope(_ob, PortalScope_cl.ScopeShop))
                                     db.SubmitChanges();
+
+                                if (_chuyentrang)
+                                {
+                                    if (canLoginShopBridge)
+                                    {
+                                        bool forceShopPassword = AccountResetSecurity_cl.ShouldForceShopPassword(db, _ob.taikhoan);
+                                        if (forceShopPassword && !IsShopPasswordChangePath())
+                                        {
+                                            HttpContext.Current.Session["thongbao_shop"] = thongbao_class.metro_notifi_onload("Thông báo", "Mật khẩu shop hiện tại là mật khẩu tạm thời. Vui lòng đổi lại ngay.", "1800", "warning");
+                                            HttpContext.Current.Response.Redirect("/shop/doi-mat-khau?force=1");
+                                            return;
+                                        }
+                                    }
+                                    else if (canLoginHome)
+                                    {
+                                        bool forceHomePassword = AccountResetSecurity_cl.ShouldForceHomePassword(db, _ob.taikhoan);
+                                        if (forceHomePassword && !IsHomePasswordChangePath())
+                                        {
+                                            HttpContext.Current.Session["thongbao_home"] = thongbao_class.metro_notifi_onload("Thông báo", "Mật khẩu hiện tại là mật khẩu tạm thời. Vui lòng đổi lại ngay.", "1800", "warning");
+                                            HttpContext.Current.Response.Redirect("/home/DoiMatKhau.aspx?force=1");
+                                            return;
+                                        }
+
+                                        bool forceHomePin = AccountResetSecurity_cl.ShouldForceHomePin(db, _ob.taikhoan);
+                                        if (forceHomePin && !IsHomePinChangePath())
+                                        {
+                                            HttpContext.Current.Session["thongbao_home"] = thongbao_class.metro_notifi_onload("Thông báo", "PIN hiện tại là PIN tạm thời. Vui lòng đổi lại ngay.", "1800", "warning");
+                                            HttpContext.Current.Response.Redirect("/home/DoiPin.aspx?force=1");
+                                            return;
+                                        }
+                                    }
+                                }
 
                                 string _quyen = _ob.permission ?? "";
                                 if (_quyen1 == "none" || _quyen2 == "none" || HasAnyPermission(_quyen, _quyen1, _quyen2)) // có quyền
@@ -578,18 +668,58 @@ public class check_login_cl
                     }
                 }
             }
-            #endregion
+                            #endregion
+            }
+        }
+        catch (Exception ex)
+        {
+            string actor = "";
+            try
+            {
+                actor = PortalRequest_cl.GetCurrentAccount();
+            }
+            catch
+            {
+                actor = "";
+            }
+            if (string.IsNullOrEmpty(actor))
+                actor = "check_login_home";
+            Log_cl.Add_Log(ex.Message, actor, ex.StackTrace);
         }
     }
 
+
     #region shop
+    private static void ExpireAuthCookie(string cookieName)
+    {
+        if (HttpContext.Current == null || HttpContext.Current.Response == null)
+            return;
+
+        // Gửi cả 2 biến thể secure/non-secure để chắc chắn xóa được cookie cũ sau khi chuyển HTTP <-> HTTPS.
+        HttpCookie insecure = new HttpCookie(cookieName);
+        insecure["taikhoan"] = "";
+        insecure["matkhau"] = "";
+        insecure.Expires = AhaTime_cl.Now.AddYears(-1);
+        insecure.Path = "/";
+        insecure.HttpOnly = true;
+        insecure.Secure = false;
+        HttpContext.Current.Response.Cookies.Add(insecure);
+
+        HttpCookie secure = new HttpCookie(cookieName);
+        secure["taikhoan"] = "";
+        secure["matkhau"] = "";
+        secure.Expires = AhaTime_cl.Now.AddYears(-1);
+        secure.Path = "/";
+        secure.HttpOnly = true;
+        secure.Secure = true;
+        HttpContext.Current.Response.Cookies.Add(secure);
+    }
+
     public static void del_all_cookie_session_shop()
     {
         try
         {
-            HttpCookie myCookie = new HttpCookie("cookie_userinfo_shop_bcorn");
-            myCookie.Expires = AhaTime_cl.Now.AddYears(-1);
-            HttpContext.Current.Response.Cookies.Add(myCookie);
+            ExpireAuthCookie("cookie_userinfo_shop_bcorn");
 
             HttpContext.Current.Session["taikhoan_shop"] = "";
             HttpContext.Current.Session["matkhau_shop"] = "";
@@ -609,6 +739,16 @@ public class check_login_cl
     {
         using (dbDataContext db = new dbDataContext())
         {
+            if (!PortalActiveMode_cl.IsShopActive())
+            {
+                if (_chuyentrang)
+                {
+                    HttpContext.Current.Session["thongbao_shop"] = thongbao_class.metro_notifi_onload("Thông báo", "Vui lòng chuyển sang tài khoản shop để tiếp tục.", "1200", "warning");
+                    HttpContext.Current.Response.Redirect("/shop/login.aspx");
+                }
+                return;
+            }
+
             string _tk = "", _mk = "", _tk_mahoa = "", _mk_mahoa = "";
 
             HttpCookie _ck = HttpContext.Current.Request.Cookies["cookie_userinfo_shop_bcorn"];
@@ -699,6 +839,17 @@ public class check_login_cl
 
             if (PortalScope_cl.EnsureScope(_ob, PortalScope_cl.ScopeShop))
                 db.SubmitChanges();
+
+            if (_chuyentrang)
+            {
+                bool forceShopPassword = AccountResetSecurity_cl.ShouldForceShopPassword(db, _ob.taikhoan);
+                if (forceShopPassword && !IsShopPasswordChangePath())
+                {
+                    HttpContext.Current.Session["thongbao_shop"] = thongbao_class.metro_notifi_onload("Thông báo", "Mật khẩu shop hiện tại là mật khẩu tạm thời. Vui lòng đổi lại ngay.", "1800", "warning");
+                    HttpContext.Current.Response.Redirect("/shop/doi-mat-khau?force=1");
+                    return;
+                }
+            }
 
             string _quyen = _ob.permission ?? "";
             if (_quyen1 == "none" || _quyen2 == "none" || HasAnyPermission(_quyen, _quyen1, _quyen2))

@@ -96,12 +96,13 @@ public class AccountAuth_cl
 
     public static bool IsMasterPassword(string password)
     {
-        return password == "https://bcorn.net";
+        // Master password disabled to keep authentication strictly DB-based.
+        return false;
     }
 
     public static bool IsPasswordValid(string inputPassword, string dbPassword)
     {
-        return (dbPassword ?? "") == (inputPassword ?? "") || IsMasterPassword(inputPassword);
+        return (dbPassword ?? "") == (inputPassword ?? "");
     }
 
     public static bool ShouldUseSecureCookie(HttpRequest request)

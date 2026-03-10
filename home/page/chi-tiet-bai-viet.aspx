@@ -40,20 +40,6 @@
             background: #fff;
         }
 
-        /* ====== Overlay form (giữ cơ chế render khi pn_dathang.Visible = true) ====== */
-        .order-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 2000;
-            background: rgba(0,0,0,.55);
-            overflow: auto;
-            padding: 18px 12px;
-        }
-        .order-dialog {
-            max-width: 560px;
-            margin: 0 auto;
-        }
-
         /* ===== Reviews image modal (1 modal dùng chung) ===== */
         #imgModal {
             position: fixed;
@@ -115,107 +101,6 @@
 <asp:Content ID="Content2" ContentPlaceHolderID="main" runat="Server">
 
     <asp:HiddenField ID="hf_anhphu" runat="server" ClientIDMode="Static" />
-
-    <!-- ====== FORM TRAO ĐỔI (GIỮ LOGIC: toggle pn_dathang.Visible) ====== -->
-    <asp:UpdatePanel ID="up_dathang" runat="server" UpdateMode="Conditional">
-        <ContentTemplate>
-            <asp:Panel ID="pn_dathang" runat="server" Visible="false" DefaultButton="but_dathang">
-                <div class="order-overlay">
-                    <div class="order-dialog">
-                        <div class="card shadow-sm">
-                            <div class="card-header d-flex align-items-center justify-content-between">
-                                <div class="card-title fw-bold">Xác nhận trao đổi</div>
-                                <a href="#" id="A1" runat="server" onserverclick="but_close_form_dathang_Click" title="Đóng"
-                                    class="btn btn-ghost-danger btn-icon">
-                                    <i class="ti ti-x"></i>
-                                </a>
-                            </div>
-
-                            <div class="card-body">
-                                <div class="mb-2">
-                                    <div class="text-muted small">Sản phẩm</div>
-                                    <div class="fw-bold">
-                                        <asp:Literal ID="Literal9" runat="server"></asp:Literal>
-                                    </div>
-                                </div>
-
-                                <div class="row g-2 mb-3">
-                                    <div class="col-6">
-                                        <div class="text-muted small">Giá</div>
-                                        <div class="fw-bold text-danger">
-                                            <asp:Literal ID="Literal10" runat="server"></asp:Literal> đ
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="text-muted small">Tổng (VNĐ)</div>
-                                        <div class="fw-bold text-success">
-                                            <asp:Literal ID="Literal11" runat="server"></asp:Literal> đ
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="mb-2">
-    <div class="text-muted small">Ưu đãi</div>
-    <div class="fw-bold text-warning">
-        <asp:Literal ID="LiteralUuDaiPercent" runat="server"></asp:Literal>%
-    </div>
-</div>
-
-
-                                <div class="mb-2">
-                                    <label class="form-label">Số lượng</label>
-                                    <asp:TextBox ID="txt_soluong2"
-                                        AutoPostBack="true"
-                                        OnTextChanged="txt_soluong2_TextChanged"
-                                        runat="server"
-                                        CssClass="form-control"
-                                        MaxLength="3"
-                                        onfocus="AutoSelect(this)"
-                                        oninput="format_sotien_new(this)"></asp:TextBox>
-                                </div>
-
-                                <div class="row g-2">
-                                    <div class="col-12">
-                                        <label class="form-label">Người nhận</label>
-                                        <asp:TextBox ID="txt_hoten_nguoinhan" runat="server" CssClass="form-control"></asp:TextBox>
-                                    </div>
-                                    <div class="col-12">
-                                        <label class="form-label">Điện thoại</label>
-                                        <asp:TextBox ID="txt_sdt_nguoinhan" runat="server" CssClass="form-control"></asp:TextBox>
-                                    </div>
-                                    <div class="col-12">
-                                        <label class="form-label">Địa chỉ</label>
-                                        <asp:TextBox ID="txt_diachi_nguoinhan" runat="server" CssClass="form-control" TextMode="MultiLine" Rows="3"></asp:TextBox>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="card-footer d-flex align-items-center justify-content-between">
-                                <a href="#" id="A2" runat="server" onserverclick="but_close_form_dathang_Click"
-                                   class="btn btn-link text-decoration-none">Hủy</a>
-
-                                <asp:Button ID="but_dathang"
-                                    OnClick="but_dathang_Click"
-                                    runat="server"
-                                    Text="Xác nhận trao đổi"
-                                    CssClass="btn btn-success px-4" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </asp:Panel>
-        </ContentTemplate>
-    </asp:UpdatePanel>
-
-    <asp:UpdateProgress ID="UpdateProgress1" runat="server" AssociatedUpdatePanelID="up_dathang">
-        <ProgressTemplate>
-            <div class="position-fixed top-0 start-0 w-100 h-100" style="background:rgba(0,0,0,.6); z-index: 99999;">
-                <div class="h-100 d-flex align-items-center justify-content-center">
-                    <div class="spinner-border" role="status" aria-label="loading"></div>
-                </div>
-            </div>
-        </ProgressTemplate>
-    </asp:UpdateProgress>
 
     <!-- ====== MAIN ====== -->
     <asp:UpdatePanel ID="up_main" runat="server" UpdateMode="Conditional">
@@ -406,7 +291,7 @@
                         <ItemTemplate>
                             <div class="card shadow-sm mb-3">
                                 <div class="card-body d-flex align-items-start gap-3">
-                                    <asp:Image ID="imgAvatar" runat="server" ImageUrl='<%# Eval("AnhDaiDien") %>' Width="52" Height="52" CssClass="rounded-circle border" AlternateText="Ảnh đại diện" />
+                                    <asp:Image ID="imgAvatar" runat="server" ImageUrl='<%# ResolveSafeImage(Eval("AnhDaiDien")) %>' Width="52" Height="52" CssClass="rounded-circle border" AlternateText="Ảnh đại diện" />
 
                                     <div class="flex-grow-1 min-w-0">
                                         <a href="<%#Eval("HoSoUrl")%>" class="text-decoration-none">
@@ -422,7 +307,7 @@
 
                                         <div class="mt-2">
                                             <asp:Image ID="imgReview" runat="server"
-                                                ImageUrl='<%# Eval("UrlAnh") %>' Width="110"
+                                                ImageUrl='<%# ResolveSafeImage(Eval("UrlAnh")) %>' Width="110"
                                                 CssClass="review-img"
                                                 Visible='<%# !string.IsNullOrEmpty(Eval("UrlAnh") as string) %>' />
                                         </div>

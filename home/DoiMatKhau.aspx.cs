@@ -7,6 +7,54 @@ using System.Web.UI.WebControls;
 
 public partial class home_DoiMatKhau : System.Web.UI.Page
 {
+    private void ClearHomeLoginState()
+    {
+        Session["taikhoan_home"] = "";
+        Session["matkhau_home"] = "";
+        if (Request.Cookies["cookie_userinfo_home_bcorn"] != null)
+        {
+            HttpCookie cookie = new HttpCookie("cookie_userinfo_home_bcorn");
+            cookie.Expires = AhaTime_cl.Now.AddDays(-1);
+            cookie.Path = "/";
+            Response.Cookies.Add(cookie);
+        }
+    }
+
+    private void ShowSuccessThenRedirectToLogin(string message)
+    {
+        Helper_Tabler_cl.ShowModal(this.Page, message, "Thông báo", false, "success");
+
+        string js = @"
+(function() {
+    function bindRedirect() {
+        var modal = document.getElementById('dynamicModal');
+        if (!modal) {
+            setTimeout(bindRedirect, 100);
+            return;
+        }
+
+        function redirectToLogin() {
+            window.location.replace('/dang-nhap');
+        }
+
+        var okButton = modal.querySelector('.btn-ok');
+        var closeButton = modal.querySelector('.btn-close');
+
+        if (okButton) okButton.addEventListener('click', redirectToLogin, { once: true });
+        if (closeButton) closeButton.addEventListener('click', redirectToLogin, { once: true });
+    }
+
+    bindRedirect();
+})();";
+
+        ScriptManager.RegisterStartupScript(
+            this.Page,
+            this.GetType(),
+            "home_password_changed_redirect_" + Guid.NewGuid().ToString("N"),
+            js,
+            true);
+    }
+
     protected void Page_Load(object sender, EventArgs e)
     {
         if (!IsPostBack)
@@ -39,7 +87,7 @@ public partial class home_DoiMatKhau : System.Web.UI.Page
         if (!string.IsNullOrEmpty(txt_NhapLaiMatKhauMoi.Text))
             txt_NhapLaiMatKhauMoi.Attributes["value"] = txt_NhapLaiMatKhauMoi.Text;
     }
-    protected void btnDoiMatKhau_Click(object sender, EventArgs e)
+	    protected void btnDoiMatKhau_Click(object sender, EventArgs e)
     {
         using (dbDataContext db = new dbDataContext())
         {
@@ -73,26 +121,63 @@ public partial class home_DoiMatKhau : System.Web.UI.Page
             }
 
             q.matkhau = _pass_1;
-            db.SubmitChanges();
 
             bool isShopPortal = PortalRequest_cl.IsShopPortalRequest();
+            string clearError;
+            if (isShopPortal)
+                AccountResetSecurity_cl.ClearForceShopPassword(db, q.taikhoan, out clearError);
+            else
+                AccountResetSecurity_cl.ClearForceHomePassword(db, q.taikhoan, out clearError);
+
+            db.SubmitChanges();
+
             if (isShopPortal)
             {
                 Session["taikhoan_shop"] = "";
                 Session["matkhau_shop"] = "";
                 if (Request.Cookies["cookie_userinfo_shop_bcorn"] != null)
-                    Response.Cookies["cookie_userinfo_shop_bcorn"].Expires = AhaTime_cl.Now.AddDays(-1);
+                {
+                    HttpCookie cookie = new HttpCookie("cookie_userinfo_shop_bcorn");
+                    cookie.Expires = AhaTime_cl.Now.AddDays(-1);
+                    cookie.Path = "/";
+                    Response.Cookies.Add(cookie);
+                }
+
+                Helper_Tabler_cl.ShowModal(this.Page, "Đổi mật khẩu thành công. Vui lòng đăng nhập lại.", "Thông báo", false, "success");
+                string shopJs = @"
+(function() {
+    function bindRedirect() {
+        var modal = document.getElementById('dynamicModal');
+        if (!modal) {
+            setTimeout(bindRedirect, 100);
+            return;
+        }
+
+        function redirectToLogin() {
+            window.location.replace('/shop/login.aspx');
+        }
+
+        var okButton = modal.querySelector('.btn-ok');
+        var closeButton = modal.querySelector('.btn-close');
+
+        if (okButton) okButton.addEventListener('click', redirectToLogin, { once: true });
+        if (closeButton) closeButton.addEventListener('click', redirectToLogin, { once: true });
+    }
+
+    bindRedirect();
+})();";
+                ScriptManager.RegisterStartupScript(
+                    this.Page,
+                    this.GetType(),
+                    "shop_password_changed_redirect_" + Guid.NewGuid().ToString("N"),
+                    shopJs,
+                    true);
             }
             else
             {
-                Session["taikhoan_home"] = "";
-                Session["matkhau_home"] = "";
-                if (Request.Cookies["cookie_userinfo_home_bcorn"] != null)
-                    Response.Cookies["cookie_userinfo_home_bcorn"].Expires = AhaTime_cl.Now.AddDays(-1);
+                ClearHomeLoginState();
+                ShowSuccessThenRedirectToLogin("Đổi mật khẩu thành công. Vui lòng đăng nhập lại.");
             }
-
-            Helper_Tabler_cl.ShowModal(this.Page, "Đổi mật khẩu thành công. Vui lòng đăng nhập lại.", "Thông báo", true, "warning");
-            Response.Redirect(isShopPortal ? "/shop/login.aspx" : "/dang-nhap");
         }
     }
 

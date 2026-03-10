@@ -240,18 +240,5 @@
 
 <asp:Content ID="cFootSau" ContentPlaceHolderID="foot_sau" runat="Server">
 <script>
-    (function () {
-        function wire() {
-            document.querySelectorAll('.js-toggle-password').forEach(btn => {
-                btn.onclick = () => {
-                    let i = btn.closest('.input-group').querySelector('.js-password');
-                    if (i) i.type = i.type === 'password' ? 'text' : 'password';
-                };
-            });
-        }
-        wire();
-        if (window.Sys)
-            Sys.WebForms.PageRequestManager.getInstance().add_endRequest(wire);
-    })();
 </script>
 </asp:Content>

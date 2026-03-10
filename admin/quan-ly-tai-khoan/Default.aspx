@@ -2,76 +2,172 @@
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="Server">
     <style>
-        .aff-current-node > a,
-        .aff-current-node > span {
-            color: #d60000 !important;
-            font-weight: 700 !important;
+        /* view=... => render như trang độc lập, không còn popup/nền mờ */
+        body.admin-shell #qltk-page-root.qltk-standalone-view {
+            padding: 0 !important;
+        }
+
+        body.admin-shell #qltk-page-root.qltk-standalone-view .aha-admin-modal-head-wrap,
+        body.admin-shell #qltk-page-root.qltk-standalone-view div[style*="position: fixed"][style*="height: 52px"][style*="z-index: 1041"] {
+            position: static !important;
+            inset: auto !important;
+            top: auto !important;
+            left: auto !important;
+            width: 100% !important;
+            height: auto !important;
+            z-index: auto !important;
+            padding: 0 !important;
+        }
+
+        body.admin-shell #qltk-page-root.qltk-standalone-view .aha-admin-modal-overlay,
+        body.admin-shell #qltk-page-root.qltk-standalone-view div[style*="position: fixed"][style*="height: 100%"][style*="z-index: 1040"] {
+            position: static !important;
+            inset: auto !important;
+            top: auto !important;
+            left: auto !important;
+            width: 100% !important;
+            height: auto !important;
+            min-height: 0 !important;
+            z-index: auto !important;
+            overflow: visible !important;
+            background: transparent !important;
+            background-image: none !important;
+            backdrop-filter: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        body.admin-shell #qltk-page-root.qltk-standalone-view .aha-admin-modal-head-card,
+        body.admin-shell #qltk-page-root.qltk-standalone-view .aha-admin-modal-dialog,
+        body.admin-shell #qltk-page-root.qltk-standalone-view div[style*="max-width: 520px"],
+        body.admin-shell #qltk-page-root.qltk-standalone-view div[style*="max-width: 526px"],
+        body.admin-shell #qltk-page-root.qltk-standalone-view div[style*="max-width: 550px"],
+        body.admin-shell #qltk-page-root.qltk-standalone-view div[style*="max-width: 556px"],
+        body.admin-shell #qltk-page-root.qltk-standalone-view div[style*="max-width: 600px"],
+        body.admin-shell #qltk-page-root.qltk-standalone-view div[style*="max-width: 606px"] {
+            margin: 0 !important;
+            max-width: none !important;
+            width: 100% !important;
+        }
+
+        body.admin-shell #qltk-page-root.qltk-standalone-view .aha-admin-modal-head-card {
+            border-radius: 16px 16px 0 0 !important;
+            box-shadow: none !important;
+        }
+
+        body.admin-shell #qltk-page-root.qltk-standalone-view .aha-admin-modal-head-card > .bg-white {
+            border-radius: 16px 16px 0 0 !important;
+        }
+
+        body.admin-shell #qltk-page-root.qltk-standalone-view .aha-admin-modal-body,
+        body.admin-shell #qltk-page-root.qltk-standalone-view .bg-white.border.bd-transparent[style*="padding-top: 52px"] {
+            border-radius: 0 0 16px 16px !important;
+            box-shadow: var(--aha-sync-shadow) !important;
+            padding: 12px 16px 24px !important;
+            margin: 0 !important;
+        }
+
+        body.admin-shell #qltk-page-root.qltk-standalone-view #menutop-tool-bc,
+        body.admin-shell #qltk-page-root.qltk-standalone-view #timkiem-fixtop-bc {
+            display: none !important;
+        }
+
+        /* Cố định render dạng bảng, chặn mọi CSS global ép theo hàng */
+        body.admin-shell #qltk-page-root .bcorn-fix-title-table {
+            display: table !important;
+            width: max-content !important;
+            min-width: 100% !important;
+            border-collapse: separate !important;
+            border-spacing: 0 !important;
+        }
+
+        body.admin-shell #qltk-page-root .bcorn-fix-title-table thead {
+            display: table-header-group !important;
+        }
+
+        body.admin-shell #qltk-page-root .bcorn-fix-title-table tbody {
+            display: table-row-group !important;
+        }
+
+        body.admin-shell #qltk-page-root .bcorn-fix-title-table tr {
+            display: table-row !important;
+        }
+
+        body.admin-shell #qltk-page-root .bcorn-fix-title-table th,
+        body.admin-shell #qltk-page-root .bcorn-fix-title-table td,
+        body.admin-shell #qltk-page-root .bcorn-fix-title-table th[class*="col-"],
+        body.admin-shell #qltk-page-root .bcorn-fix-title-table td[class*="col-"] {
+            display: table-cell !important;
+            float: none !important;
+            width: auto !important;
+            max-width: none !important;
+            min-width: 0 !important;
+            flex: none !important;
+        }
+
+        /* Scope HOME: chỉ giữ Tài khoản, Điện thoại, Hành vi, Thao tác */
+        body.admin-shell #qltk-page-root.scope-home .col-id,
+        body.admin-shell #qltk-page-root.scope-home .col-check,
+        body.admin-shell #qltk-page-root.scope-home .col-avatar,
+        body.admin-shell #qltk-page-root.scope-home .col-balance,
+        body.admin-shell #qltk-page-root.scope-home .col-fullname,
+        body.admin-shell #qltk-page-root.scope-home .col-percent,
+        body.admin-shell #qltk-page-root.scope-home .col-birthday,
+        body.admin-shell #qltk-page-root.scope-home .col-email,
+        body.admin-shell #qltk-page-root.scope-home .qltkc-id,
+        body.admin-shell #qltk-page-root.scope-home .qltkc-check,
+        body.admin-shell #qltk-page-root.scope-home .qltkc-avatar,
+        body.admin-shell #qltk-page-root.scope-home .qltkc-balance,
+        body.admin-shell #qltk-page-root.scope-home .qltkc-fullname,
+        body.admin-shell #qltk-page-root.scope-home .qltkc-percent,
+        body.admin-shell #qltk-page-root.scope-home .qltkc-birthday,
+        body.admin-shell #qltk-page-root.scope-home .qltkc-email {
+            display: none !important;
+        }
+
+        /* Scope SHOP: chỉ giữ Tài khoản, Email, % DV Cho sàn, Thao tác */
+        body.admin-shell #qltk-page-root.scope-shop .col-id,
+        body.admin-shell #qltk-page-root.scope-shop .col-check,
+        body.admin-shell #qltk-page-root.scope-shop .col-avatar,
+        body.admin-shell #qltk-page-root.scope-shop .col-balance,
+        body.admin-shell #qltk-page-root.scope-shop .col-fullname,
+        body.admin-shell #qltk-page-root.scope-shop .col-hanhvi,
+        body.admin-shell #qltk-page-root.scope-shop .col-birthday,
+        body.admin-shell #qltk-page-root.scope-shop .col-phone,
+        body.admin-shell #qltk-page-root.scope-shop .qltkc-id,
+        body.admin-shell #qltk-page-root.scope-shop .qltkc-check,
+        body.admin-shell #qltk-page-root.scope-shop .qltkc-avatar,
+        body.admin-shell #qltk-page-root.scope-shop .qltkc-balance,
+        body.admin-shell #qltk-page-root.scope-shop .qltkc-fullname,
+        body.admin-shell #qltk-page-root.scope-shop .qltkc-hanhvi,
+        body.admin-shell #qltk-page-root.scope-shop .qltkc-birthday,
+        body.admin-shell #qltk-page-root.scope-shop .qltkc-phone {
+            display: none !important;
+        }
+
+        /* Nút tạo tài khoản admin chỉ hiển thị ở scope admin */
+        body.admin-shell #qltk-page-root.scope-home #ctl00_main_but_show_form_add,
+        body.admin-shell #qltk-page-root.scope-shop #ctl00_main_but_show_form_add {
+            display: none !important;
+        }
+
+        .admin-create-account-btn {
+            display: inline-flex !important;
+            align-items: center;
+            gap: 6px;
+            font-weight: 800 !important;
+            white-space: nowrap;
+            padding: 0 14px !important;
+        }
+
+        .admin-create-account-btn .mif-plus {
+            font-size: 15px;
         }
     </style>
-
 </asp:Content>
 
 <asp:Content ID="Content2" ContentPlaceHolderID="main" runat="Server">
-    <!-- ======================= POPUP CÂY AFFILIATE (NEW) ======================= -->
-    <asp:UpdatePanel ID="up_aff_tree" runat="server" UpdateMode="Conditional">
-        <ContentTemplate>
-            <asp:Panel ID="pn_aff_tree" runat="server" Visible="false">
-
-                <div style="position: fixed; width: 100%; height: 52px; background-color: none; top: 0; left: 0; z-index: 1041!important;">
-                    <div style='top: 0; left: 0px; margin: 0 auto; max-width: 650px; opacity: 1;'>
-                        <div style='position: absolute; right: 18px; top: 14px; z-index: 1040!important'>
-                            <a href='#' class='fg-white d-inline' runat="server" id="A_close_aff_tree" onserverclick="but_close_form_aff_tree_Click" title='Đóng'>
-                                <span class='mif mif-cross mif-2x fg-red fg-lightRed-hover'></span>
-                            </a>
-                        </div>
-                        <div class="bg-white pl-4 pl-8-md pr-8-md pr-4" style="height: 52px;">
-                            <div class="pt-4 text-upper text-bold">
-                                CÂY AFFILIATE
-                            </div>
-                            <hr />
-                        </div>
-                    </div>
-                </div>
-
-                <div style="position: fixed; width: 100%; height: 100%; top: 0; left: 0; overflow: auto; z-index: 1040!important; background-image: url('/uploads/images/bg1.png');">
-                    <div style='top: 0; left: 0; margin: 0 auto; max-width: 656px; opacity: 1;'>
-                        <div class="bg-white border bd-transparent pl-4 pl-8-md pr-8-md pr-4" style="padding-top: 52px">
-                            <div class="mt-3 mb-3">
-                                <div class="text-bold">
-                                    Tài khoản đang xem: 
-                                <asp:Label ID="lb_aff_current" runat="server" CssClass="fg-red"></asp:Label>
-                                </div>
-                            </div>
-
-                            <!-- MetroUI4 TreeView -->
-                            <div class="mt-2 mb-4">
-                                <div data-role="treeview" data-on-node-click="false">
-                                    <asp:Literal ID="lit_aff_tree" runat="server"></asp:Literal>
-                                </div>
-                            </div>
-
-                            <div class="mb-10"></div>
-                        </div>
-                    </div>
-                </div>
-
-            </asp:Panel>
-        </ContentTemplate>
-    </asp:UpdatePanel>
-
-    <asp:UpdateProgress ID="UpdateProgress_aff_tree" runat="server" AssociatedUpdatePanelID="up_aff_tree">
-        <ProgressTemplate>
-            <div class="bg-dark fixed-top h-100 w-100" style="opacity: 0.9; z-index: 99999!important">
-                <div style="padding-top: 45vh;">
-                    <div class="mx-auto color-style activity-atom" data-role="activity" data-type="atom" data-style="color" data-role-activity="true">
-                        <span class="electron"></span><span class="electron"></span><span class="electron"></span>
-                    </div>
-                </div>
-            </div>
-        </ProgressTemplate>
-    </asp:UpdateProgress>
-
-
+    <div id="qltk-page-root" class="qltk-page-root <%= IsStandaloneViewByQuery() ? "qltk-standalone-view" : "" %> <%= GetAccountListScopeCssClass() %>">
     <!-- ======================= POPUP PHÂN QUYỀN ======================= -->
     <asp:UpdatePanel ID="up_phanquyen" runat="server" UpdateMode="Conditional">
         <ContentTemplate>
@@ -104,7 +200,7 @@
                                                 <asp:CheckBox ID="check_all_quyen_quanlynhanvien" runat="server" CssClass="text-bold" Text="QUẢN LÝ TÀI KHOẢN" OnCheckedChanged="check_all_quyen_quanlynhanvien_CheckedChanged" AutoPostBack="true" />
                                             </div>
                                             <asp:CheckBoxList ID="check_list_quyen_quanlynhanvien" runat="server" AutoPostBack="true" OnSelectedIndexChanged="check_list_quyen_quanlynhanvien_SelectedIndexChanged">
-                                                <asp:ListItem Text="Phân quyền cho tài khoản khác" Value="5" Selected="false"></asp:ListItem>
+                                                <asp:ListItem Text="Tạo + phân quyền tài khoản admin" Value="5" Selected="false"></asp:ListItem>
                                                 <asp:ListItem Text="Các quyền còn lại (tạm thời)" Value="1" Selected="false"></asp:ListItem>
                                             </asp:CheckBoxList>
                                         </div>
@@ -134,6 +230,15 @@
                                                 <asp:ListItem Text="Hồ sơ hành vi lao động (duyệt ghi nhận điểm + đổi tầng Cộng tác phát triển)" Value="q2_3" Selected="false"></asp:ListItem>
                                                 <asp:ListItem Text="Hồ sơ chỉ số gắn kết (duyệt ghi nhận điểm + đổi tầng Đồng hành hệ sinh thái)" Value="q2_4" Selected="false"></asp:ListItem>
                                                 <asp:ListItem Text="Hồ sơ gian hàng đối tác (duyệt ghi nhận điểm ShopOnly tiêu dùng + ưu đãi)" Value="q2_5" Selected="false"></asp:ListItem>
+                                            </asp:CheckBoxList>
+                                        </div>
+
+                                        <div class="mt-3">
+                                            <div class="mt-1">
+                                                <asp:CheckBox ID="check_all_quyen_noidung_home" runat="server" CssClass="text-bold" Text="NỘI DUNG TRANG CHỦ HOME" OnCheckedChanged="check_all_quyen_noidung_home_CheckedChanged" AutoPostBack="true" />
+                                            </div>
+                                            <asp:CheckBoxList ID="check_list_quyen_noidung_home" runat="server" AutoPostBack="true" OnSelectedIndexChanged="check_list_quyen_noidung_home_SelectedIndexChanged">
+                                                <asp:ListItem Text="Quản lý nội dung hiển thị trang chủ Home (mở rộng cho các vị trí mới sau này)" Value="q3_1" Selected="false"></asp:ListItem>
                                             </asp:CheckBoxList>
                                         </div>
                                     </div>
@@ -197,13 +302,16 @@
                                     <asp:PlaceHolder ID="PlaceHolder1" runat="server">
                                         <div class="mt-3">
                                             <label class="fw-600 fg-red">Mật khẩu</label>
-                                            <div>
+                                            <div class="aha-password-field">
                                                 <asp:TextBox ID="txt_matkhau" TextMode="Password" runat="server" data-role="input"></asp:TextBox>
+                                                <button type="button" class="aha-password-toggle js-toggle-password" aria-label="Hiện mật khẩu">
+                                                    <span class="aha-password-toggle-label">Hiện</span>
+                                                </button>
                                             </div>
                                         </div>
                                     </asp:PlaceHolder>
 
-                                    <div class="mt-3">
+                                    <asp:Panel ID="pn_loai_taikhoan" runat="server" CssClass="mt-3">
                                         <label class="fw-600 fg-red">Loại tài khoản</label>
                                         <div>
                                             <asp:DropDownList ID="DropDownList1" runat="server" data-role="select">
@@ -211,9 +319,9 @@
                                                 <asp:ListItem Value="Tài khoản tổng" Text="Tài khoản tổng"></asp:ListItem>
                                             </asp:DropDownList>
                                         </div>
-                                    </div>
+                                    </asp:Panel>
 
-<div class="mt-3">
+<asp:Panel ID="pn_tang_home" runat="server" CssClass="mt-3" Visible="false">
     <label class="fw-600">Tầng Home (chỉnh bởi admin có quyền)</label>
     <div>
         <asp:DropDownList ID="ddl_cap_sp" runat="server" data-role="select">
@@ -222,17 +330,10 @@
             <asp:ListItem Value="3" Text="Đồng hành hệ sinh thái"></asp:ListItem>
         </asp:DropDownList>
     </div>
-</div>
+</asp:Panel>
 
 
-                                    <!-- ✅ NEW: Người giới thiệu -->
-                                    <div class="mt-3">
-                                        <label class="fw-600">Người giới thiệu</label>
-                                        <div>
-                                            <asp:DropDownList ID="ddl_nguoi_gioi_thieu" runat="server" data-role="select"></asp:DropDownList>
-                                        </div>
-
-                                    </div>
+                                    <asp:DropDownList ID="ddl_nguoi_gioi_thieu" runat="server" Visible="false"></asp:DropDownList>
 
                       
 
@@ -280,6 +381,63 @@
                                             <asp:TextBox ID="txt_dienthoai" runat="server" data-role="input"></asp:TextBox>
                                         </div>
                                     </div>
+
+                                    <asp:Panel ID="pn_reset_security_actions" runat="server" CssClass="mt-4 p-3 border bd-default rounded" Visible="false">
+                                        <div class="text-bold">Reset bảo mật tạm thời</div>
+                                        <div class="fg-gray mt-1">
+                                            <small>
+                                                Admin nhập giá trị tạm thời để cấp lại cho người dùng.
+                                                Sau khi đăng nhập, tài khoản sẽ bị bắt buộc đổi lại thông tin bảo mật tương ứng.
+                                            </small>
+                                        </div>
+                                        <div class="mt-1">
+                                            <small class="fg-blue">
+                                                <asp:Label ID="lb_reset_scope_note" runat="server" Text=""></asp:Label>
+                                            </small>
+                                        </div>
+
+                                        <asp:Panel ID="pn_reset_home_credentials" runat="server" CssClass="mt-3" Visible="false">
+                                            <div class="mt-2">
+                                                <label class="fw-600">Mật khẩu tạm thời (Home)</label>
+                                                <div class="d-flex flex-wrap align-items-center">
+                                                    <div class="aha-password-field">
+                                                        <asp:TextBox ID="txt_reset_home_password" runat="server" data-role="input" TextMode="Password" placeholder="Nhập mật khẩu tạm thời mới"></asp:TextBox>
+                                                        <button type="button" class="aha-password-toggle js-toggle-password" aria-label="Hiện mật khẩu tạm thời Home">
+                                                            <span class="aha-password-toggle-label">Hiện</span>
+                                                        </button>
+                                                    </div>
+                                                    <asp:Button ID="but_reset_home_password" runat="server" Text="Reset mật khẩu Home" CssClass="button warning ml-2 mt-2 mt-0-sm" CausesValidation="false" OnClick="but_reset_home_password_Click" />
+                                                </div>
+                                            </div>
+                                            <div class="mt-3">
+                                                <label class="fw-600">Mã PIN tạm thời (Home)</label>
+                                                <div class="d-flex flex-wrap align-items-center">
+                                                    <div class="aha-password-field">
+                                                        <asp:TextBox ID="txt_reset_home_pin" runat="server" MaxLength="4" TextMode="Password" data-role="input" placeholder="4 chữ số"></asp:TextBox>
+                                                        <button type="button" class="aha-password-toggle js-toggle-password" aria-label="Hiện mã PIN tạm thời Home">
+                                                            <span class="aha-password-toggle-label">Hiện</span>
+                                                        </button>
+                                                    </div>
+                                                    <asp:Button ID="but_reset_home_pin" runat="server" Text="Reset PIN Home" CssClass="button warning ml-2 mt-2 mt-0-sm" CausesValidation="false" OnClick="but_reset_home_pin_Click" />
+                                                </div>
+                                            </div>
+                                        </asp:Panel>
+
+                                        <asp:Panel ID="pn_reset_shop_credentials" runat="server" CssClass="mt-3" Visible="false">
+                                            <div class="mt-2">
+                                                <label class="fw-600">Mật khẩu tạm thời (Shop)</label>
+                                                <div class="d-flex flex-wrap align-items-center">
+                                                    <div class="aha-password-field">
+                                                        <asp:TextBox ID="txt_reset_shop_password" runat="server" data-role="input" TextMode="Password" placeholder="Nhập mật khẩu tạm thời mới"></asp:TextBox>
+                                                        <button type="button" class="aha-password-toggle js-toggle-password" aria-label="Hiện mật khẩu tạm thời Shop">
+                                                            <span class="aha-password-toggle-label">Hiện</span>
+                                                        </button>
+                                                    </div>
+                                                    <asp:Button ID="but_reset_shop_password" runat="server" Text="Reset mật khẩu Shop" CssClass="button warning ml-2 mt-2 mt-0-sm" CausesValidation="false" OnClick="but_reset_shop_password_Click" />
+                                                </div>
+                                            </div>
+                                        </asp:Panel>
+                                    </asp:Panel>
 
                                 </div>
                             </div>
@@ -393,9 +551,12 @@
                 <div id="menutop-tool-bc" style="position: fixed; top: 52px; width: 100%; z-index: 4">
                     <ul class="h-menu bg-white">
 
-                        <!-- nút thêm -->
-                        <li data-role="hint" data-hint-position="top" data-hint-text="Thêm">
-                            <asp:HyperLink ID="but_show_form_add" runat="server" NavigateUrl="<%# BuildAddUrl() %>"><span class="mif-plus"></span></asp:HyperLink>
+                        <!-- nút tạo tài khoản admin -->
+                        <li data-role="hint" data-hint-position="top" data-hint-text="Tạo tài khoản admin">
+                            <asp:HyperLink ID="but_show_form_add" runat="server" CssClass="admin-create-account-btn">
+                                <span class="mif-plus"></span>
+                                <span>Tạo tài khoản admin</span>
+                            </asp:HyperLink>
                         </li>
 
                         <!-- ✅ NEW: icon lọc -->
@@ -409,6 +570,10 @@
 
                         <li data-role="hint" data-hint-position="top" data-hint-text="Làm mới">
                             <asp:LinkButton ID="but_xoa_timkiem" OnClick="but_xoa_timkiem_Click" runat="server"><span class="mif-loop2"></span></asp:LinkButton>
+                        </li>
+
+                        <li data-role="hint" data-hint-position="top" data-hint-text="Khóa hàng loạt Home không đủ số điện thoại">
+                            <asp:LinkButton ID="but_lock_legacy_home" OnClick="but_lock_legacy_home_Click" runat="server"><span class="mif-lock"></span></asp:LinkButton>
                         </li>
 
                         <li class="bd-gray border bd-default mt-2 d-block-lg d-none" style="height: 24px"></li>
@@ -430,13 +595,13 @@
                 </div>
 
                 <div id="timkiem-fixtop-bc" style="position: fixed; right: 10px; top: 58px; width: 240px; z-index: 4" class="d-none d-block-sm">
-                    <asp:TextBox MaxLength="50" data-prepend="<span class='mif mif-search'></span>" ID="txt_timkiem" runat="server" placeholder="Nhập từ khóa" data-role="input" CssClass="input-small" AutoPostBack="false" data-sync-key="qltk-search" data-enter-click="but_timkiem"></asp:TextBox>
+                    <asp:TextBox MaxLength="50" data-prepend="<span class='mif mif-search'></span>" ID="txt_timkiem" runat="server" placeholder="Tìm bất kỳ dữ liệu" data-role="input" CssClass="input-small" AutoPostBack="false" data-sync-key="qltk-search" data-enter-click="but_timkiem"></asp:TextBox>
                 </div>
             </div>
 
             <div class="p-3">
                 <div class="d-none-sm d-block">
-                    <asp:TextBox MaxLength="50" data-prepend="<span class='mif mif-search'></span>" ID="txt_timkiem1" runat="server" placeholder="Nhập từ khóa" data-role="input" AutoPostBack="false" data-sync-key="qltk-search" data-enter-click="but_timkiem"></asp:TextBox>
+                    <asp:TextBox MaxLength="50" data-prepend="<span class='mif mif-search'></span>" ID="txt_timkiem1" runat="server" placeholder="Tìm bất kỳ dữ liệu" data-role="input" AutoPostBack="false" data-sync-key="qltk-search" data-enter-click="but_timkiem"></asp:TextBox>
                 </div>
 
                 <div class="d-none-lg d-block mb-3 mt-0-lg mt-3">
@@ -455,34 +620,28 @@
                             <table class="bcorn-fix-title-table">
                                 <thead>
                                     <tr class="">
-                                        <th style="width: 1px;">ID</th>
-                                        <th style="width: 1px;">
+                                        <th class="qltkc-id" style="width: 1px;">ID</th>
+                                        <th class="qltkc-check" style="width: 1px;">
                                             <input data-role="hint" data-hint-position="top" data-hint-text="Chọn/Bỏ chọn" type="checkbox" onkeypress="if (event.keyCode==13) return false;" onclick="$('.checkbox-table input[type=checkbox]').prop('checked', this.checked)">
                                         </th>
 
-                                        <th class="text-center" style="width: 60px; min-width: 60px;">Ảnh</th>
-                                        <th class="text-center" style="min-width: 1px;">Tài khoản</th>
-                                        <th class="text-center" style="min-width: 50px;">Quyền tiêu dùng</th>
+                                        <th class="text-center qltkc-avatar" style="width: 60px; min-width: 60px;">Ảnh</th>
+                                        <th class="text-center qltkc-account" style="min-width: 1px;">Tài khoản</th>
+                                        <th class="text-center qltkc-balance" style="min-width: 50px;">Quyền tiêu dùng</th>
 
                                         <!-- ✅ NEW -->
                                        <%-- <th class="text-center" style="min-width: 90px;">Ví 1 (20%)</th>
                                         <th class="text-center" style="min-width: 90px;">Ví 2 (30%) EVoucher</th>
                                         <th class="text-center" style="min-width: 90px;">Ví 3 (50%)</th>--%>
 
-                                        <th class="text-center" style="min-width: 140px;">Họ tên</th>
-                                        <th class="text-center" style="min-width: 220px;">Hành vi</th>
+                                        <th class="text-center qltkc-fullname" style="min-width: 140px;">Họ tên</th>
+                                        <th class="text-center qltkc-hanhvi" style="min-width: 220px;">Hành vi</th>
+                                        <th class="text-center qltkc-percent" style="width: 90px; min-width: 90px;">% DV Cho sàn</th>
 
-
-
-                                        <!-- ✅ NEW: Người giới thiệu -->
-                                        <th class="text-center" style="min-width: 140px;">Người giới thiệu</th>
-
-                                        <th class="text-center" style="width: 90px; min-width: 90px;">% DV Cho sàn</th>
-
-                                        <th class="text-center" style="width: 60px; min-width: 60px;">Ngày sinh</th>
-                                        <th class="text-center" style="width: 60px; min-width: 60px;">Điện thoại</th>
-                                        <th class="text-center" style="width: 60px; min-width: 60px;">Email</th>
-                                        <th class="text-center" style="min-width: 120px;">Thao tác</th>
+                                        <th class="text-center qltkc-birthday" style="width: 60px; min-width: 60px;">Ngày sinh</th>
+                                        <th class="text-center qltkc-phone" style="width: 60px; min-width: 60px;">Điện thoại</th>
+                                        <th class="text-center qltkc-email" style="width: 60px; min-width: 60px;">Email</th>
+                                        <th class="text-center qltkc-actions" style="min-width: 120px;">Thao tác</th>
                                     </tr>
                                 </thead>
 
@@ -493,18 +652,16 @@
                                                 <asp:Label ID="lbID" runat="server" Text='<%#Eval("taikhoan") %>'></asp:Label>
                                             </span>
                                             <tr>
-                                                <td class="text-center">
+                                                <td class="text-center qltkc-id">
                                                     <%# Eval("id") %>
                                                 </td>
-                                                <td class="checkbox-table text-center">
+                                                <td class="checkbox-table text-center qltkc-check">
                                                     <asp:CheckBox ID="checkID" runat="server" onkeypress="if (event.keyCode==13) return false;" />
                                                 </td>
-                                                <td class="text-center">
-                                                    <div data-role="lightbox" class="c-pointer">
-                                                        <img src='<%#Eval("anhdaidien") %>' class="img-cover-vuongtron" width="60" height="60" />
-                                                    </div>
+                                                <td class="text-center qltkc-avatar">
+                                                    <img src='<%#Eval("anhdaidien") %>' class="img-cover-vuongtron" width="60" height="60" />
                                                 </td>
-                                                <td class="text-left" style="vertical-align: middle">
+                                                <td class="text-left qltkc-account" style="vertical-align: middle">
                                                     <div>
                                                         <%# Eval("taikhoan") %>
                                                     </div>
@@ -527,8 +684,13 @@
                                                     <asp:PlaceHolder ID="PlaceHolder5" runat="server" Visible='<%# AccountType_cl.IsTreasury(Eval("phanloai").ToString()) %>'>
                                                         <div class="button mini bg-violet fg-white rounded">Tài khoản tổng</div>
                                                     </asp:PlaceHolder>
+                                                    <asp:PlaceHolder ID="PlaceHolderLockHome" runat="server" Visible='<%# Convert.ToBoolean(Eval("IsHomeScope")) %>'>
+                                                        <div class='<%# Convert.ToBoolean(Eval("IsBlocked")) ? "button mini alert rounded" : "button mini success rounded" %>'>
+                                                            <%# Convert.ToBoolean(Eval("IsBlocked")) ? "Đã khóa Home" : "Home hoạt động" %>
+                                                        </div>
+                                                    </asp:PlaceHolder>
                                                 </td>
-                                                <td class="text-left">
+                                                <td class="text-left qltkc-balance">
                                                     <img src="/uploads/images/dong-a.png" width="20" />
                                                     <div class="button mini light rounded"><%# Eval("DongA","{0:#,##0.##}") %></div>
                                                 </td>
@@ -547,48 +709,38 @@
                                                     <div class="button mini light rounded"><%# Eval("Vi2_50PhanTram_ViLaoDong","{0:#,##0.##}") %></div>
                                                 </td>--%>
 
-                                                <td class="text-left">
+                                                <td class="text-left qltkc-fullname">
                                                     <div class="fw-600"><%#Eval("hoten") %></div>
                                                 </td>
-                                                <td class="text-center">
+                                                <td class="text-center qltkc-hanhvi">
                                                     <div class="button mini light rounded">
                                                         <%# Eval("HanhVi_HienThi") %>
                                                     </div>
                                                 </td>
-
-
-                                                <!-- ✅ NEW: Người giới thiệu -->
-                                                <td class="text-left">
-                                                    <div class="fw-600"><%# Eval("NguoiGioiThieu_HienThi") %></div>
-
-                                                    <div class="mt-1">
-                                                        <asp:HyperLink ID="hl_xem_cay_aff" runat="server"
-                                                            CssClass="fg-blue fg-cyan-hover"
-                                                            Text="Xem chi tiết"
-                                                            NavigateUrl='<%# BuildAffiliateTreeUrl(Eval("taikhoan")) %>'>
-                                                        </asp:HyperLink>
-                                                    </div>
-                                                </td>
-
-
-                                                <td class="text-center">
+                                                <td class="text-center qltkc-percent">
                                                     <div class="button mini light rounded">
                                                         <%# Eval("ChiPhanTram_BanDichVu_ChoSan") %>%
                                                     </div>
                                                 </td>
 
-                                                <td>
+                                                <td class="qltkc-birthday">
                                                     <%#Eval("ngaysinh","{0:dd/MM/yyyy}") %>
                                                 </td>
-                                                <td>
+                                                <td class="qltkc-phone">
                                                     <div><a title="Gọi" href="tel:<%#Eval("dienthoai") %>"><%#Eval("dienthoai") %></a></div>
                                                 </td>
-                                                <td class="text-left"><%#Eval("email") %></td>
+                                                <td class="text-left qltkc-email"><%#Eval("email") %></td>
 
-                                                <td style="vertical-align: middle" class="text-center">
+                                                <td style="vertical-align: middle" class="text-center qltkc-actions">
                                                     <div class="d-flex flex-wrap justify-content-center align-items-center">
                                                         <asp:HyperLink ID="hl_chi_tiet" runat="server" CssClass="button small primary rounded mr-1" NavigateUrl='<%# BuildEditUrl(Eval("taikhoan")) %>' Text="Chi tiết"></asp:HyperLink>
                                                         <asp:HyperLink ID="hl_show_form_phanquyen" runat="server" CssClass="button small warning rounded" NavigateUrl='<%# BuildPermissionUrl(Eval("taikhoan")) %>' Visible='<%# Convert.ToBoolean(Eval("CanShowPhanQuyen")) %>'>Phân quyền</asp:HyperLink>
+                                                        <asp:HyperLink ID="hl_toggle_home_lock" runat="server"
+                                                            CssClass='<%# Convert.ToBoolean(Eval("IsBlocked")) ? "button small success rounded ml-1" : "button small alert rounded ml-1" %>'
+                                                            Visible='<%# Convert.ToBoolean(Eval("CanToggleHomeLock")) %>'
+                                                            NavigateUrl='<%# BuildToggleHomeLockUrl(Eval("taikhoan")) %>'>
+                                                            <%# Convert.ToBoolean(Eval("IsBlocked")) ? "Mở khóa Home" : "Khóa Home" %>
+                                                        </asp:HyperLink>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -616,6 +768,7 @@
         </ProgressTemplate>
     </asp:UpdateProgress>
 
+    </div>
 </asp:Content>
 
 <asp:Content ID="Content3" ContentPlaceHolderID="foot" runat="Server">

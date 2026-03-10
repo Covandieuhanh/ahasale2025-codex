@@ -331,7 +331,7 @@ public partial class admin_quan_ly_banner_Default : System.Web.UI.Page
             checkBox.Checked = dataItem.show;
             //hoặc
             // Lấy giá trị cần so sánh từ DataItem (sửa 'ten_field' thành tên trường dữ liệu phù hợp)
-            //string valueToCompare = DataBinder.Eval(dataItem, "Tên Cột")?.ToString() ?? string.Empty;
+            //string valueToCompare = Convert.ToString(DataBinder.Eval(dataItem, "Tên Cột")) ?? string.Empty;
         }
     }
 

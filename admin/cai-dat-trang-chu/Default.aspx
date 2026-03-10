@@ -212,11 +212,12 @@
                                         <label class="fw-600">Icon mobile</label>
                                         <span style="cursor: pointer" class="mif mif-info ml-1" data-role="popover" data-popover-text="<small>Kích thước chuẩn: 180x180 pixel. Icon mobile là biểu tượng hiển thị khi người dùng thêm trang web của bạn vào màn hình chính trên thiết bị di động.</small>" data-popover-hide="8000" data-close-button="false" data-popover-position="right" data-popover-trigger="click" data-cls-popover="drop-shadow"></span>
                                         <input type="file" id="fileInput3" onchange="uploadFile3()" data-role="file" data-button-title="<span class='mif-file-upload'></span>" />
-                                        <div id="Div1" runat="server"></div>
+                                        <div id="message3" runat="server"></div>
                                         <div id="uploadedFilePath3"></div>
                                         <button type="button" id="cancelButton3" class="button alert mini rounded mb-2 mt-1" onclick="cancelUpload3()" style="display: none; width: 100px">Hủy ảnh mới chọn</button>
-                                        <div style="display: none">
-                                            <asp:TextBox ID="txt_link_upload_3" runat="server"></asp:TextBox>
+                                        <div class="mt-2">
+                                            <label class="fw-600">Hoặc dán link icon (https://... hoặc /uploads/...)</label>
+                                            <asp:TextBox ID="txt_link_upload_3" runat="server" data-role="input" placeholder="Ví dụ: https://cdn.domain.com/icon.png"></asp:TextBox>
                                         </div>
                                         <div>
                                             <asp:Label ID="Label3" runat="server" Text=""></asp:Label>

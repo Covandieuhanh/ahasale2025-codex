@@ -101,8 +101,9 @@
 
                             <div class="mt-6 mb-20 text-right">
                                 <asp:Button ID="but_tao_banthe" runat="server" Text="BÁN SẢN PHẨM"
-                                    CssClass="button success" OnClick="but_tao_banthe_Click" OnClientClick="this.disabled=true; this.value='Đang xử lý...'; __doPostBack(this.name,''); return false;"
- />
+                                    CssClass="button success"
+                                    UseSubmitBehavior="false"
+                                    OnClick="but_tao_banthe_Click" />
                             </div>
 
                             <div class="mb-20"></div>

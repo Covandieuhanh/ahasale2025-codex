@@ -184,19 +184,38 @@
         }
 
         .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 14px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
             padding: 14px;
         }
 
+        .grid-item {
+            width: 100%;
+        }
+
+        @media (max-width: 767.98px) {
+            .grid-item { width: calc((100% - 16px) / 2); }
+        }
+
+        @media (min-width: 768px) and (max-width: 991.98px) {
+            .grid-item { width: calc((100% - 16px*2) / 3); }
+        }
+
+        @media (min-width: 992px) {
+            .grid-item { width: calc((100% - 16px*4) / 5); }
+        }
+
         .card {
-            display: block;
-            border: 1px solid var(--shop-line);
-            border-radius: 14px;
+            border: none;
+            border-radius: 12px;
             overflow: hidden;
             background: #fff;
             transition: transform .18s ease, box-shadow .18s ease;
+            display: flex;
+            flex-direction: column;
+            min-height: 100%;
+            box-shadow: 0 2px 14px rgba(0,0,0,.06);
         }
 
         .card:hover {
@@ -204,39 +223,134 @@
             box-shadow: 0 12px 24px rgba(16, 42, 67, .16);
         }
 
+        .card-link {
+            display: block;
+            color: inherit;
+        }
+
         .card-image {
             width: 100%;
-            aspect-ratio: 16/10;
+            aspect-ratio: 1 / 1;
             object-fit: cover;
             background: #edf4fc;
             display: block;
+            transition: transform .25s ease;
+        }
+
+        .card:hover .card-image {
+            transform: scale(1.04);
         }
 
         .card-body {
             padding: 11px 12px 12px;
+            display: flex;
+            flex-direction: column;
+            min-height: 118px;
         }
 
         .card-name {
             margin: 0;
-            font-size: 16px;
-            line-height: 1.28;
-            font-weight: 800;
+            font-size: 15px;
+            line-height: 1.25rem;
+            font-weight: 700;
             color: var(--shop-text);
-            min-height: 42px;
+            min-height: 2.5rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
         .card-meta {
-            margin-top: 6px;
             color: var(--shop-muted);
-            font-size: 13px;
+            font-size: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-meta-row {
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .card-badges {
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .card-badge {
+            display: inline-flex;
+            align-items: center;
+            min-height: 22px;
+            border-radius: 999px;
+            padding: 0 8px;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .card-badge-public {
+            color: #0f4c81;
+            background: #e8f2ff;
+            border: 1px solid #c5dbfa;
         }
 
         .card-price {
             margin-top: 8px;
-            color: #0b7a4d;
-            font-size: 20px;
-            font-weight: 900;
+            color: #d63939;
+            font-size: 16px;
+            font-weight: 800;
             line-height: 1.2;
+        }
+
+        .card-actions {
+            margin-top: auto;
+            padding: 0 12px 12px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .card-btn {
+            min-height: 34px;
+            border-radius: 10px;
+            border: 1px solid transparent;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .card-btn-trade {
+            background: #0f8f5d;
+            border-color: #0f8f5d;
+            color: #fff;
+        }
+
+        .card-btn-trade:hover {
+            color: #fff;
+            background: #0d7b50;
+            border-color: #0d7b50;
+        }
+
+        .card-btn-cart {
+            background: #eef6ff;
+            border-color: #bfd7f5;
+            color: #0f4c81;
+        }
+
+        .card-btn-cart:hover {
+            color: #0b3f66;
+            background: #e1efff;
+            border-color: #a9c8ee;
         }
 
         .empty {
@@ -288,24 +402,26 @@
                     </div>
                 </div>
 
-                <div class="stats">
-                    <article class="stat">
-                        <div class="stat-label">Sản phẩm đang hiển thị</div>
-                        <div class="stat-value"><asp:Label ID="lb_total_products" runat="server" /></div>
-                    </article>
-                    <article class="stat">
-                        <div class="stat-label">Tổng lượt xem</div>
-                        <div class="stat-value"><asp:Label ID="lb_total_views" runat="server" /></div>
-                    </article>
-                    <article class="stat">
-                        <div class="stat-label">Đã bán</div>
-                        <div class="stat-value"><asp:Label ID="lb_total_sold" runat="server" /></div>
-                    </article>
-                    <article class="stat">
-                        <div class="stat-label">Đơn chờ trao đổi</div>
-                        <div class="stat-value"><asp:Label ID="lb_pending_orders" runat="server" /></div>
-                    </article>
-                </div>
+                <asp:Panel ID="pn_public_stats" runat="server" Visible="false">
+                    <div class="stats">
+                        <article class="stat">
+                            <div class="stat-label">Sản phẩm đang hiển thị</div>
+                            <div class="stat-value"><asp:Label ID="lb_total_products" runat="server" /></div>
+                        </article>
+                        <article class="stat">
+                            <div class="stat-label">Tổng lượt xem</div>
+                            <div class="stat-value"><asp:Label ID="lb_total_views" runat="server" /></div>
+                        </article>
+                        <article class="stat">
+                            <div class="stat-label">Đã bán</div>
+                            <div class="stat-value"><asp:Label ID="lb_total_sold" runat="server" /></div>
+                        </article>
+                        <article class="stat">
+                            <div class="stat-label">Đơn chờ trao đổi</div>
+                            <div class="stat-value"><asp:Label ID="lb_pending_orders" runat="server" /></div>
+                        </article>
+                    </div>
+                </asp:Panel>
             </section>
 
             <section class="products">
@@ -327,14 +443,28 @@
                     <div class="grid">
                         <asp:Repeater ID="rp_products" runat="server">
                             <ItemTemplate>
-                                <a class="card" href="<%# ResolveProductUrl(Eval("id"), Eval("name_en")) %>">
-                                    <img class="card-image" src="<%# ResolveProductImage(Eval("image")) %>" alt="<%# HttpUtility.HtmlEncode((Eval("name") ?? "").ToString()) %>" />
-                                    <div class="card-body">
-                                        <h4 class="card-name"><%# HttpUtility.HtmlEncode((Eval("name") ?? "").ToString()) %></h4>
-                                        <div class="card-meta">Ngày đăng: <%# FormatDate(Eval("ngaytao")) %></div>
-                                        <div class="card-price"><%# FormatCurrency(Eval("giaban")) %> Quyền</div>
-                                    </div>
-                                </a>
+                                <div class="grid-item">
+                                    <article class="card">
+                                        <a class="card-link" href="<%# ResolveProductUrl(Eval("id"), Eval("name_en")) %>">
+                                            <img class="card-image" src="<%# ResolveProductImage(Eval("image")) %>" alt="<%# HttpUtility.HtmlEncode((Eval("name") ?? "").ToString()) %>" />
+                                            <div class="card-body">
+                                                <h4 class="card-name"><%# HttpUtility.HtmlEncode((Eval("name") ?? "").ToString()) %></h4>
+                                                <div class="card-badges">
+                                                    <span class="card-badge card-badge-public">Công khai</span>
+                                                </div>
+                                                <div class="card-price"><%# FormatCurrency(Eval("giaban")) %> đ</div>
+                                                <div class="card-meta-row">
+                                                    <div class="card-meta">Ngày đăng: <%# FormatDate(Eval("ngaytao")) %></div>
+                                                    <div class="card-meta">Lượt xem: <%# Eval("LuotTruyCap") %></div>
+                                                </div>
+                                            </div>
+                                        </a>
+                                        <div class="card-actions">
+                                            <a class="card-btn card-btn-trade" href="<%# BuildExchangeActionUrl(Eval("id")) %>">Trao đổi</a>
+                                            <a class="card-btn card-btn-cart" href="<%# BuildAddCartActionUrl(Eval("id")) %>">Thêm vào giỏ</a>
+                                        </div>
+                                    </article>
+                                </div>
                             </ItemTemplate>
                         </asp:Repeater>
                     </div>

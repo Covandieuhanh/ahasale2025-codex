@@ -16,11 +16,11 @@
     <link href="/Metro-UI-CSS-master/css/metro-all.min.css" rel="stylesheet" />
     <link href="/Metro-UI-CSS-master/css/icons.css" rel="stylesheet" />
     <%--dành riêng cho trang admin--%>
-    <link href="/css/home-style.css" rel="stylesheet" />
+    <link href="/assetscss/home-style.css" rel="stylesheet" />
     <%--viết thêm dựa vào metro--%>
-    <link href="/css/bcorn-with-metro.css" rel="stylesheet" />
+    <link href="/assetscss/bcorn-with-metro.css" rel="stylesheet" />
     <%--sửa lại css metro theo ý mình--%>
-    <link href="/css/fix-metro.css" rel="stylesheet" />
+    <link href="/assetscss/fix-metro.css" rel="stylesheet" />
 
     <asp:Literal ID="literal_fav_icon" runat="server"></asp:Literal>
 

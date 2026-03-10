@@ -2,7 +2,6 @@
 using System.Configuration;
 using System.Net;
 using System.Net.Mail;
-using static OfficeOpenXml.ExcelErrorValue;
 using System.IO;
 using System.Collections.Generic;
 using System.Web;
@@ -26,7 +25,7 @@ public class guiEmail_cl
         string password = ConfigurationManager.AppSettings["EmailPassword"];
 
         //int randomNumber = Random.Next(1, 21);
-        string fromAddress = $"hotro@ahasale.vn";
+        string fromAddress = "hotro@ahasale.vn";
 
         try
         {
@@ -87,7 +86,7 @@ public class guiEmail_cl
 
 //List<string> emailAddresses = new List<string>
 //        {
-//            "bcorn.net@gmail.com",
+//            "ahasale.vn@gmail.com",
 //            "mkt.tcsmoitruong@gmail.com"
 //        };
 ////ADD EMAIL

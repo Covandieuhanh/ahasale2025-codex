@@ -17,6 +17,18 @@ public static class TierHome_cl
         return Tier0;
     }
 
+    public static int GetTierFromPhanLoai(string phanLoai)
+    {
+        string value = (phanLoai ?? "").Trim();
+        if (string.Equals(value, "Đồng hành hệ sinh thái", StringComparison.OrdinalIgnoreCase))
+            return Tier3;
+        if (string.Equals(value, "Cộng tác phát triển", StringComparison.OrdinalIgnoreCase))
+            return Tier2;
+        if (string.Equals(value, "Khách hàng", StringComparison.OrdinalIgnoreCase))
+            return Tier1;
+        return Tier0;
+    }
+
     public static int? GetCurrentHanhViFromAccount(taikhoan_tb acc)
     {
         if (acc == null) return null;
@@ -38,26 +50,15 @@ public static class TierHome_cl
         if (tk == "") return Tier0;
 
         var acc = db.taikhoan_tbs.FirstOrDefault(x => x.taikhoan == tk);
+        int tierFromPhanLoai = GetTierFromPhanLoai(acc != null ? acc.phanloai : "");
+        if (tierFromPhanLoai > Tier0)
+            return tierFromPhanLoai;
+
         int tierFromAccount = GetTierFromHanhVi(GetCurrentHanhViFromAccount(acc));
         if (tierFromAccount > Tier0)
             return tierFromAccount;
 
-        int tier = Tier0;
-
-        var approved = db.YeuCau_HeThongSanPham_tbs
-            .Where(x => x.taikhoan == tk && x.TrangThai == 1)
-            .Select(x => new { x.CapYeuCau, x.GiaTriYeuCau })
-            .ToList();
-
-        foreach (var item in approved)
-        {
-            int? hanhVi = HanhVi9Cap_cl.GetLoaiHanhViByCapGiaTri(item.CapYeuCau, item.GiaTriYeuCau);
-            tier = Math.Max(tier, GetTierFromHanhVi(hanhVi));
-        }
-
-        if (tier < Tier0) tier = Tier0;
-        if (tier > Tier3) tier = Tier3;
-        return tier;
+        return Tier1;
     }
 
     public static bool CanViewHoSo(int tierHome, int loaiHoSoVi)

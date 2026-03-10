@@ -49,6 +49,9 @@ public static class PortalRequest_cl
     {
         if (IsShopPortalRequest())
         {
+            if (!PortalActiveMode_cl.IsShopActive())
+                return "";
+
             string tkShop = ReadSession("taikhoan_shop");
             if (!string.IsNullOrEmpty(tkShop))
                 return tkShop;
@@ -56,10 +59,11 @@ public static class PortalRequest_cl
             tkShop = ReadCookieValue("cookie_userinfo_shop_bcorn", "taikhoan");
             if (!string.IsNullOrEmpty(tkShop))
                 return tkShop;
-
-            // Fallback dữ liệu cũ: một số màn đã lưu nhầm session home khi đi từ shop bridge.
-            return ReadSession("taikhoan_home");
+            return "";
         }
+
+        if (!PortalActiveMode_cl.IsHomeActive())
+            return "";
 
         string tkHome = ReadSession("taikhoan_home");
         if (!string.IsNullOrEmpty(tkHome))

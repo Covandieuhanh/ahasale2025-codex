@@ -31,7 +31,7 @@
                     <div class="text-secondary">
                         <!-- Bạn thay nội dung thật ở đây -->
                         <p class="mb-2"><strong>1)</strong> Điều khoản tham gia gian hàng đối tác...</p>
-                        <p class="mb-2"><strong>2)</strong> Chính sách duyệt, vận hành, thanh toán...</p>
+                        <p class="mb-2"><strong>2)</strong> Chính sách duyệt, vận hành, trao đổi...</p>
                         <p class="mb-0"><strong>3)</strong> Quy định nội dung, sản phẩm, dịch vụ...</p>
                         <hr class="my-3" />
                         <a href="javascript:;" data-bs-toggle="modal" data-bs-target="#modal-dieukhoan">

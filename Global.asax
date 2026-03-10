@@ -2,6 +2,16 @@
 
 <script RunAt="server">
 
+    void Application_BeginRequest(object sender, EventArgs e)
+    {
+        HttpContext ctx = HttpContext.Current;
+        if (ctx == null || ctx.Response == null) return;
+
+        // Enforce UTF-8 for all dynamic ASP.NET responses on hosting.
+        ctx.Response.ContentEncoding = System.Text.Encoding.UTF8;
+        ctx.Response.Charset = "utf-8";
+    }
+
     void Application_Start(object sender, EventArgs e)
     {
         // Code that runs on application startup

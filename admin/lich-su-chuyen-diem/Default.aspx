@@ -361,21 +361,24 @@
                                                         <td class="text-center"><%# Eval("TenHanhVi") %></td>
                                                         <td class="text-right"><%# Eval("TongQuyen", "{0:#,##0.##}") %></td>
                                                         <td class="text-center">
-                                                            <asp:PlaceHolder ID="ph_yc_status_pending" runat="server" Visible='<%# Eval("TrangThaiCode").ToString()=="0" %>'>
+                                                            <asp:PlaceHolder ID="ph_yc_status_pending" runat="server" Visible='<%# Eval("TrangThaiUiCode").ToString()=="0" %>'>
                                                                 <span class="status-pill">Chờ duyệt</span>
                                                             </asp:PlaceHolder>
-                                                            <asp:PlaceHolder ID="ph_yc_status_done" runat="server" Visible='<%# Eval("TrangThaiCode").ToString()=="1" %>'>
+                                                            <asp:PlaceHolder ID="ph_yc_status_done" runat="server" Visible='<%# Eval("TrangThaiUiCode").ToString()=="1" %>'>
                                                                 <span class="status-pill" style="background:#e9fbf2;border-color:#b9e6d1;color:#0f7a4f;">Đã duyệt</span>
                                                             </asp:PlaceHolder>
-                                                            <asp:PlaceHolder ID="ph_yc_status_reject" runat="server" Visible='<%# Eval("TrangThaiCode").ToString()=="2" %>'>
+                                                            <asp:PlaceHolder ID="ph_yc_status_reject" runat="server" Visible='<%# Eval("TrangThaiUiCode").ToString()=="2" %>'>
                                                                 <span class="status-pill" style="background:#fff0f0;border-color:#f3c1c1;color:#b83232;">Từ chối</span>
+                                                            </asp:PlaceHolder>
+                                                            <asp:PlaceHolder ID="ph_yc_status_paid" runat="server" Visible='<%# Eval("TrangThaiUiCode").ToString()=="3" %>'>
+                                                                <span class="status-pill" style="background:#edf4ff;border-color:#c7d9ff;color:#1f4a93;">Đã chi trả</span>
                                                             </asp:PlaceHolder>
                                                         </td>
                                                         <td class="text-center"><%# Eval("NguoiDuyet") %></td>
                                                         <td class="text-center"><%# Eval("NgayCapNhat", "{0:dd/MM/yyyy HH:mm}") %></td>
                                                         <td><%# Eval("GhiChu") %></td>
                                                         <td class="text-center">
-                                                            <asp:PlaceHolder ID="ph_action_pending" runat="server" Visible='<%# Eval("TrangThaiCode").ToString()=="0" %>'>
+                                                            <asp:PlaceHolder ID="ph_action_pending" runat="server" Visible='<%# Eval("TrangThaiUiCode").ToString()=="0" %>'>
                                                                 <asp:Button ID="but_duyet_yeucau_hanhvi"
                                                                     CommandArgument='<%# Eval("IdYeuCauRut") %>'
                                                                     OnClick="but_duyet_yeucau_hanhvi_Click"
@@ -388,6 +391,17 @@
                                                                     runat="server"
                                                                     CssClass="rounded mini alert mt-1"
                                                                     Text="Từ chối" />
+                                                            </asp:PlaceHolder>
+                                                            <asp:PlaceHolder ID="ph_action_can_payout" runat="server" Visible='<%# Eval("CanChiTra").ToString()=="True" %>'>
+                                                                <asp:Button ID="but_chitra_yeucau_hanhvi"
+                                                                    CommandArgument='<%# Eval("IdYeuCauRut") %>'
+                                                                    OnClick="but_chitra_yeucau_hanhvi_Click"
+                                                                    runat="server"
+                                                                    CssClass="rounded mini success"
+                                                                    Text="Chi trả" />
+                                                            </asp:PlaceHolder>
+                                                            <asp:PlaceHolder ID="ph_action_paid" runat="server" Visible='<%# Eval("DaChiTra").ToString()=="True" %>'>
+                                                                <span class="mini rounded button light">Đã chi trả</span>
                                                             </asp:PlaceHolder>
                                                         </td>
                                                     </tr>

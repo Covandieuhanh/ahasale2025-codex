@@ -9,11 +9,16 @@ using System.Web;
 using System.Web.Script.Serialization;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+using System.Text.RegularExpressions;
 
 public partial class admin_Default : System.Web.UI.Page
 {
     private const int BridgeRecentLimit = 8;
     private const string BridgeWatcherStateRelativePath = "~/scripts/usdt_bridge_state.json";
+    private const string BridgeWatcherEnvRelativePath = "~/scripts/usdt_bridge.env";
+    private const string PermissionManageAdminAccounts = "5";
+    private const string PermissionLegacyGeneralAdmin = "1";
+    private const string PermissionHomeContent = "q3_1";
 
     private class BridgeHistoryRowView
     {
@@ -36,12 +41,74 @@ public partial class admin_Default : System.Web.UI.Page
         public string Note { get; set; }
     }
 
+    private bool HasPermissionCode(dbDataContext db, string taiKhoan, string permissionCode)
+    {
+        if (db == null || string.IsNullOrWhiteSpace(taiKhoan) || string.IsNullOrWhiteSpace(permissionCode))
+            return false;
+        return check_login_cl.CheckQuyen(db, taiKhoan.Trim(), permissionCode.Trim());
+    }
+
+    private string ResolveNonRootLandingUrl(string taiKhoan)
+    {
+        if (string.IsNullOrWhiteSpace(taiKhoan))
+            return "/admin/login.aspx";
+
+        using (dbDataContext db = new dbDataContext())
+        {
+            bool canManageAdminAccounts = HasPermissionCode(db, taiKhoan, PermissionManageAdminAccounts);
+            bool legacyGeneral = HasPermissionCode(db, taiKhoan, PermissionLegacyGeneralAdmin);
+            bool canLegacyTransfer = PermissionProfile_cl.LegacyTieuDungPermissions.Any(code => HasPermissionCode(db, taiKhoan, code));
+            bool canTieuDung = HasPermissionCode(db, taiKhoan, PermissionProfile_cl.HoSoTieuDung);
+            bool canUuDai = HasPermissionCode(db, taiKhoan, PermissionProfile_cl.HoSoUuDai);
+            bool canLaoDong = HasPermissionCode(db, taiKhoan, PermissionProfile_cl.HoSoLaoDong);
+            bool canGanKet = HasPermissionCode(db, taiKhoan, PermissionProfile_cl.HoSoGanKet);
+            bool canShopOnly = HasPermissionCode(db, taiKhoan, PermissionProfile_cl.HoSoShopOnly);
+            bool canHomeContent = HasPermissionCode(db, taiKhoan, PermissionHomeContent);
+
+            bool canApproveHanhVi = canUuDai || canLaoDong || canGanKet;
+            // Quyền nội dung (q3_1) không được mở nhóm/tabs quản lý tài khoản home.
+            bool canHomeAccount = canTieuDung || canApproveHanhVi;
+            bool canTransferHistory = canLegacyTransfer || canTieuDung;
+
+            if (canManageAdminAccounts)
+                return "/admin/quan-ly-tai-khoan/Default.aspx?scope=admin";
+            if (legacyGeneral || canTransferHistory)
+                return "/admin/lich-su-chuyen-diem/default.aspx";
+            if (legacyGeneral || canHomeAccount)
+                return "/admin/quan-ly-tai-khoan/Default.aspx?scope=home";
+            if (legacyGeneral || canApproveHanhVi)
+                return "/admin/duyet-yeu-cau-len-cap.aspx";
+            if (legacyGeneral || canTieuDung)
+                return "/admin/phat-hanh-the.aspx";
+            if (legacyGeneral || canShopOnly)
+                return "/admin/quan-ly-tai-khoan/Default.aspx?scope=shop";
+            if (legacyGeneral || canHomeContent)
+                return "/admin/quan-ly-menu/default.aspx";
+        }
+
+        return "/admin/lich-su-chuyen-diem/default.aspx";
+    }
+
+    private void RedirectTo(string url)
+    {
+        Response.Redirect(url, false);
+        Context.ApplicationInstance.CompleteRequest();
+    }
+
     protected void Page_Load(object sender, EventArgs e)
     {
         if (!IsPostBack)
         {
             Session["url_back"] = HttpContext.Current.Request.Url.AbsoluteUri.ToLower();
             check_login_cl.check_login_admin("none", "none");
+
+            string taiKhoanMaHoa = Session["taikhoan"] as string;
+            string taiKhoan = string.IsNullOrEmpty(taiKhoanMaHoa) ? "" : mahoa_cl.giaima_Bcorn(taiKhoanMaHoa);
+            if (!PermissionProfile_cl.IsRootAdmin(taiKhoan))
+            {
+                RedirectTo(ResolveNonRootLandingUrl(taiKhoan));
+                return;
+            }
 
             if (Session["title"] != null)
                 ViewState["title"] = Session["title"].ToString();
@@ -54,7 +121,7 @@ public partial class admin_Default : System.Web.UI.Page
         catch (Exception ex)
         {
             SafeLog(ex);
-            lb_bridge_status_note.Text = "Không đọc được dữ liệu bridge: " + ex.Message;
+            lb_bridge_status_note.Text = "Khong doc duoc du lieu bridge: " + ex.Message;
         }
     }
 
@@ -64,7 +131,7 @@ public partial class admin_Default : System.Web.UI.Page
         lb_bridge_treasury_account.Text = treasuryAccount;
         lb_bridge_deposit_address.Text = (USDTBridgeConfig_cl.DepositAddress ?? "").Trim();
         lb_bridge_token_contract.Text = (USDTBridgeConfig_cl.TokenContract ?? "").Trim();
-        lb_bridge_enabled.Text = USDTBridgeConfig_cl.Enabled ? "Bật" : "Tắt";
+        lb_bridge_enabled.Text = USDTBridgeConfig_cl.Enabled ? "Bat" : "Tat";
         lb_bridge_point_rate.Text = USDTBridgeConfig_cl.PointRatePerToken.ToString("#,##0.######");
         lb_bridge_min_confirmations.Text = USDTBridgeConfig_cl.MinConfirmations.ToString("#,##0");
 
@@ -76,6 +143,10 @@ public partial class admin_Default : System.Web.UI.Page
         lb_bridge_status_note.Text = "";
         RepeaterBridge.DataSource = null;
         RepeaterBridge.DataBind();
+
+        txt_bridge_deposit_address.Text = lb_bridge_deposit_address.Text;
+        txt_bridge_token_contract.Text = lb_bridge_token_contract.Text;
+        txt_bridge_treasury_account.Text = treasuryAccount;
 
         BridgeWatcherBalanceView watcherBalance = ReadBridgeWatcherBalance();
         using (dbDataContext db = new dbDataContext())
@@ -90,9 +161,9 @@ public partial class admin_Default : System.Web.UI.Page
             }
             else
             {
-                lb_bridge_treasury_name.Text = "(Không tìm thấy tài khoản tổng)";
+                lb_bridge_treasury_name.Text = "(Khong tim thay tai khoan tong)";
                 lb_bridge_points_db.Text = "0";
-                AppendBridgeStatusNote("Không tìm thấy tài khoản tổng để đối chiếu điểm nội bộ.");
+                AppendBridgeStatusNote("Khong tim thay tai khoan tong de doi chieu diem noi bo.");
             }
 
             if (watcherBalance.HasBalance)
@@ -111,7 +182,7 @@ public partial class admin_Default : System.Web.UI.Page
                 if (treasury != null && Math.Abs(chainPoints - dbPoints) >= 0.01m)
                 {
                     AppendBridgeStatusNote(
-                        "Điểm DB chưa khớp số dư blockchain. "
+                        "Diem DB chua khop so du blockchain. "
                         + "Blockchain="
                         + chainPoints.ToString("#,##0.##")
                         + ", DB="
@@ -175,14 +246,14 @@ public partial class admin_Default : System.Web.UI.Page
                 RepeaterBridge.DataBind();
 
                 if (viewRows.Count == 0)
-                    AppendBridgeStatusNote("Chưa có giao dịch bridge nào.");
+                    AppendBridgeStatusNote("Chua co giao dich bridge nao.");
             }
             catch (SqlException ex)
             {
                 if (ex.Number == 208)
-                    AppendBridgeStatusNote("Chưa có bảng bridge. Hãy chạy scripts/sql/create-usdt-point-bridge.sql trước.");
+                    AppendBridgeStatusNote("Chua co bang bridge. Hay chay scripts/sql/create-usdt-point-bridge.sql truoc.");
                 else
-                    AppendBridgeStatusNote("Không đọc được lịch sử bridge: " + ex.Message);
+                    AppendBridgeStatusNote("Khong doc duoc lich su bridge: " + ex.Message);
             }
         }
     }
@@ -233,6 +304,135 @@ public partial class admin_Default : System.Web.UI.Page
         lb_bridge_status_note.Text = lb_bridge_status_note.Text.Trim() + " | " + clean;
     }
 
+    protected void but_save_bridge_config_Click(object sender, EventArgs e)
+    {
+        lb_bridge_config_notice.Text = "";
+        lb_bridge_config_notice.CssClass = "";
+
+        string depositAddress = (txt_bridge_deposit_address.Text ?? "").Trim();
+        string tokenContract = (txt_bridge_token_contract.Text ?? "").Trim();
+        string treasuryAccount = (txt_bridge_treasury_account.Text ?? "").Trim();
+
+        List<string> errors = new List<string>();
+        if (!IsHexAddress(depositAddress))
+            errors.Add("Ví BSC theo dõi không hợp lệ. Định dạng: 0x + 40 ký tự hex.");
+        if (!IsHexAddress(tokenContract))
+            errors.Add("Token contract không hợp lệ. Định dạng: 0x + 40 ký tự hex.");
+        if (string.IsNullOrWhiteSpace(treasuryAccount))
+            errors.Add("Tài khoản ví tổng không được để trống.");
+
+        if (errors.Count > 0)
+        {
+            lb_bridge_config_notice.CssClass = "bridge-config-error";
+            lb_bridge_config_notice.Text = string.Join("<br/>", errors);
+            return;
+        }
+
+        try
+        {
+            UpdateBridgeEnv(depositAddress, tokenContract);
+            UpdateBridgeWebConfig(depositAddress, tokenContract, treasuryAccount);
+
+            lb_bridge_config_notice.CssClass = "bridge-config-success";
+            lb_bridge_config_notice.Text = "Đã lưu cấu hình. Cần khởi động lại watcher để áp dụng ví/token mới.";
+
+            LoadBridgeSummary();
+        }
+        catch (Exception ex)
+        {
+            SafeLog(ex);
+            lb_bridge_config_notice.CssClass = "bridge-config-error";
+            lb_bridge_config_notice.Text = "Không lưu được cấu hình: " + ex.Message;
+        }
+    }
+
+    private static bool IsHexAddress(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value.Length != 42)
+            return false;
+        if (!value.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+            return false;
+        for (int i = 2; i < value.Length; i++)
+        {
+            char c = value[i];
+            bool isHex = (c >= '0' && c <= '9')
+                || (c >= 'a' && c <= 'f')
+                || (c >= 'A' && c <= 'F');
+            if (!isHex)
+                return false;
+        }
+        return true;
+    }
+
+    private void UpdateBridgeEnv(string depositAddress, string tokenContract)
+    {
+        string envPath = Server.MapPath(BridgeWatcherEnvRelativePath);
+        if (string.IsNullOrWhiteSpace(envPath) || !File.Exists(envPath))
+            return;
+
+        List<string> lines = File.ReadAllLines(envPath).ToList();
+        bool updatedDeposit = false;
+        bool updatedToken = false;
+
+        for (int i = 0; i < lines.Count; i++)
+        {
+            string line = lines[i];
+            if (line.StartsWith("BSC_DEPOSIT_ADDRESS=", StringComparison.OrdinalIgnoreCase))
+            {
+                lines[i] = "BSC_DEPOSIT_ADDRESS=" + depositAddress;
+                updatedDeposit = true;
+            }
+            else if (line.StartsWith("BSC_TOKEN_CONTRACT=", StringComparison.OrdinalIgnoreCase))
+            {
+                lines[i] = "BSC_TOKEN_CONTRACT=" + tokenContract;
+                updatedToken = true;
+            }
+        }
+
+        if (!updatedDeposit)
+            lines.Add("BSC_DEPOSIT_ADDRESS=" + depositAddress);
+        if (!updatedToken)
+            lines.Add("BSC_TOKEN_CONTRACT=" + tokenContract);
+
+        File.WriteAllLines(envPath, lines);
+    }
+
+    private void UpdateBridgeWebConfig(string depositAddress, string tokenContract, string treasuryAccount)
+    {
+        string configPath = Server.MapPath("~/Web.config");
+        if (string.IsNullOrWhiteSpace(configPath) || !File.Exists(configPath))
+            throw new InvalidOperationException("Khong tim thay Web.config.");
+
+        string content = File.ReadAllText(configPath);
+        content = ReplaceAppSetting(content, "USDTBridge.DepositAddress", depositAddress);
+        content = ReplaceAppSetting(content, "USDTBridge.TokenContract", tokenContract);
+        content = ReplaceAppSetting(content, "USDTBridge.TreasuryAccount", treasuryAccount);
+        File.WriteAllText(configPath, content);
+    }
+
+    private static string ReplaceAppSetting(string content, string key, string value)
+    {
+        string pattern = "(<add\\s+key=\\\"" + Regex.Escape(key) + "\\\"\\s+value=\\\")[^\\\"]*(\\\"\\s*/?>)";
+        Regex regex = new Regex(pattern, RegexOptions.IgnoreCase);
+        if (!regex.IsMatch(content))
+            throw new InvalidOperationException("Thieu key trong Web.config: " + key);
+
+        string safeValue = EscapeXmlAttr(value);
+        return regex.Replace(content, "$1" + safeValue + "$2", 1);
+    }
+
+    private static string EscapeXmlAttr(string value)
+    {
+        if (value == null)
+            return "";
+        return value
+            .Replace("&", "&amp;")
+            .Replace("\"", "&quot;")
+            .Replace("<", "&lt;")
+            .Replace(">", "&gt;")
+            .Replace("'", "&apos;");
+    }
+
     private BridgeWatcherBalanceView ReadBridgeWatcherBalance()
     {
         BridgeWatcherBalanceView result = new BridgeWatcherBalanceView
@@ -249,20 +449,20 @@ public partial class admin_Default : System.Web.UI.Page
             string statePath = Server.MapPath(BridgeWatcherStateRelativePath);
             if (string.IsNullOrWhiteSpace(statePath))
             {
-                result.Note = "Không xác định được đường dẫn file state watcher.";
+                result.Note = "Khong xac dinh duoc duong dan file state watcher.";
                 return result;
             }
 
             if (!File.Exists(statePath))
             {
-                result.Note = "Chưa có state watcher. Hãy chạy scripts/usdt_bridge_watcher.py để khởi tạo.";
+                result.Note = "Khong co state watcher tren host (watcher co the dang chay may khac). Dang hien thi diem theo DB.";
                 return result;
             }
 
             string json = File.ReadAllText(statePath);
             if (string.IsNullOrWhiteSpace(json))
             {
-                result.Note = "File state watcher đang rỗng.";
+                result.Note = "File state watcher dang rong.";
                 return result;
             }
 
@@ -270,21 +470,21 @@ public partial class admin_Default : System.Web.UI.Page
             Dictionary<string, object> state = serializer.DeserializeObject(json) as Dictionary<string, object>;
             if (state == null)
             {
-                result.Note = "State watcher sai định dạng JSON.";
+                result.Note = "State watcher sai dinh dang JSON.";
                 return result;
             }
 
             string rawBalanceText = GetStateString(state, "last_confirmed_balance_raw");
             if (string.IsNullOrWhiteSpace(rawBalanceText))
             {
-                result.Note = "Watcher chưa có số dư baseline trên blockchain.";
+                result.Note = "Watcher chua co so du baseline tren blockchain.";
                 return result;
             }
 
             decimal rawBalance;
             if (!decimal.TryParse(rawBalanceText, NumberStyles.Integer, CultureInfo.InvariantCulture, out rawBalance) || rawBalance < 0m)
             {
-                result.Note = "Không đọc được last_confirmed_balance_raw từ state watcher.";
+                result.Note = "Khong doc duoc last_confirmed_balance_raw tu state watcher.";
                 return result;
             }
 
@@ -301,7 +501,7 @@ public partial class admin_Default : System.Web.UI.Page
         }
         catch (Exception ex)
         {
-            result.Note = "Không đọc được state watcher: " + ex.Message;
+            result.Note = "Khong doc duoc state watcher: " + ex.Message;
             return result;
         }
     }

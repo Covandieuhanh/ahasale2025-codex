@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ENV_FILE="$ROOT_DIR/scripts/usdt_bridge.env"
 WEB_CONFIG="$ROOT_DIR/Web.config"
+DEFAULT_BRIDGE_API_URL="http://localhost:8081/admin/api/usdt-bridge-credit.aspx"
 
 DEFAULT_TOKEN_CONTRACT="0x55d398326f99059ff775485246999027b3197955"
 DEFAULT_CHAIN_ID="56"
@@ -18,6 +19,7 @@ etherscan_api_key=""
 bridge_api_key=""
 bridge_signing_secret=""
 treasury_account=""
+bridge_api_url="$DEFAULT_BRIDGE_API_URL"
 point_rate="$DEFAULT_POINT_RATE"
 min_confirmations="$DEFAULT_MIN_CONFIRMATIONS"
 token_contract="$DEFAULT_TOKEN_CONTRACT"
@@ -35,6 +37,7 @@ Usage:
     [--rpc-url https://bsc-dataseed.binance.org] \
     [--bridge-api-key INTERNAL_KEY] \
     [--bridge-signing-secret INTERNAL_SECRET] \
+    [--bridge-api-url https://ahasale.vn/admin/api/usdt-bridge-credit.aspx] \
     [--treasury-account ACCOUNT] \
     [--point-rate 1000] \
     [--min-confirmations 20] \
@@ -57,13 +60,23 @@ escape_regex() {
   printf '%s' "$1" | sed -e 's/[][(){}.^$*+?|\/]/\\&/g'
 }
 
+sed_inplace_extended() {
+  local expression="$1"
+  local file="$2"
+  if sed --version >/dev/null 2>&1; then
+    sed -i -E "$expression" "$file"
+  else
+    sed -i '' -E "$expression" "$file"
+  fi
+}
+
 set_env_value() {
   local key="$1"
   local value="$2"
   local escaped
   escaped="$(escape_sed_replacement "$value")"
   if grep -q "^${key}=" "$ENV_FILE"; then
-    sed -i '' -E "s|^${key}=.*$|${key}=${escaped}|" "$ENV_FILE"
+    sed_inplace_extended "s|^${key}=.*$|${key}=${escaped}|" "$ENV_FILE"
   else
     printf '\n%s=%s\n' "$key" "$value" >> "$ENV_FILE"
   fi
@@ -82,7 +95,7 @@ set_web_config_value() {
     exit 1
   fi
 
-  sed -i '' -E \
+  sed_inplace_extended \
     "s|(<add[[:space:]]+key=\"$key_regex\"[[:space:]]+value=\")[^\"]*(\"[[:space:]]*/>)|\\1${value_escaped}\\2|" \
     "$WEB_CONFIG"
 }
@@ -102,6 +115,8 @@ while [[ $# -gt 0 ]]; do
       bridge_api_key="${2:-}"; shift 2 ;;
     --bridge-signing-secret)
       bridge_signing_secret="${2:-}"; shift 2 ;;
+    --bridge-api-url)
+      bridge_api_url="${2:-}"; shift 2 ;;
     --treasury-account)
       treasury_account="${2:-}"; shift 2 ;;
     --point-rate)
@@ -165,6 +180,11 @@ if [[ -z "$deposit_address" ]]; then
   exit 1
 fi
 
+if [[ -z "$bridge_api_url" ]]; then
+  echo "Missing required value: bridge api url." >&2
+  exit 1
+fi
+
 if [[ "$chain_data_provider" == "etherscan" && -z "$etherscan_api_key" ]]; then
   echo "Missing required value: etherscan api key for etherscan provider." >&2
   exit 1
@@ -206,7 +226,7 @@ if ! [[ "$point_rate" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
 fi
 
 # Update watcher env
-set_env_value "USDT_BRIDGE_API_URL" "http://localhost:8081/admin/api/usdt-bridge-credit.aspx"
+set_env_value "USDT_BRIDGE_API_URL" "$bridge_api_url"
 set_env_value "USDT_BRIDGE_API_KEY" "$bridge_api_key"
 set_env_value "USDT_BRIDGE_SIGNING_SECRET" "$bridge_signing_secret"
 set_env_value "BSC_DEPOSIT_ADDRESS" "$deposit_address"
@@ -266,6 +286,7 @@ echo " - $WEB_CONFIG"
 echo "Bridge API key: $(mask "$bridge_api_key")"
 echo "Bridge signing secret: $(mask "$bridge_signing_secret")"
 echo "Deposit address: $deposit_address"
+echo "Bridge API URL: $bridge_api_url"
 echo "Data provider: $chain_data_provider"
 if [[ "$chain_data_provider" == "rpc" || "$chain_data_provider" == "rpc_logs" ]]; then
   echo "BSC RPC URL: $bsc_rpc_url"

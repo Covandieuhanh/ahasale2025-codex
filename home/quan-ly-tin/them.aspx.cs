@@ -9,6 +9,32 @@ public partial class home_quan_ly_bai_Them : System.Web.UI.Page
     private readonly DanhMuc_cl dm_cl = new DanhMuc_cl();
     private readonly String_cl str_cl = new String_cl();
 
+    private bool IsCurrentCompanyShopPortal()
+    {
+        using (dbDataContext db = new dbDataContext())
+        {
+            return CompanyShop_cl.IsCurrentPortalCompanyShop(db);
+        }
+    }
+
+    private void BindCompanyShopOptions(bool isCompanyShopPortal)
+    {
+        ph_company_shop_options.Visible = isCompanyShopPortal;
+
+        if (!isCompanyShopPortal)
+            return;
+
+        if (ddl_kenh_hienthi.Items.Count == 0)
+        {
+            ddl_kenh_hienthi.Items.Add(new ListItem("Công khai (hiển thị ngoài Home)", "public"));
+            ddl_kenh_hienthi.Items.Add(new ListItem("Nội bộ (chỉ shop công ty tự bán)", "internal"));
+        }
+
+        if (ddl_kenh_hienthi.Items.FindByValue("public") != null)
+            ddl_kenh_hienthi.SelectedValue = "public";
+        txt_phantram_san.Text = "0";
+    }
+
     private bool IsDuyetGianHangDoiTac()
     {
         string tkEnc = PortalRequest_cl.GetCurrentAccountEncrypted();
@@ -18,6 +44,10 @@ public partial class home_quan_ly_bai_Them : System.Web.UI.Page
         string tk = mahoa_cl.giaima_Bcorn(tkEnc);
         using (dbDataContext db = new dbDataContext())
         {
+            taikhoan_tb acc = db.taikhoan_tbs.FirstOrDefault(x => x.taikhoan == tk);
+            if (acc != null && PortalScope_cl.CanLoginShop(acc.taikhoan, acc.phanloai, acc.permission))
+                return true;
+
             return db.DangKy_GianHangDoiTac_tbs.Any(x => x.taikhoan == tk && x.TrangThai == 1);
         }
     }
@@ -37,6 +67,9 @@ public partial class home_quan_ly_bai_Them : System.Web.UI.Page
         Session["url_back_home"] = HttpContext.Current.Request.Url.AbsoluteUri.ToLower();
         check_login_cl.check_login_home("none", "none", true);
 
+        bool isCompanyShopPortal = IsCurrentCompanyShopPortal();
+        ph_company_shop_options.Visible = isCompanyShopPortal;
+
         if (!IsDuyetGianHangDoiTac())
         {
             Session["home_modal_msg"] = "Tính năng này chỉ dành cho tài khoản đã đăng ký gian hàng đối tác thành công.";
@@ -52,6 +85,7 @@ public partial class home_quan_ly_bai_Them : System.Web.UI.Page
             txt_phantram_uu_dai.Text = "0";
             LoadDanhMuc();
             LoadThanhPho();
+            BindCompanyShopOptions(isCompanyShopPortal);
         }
     }
 
@@ -78,7 +112,6 @@ public partial class home_quan_ly_bai_Them : System.Web.UI.Page
     {
         check_login_cl.check_login_home("none", "none", true);
 
-        string phanloaiBaiViet = "sanpham";
         if (!Directory.Exists(Server.MapPath("~/uploads/img-handler/")))
             Directory.CreateDirectory(Server.MapPath("~/uploads/img-handler/"));
 
@@ -96,6 +129,12 @@ public partial class home_quan_ly_bai_Them : System.Web.UI.Page
         int phanTramUuDai = 0;
         int.TryParse((txt_phantram_uu_dai.Text ?? "").Trim(), out phanTramUuDai);
         if (phanTramUuDai < 0) phanTramUuDai = 0;
+
+        int phanTramChoSan = 0;
+        int.TryParse((txt_phantram_san.Text ?? "").Trim(), out phanTramChoSan);
+        phanTramChoSan = CompanyShop_cl.ClampPlatformSharePercent(phanTramChoSan);
+
+        string selectedProductType = (ddl_kenh_hienthi.SelectedValue ?? "").Trim();
 
         string nguoiTao = PortalRequest_cl.GetCurrentAccount();
         if (idMenu == "")
@@ -131,6 +170,9 @@ public partial class home_quan_ly_bai_Them : System.Web.UI.Page
 
         using (dbDataContext db = new dbDataContext())
         {
+            bool isCompanyShop = CompanyShop_cl.IsCompanyShopAccount(db, nguoiTao);
+            string phanloaiBaiViet = CompanyShop_cl.NormalizeProductType(selectedProductType, isCompanyShop);
+
             var qDanhMuc = db.DanhMuc_tbs.FirstOrDefault(p => p.id.ToString() == idMenu);
             if (qDanhMuc == null)
             {
@@ -162,6 +204,7 @@ public partial class home_quan_ly_bai_Them : System.Web.UI.Page
             ob.ThanhPho = thanhPho;
             ob.LinkMap = linkMap;
             ob.PhanTram_GiamGia_ThanhToan_BangEvoucher = phanTramUuDai;
+            CompanyShop_cl.SetPlatformSharePercent(ob, isCompanyShop ? phanTramChoSan : 0);
             db.BaiViet_tbs.InsertOnSubmit(ob);
             db.SubmitChanges();
 

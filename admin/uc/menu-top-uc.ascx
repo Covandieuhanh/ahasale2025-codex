@@ -77,11 +77,11 @@
         <asp:Panel ID="pn_doimatkhau" runat="server" Visible="false" DefaultButton="but_doimatkhau">
             <div style="position: fixed; width: 100%; height: 52px; background-color: none; top: 0; left: 0; z-index: 1041!important;">
                 <div style='top: 0; left: 0px; margin: 0 auto; max-width: 440px; opacity: 1;'>
-                    <div style='position: absolute; right: 18px; top: 14px; z-index: 1040!important'>
-                        <a href='#' class='fg-white d-inline' id="A5" runat="server" onserverclick="but_close_doimatkhau_Click" title='Đóng'>
-                            <span class='mif mif-cross mif-2x fg-red fg-lightRed-hover'></span>
-                        </a>
-                    </div>
+                            <div style='position: absolute; right: 18px; top: 14px; z-index: 1040!important'>
+                                <asp:LinkButton ID="but_close_doimatkhau" runat="server" CssClass="fg-white d-inline" CausesValidation="false" OnClick="but_close_doimatkhau_Click" ToolTip="Đóng">
+                                    <span class='mif mif-cross mif-2x fg-red fg-lightRed-hover'></span>
+                                </asp:LinkButton>
+                            </div>
                     <div class="bg-white pl-4 pl-8-md pr-8-md pr-4" style="height: 52px;">
                         <div class="pt-4 text-upper text-bold">
                             Đổi mật khẩu
@@ -95,15 +95,30 @@
                     <div class="bg-white border bd-transparent pl-4 pl-8-md pr-8-md pr-4" style="padding-top: 52px">
                         <div class="mt-3 ">
                             <div class="fw-600">Mật khẩu hiện tại</div>
-                            <asp:TextBox ID="TextBox1" runat="server" data-role="input" TextMode="Password"></asp:TextBox>
+                            <div class="aha-password-field">
+                                <asp:TextBox ID="TextBox1" runat="server" data-role="input" TextMode="Password"></asp:TextBox>
+                                <button type="button" class="aha-password-toggle js-toggle-password" aria-label="Hiện mật khẩu hiện tại">
+                                    <span class="aha-password-toggle-label">Hiện</span>
+                                </button>
+                            </div>
                         </div>
                         <div class="mt-3 ">
                             <div class="fw-600">Mật khẩu mới</div>
-                            <asp:TextBox ID="TextBox2" runat="server" data-role="input" TextMode="Password"></asp:TextBox>
+                            <div class="aha-password-field">
+                                <asp:TextBox ID="TextBox2" runat="server" data-role="input" TextMode="Password"></asp:TextBox>
+                                <button type="button" class="aha-password-toggle js-toggle-password" aria-label="Hiện mật khẩu mới">
+                                    <span class="aha-password-toggle-label">Hiện</span>
+                                </button>
+                            </div>
                         </div>
                         <div class="mt-3 ">
                             <div class="fw-600">Nhập lại mật khẩu mới</div>
-                            <asp:TextBox ID="TextBox3" runat="server" data-role="input" TextMode="Password"></asp:TextBox>
+                            <div class="aha-password-field">
+                                <asp:TextBox ID="TextBox3" runat="server" data-role="input" TextMode="Password"></asp:TextBox>
+                                <button type="button" class="aha-password-toggle js-toggle-password" aria-label="Hiện xác nhận mật khẩu mới">
+                                    <span class="aha-password-toggle-label">Hiện</span>
+                                </button>
+                            </div>
                         </div>
                         <div class="mt-3 ">
                             <div class="fw-600 fg-red"><i>Bạn sẽ phải đăng nhập lại sau khi đổi mật khẩu.</i></div>
@@ -133,9 +148,8 @@
 
     <a href="#" class="app-bar-item d-block d-none-lg" id="paneToggle"><span class="mif-menu"></span></a>
 
-    <a class="app-bar-item no-hover d-block-xl d-none"><span style="width: 250px" class="d-block-xl d-none"></span></a>
-    <a class="app-bar-item fg-white" href="/admin/default.aspx"><span class="mif mif-home"></span></a>
-    <a class="app-bar-item fg-white d-block-lg d-none fw-600" style="z-index: 10!important" href="/admin/default.aspx"><%=ViewState["title"] %></a>
+    <a class="app-bar-item fg-white admin-topbar-home" href="<%=GetAdminHomeUrl() %>"><span class="mif mif-home"></span></a>
+    <a class="app-bar-item fg-white d-block-lg d-none fw-600 admin-topbar-title" style="z-index: 10!important" href="<%=GetAdminHomeUrl() %>"><%=ViewState["title"] %></a>
     <a class="app-bar-item d-block-lg d-none" href="#" id="admin-ui-density-toggle" title="Thu gọn menu">
         <span class="mif mif-list"></span>
     </a>
@@ -149,7 +163,6 @@
                         <asp:Label ID="lb_sl_thongbao" runat="server" Text="0"></asp:Label>
                     </span>
                 </asp:LinkButton>
-                <asp:Timer ID="Timer1" runat="server" Interval="5000" OnTick="Timer1_Tick"></asp:Timer>
             </ContentTemplate>
         </asp:UpdatePanel>
 
@@ -165,77 +178,125 @@
                     <div class="admin-shop-menu-sub"><%=ViewState["phanloai"] %> • <%=ViewState["taikhoan"] %></div>
                 </div>
                 <div class="admin-shop-menu-body">
+                    <% if (ShowMenuDashboard()) { %>
                     <div class="admin-shop-menu-group-title">Trang chính</div>
                     <a class='admin-shop-menu-item <%= MenuActive("/admin/default.aspx") %>' href="/admin/default.aspx">
                         <span>Trang chủ admin</span>
                         <span class="admin-shop-menu-badge">Dashboard</span>
                     </a>
+                    <% } %>
 
+                    <% if (ShowMenuGroupAdmin()) { %>
                     <div class="admin-shop-menu-group-title">Quản lý admin</div>
-                    <a class='admin-shop-menu-item <%= MenuActiveTaiKhoanScope("admin") %>' href="/admin/quan-ly-tai-khoan/default.aspx?scope=admin">
+                    <% if (ShowMenuAdminAccount()) { %>
+                    <a class='admin-shop-menu-item <%= MenuActiveTaiKhoanScope("admin") %>' href="/admin/quan-ly-tai-khoan/Default.aspx?scope=admin">
                         <span>Quản lý tài khoản admin</span>
                     </a>
+                    <% } %>
+                    <% if (ShowMenuOtp()) { %>
+                    <a class='admin-shop-menu-item <%= MenuActive("/admin/otp/default.aspx") %>' href="/admin/otp/default.aspx?scope=home">
+                        <span>Quản lý OTP</span>
+                    </a>
+                    <% } %>
+                    <% if (ShowMenuTransferHistory()) { %>
                     <a class='admin-shop-menu-item <%= MenuActive("/admin/lich-su-chuyen-diem/default.aspx") %>' href="/admin/lich-su-chuyen-diem/default.aspx">
                         <span>Lịch sử chuyển điểm</span>
                         <span class="admin-shop-menu-badge"><%=ViewState["DongA"] %></span>
                     </a>
+                    <% } %>
+                    <% } %>
 
+                    <% if (ShowMenuGroupHome()) { %>
                     <div class="admin-shop-menu-group-title">Quản lý home</div>
-                    <a class='admin-shop-menu-item <%= MenuActiveTaiKhoanScope("home") %>' href="/admin/quan-ly-tai-khoan/default.aspx?scope=home">
+                    <% if (ShowMenuHomeAccount()) { %>
+                    <a class='admin-shop-menu-item <%= MenuActiveTaiKhoanScope("home") %>' href="/admin/quan-ly-tai-khoan/Default.aspx?scope=home">
                         <span>Quản lý tài khoản home</span>
                     </a>
+                    <% } %>
+                    <% if (ShowMenuApproveHanhVi()) { %>
                     <a class='admin-shop-menu-item <%= MenuActive("/admin/duyet-yeu-cau-len-cap.aspx") %>' href="/admin/duyet-yeu-cau-len-cap.aspx">
-                        <span>Duyệt yêu cầu lên cấp</span>
+                        <span>Duyệt yêu cầu xác nhận hành vi</span>
                     </a>
+                    <% } %>
+                    <% if (ShowMenuIssueCard()) { %>
                     <a class='admin-shop-menu-item <%= MenuActive("/admin/phat-hanh-the.aspx") %>' href="/admin/phat-hanh-the.aspx">
                         <span>Phát hành thẻ</span>
                     </a>
+                    <% } %>
+                    <% if (ShowMenuTierDescription()) { %>
                     <a class='admin-shop-menu-item <%= MenuActive("/admin/motacapbac.aspx", "/admin/MoTaCapBac.aspx") %>' href="/admin/MoTaCapBac.aspx">
                         <span>Mô tả cấp bậc</span>
                     </a>
+                    <% } %>
+                    <% if (ShowMenuSellProduct()) { %>
                     <a class='admin-shop-menu-item <%= MenuActive("/admin/he-thong-san-pham/ban-san-pham.aspx") %>' href="/admin/he-thong-san-pham/ban-san-pham.aspx">
                         <span>Bán sản phẩm</span>
                     </a>
+                    <% } %>
+                    <% } %>
 
+                    <% if (ShowMenuGroupShop()) { %>
                     <div class="admin-shop-menu-group-title">Quản lý shop</div>
-                    <a class='admin-shop-menu-item <%= MenuActiveTaiKhoanScope("shop") %>' href="/admin/quan-ly-tai-khoan/default.aspx?scope=shop">
+                    <% if (ShowMenuShopAccount()) { %>
+                    <a class='admin-shop-menu-item <%= MenuActiveTaiKhoanScope("shop") %>' href="/admin/quan-ly-tai-khoan/Default.aspx?scope=shop">
                         <span>Quản lý tài khoản shop</span>
                     </a>
+                    <% } %>
+                    <% if (ShowMenuShopApprove()) { %>
                     <a class='admin-shop-menu-item <%= MenuActive("/admin/duyet-gian-hang-doi-tac.aspx") %>' href="/admin/duyet-gian-hang-doi-tac.aspx">
                         <span>Duyệt gian hàng đối tác</span>
                     </a>
+                    <% } %>
+                    <% } %>
 
+                    <% if (ShowMenuGroupContent()) { %>
                     <div class="admin-shop-menu-group-title">Quản lý nội dung</div>
+                    <% if (ShowMenuHomeContent()) { %>
                     <a class='admin-shop-menu-item <%= MenuActive("/admin/cai-dat-trang-chu/default.aspx") %>' href="/admin/cai-dat-trang-chu/default.aspx">
                         <span>Cài đặt trang chủ</span>
                     </a>
+                    <% } %>
+                    <% if (ShowMenuHomeTextContent()) { %>
+                    <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-noi-dung-home/default.aspx") %>' href="/admin/quan-ly-noi-dung-home/default.aspx">
+                        <span>Nội dung trang chủ Home</span>
+                    </a>
+                    <% } %>
+                    <% if (ShowMenuContentMenu()) { %>
                     <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-menu/default.aspx") %>' href="/admin/quan-ly-menu/default.aspx">
                         <span>Quản lý menu</span>
                     </a>
+                    <% } %>
+                    <% if (ShowMenuContentBaiViet()) { %>
                     <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-bai-viet/default.aspx", "/admin/quan-ly-bai-viet/in.aspx") %>' href="/admin/quan-ly-bai-viet/default.aspx">
                         <span>Quản lý bài viết</span>
                     </a>
+                    <% } %>
+                    <% if (ShowMenuContentBanner()) { %>
                     <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-banner/default.aspx") %>' href="/admin/quan-ly-banner/default.aspx">
                         <span>Quản lý banner</span>
                     </a>
+                    <% } %>
+                    <% if (ShowMenuContentGopY()) { %>
                     <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-gop-y/default.aspx") %>' href="/admin/quan-ly-gop-y/default.aspx">
                         <span>Quản lý góp ý</span>
                     </a>
+                    <% } %>
+                    <% if (ShowMenuContentThongBao()) { %>
                     <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-thong-bao/default.aspx", "/admin/quan-ly-thong-bao/in.aspx") %>' href="/admin/quan-ly-thong-bao/default.aspx">
                         <span>Quản lý thông báo</span>
                     </a>
+                    <% } %>
+                    <% if (ShowMenuContentTuVan()) { %>
                     <a class='admin-shop-menu-item <%= MenuActive("/admin/yeu-cau-tu-van/default.aspx") %>' href="/admin/yeu-cau-tu-van/default.aspx">
                         <span>Yêu cầu tư vấn</span>
                     </a>
+                    <% } %>
+                    <% } %>
                 </div>
-                <asp:UpdatePanel ID="UpdatePanel3" runat="server" UpdateMode="Conditional">
-                    <ContentTemplate>
-                        <div class="admin-shop-menu-footer">
-                            <asp:LinkButton ID="but_show_form_doimatkhau" OnClick="but_show_form_doimatkhau_Click" runat="server" CssClass="admin-shop-btn admin-shop-btn-light">Đổi mật khẩu</asp:LinkButton>
-                            <asp:Button ID="but_dangxuat" runat="server" Text="Đăng xuất" CssClass="admin-shop-btn admin-shop-btn-danger" OnClick="but_dangxuat_Click" />
-                        </div>
-                    </ContentTemplate>
-                </asp:UpdatePanel>
+                <div class="admin-shop-menu-footer">
+                    <asp:LinkButton ID="but_show_form_doimatkhau" runat="server" CssClass="admin-shop-btn admin-shop-btn-light" CausesValidation="false" OnClick="but_show_form_doimatkhau_Click">Đổi mật khẩu</asp:LinkButton>
+                    <asp:LinkButton ID="but_dangxuat" runat="server" CssClass="admin-shop-btn admin-shop-btn-danger" OnClick="but_dangxuat_Click">Đăng xuất</asp:LinkButton>
+                </div>
             </div>
         </div>
     </div>

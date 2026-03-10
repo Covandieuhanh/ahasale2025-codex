@@ -52,55 +52,55 @@ public partial class admin_Default2 : System.Web.UI.Page
 
                     if (q != null)
                     {
-                        string baseUrl = $"{Request.Url.Scheme}://{Request.Url.Authority}";
+                        string baseUrl = string.Format("{0}://{1}", Request.Url.Scheme, Request.Url.Authority);
 
-                        string iconUrl = $"{baseUrl}{q.thongtin_icon}";
-                        string appleTouchIconUrl = $"{baseUrl}{q.thongtin_apple_touch_icon}";
+                        string iconUrl = string.Format("{0}{1}", baseUrl, q.thongtin_icon);
+                        string appleTouchIconUrl = string.Format("{0}{1}", baseUrl, q.thongtin_apple_touch_icon);
 
-                        string iconsHtml = $@"
+                        string iconsHtml = string.Format(@"
                 <!-- Favicon -->
-                <link rel='icon' href='{iconUrl}' sizes='16x16' type='image/x-icon'>
-                <link rel='icon' href='{iconUrl}' sizes='32x32' type='image/x-icon'>
-                <link rel='icon' href='{iconUrl}' sizes='48x48' type='image/x-icon'>
+                <link rel='icon' href='{0}' sizes='16x16' type='image/x-icon'>
+                <link rel='icon' href='{1}' sizes='32x32' type='image/x-icon'>
+                <link rel='icon' href='{2}' sizes='48x48' type='image/x-icon'>
 
                 <!-- Apple Touch Icon -->
-                <link rel='apple-touch-icon' href='{appleTouchIconUrl}' sizes='180x180'>
-                <link rel='apple-touch-icon' href='{appleTouchIconUrl}' sizes='167x167'>
-                <link rel='apple-touch-icon' href='{appleTouchIconUrl}' sizes='152x152'>
-                <link rel='apple-touch-icon' href='{appleTouchIconUrl}' sizes='120x120'>
+                <link rel='apple-touch-icon' href='{3}' sizes='180x180'>
+                <link rel='apple-touch-icon' href='{4}' sizes='167x167'>
+                <link rel='apple-touch-icon' href='{5}' sizes='152x152'>
+                <link rel='apple-touch-icon' href='{6}' sizes='120x120'>
 
                 <!-- Android Icons -->
-                <link rel='icon' href='{iconUrl}' sizes='192x192'>
-                <link rel='icon' href='{iconUrl}' sizes='144x144'>
-                ";
+                <link rel='icon' href='{7}' sizes='192x192'>
+                <link rel='icon' href='{8}' sizes='144x144'>
+                ", iconUrl, iconUrl, iconUrl, appleTouchIconUrl, appleTouchIconUrl, appleTouchIconUrl, appleTouchIconUrl, iconUrl, iconUrl);
 
                         string title = q.lienket_chiase_title;
                         string description = q.lienket_chiase_description;
                         string imageRelativePath = q.lienket_chiase_image;
 
                         // Tạo URL tuyệt đối cho hình ảnh
-                        string imageUrl = $"{Request.Url.Scheme}://{Request.Url.Authority}{imageRelativePath}";
+                        string imageUrl = string.Format("{0}://{1}{2}", Request.Url.Scheme, Request.Url.Authority, imageRelativePath);
 
-                        string metaTags = $@"
+                        string metaTags = string.Format(@"
                     <!-- Title -->
-                    <title>{title}</title>
+                    <title>{0}</title>
 
                     <!-- Meta Description -->
-                    <meta name='description' content='{description}' />
+                    <meta name='description' content='{1}' />
 
                     <!-- Open Graph Meta Tags -->
-                    <meta property='og:title' content='{title}' />
-                    <meta property='og:description' content='{description}' />
-                    <meta property='og:image' content='{imageUrl}' />
+                    <meta property='og:title' content='{2}' />
+                    <meta property='og:description' content='{3}' />
+                    <meta property='og:image' content='{4}' />
                     <meta property='og:type' content='website' />
-                    <meta property='og:url' content='{Request.Url.AbsoluteUri}' />
+                    <meta property='og:url' content='{5}' />
 
                     <!-- Twitter Card Meta Tags -->
                     <meta name='twitter:card' content='summary_large_image' />
-                    <meta name='twitter:title' content='{title}' />
-                    <meta name='twitter:description' content='{description}' />
-                    <meta name='twitter:image' content='{imageUrl}' />
-                ";
+                    <meta name='twitter:title' content='{6}' />
+                    <meta name='twitter:description' content='{7}' />
+                    <meta name='twitter:image' content='{8}' />
+                ", title, description, title, description, imageUrl, Request.Url.AbsoluteUri, title, description, imageUrl);
                         //literal_fav_icon.Text = iconsHtml + metaTags;
                     }
 
@@ -249,7 +249,7 @@ public partial class admin_Default2 : System.Web.UI.Page
                             // Đặt thuộc tính Secure để chỉ cho phép truyền cookie qua kết nối an toàn
                             _ck.Secure = AccountAuth_cl.ShouldUseSecureCookie(Request);
                             //chỉ định tên miền mà cookie được áp dụng. Bằng cách này, cookie chỉ được gửi đến máy chủ từ tên miền đã chỉ định, các miền con sẽ đc áp dụng theo
-                            //_ck.Domain = "https://bcorn.net";//bị ảnh hưởng khi ở localhost
+                            //_ck.Domain = "https://ahasale.vn";//bị ảnh hưởng khi ở localhost
                             Response.Cookies.Add(_ck);
 
                             //lưu session
@@ -257,7 +257,7 @@ public partial class admin_Default2 : System.Web.UI.Page
                             Session["matkhau"] = _matkhau_mahoa;
                             Session["thongbao"] = thongbao_class.metro_notifi_onload("Thông báo", "Đăng nhập thành công.", "1000", "warning");
 
-                            string _url_back = Session["url_back"]?.ToString();
+                            string _url_back = Convert.ToString(Session["url_back"]);
 
                             if (!string.IsNullOrEmpty(_url_back))
                             {
@@ -341,7 +341,7 @@ public partial class admin_Default2 : System.Web.UI.Page
                 string _tieude = "Khôi phục mật khẩu";
 
                 string _ma = Guid.NewGuid().ToString().ToLower();
-                string _link_khoiphuc = $"{Request.Url.Scheme}://{Request.Url.Authority}{"/admin/khoi-phuc-mat-khau.aspx?code=" + _ma}";
+                string _link_khoiphuc = string.Format("{0}://{1}{2}", Request.Url.Scheme, Request.Url.Authority, "/admin/khoi-phuc-mat-khau.aspx?code=" + _ma);
                 DateTime _hsd = AhaTime_cl.Now.AddMinutes(5);
 
                 string _noidung = "<div style='color:red'>Ai đó đã yêu cầu đặt lại mật khẩu của bạn tại " + _tenmien + "</div>";

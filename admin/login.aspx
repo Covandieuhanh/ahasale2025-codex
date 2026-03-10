@@ -23,7 +23,7 @@
 
 <title></title>
 <meta name="description" content="Mô tả ngắn và hấp dẫn về nội dung của trang web của bạn." />
-<link rel="canonical" href="https://bcorn.net" />--%>
+<link rel="canonical" href="https://ahasale.vn" />--%>
 
 
     <%--Favicon & icon Mobile & meta--%>
@@ -31,13 +31,13 @@
 
     <%--css nguồn--%>
     <link href="/Metro-UI-CSS-master/css/metro-all.min.css" rel="stylesheet" />
-    <%--dành riêng cho trang login--%>
-    <link href="/css/login.css?v=2026-03-02.1" rel="stylesheet" />
-    <link href="/css/aha-ui-refresh.css?v=2026-03-02.1" rel="stylesheet" />
+    <link href="/assetscss/aha-ui-refresh.css?v=2026-03-06.1" rel="stylesheet" />
     <%--viết thêm dựa vào metro--%>
-    <link href="/css/bcorn-with-metro.css" rel="stylesheet" />
+    <link href="/assetscss/bcorn-with-metro.css" rel="stylesheet" />
     <%--sửa lại css metro theo ý mình--%>
-    <link href="/css/fix-metro.css" rel="stylesheet" />
+    <link href="/assetscss/fix-metro.css" rel="stylesheet" />
+    <%--dành riêng cho trang login (đặt sau cùng để ưu tiên hiển thị ổn định)--%>
+    <link href="/assetscss/login.css?v=2026-03-06.2" rel="stylesheet" />
     <!-- jquery nên để trước các js khác -->
     <%--<script src="/js/jquery-3.7.1.min.js"></script>--%>
     <style>
@@ -69,7 +69,7 @@
 
 
 </head>
-<body class="body-login-bcorn1">
+<body class="body-login-bcorn1 admin-login-page">
 
     <form id="form1" runat="server">
         <asp:ScriptManager ID="ScriptManager1" runat="server" EnableScriptGlobalization="True"></asp:ScriptManager>
@@ -138,34 +138,38 @@
                 </div>--%>
             </div>
 
-            <div style="margin: 0 auto; max-width: 360px; z-index: 0;" class="pl-4 pr-4 pl-0-md pr-0-md">
+            <div class="admin-login-shell pl-4 pr-4 pl-0-md pr-0-md">
                 <div>
                     <div class="text-center" style="padding-top: 30px; padding-bottom: 40px;">
                         <img src="/uploads/images/logo-aha-trang.png" width="100" />
                     </div>
 
-                    <div>
+                    <div class="admin-login-form-wrap">
                         <asp:UpdatePanel ID="UpdatePanel1" runat="server" UpdateMode="Conditional">
                             <ContentTemplate>
                                 <asp:Panel ID="Panel1" runat="server" DefaultButton="but_login">
-                                    <div class="mt-0">
-                                        <asp:TextBox MaxLength="50" ID="txt_user" runat="server" data-role="input" data-prepend="<span class='mif-user'>" placeholder="Tài khoản"></asp:TextBox><%--autocomplete="off" --%>
+                                    <div class="admin-login-input-group mt-0">
+                                        <span class="admin-login-input-icon mif-user"></span>
+                                        <asp:TextBox MaxLength="50" ID="txt_user" runat="server" CssClass="admin-login-input" placeholder="Tài khoản"></asp:TextBox><%--autocomplete="off" --%>
                                     </div>
-                                    <div class="mt-5">
-                                        <asp:TextBox MaxLength="50" TextMode="Password" ID="txt_pass" runat="server" data-role="input" data-prepend="<span class='mif-key'>" placeholder="Mật khẩu"></asp:TextBox>
+                                    <div class="admin-login-input-group mt-4">
+                                        <span class="admin-login-input-icon mif-key"></span>
+                                        <asp:TextBox MaxLength="50" TextMode="Password" ID="txt_pass" runat="server" CssClass="admin-login-input" placeholder="Mật khẩu"></asp:TextBox>
+                                        <button type="button" class="aha-password-toggle js-toggle-password" aria-label="Hiện mật khẩu">
+                                            <span class="aha-password-toggle-label">Hiện</span>
+                                        </button>
                                     </div>
-                                    <div class="mt-5">
-                                        <div style="float: left">
+                                    <div class="admin-login-actions mt-5">
+                                        <div class="admin-login-forgot">
                                             <small>
                                                 <asp:LinkButton ID="but_show_form_quenmk" OnClick="but_show_form_quenmk_Click" CssClass="fg-white fg-light-hover" runat="server">Quên mật khẩu?</asp:LinkButton>
                                             </small>
                                         </div>
-                                        <div style="float: right">
+                                        <div class="admin-login-submit-wrap">
 
-                                            <asp:Button ID="but_login" runat="server" Text="ĐĂNG NHẬP" CssClass="button dark ml-2 " OnClick="but_login_Click" />
+                                            <asp:Button ID="but_login" runat="server" Text="ĐĂNG NHẬP" CssClass="button dark admin-login-submit" OnClick="but_login_Click" />
 
                                         </div>
-                                        <div style="clear: both"></div>
                                     </div>
                                 </asp:Panel>
                             </ContentTemplate>
@@ -189,7 +193,7 @@
         </div>
     </form>
     <script src="/Metro-UI-CSS-master/js/metro.min.js"></script>
-    <script src="/js/aha-ui-refresh.js?v=2026-03-02.2"></script>
+    <script src="/js/aha-ui-refresh.js?v=2026-03-07.2"></script>
 
     <%=ViewState["thongbao"] %>
 </body>

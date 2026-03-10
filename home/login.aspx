@@ -66,11 +66,19 @@
                             <img src="/uploads/images/logo-aha-trang.png" alt="AhaSale" />
                         </div>
                         <div class="aha-title h2 mb-1">Đăng nhập AHASALE.VN</div>
-                        <div class="aha-sub">Giá tốt, gần bạn, chốt nhanh!</div>
+                        <div class="aha-sub">Giá sale, gần bạn</div>
                     </div>
 
                     <div class="card card-md aha-login-card">
                         <div class="card-body">
+                            <asp:PlaceHolder ID="ph_switch_home_mode" runat="server" Visible="false">
+                                <div class="alert alert-warning" role="alert">
+                                    Bạn đang ở chế độ gian hàng đối tác. Để dùng lại tài khoản cá nhân home, vui lòng chuyển chế độ.
+                                    <div class="mt-2">
+                                        <a href="/dang-nhap?switch=home" class="btn btn-sm btn-warning">Chuyển sang tài khoản cá nhân</a>
+                                    </div>
+                                </div>
+                            </asp:PlaceHolder>
 
                             <asp:Panel ID="pnLogin" runat="server" DefaultButton="but_login">
                                 <div class="mb-3">
@@ -111,12 +119,11 @@
                                 </div>
 
                                 <div class="d-flex align-items-center justify-content-between mb-3">
-                                    <asp:LinkButton ID="but_show_form_quenmk" runat="server"
-                                        CssClass="link-secondary"
-                                        OnClick="but_show_form_quenmk_Click">
-                                        Quên mật khẩu?
-                                    </asp:LinkButton>
+                                    <a href="/home/khoi-phuc-mat-khau.aspx" class="link-secondary">Quên mật khẩu?</a>
+                                    <a href="/dang-ky" class="link-secondary">Đăng ký</a>
+                                </div>
 
+                                <div class="d-flex align-items-center justify-content-end mb-3">
                                     <asp:Button ID="but_login" runat="server"
                                         Text="ĐĂNG NHẬP"
                                         CssClass="btn btn-success px-4"
@@ -132,44 +139,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Modal: Khôi phục mật khẩu (Tabler/Bootstrap) -->
-            <asp:Panel ID="pn_khoiphuc" runat="server" Visible="false">
-                <div class="modal fade show" style="display:block;" tabindex="-1" role="dialog" aria-modal="true">
-                    <div class="modal-dialog modal-dialog-centered" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Khôi phục mật khẩu</h5>
-                                <asp:LinkButton ID="but_close_form_quenmk" runat="server"
-                                    CssClass="btn-close"
-                                    OnClick="but_close_form_quenmk_Click"
-                                    aria-label="Close" />
-                            </div>
-
-                            <div class="modal-body">
-                                <div class="mb-3">
-                                    <label class="form-label">Nhập email khôi phục của bạn</label>
-                                    <asp:TextBox ID="txt_email_khoiphuc" runat="server"
-                                        CssClass="form-control"
-                                        MaxLength="100"
-                                        placeholder="email@domain.com"></asp:TextBox>
-                                    <div class="text-secondary mt-2">
-                                        <small>Hệ thống sẽ gửi link đặt lại mật khẩu (hết hạn sau 5 phút).</small>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="modal-footer">
-                                <asp:Button ID="but_nhanma" runat="server"
-                                    Text="Nhận mã khôi phục"
-                                    CssClass="btn btn-success"
-                                    OnClick="but_nhanma_Click" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-backdrop fade show"></div>
-            </asp:Panel>
 
         </ContentTemplate>
     </asp:UpdatePanel>
@@ -194,26 +163,9 @@
 
 <asp:Content ID="cFootSau" ContentPlaceHolderID="foot_sau" runat="Server">
     <script type="text/javascript">
-        // Toggle password (giống trang Đổi mật khẩu)
         (function () {
-            function wireToggle() {
-                document.querySelectorAll('.js-toggle-password').forEach(function (btn) {
-                    btn.onclick = function () {
-                        var input = btn.closest('.input-group').querySelector('.js-password');
-                        if (!input) return;
-                        input.type = (input.type === 'password') ? 'text' : 'password';
-                    };
-                });
-            }
-
-            // Lần đầu
-            wireToggle();
-
-            // Sau UpdatePanel
             if (window.Sys && Sys.WebForms) {
                 Sys.WebForms.PageRequestManager.getInstance().add_endRequest(function () {
-                    wireToggle();
-                    // focus lại ô user cho tiện
                     var u = document.getElementById('<%= txt_user.ClientID %>');
                     if (u) u.focus();
                 });

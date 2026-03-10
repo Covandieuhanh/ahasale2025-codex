@@ -217,6 +217,9 @@ public partial class admin_duyet_yeu_cau_len_cap : System.Web.UI.Page
             }
 
             // cập nhật tài khoản
+            acc.HeThongSanPham_QuyenLoi_MoVi_Cap1_15_9_6 = null;
+            acc.HeThongSanPham_QuyenLoi_MoVi_Cap2_25_15_10 = null;
+            acc.HeThongSanPham_QuyenLoi_MoVi_Cap3_10_6_4 = null;
             acc.HeThongSanPham_Cap123 = yc.CapYeuCau;
 
             if (yc.CapYeuCau == 1)
@@ -226,10 +229,15 @@ public partial class admin_duyet_yeu_cau_len_cap : System.Web.UI.Page
             else
                 acc.HeThongSanPham_QuyenLoi_MoVi_Cap3_10_6_4 = yc.GiaTriYeuCau;
 
+            int tierAfterApprove = TierHome_cl.GetTierFromHanhVi(
+                HanhVi9Cap_cl.GetLoaiHanhViByCapGiaTri(yc.CapYeuCau, yc.GiaTriYeuCau));
+            if (tierAfterApprove < TierHome_cl.Tier1) tierAfterApprove = TierHome_cl.Tier1;
+            acc.phanloai = TierHome_cl.GetTenTangHome(tierAfterApprove);
+
             yc.TrangThai = 1; // đã duyệt
             yc.NgayDuyet = AhaTime_cl.Now;
             yc.NguoiDuyet = tkAdmin;
-            yc.GhiChuAdmin = "Đã duyệt yêu cầu nâng cấp.";
+            yc.GhiChuAdmin = "Đã duyệt yêu cầu xác nhận hành vi.";
 
             Helper_DongA_cl.AddNotify(
                 db,

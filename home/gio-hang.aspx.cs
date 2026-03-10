@@ -17,6 +17,204 @@ public partial class home_gio_hang : System.Web.UI.Page
         return Math.Ceiling(a * 100m) / 100m;
     }
 
+    private void BindCheckoutSummary(List<BaiVietViewModel> items)
+    {
+        if (items == null || items.Count == 0)
+        {
+            lb_checkout_items.Text = "0";
+            lb_checkout_total_vnd.Text = "0";
+            lb_checkout_total_vnd_footer.Text = "0";
+            lb_checkout_total_a.Text = "0";
+            lb_checkout_total_a_footer.Text = "0";
+            return;
+        }
+
+        int tongSanPham = items.Sum(x => x.soluong);
+        decimal tongVnd = items.Sum(x => x.ThanhTien ?? 0m);
+        decimal tongA = QuyDoi_VND_To_A(tongVnd);
+        string tongAText = tongA.ToString("#,##0.##");
+
+        lb_checkout_items.Text = tongSanPham.ToString("#,##0");
+        lb_checkout_total_vnd.Text = tongVnd.ToString("#,##0");
+        lb_checkout_total_vnd_footer.Text = tongVnd.ToString("#,##0");
+        lb_checkout_total_a.Text = tongAText;
+        lb_checkout_total_a_footer.Text = tongAText;
+    }
+
+    private int ParseQty(string raw)
+    {
+        int qty = Number_cl.Check_Int((raw ?? "").Trim());
+        if (qty < 1) qty = 1;
+        if (qty > 999) qty = 999;
+        return qty;
+    }
+
+    private string CurrentAccount()
+    {
+        return ((ViewState["taikhoan"] ?? "").ToString() ?? "").Trim();
+    }
+
+    private bool IsCheckoutStepRequest()
+    {
+        return string.Equals((Request.QueryString["step"] ?? "").Trim(), "2", StringComparison.Ordinal);
+    }
+
+    private List<long> ParseSelectedIdsFromQuery()
+    {
+        string raw = (Request.QueryString["sel"] ?? "").Trim();
+        if (string.IsNullOrEmpty(raw))
+            return new List<long>();
+
+        return raw
+            .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(x =>
+            {
+                long id;
+                return long.TryParse((x ?? "").Trim(), out id) ? id : 0;
+            })
+            .Where(id => id > 0)
+            .Distinct()
+            .ToList();
+    }
+
+    private Dictionary<long, int> ParseQtyMapFromQuery()
+    {
+        Dictionary<long, int> map = new Dictionary<long, int>();
+        string raw = (Request.QueryString["qty"] ?? "").Trim();
+        if (string.IsNullOrEmpty(raw))
+            return map;
+
+        string[] pairs = raw.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+        foreach (string pair in pairs)
+        {
+            if (string.IsNullOrWhiteSpace(pair)) continue;
+            string[] parts = pair.Split('-');
+            if (parts.Length != 2) continue;
+
+            long id;
+            int qty;
+            if (!long.TryParse((parts[0] ?? "").Trim(), out id) || id <= 0) continue;
+            if (!int.TryParse((parts[1] ?? "").Trim(), out qty)) continue;
+
+            map[id] = ParseQty(qty.ToString());
+        }
+
+        return map;
+    }
+
+    private sealed class CartRowInput
+    {
+        public long CartId { get; set; }
+        public int Qty { get; set; }
+    }
+
+    private List<CartRowInput> ReadCartRowsFromMainRepeater()
+    {
+        List<CartRowInput> rows = new List<CartRowInput>();
+
+        foreach (RepeaterItem item in Repeater1.Items)
+        {
+            Label lblData = (Label)item.FindControl("lbID");
+            TextBox txtQty = (TextBox)item.FindControl("txt_sl_1");
+            if (lblData == null || txtQty == null) continue;
+
+            long cartId;
+            if (!long.TryParse((lblData.Text ?? "").Trim(), out cartId) || cartId <= 0)
+                continue;
+
+            int qty = ParseQty(txtQty.Text);
+            txtQty.Text = qty.ToString();
+
+            rows.Add(new CartRowInput
+            {
+                CartId = cartId,
+                Qty = qty
+            });
+        }
+
+        return rows;
+    }
+
+    private int SyncGridCartQuantity(dbDataContext db, List<CartRowInput> rows)
+    {
+        if (rows == null || rows.Count == 0)
+            return 0;
+
+        List<long> ids = rows.Select(x => x.CartId).Distinct().ToList();
+        Dictionary<long, GioHang_tb> cartMap = db.GioHang_tbs
+            .Where(p => ids.Contains(p.id))
+            .ToDictionary(p => p.id);
+
+        int changed = 0;
+        foreach (CartRowInput row in rows)
+        {
+            GioHang_tb q;
+            if (!cartMap.TryGetValue(row.CartId, out q))
+                continue;
+
+            if ((q.soluong ?? 0) != row.Qty)
+            {
+                q.soluong = row.Qty;
+                changed++;
+            }
+        }
+
+        return changed;
+    }
+
+    private void SyncCheckoutQuantityFromRepeater(dbDataContext db, List<BaiVietViewModel> danhSach)
+    {
+        if (danhSach == null || danhSach.Count == 0)
+            return;
+
+        Dictionary<string, BaiVietViewModel> vmMap = danhSach.ToDictionary(x => x.id, x => x);
+        List<long> ids = vmMap.Keys
+            .Select(x =>
+            {
+                long id;
+                return long.TryParse((x ?? "").Trim(), out id) ? id : 0;
+            })
+            .Where(id => id > 0)
+            .Distinct()
+            .ToList();
+
+        Dictionary<long, GioHang_tb> cartMap = db.GioHang_tbs
+            .Where(p => ids.Contains(p.id))
+            .ToDictionary(p => p.id);
+
+        foreach (RepeaterItem item in Repeater2.Items)
+        {
+            Label lblData = (Label)item.FindControl("lbID");
+            TextBox txtQty = (TextBox)item.FindControl("txt_sl_2");
+            if (lblData == null || txtQty == null) continue;
+
+            string idGioHang = (lblData.Text ?? "").Trim();
+            if (string.IsNullOrEmpty(idGioHang)) continue;
+
+            BaiVietViewModel vm;
+            if (!vmMap.TryGetValue(idGioHang, out vm))
+                continue;
+
+            long idInt;
+            if (!long.TryParse(idGioHang, out idInt) || idInt <= 0)
+                continue;
+
+            GioHang_tb q;
+            if (!cartMap.TryGetValue(idInt, out q))
+                continue;
+
+            if (vm == null) continue;
+
+            int qty = ParseQty(txtQty.Text);
+            txtQty.Text = qty.ToString();
+
+            vm.soluong = qty;
+            decimal gia = vm.giaban ?? 0m;
+            vm.ThanhTien = gia * qty;
+            q.soluong = qty;
+        }
+    }
+
     protected void Page_Load(object sender, EventArgs e)
     {
         if (!IsPostBack)
@@ -30,8 +228,31 @@ public partial class home_gio_hang : System.Web.UI.Page
             {
                 ViewState["taikhoan"] = mahoa_cl.giaima_Bcorn(_tk);
             }
-
-            show_main();
+            if (IsCheckoutStepRequest())
+            {
+                List<long> selectedIds = ParseSelectedIdsFromQuery();
+                Dictionary<long, int> qtyMap = ParseQtyMapFromQuery();
+                using (dbDataContext db = new dbDataContext())
+                {
+                    if (!TryBuildCheckoutStep(db, selectedIds, qtyMap, true))
+                    {
+                        pn_step1.Visible = true;
+                        pn_dathang.Visible = false;
+                        show_main();
+                    }
+                    else
+                    {
+                        pn_step1.Visible = false;
+                        pn_dathang.Visible = true;
+                    }
+                }
+            }
+            else
+            {
+                pn_step1.Visible = true;
+                pn_dathang.Visible = false;
+                show_main();
+            }
         }
     }
 
@@ -45,6 +266,9 @@ public partial class home_gio_hang : System.Web.UI.Page
                             from ob2 in SanPhamGroup.DefaultIfEmpty()
                             join ob3 in db.taikhoan_tbs on ob1.nguoiban_goc equals ob3.taikhoan into TaiKhoanGroup
                             from ob3 in TaiKhoanGroup.DefaultIfEmpty()
+                            where ob2 != null
+                                  && ob2.bin != true
+                                  && db.taikhoan_tbs.Any(acc => acc.taikhoan == ob2.nguoitao && acc.block != true)
                             select new
                             {
                                 ob1.id,
@@ -121,6 +345,7 @@ public partial class home_gio_hang : System.Web.UI.Page
         public string name { get; set; }
         public string name_en { get; set; }
         public decimal? giaban { get; set; }   // ✅ VNĐ
+        public int PhanTramUuDai { get; set; }
         public int soluong { get; set; }
         public decimal? ThanhTien { get; set; } // ✅ VNĐ
         public string TenShop { get; set; }
@@ -129,110 +354,116 @@ public partial class home_gio_hang : System.Web.UI.Page
         public string idsp { get; set; }
     }
 
-    protected void Button2_Click(object sender, EventArgs e)
+    private bool TryBuildCheckoutStep(dbDataContext db, List<long> selectedCartIds, Dictionary<long, int> qtyMap, bool showEmptyAlert)
     {
-        using (dbDataContext db = new dbDataContext())
+        if (selectedCartIds == null || selectedCartIds.Count == 0)
         {
-            List<GioHang_tb> danhSachChon = new List<GioHang_tb>();
-            List<string> danhSachID = new List<string>();
-
-            foreach (RepeaterItem item in Repeater1.Items)
-            {
-                CheckBox chkItem = (CheckBox)item.FindControl("checkID");
-                Label lblData = (Label)item.FindControl("lbID");
-
-                if (chkItem != null && lblData != null && chkItem.Checked)
-                {
-                    danhSachID.Add(lblData.Text);
-                }
-            }
-
-            if (danhSachID.Count > 0)
-            {
-                danhSachChon = db.GioHang_tbs
-                                 .Where(p => danhSachID.Contains(p.id.ToString()))
-                                 .ToList();
-
-                var idspList = danhSachChon.Select(p => p.idsp).ToList();
-                bool allStopped = !db.BaiViet_tbs.Any(p => idspList.Contains(p.id.ToString()) && p.bin == false);
-                if (allStopped)
-                {
-                    Helper_Tabler_cl.ShowModal(this.Page, "Sản phẩm đã ngừng bán", "Thông báo", true, "warning");
-                    return;
-                }
-
-                var list_all = (from ob1 in danhSachChon
-                                join ob2 in db.BaiViet_tbs on ob1.idsp equals ob2.id.ToString() into SanPhamGroup
-                                from ob2 in SanPhamGroup.DefaultIfEmpty()
-                                join ob3 in db.taikhoan_tbs on ob1.nguoiban_goc equals ob3.taikhoan into TaiKhoanGroup
-                                from ob3 in TaiKhoanGroup.DefaultIfEmpty()
-                                where ob2.bin != true
-                                select new
-                                {
-                                    ob1.id,
-                                    ob1.ngaythem,
-                                    ob2.image,
-                                    ob2.name,
-                                    ob2.name_en,
-                                    ob2.giaban, // ✅ VNĐ
-                                    ob1.soluong,
-
-                                    // ✅ % ưu đãi (null -> 0)
-                                    PhanTramUuDai = (ob2.PhanTram_GiamGia_ThanhToan_BangEvoucher ?? 0),
-
-                                    // ✅ Thành tiền VNĐ
-                                    ThanhTien = ((ob2.giaban ?? 0m) * (ob1.soluong ?? 0)),
-
-                                    TenShop = ob3.ten_shop,
-                                    ob1.nguoiban_goc,
-                                    ob1.nguoiban_danglai,
-                                    ob1.idsp
-                                }).AsQueryable();
-
-
-                var list_all_data = list_all.Select(x => new BaiVietViewModel
-                {
-                    id = x.id.ToString(),
-                    ngaythem = x.ngaythem,
-                    image = x.image,
-                    name = x.name,
-                    name_en = x.name_en,
-                    giaban = x.giaban,
-                    soluong = (int)(x.soluong ?? 0),
-                    ThanhTien = x.ThanhTien,
-                    TenShop = x.TenShop,
-                    nguoiban_goc = x.nguoiban_goc,
-                    nguoiban_danglai = x.nguoiban_danglai,
-                    idsp = x.idsp,
-                }).ToList();
-
-                Session["danhSachGomNhom"] = list_all_data;
-
-                Repeater2.DataSource = list_all.OrderBy(p => p.nguoiban_goc);
-                Repeater2.DataBind();
-
-                var q_tk = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == ViewState["taikhoan"].ToString());
-                if (q_tk != null)
-                {
-                    txt_hoten_nguoinhan.Text = q_tk.hoten;
-                    txt_sdt_nguoinhan.Text = q_tk.dienthoai;
-                    txt_diachi_nguoinhan.Text = q_tk.diachi;
-                }
-
-                pn_dathang.Visible = !pn_dathang.Visible;
-                up_dathang.Update();
-            }
-            else
-            {
+            if (showEmptyAlert)
                 Helper_Tabler_cl.ShowModal(this.Page, "Không có mục nào được chọn.", "Thông báo", true, "warning");
-            }
+            return false;
         }
+
+        string tk = CurrentAccount();
+        if (string.IsNullOrEmpty(tk))
+            return false;
+
+        if (qtyMap == null)
+            qtyMap = new Dictionary<long, int>();
+
+        var selectedRows = (from g in db.GioHang_tbs
+                            where selectedCartIds.Contains(g.id) && g.taikhoan == tk
+                            join p in db.BaiViet_tbs on g.idsp equals p.id.ToString()
+                            join seller in db.taikhoan_tbs on p.nguoitao equals seller.taikhoan
+                            join shop in db.taikhoan_tbs on g.nguoiban_goc equals shop.taikhoan into ShopGroup
+                            from shop in ShopGroup.DefaultIfEmpty()
+                            where p.bin != true
+                                  && p.phanloai == "sanpham"
+                                  && seller.block != true
+                            select new
+                            {
+                                g.id,
+                                g.ngaythem,
+                                g.idsp,
+                                g.soluong,
+                                g.nguoiban_goc,
+                                g.nguoiban_danglai,
+                                p.image,
+                                p.name,
+                                p.name_en,
+                                p.giaban,
+                                PhanTramUuDai = (p.PhanTram_GiamGia_ThanhToan_BangEvoucher ?? 0),
+                                TenShop = (shop == null ? "" : shop.ten_shop)
+                            }).ToList();
+
+        if (selectedRows.Count == 0)
+        {
+            Helper_Tabler_cl.ShowModal(this.Page, "Không tìm thấy sản phẩm còn hoạt động trong giỏ.", "Thông báo", true, "warning");
+            return false;
+        }
+
+        List<BaiVietViewModel> list_all_data = selectedRows
+            .Select(ob =>
+            {
+                int soLuong = qtyMap.ContainsKey(ob.id)
+                    ? ParseQty(qtyMap[ob.id].ToString())
+                    : ParseQty((ob.soluong ?? 1).ToString());
+
+                int phanTramUuDai = ob.PhanTramUuDai;
+                if (phanTramUuDai < 0) phanTramUuDai = 0;
+                if (phanTramUuDai > 50) phanTramUuDai = 50;
+
+                decimal giaBan = ob.giaban ?? 0m;
+
+                return new BaiVietViewModel
+                {
+                    id = ob.id.ToString(),
+                    ngaythem = ob.ngaythem,
+                    image = string.IsNullOrWhiteSpace(ob.image) ? "/uploads/images/macdinh.jpg" : ob.image,
+                    name = ob.name,
+                    name_en = ob.name_en,
+                    giaban = ob.giaban,
+                    PhanTramUuDai = phanTramUuDai,
+                    soluong = soLuong,
+                    ThanhTien = giaBan * soLuong,
+                    TenShop = ob.TenShop ?? "",
+                    nguoiban_goc = ob.nguoiban_goc,
+                    nguoiban_danglai = ob.nguoiban_danglai,
+                    idsp = (ob.idsp ?? "").Trim()
+                };
+            })
+            .OrderBy(x => x.nguoiban_goc)
+            .ThenByDescending(x => x.ngaythem)
+            .ToList();
+
+        if (list_all_data.Count == 0)
+        {
+            Helper_Tabler_cl.ShowModal(this.Page, "Sản phẩm đã ngừng bán", "Thông báo", true, "warning");
+            return false;
+        }
+
+        Session["danhSachGomNhom"] = list_all_data;
+        BindCheckoutSummary(list_all_data);
+        Repeater2.DataSource = list_all_data;
+        Repeater2.DataBind();
+
+        var q_tk = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == tk);
+        if (q_tk != null)
+        {
+            txt_hoten_nguoinhan.Text = q_tk.hoten;
+            txt_sdt_nguoinhan.Text = q_tk.dienthoai;
+            txt_diachi_nguoinhan.Text = q_tk.diachi;
+        }
+
+        pn_step1.Visible = false;
+        pn_dathang.Visible = true;
+        return true;
     }
 
     protected void but_close_form_dathang_Click(object sender, EventArgs e)
     {
         Session["danhSachGomNhom"] = null;
-        pn_dathang.Visible = !pn_dathang.Visible;
+        BindCheckoutSummary(null);
+        pn_dathang.Visible = false;
     }
 
     protected void but_dathang_Click(object sender, EventArgs e)
@@ -244,9 +475,17 @@ public partial class home_gio_hang : System.Web.UI.Page
             var danhSachGomNhom = Session["danhSachGomNhom"] as List<BaiVietViewModel>;
             if (danhSachGomNhom == null || danhSachGomNhom.Count == 0) return;
 
+            SyncCheckoutQuantityFromRepeater(db, danhSachGomNhom);
+            Session["danhSachGomNhom"] = danhSachGomNhom;
+            BindCheckoutSummary(danhSachGomNhom);
+
             // ✅ Check sản phẩm còn bán
             var idspList = danhSachGomNhom.Select(p => p.idsp).ToList();
-            bool allStopped = !db.BaiViet_tbs.Any(p => idspList.Contains(p.id.ToString()) && p.bin == false);
+            bool allStopped = !db.BaiViet_tbs.Any(p =>
+                idspList.Contains(p.id.ToString())
+                && p.bin == false
+                && p.phanloai == "sanpham"
+                && db.taikhoan_tbs.Any(acc => acc.taikhoan == p.nguoitao && acc.block != true));
             if (allStopped)
             {
                 Helper_Tabler_cl.ShowModal(this.Page, "Có sản phẩm đã ngừng bán", "Thông báo", true, "warning");
@@ -290,8 +529,8 @@ public partial class home_gio_hang : System.Web.UI.Page
                 decimal tongThanhToan_VND = danhSachGomNhom.Sum(item => item.ThanhTien ?? 0m);
                 Helper_Tabler_cl.ShowModal(
                     this.Page,
-                    $"Quyền tiêu dùng của bạn không đủ để đặt các đơn này.<br/>" +
-                    $"Cần <b>{tongA_ToiThieuCanCo:#,##0.##} A</b> (≈ {tongThanhToan_VND:#,##0}đ).",
+                    "Quyền tiêu dùng của bạn không đủ để đặt các đơn này.<br/>" +
+                    string.Format("Cần <b>{0:#,##0.##} A</b> (≈ {1:#,##0}đ).", tongA_ToiThieuCanCo, tongThanhToan_VND),
                     "Thông báo",
                     true,
                     "danger"
@@ -316,7 +555,7 @@ public partial class home_gio_hang : System.Web.UI.Page
                 foreach (var item in group.BaiViets)
                 {
                     // lấy % ưu đãi từ BaiViet
-                    var sp = db.BaiViet_tbs.FirstOrDefault(p => p.id.ToString() == item.idsp && p.bin == false);
+                    var sp = AccountVisibility_cl.FindVisibleProductById(db, item.idsp);
                     if (sp == null) continue;
 
                     int phanTramUuDai = 0;
@@ -353,8 +592,8 @@ public partial class home_gio_hang : System.Web.UI.Page
                     {
                         Helper_Tabler_cl.ShowModal(
                             this.Page,
-                            $"Bạn đủ ví ưu đãi nhưng Đồng A không đủ cho phần còn lại.<br/>" +
-                            $"Cần thêm <b>{A_ConLai:#,##0.##} A</b>, bạn đang có <b>{soDuA:#,##0.##} A</b>.",
+                            "Bạn đủ ví ưu đãi nhưng Đồng A không đủ cho phần còn lại.<br/>" +
+                            string.Format("Cần thêm <b>{0:#,##0.##} A</b>, bạn đang có <b>{1:#,##0.##} A</b>.", A_ConLai, soDuA),
                             "Thông báo",
                             true,
                             "danger"
@@ -369,8 +608,8 @@ public partial class home_gio_hang : System.Web.UI.Page
                     {
                         Helper_Tabler_cl.ShowModal(
                             this.Page,
-                            $"Quyền tiêu dùng của bạn không đủ.<br/>" +
-                            $"Cần <b>{canTraA_TungDon:#,##0.##} A</b> (≈ {tongVND_TungDon:#,##0}đ), bạn đang có <b>{soDuA:#,##0.##} A</b>.",
+                            "Quyền tiêu dùng của bạn không đủ.<br/>" +
+                            string.Format("Cần <b>{0:#,##0.##} A</b> (≈ {1:#,##0}đ), bạn đang có <b>{2:#,##0.##} A</b>.", canTraA_TungDon, tongVND_TungDon, soDuA),
                             "Thông báo",
                             true,
                             "danger"
@@ -414,7 +653,7 @@ public partial class home_gio_hang : System.Web.UI.Page
                     _ob1.thanhtien = (_ob1.giaban * item.soluong);   // ✅ VNĐ
 
                     // Nếu bảng chi tiết của bạn có field này như trang trước thì bật lại:
-                    var sp = db.BaiViet_tbs.FirstOrDefault(p => p.id.ToString() == item.idsp && p.bin == false);
+                    var sp = AccountVisibility_cl.FindVisibleProductById(db, item.idsp);
                     if (sp != null)
                     {
                         int pt = (sp.PhanTram_GiamGia_ThanhToan_BangEvoucher ?? 0);
@@ -440,7 +679,7 @@ public partial class home_gio_hang : System.Web.UI.Page
                     lsUuDai.id_donhang = _id_donhang;
                     lsUuDai.LoaiHoSo_Vi = 2;
                     lsUuDai.ghichu =
-                        $"Ưu đãi đơn {_id_donhang}: {A_UuDai:#,##0.##}A (≈ {tienUuDaiVND_TungDon:#,##0}đ, 1A={TY_GIA_DONGA_VND:#,##0}đ)";
+                        string.Format("Ưu đãi đơn {0}: {1:#,##0.##}A (≈ {2:#,##0}đ, 1A={3:#,##0}đ)", _id_donhang, A_UuDai, tienUuDaiVND_TungDon, TY_GIA_DONGA_VND);
                     db.LichSu_DongA_tbs.InsertOnSubmit(lsUuDai);
 
                     // trừ số dư ví ưu đãi
@@ -459,7 +698,7 @@ public partial class home_gio_hang : System.Web.UI.Page
                     lsA.id_donhang = _id_donhang;
                     lsA.LoaiHoSo_Vi = 1;
                     lsA.ghichu =
-                        $"Tạm giữ Trao đổi đơn hàng số {_id_donhang} (phần còn lại): {A_ConLai:#,##0.##}A (≈ {conLaiVND:#,##0}đ, 1A={TY_GIA_DONGA_VND:#,##0}đ)";
+                        string.Format("Tạm giữ Trao đổi đơn hàng số {0} (phần còn lại): {1:#,##0.##}A (≈ {2:#,##0}đ, 1A={3:#,##0}đ)", _id_donhang, A_ConLai, conLaiVND, TY_GIA_DONGA_VND);
                     db.LichSu_DongA_tbs.InsertOnSubmit(lsA);
 
                     // trừ số dư Đồng A
@@ -476,7 +715,7 @@ public partial class home_gio_hang : System.Web.UI.Page
                     _ob2.CongTru = false;
                     _ob2.id_donhang = _id_donhang;
                     _ob2.ghichu =
-                        $"Tạm giữ Trao đổi đơn hàng số {_id_donhang}: {canTraA_TungDon:#,##0.##}A (≈ {tongVND_TungDon:#,##0}đ, 1A={TY_GIA_DONGA_VND:#,##0}đ)";
+                        string.Format("Tạm giữ Trao đổi đơn hàng số {0}: {1:#,##0.##}A (≈ {2:#,##0}đ, 1A={3:#,##0}đ)", _id_donhang, canTraA_TungDon, tongVND_TungDon, TY_GIA_DONGA_VND);
                     _ob2.LoaiHoSo_Vi = 1;
                     db.LichSu_DongA_tbs.InsertOnSubmit(_ob2);
 
@@ -502,10 +741,10 @@ public partial class home_gio_hang : System.Web.UI.Page
             }
 
             show_main();
-            up_main.Update();
 
             Session["danhSachGomNhom"] = null;
-            pn_dathang.Visible = !pn_dathang.Visible;
+            BindCheckoutSummary(null);
+            pn_dathang.Visible = false;
 
             Helper_Tabler_cl.ShowModal(
                 this.Page,
@@ -524,27 +763,8 @@ public partial class home_gio_hang : System.Web.UI.Page
     {
         using (dbDataContext db = new dbDataContext())
         {
-            int _dem = 0;
-            foreach (RepeaterItem item in Repeater1.Items)
-            {
-                Label lblData = (Label)item.FindControl("lbID");
-                TextBox txt_sl_1 = (TextBox)item.FindControl("txt_sl_1");
-
-                if (txt_sl_1 != null && lblData != null)
-                {
-                    string _id_giohang = lblData.Text;
-                    var q = db.GioHang_tbs.FirstOrDefault(p => p.id.ToString() == _id_giohang);
-                    if (q != null)
-                    {
-                        int _sl = Number_cl.Check_Int(txt_sl_1.Text.Trim());
-                        if (_sl > 0)
-                        {
-                            q.soluong = _sl;
-                            _dem++;
-                        }
-                    }
-                }
-            }
+            List<CartRowInput> rows = ReadCartRowsFromMainRepeater();
+            int _dem = SyncGridCartQuantity(db, rows);
 
             if (_dem > 0)
             {

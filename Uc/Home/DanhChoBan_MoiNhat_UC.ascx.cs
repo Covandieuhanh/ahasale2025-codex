@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.Services;
@@ -58,8 +59,15 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
     }
 
     // ===== UNIQUE KEYS để tránh đạp nhau nếu sau này 1 trang có nhiều UC =====
-    private string VS_PageKey => "current_page_home_" + this.ClientID;
-    private string SS_LoadedKey => "home_loaded_list_" + this.ClientID;
+    private string VS_PageKey
+    {
+        get { return "current_page_home_" + this.ClientID; }
+    }
+
+    private string SS_LoadedKey
+    {
+        get { return "home_loaded_list_" + this.ClientID; }
+    }
 
     // ✅ Quy đổi VNĐ -> A (làm tròn lên 2 chữ số thập phân)
     private decimal QuyDoi_VND_To_A(decimal vnd)
@@ -133,6 +141,8 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
 
     protected void Page_Load(object sender, EventArgs e)
     {
+        ApplyGuestMobileAuthVisibility();
+
         if (!IsPostBack)
         {
             // ✅ THÊM: bind dropdown hero/search (KHÔNG ảnh hưởng logic cũ) 
@@ -163,6 +173,17 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
             // nếu page cha thay TitleText trong postback
             lblTitle.Text = TitleText;
         }
+    }
+
+    private void ApplyGuestMobileAuthVisibility()
+    {
+        if (phGuestMobileQuickAuth == null)
+            return;
+
+        string tkEnc = PortalRequest_cl.GetCurrentAccountEncrypted();
+        bool isLogged = !string.IsNullOrEmpty(tkEnc);
+        bool isShopPortal = PortalRequest_cl.IsShopPortalRequest();
+        phGuestMobileQuickAuth.Visible = (!isLogged && !isShopPortal);
     }
 
     public void set_dulieu_macdinh()
@@ -215,12 +236,13 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
         }
         if (!string.IsNullOrEmpty(Is_lich_su_xem_tin))
         {
-            string taiKhoanHienTai = ViewState["taikhoan"]?.ToString() ?? "";
+            string taiKhoanHienTai = Convert.ToString(ViewState["taikhoan"]) ?? "";
 
             // Chỉ lấy các tin đã xem bởi user hiện tại
             var query = db.BaiViet_tbs.Where(p =>
                 p.bin == false &&
                 p.phanloai == "sanpham" &&
+                db.taikhoan_tbs.Any(acc => acc.taikhoan == p.nguoitao && acc.block != true) &&
                 db.TinDaXem_tbs.Any(t => t.idBaiViet == p.id && t.TaiKhoan == taiKhoanHienTai) &&
                 !hideList.Contains(p.id)
             );
@@ -277,12 +299,13 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
         }
         else if (!string.IsNullOrEmpty(Is_tin_theo_doi))
         {
-            string taiKhoanHienTai = ViewState["taikhoan"]?.ToString() ?? "";
+            string taiKhoanHienTai = Convert.ToString(ViewState["taikhoan"]) ?? "";
 
             // Chỉ lấy các tin được theo dõi
             var query = db.BaiViet_tbs.Where(p =>
                 p.bin == false &&
                 p.phanloai == "sanpham" &&
+                db.taikhoan_tbs.Any(acc => acc.taikhoan == p.nguoitao && acc.block != true) &&
                 db.TheoDoiTin_dbs.Any(t =>
                     t.idBaiviet == p.id &&
                     t.taikhoan == taiKhoanHienTai
@@ -329,11 +352,12 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
         // ✅ Nếu không có idmn => không lọc (trang chủ)
         else if (danhMucIds == null)
         {
-            string taiKhoanHienTai = ViewState["taikhoan"]?.ToString() ?? "";
+            string taiKhoanHienTai = Convert.ToString(ViewState["taikhoan"]) ?? "";
 
             var query = db.BaiViet_tbs.Where(p =>
                 p.bin == false &&
                 p.phanloai == "sanpham" &&
+                db.taikhoan_tbs.Any(acc => acc.taikhoan == p.nguoitao && acc.block != true) &&
                 !hideList.Contains(p.id));
 
             // ✅ lọc danh mục từ dropdown
@@ -369,11 +393,12 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
         }
         else
         {
-            string taiKhoanHienTai = ViewState["taikhoan"]?.ToString() ?? "";
+            string taiKhoanHienTai = Convert.ToString(ViewState["taikhoan"]) ?? "";
 
             var query = db.BaiViet_tbs.Where(p =>
                 p.bin == false &&
                 p.phanloai == "sanpham" &&
+                db.taikhoan_tbs.Any(acc => acc.taikhoan == p.nguoitao && acc.block != true) &&
                 danhMucIds.Contains(p.id_DanhMuc) &&
                 !hideList.Contains(p.id));
 
@@ -573,12 +598,12 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
 
     private string RenderCardMediaHtml(string mediaUrl, string altText)
     {
-        string safeUrl = MediaFile_cl.GetSafeUrl(mediaUrl);
+        const string fallback = "/uploads/images/macdinh.jpg";
+        bool isVideo = MediaFile_cl.IsVideo(mediaUrl);
+        string safeUrl = ResolveMediaUrlOrFallback(mediaUrl, fallback);
         string safeAlt = MediaFile_cl.GetSafeText(altText);
-        if (string.IsNullOrEmpty(safeUrl))
-            safeUrl = "/uploads/images/macdinh.jpg";
 
-        if (MediaFile_cl.IsVideo(mediaUrl))
+        if (isVideo && !string.Equals(safeUrl, fallback, StringComparison.OrdinalIgnoreCase))
         {
             string mime = MediaFile_cl.GetVideoMime(mediaUrl);
             return "<video class='sp-thumb-video' muted playsinline preload='metadata'>" +
@@ -587,6 +612,41 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
         }
 
         return "<img class='sp-thumb' src='" + safeUrl + "' alt='" + safeAlt + "' />";
+    }
+
+    private string ResolveMediaUrlOrFallback(string mediaUrl, string fallback)
+    {
+        string safeUrl = MediaFile_cl.GetSafeUrl(mediaUrl);
+        if (string.IsNullOrWhiteSpace(safeUrl))
+            return fallback;
+
+        if (safeUrl.StartsWith("javascript:", StringComparison.OrdinalIgnoreCase))
+            return fallback;
+
+        Uri absolute;
+        if (Uri.TryCreate(safeUrl, UriKind.Absolute, out absolute))
+        {
+            if (string.Equals(absolute.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(absolute.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+                return absolute.AbsoluteUri;
+            return fallback;
+        }
+
+        string localPath = safeUrl;
+        if (localPath.StartsWith("~/", StringComparison.Ordinal))
+            localPath = localPath.Substring(1);
+        if (!localPath.StartsWith("/", StringComparison.Ordinal))
+            localPath = "/" + localPath;
+
+        if (IsMissingUploadFile(localPath))
+            return fallback;
+
+        return localPath;
+    }
+
+    private bool IsMissingUploadFile(string relativeUrl)
+    {
+        return Helper_cl.IsMissingUploadFile(relativeUrl);
     }
 
     protected void RepeaterTin_ItemDataBound(object sender, RepeaterItemEventArgs e)
@@ -623,7 +683,7 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
             }
             else
             {
-                string nguoitao = DataBinder.Eval(dataItem, "nguoitao")?.ToString();
+                string nguoitao = Convert.ToString(DataBinder.Eval(dataItem, "nguoitao"));
                 if (nguoitao == ViewState["taikhoan"].ToString())
                     showButtons = false;
             }
@@ -656,7 +716,10 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
                     return;
                 }
 
-                var sp = db.BaiViet_tbs.FirstOrDefault(p => p.id.ToString() == _idsp && p.bin == false);
+                var sp = db.BaiViet_tbs.FirstOrDefault(p =>
+                    p.id.ToString() == _idsp
+                    && p.bin == false
+                    && db.taikhoan_tbs.Any(acc => acc.taikhoan == p.nguoitao && acc.block != true));
                 if (sp == null)
                 {
                     Helper_Tabler_cl.ShowModal(this.Page, "Sản phẩm không tồn tại / đã ngừng bán.", "Thông báo", true, "danger");
@@ -714,10 +777,11 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
         if (!string.IsNullOrWhiteSpace(userBanCheo))
             query["user_bancheo"] = userBanCheo;
         query["return_url"] = (Request.RawUrl ?? "/");
-        if (PortalRequest_cl.IsShopPortalRequest())
-            query["shop_portal"] = "1";
 
-        return "/home/trao-doi.aspx?" + query.ToString();
+        string basePath = PortalRequest_cl.IsShopPortalRequest()
+            ? "/shop/trao-doi"
+            : "/home/trao-doi.aspx";
+        return basePath + "?" + query.ToString();
     }
 
     // ===================== TRAO ĐỔI (CHUYỂN TRANG) =====================
@@ -773,7 +837,10 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
                 }
 
                 string idsp = (ViewState["idsp_giohang"] + "");
-                var sp = db.BaiViet_tbs.FirstOrDefault(p => p.id.ToString() == idsp && p.bin == false);
+                var sp = db.BaiViet_tbs.FirstOrDefault(p =>
+                    p.id.ToString() == idsp
+                    && p.bin == false
+                    && db.taikhoan_tbs.Any(acc => acc.taikhoan == p.nguoitao && acc.block != true));
                 if (sp == null)
                 {
                     Helper_Tabler_cl.ShowModal(this.Page, "Sản phẩm đã ngừng bán", "Thông báo", true, "danger");
@@ -816,8 +883,8 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
                     {
                         Helper_Tabler_cl.ShowModal(
                             this.Page,
-                            $"Bạn đủ ví ưu đãi nhưng Quyền tiêu dùng không đủ cho phần còn lại.<br/>" +
-                            $"Cần thêm <b>{A_ConLai:#,##0.##} Quyền tiêu dùng</b>, bạn đang có <b>{soDuA:#,##0.##} Quyền tiêu dùng</b>.",
+                            "Bạn đủ ví ưu đãi nhưng Quyền tiêu dùng không đủ cho phần còn lại.<br/>" +
+                            string.Format("Cần thêm <b>{0:#,##0.##} Quyền tiêu dùng</b>, bạn đang có <b>{1:#,##0.##} Quyền tiêu dùng</b>.", A_ConLai, soDuA),
                             "Thông báo",
                             true,
                             "danger"
@@ -832,7 +899,7 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
                     {
                         Helper_Tabler_cl.ShowModal(
                             this.Page,
-                            $"Quyền tiêu dùng của bạn không đủ.<br/>Cần <b>{canTraA_Tong:#,##0.##} Quyền tiêu dùng</b>, bạn đang có <b>{soDuA:#,##0.##} Quyền tiêu dùng</b>.",
+                            string.Format("Quyền tiêu dùng của bạn không đủ.<br/>Cần <b>{0:#,##0.##} Quyền tiêu dùng</b>, bạn đang có <b>{1:#,##0.##} Quyền tiêu dùng</b>.", canTraA_Tong, soDuA),
                             "Thông báo",
                             true,
                             "danger"
@@ -890,7 +957,7 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
                     lsUuDai.id_donhang = id_dh;
                     lsUuDai.LoaiHoSo_Vi = 2; // ✅ ví ưu đãi
                     lsUuDai.ghichu =
-                        $"Ưu đãi {phanTramUuDai}% đơn {id_dh}: trừ {A_UuDai:#,##0.##} Quyền tiêu dùng";
+                        string.Format("Ưu đãi {0}% đơn {1}: trừ {2:#,##0.##} Quyền tiêu dùng", phanTramUuDai, id_dh, A_UuDai);
                     db.LichSu_DongA_tbs.InsertOnSubmit(lsUuDai);
 
                     if (q_tk != null && q_tk.Vi1That_Evocher_30PhanTram.HasValue)
@@ -906,7 +973,7 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
                     lsA.id_donhang = id_dh;
                     lsA.LoaiHoSo_Vi = 1; // ví tiêu dùng (Đồng A)
                     lsA.ghichu =
-                        $"Trao đổi đơn {id_dh} (phần còn lại): trừ {A_ConLai:#,##0.##} Quyền tiêu dùng";
+                        string.Format("Trao đổi đơn {0} (phần còn lại): trừ {1:#,##0.##} Quyền tiêu dùng", id_dh, A_ConLai);
                     db.LichSu_DongA_tbs.InsertOnSubmit(lsA);
 
                     if (q_tk != null && q_tk.DongA.HasValue)
@@ -922,7 +989,7 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
                     ls.CongTru = false;
                     ls.id_donhang = id_dh;
                     ls.LoaiHoSo_Vi = 1;//ví tiêu dùng
-                    ls.ghichu = $"Trao đổi đơn {id_dh}: trừ {canTraA_Tong:#,##0.##} Quyền tiêu dùng";
+                    ls.ghichu = string.Format("Trao đổi đơn {0}: trừ {1:#,##0.##} Quyền tiêu dùng", id_dh, canTraA_Tong);
                     db.LichSu_DongA_tbs.InsertOnSubmit(ls);
 
                     if (q_tk != null && q_tk.DongA.HasValue)
@@ -954,28 +1021,28 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
                 if (apDungUuDai)
                 {
                     msgOk =
-                        $"Đặt hàng thành công.<br/>" +
-                        $"ID đơn hàng: <b>{id_dh}</b><br/><br/>" +
-                        $"Ưu đãi: <b>{phanTramUuDai}%</b> → trừ ví ưu đãi <b>{A_UuDai:#,##0.##} Quyền tiêu dùng</b><br/>" +
-                        $"Còn lại: trừ Quyền tiêu dùng <b>{A_ConLai:#,##0.##} Quyền tiêu dùng</b><br/><br/>" +
-                        $"Tổng trừ: <b>{canTraA_Tong:#,##0.##} Quyền tiêu dùng</b>";
+                        "Đặt hàng thành công.<br/>" +
+                        string.Format("ID đơn hàng: <b>{0}</b><br/><br/>", id_dh) +
+                        string.Format("Ưu đãi: <b>{0}%</b> → trừ ví ưu đãi <b>{1:#,##0.##} Quyền tiêu dùng</b><br/>", phanTramUuDai, A_UuDai) +
+                        string.Format("Còn lại: trừ Quyền tiêu dùng <b>{0:#,##0.##} Quyền tiêu dùng</b><br/><br/>", A_ConLai) +
+                        string.Format("Tổng trừ: <b>{0:#,##0.##} Quyền tiêu dùng</b>", canTraA_Tong);
                 }
                 else
                 {
                     if (phanTramUuDai > 0)
                     {
                         msgOk =
-                            $"Đặt hàng thành công.<br/>" +
-                            $"ID đơn hàng: <b>{id_dh}</b><br/><br/>" +
-                            $"Ưu đãi: <b>{phanTramUuDai}%</b> nhưng <b>ví ưu đãi không đủ</b> → hệ thống trừ toàn bộ bằng Quyền tiêu dùng.<br/>" +
-                            $"Đã trừ: <b>{canTraA_Tong:#,##0.##} Quyền tiêu dùng</b>.";
+                            "Đặt hàng thành công.<br/>" +
+                            string.Format("ID đơn hàng: <b>{0}</b><br/><br/>", id_dh) +
+                            string.Format("Ưu đãi: <b>{0}%</b> nhưng <b>ví ưu đãi không đủ</b> → hệ thống trừ toàn bộ bằng Quyền tiêu dùng.<br/>", phanTramUuDai) +
+                            string.Format("Đã trừ: <b>{0:#,##0.##} Quyền tiêu dùng</b>.", canTraA_Tong);
                     }
                     else
                     {
                         msgOk =
-                            $"Đặt hàng thành công.<br/>" +
-                            $"ID đơn hàng: <b>{id_dh}</b><br/>" +
-                            $"Đã trừ <b>{canTraA_Tong:#,##0.##} Quyền tiêu dùng</b>.";
+                            "Đặt hàng thành công.<br/>" +
+                            string.Format("ID đơn hàng: <b>{0}</b><br/>", id_dh) +
+                            string.Format("Đã trừ <b>{0:#,##0.##} Quyền tiêu dùng</b>.", canTraA_Tong);
                     }
                 }
 
@@ -1012,7 +1079,10 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
                 Button button = (Button)sender;
                 string _idsp = button.CommandArgument;
 
-                var q = db.BaiViet_tbs.FirstOrDefault(p => p.id.ToString() == _idsp && p.bin == false);
+                var q = db.BaiViet_tbs.FirstOrDefault(p =>
+                    p.id.ToString() == _idsp
+                    && p.bin == false
+                    && db.taikhoan_tbs.Any(acc => acc.taikhoan == p.nguoitao && acc.block != true));
                 if (q == null)
                 {
                     Helper_Tabler_cl.ShowModal(this.Page, "Sản phẩm đã ngừng bán", "Thông báo", true, "danger");
@@ -1066,12 +1136,19 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
                 }
                 else
                 {
+                    var sp = AccountVisibility_cl.FindVisibleProductById(db, idsp);
+                    if (sp == null)
+                    {
+                        Helper_Tabler_cl.ShowModal(this.Page, "Sản phẩm đã ngừng bán hoặc tài khoản đã bị khóa.", "Thông báo", true, "warning");
+                        return;
+                    }
+
                     GioHang_tb ob = new GioHang_tb();
                     ob.ngaythem = DateTime.Now;
                     ob.taikhoan = tk;
                     ob.idsp = idsp;
                     ob.soluong = slAdd;
-                    ob.nguoiban_goc = db.BaiViet_tbs.First(p => p.id.ToString() == idsp).nguoitao;
+                    ob.nguoiban_goc = sp.nguoitao;
                     ob.nguoiban_danglai = "";
                     db.GioHang_tbs.InsertOnSubmit(ob);
                     db.SubmitChanges();
@@ -1146,6 +1223,7 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
             prefixText = prefixText ?? "";
             return db.BaiViet_tbs
                 .Where(p => p.bin == false && p.phanloai == "sanpham"
+                         && db.taikhoan_tbs.Any(acc => acc.taikhoan == p.nguoitao && acc.block != true)
                          && (((p.name ?? "")).StartsWith(prefixText) || ((p.name_en ?? "")).StartsWith(prefixText)))
                 .Select(p => p.name)
                 .Distinct()

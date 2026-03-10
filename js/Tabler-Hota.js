@@ -180,6 +180,12 @@ if (window.Sys && Sys.WebForms && Sys.WebForms.PageRequestManager) {
 
 /*BEGIN ẨN HIỆN MẬT KHẨU Ở TEXTBOX PASSWORD*/
 (function () {
+    if (window.__ahaPasswordToggleBound === true) {
+        return;
+    }
+
+    window.__ahaPasswordToggleBound = true;
+
     // Gắn 1 listener duy nhất trên document
     document.addEventListener('click', function (e) {
         var toggle = e.target.closest('.js-toggle-password');
@@ -399,6 +405,106 @@ if (window.Sys && Sys.WebForms && Sys.WebForms.PageRequestManager) {
         }
     };
 })();
+/*BEGIN SHOW MODAL 2 BUTTONS*/
+(function () {
+    var currentModalEl = null;
+    var currentBackdropEl = null;
+
+    function closeModal() {
+        if (currentModalEl) {
+            currentModalEl.remove();
+            currentModalEl = null;
+        }
+        if (currentBackdropEl) {
+            currentBackdropEl.remove();
+            currentBackdropEl = null;
+        }
+        document.body.classList.remove("modal-open");
+        document.body.style.removeProperty("overflow");
+    }
+
+    // API: show_modal_2btn(message, title, allowBackdropClose, type, primaryText, primaryHref, secondaryText, secondaryHref)
+    window.show_modal_2btn = function (message, title, allowBackdropClose, type, primaryText, primaryHref, secondaryText, secondaryHref) {
+        closeModal();
+
+        var colorClass =
+            type === "danger" ? "bg-danger text-white" :
+                type === "warning" ? "bg-warning" :
+                    type === "success" ? "bg-success text-white" :
+                        type === "info" ? "bg-info text-white" :
+                            "bg-primary text-white";
+
+        var html = `
+            <div class="modal modal-blur show" id="dynamicModal2"
+                 tabindex="-1" role="dialog" style="display:block;">
+              <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+
+                  <div class="modal-header ${colorClass}">
+                    <h5 class="modal-title">${title || ""}</h5>
+                    <button type="button" class="btn-close btn-close-white" aria-label="Close"></button>
+                  </div>
+
+                  <div class="modal-body">
+                    ${message || ""}
+                  </div>
+
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary btn-secondary-action">${secondaryText || "Để sau"}</button>
+                    <button type="button" class="btn btn-danger btn-primary-action">${primaryText || "Đăng xuất"}</button>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+        `;
+
+        var wrapper = document.createElement("div");
+        wrapper.innerHTML = html.trim();
+        var modal = wrapper.firstChild;
+
+        currentModalEl = modal;
+        var backdrop = document.createElement("div");
+        backdrop.className = "modal-backdrop fade show";
+        currentBackdropEl = backdrop;
+
+        document.body.appendChild(backdrop);
+        document.body.appendChild(modal);
+        document.body.classList.add("modal-open");
+        document.body.style.overflow = "hidden";
+
+        modal.querySelector(".btn-close").addEventListener("click", closeModal);
+
+        var primaryBtn = modal.querySelector(".btn-primary-action");
+        if (primaryBtn) {
+            primaryBtn.addEventListener("click", function () {
+                if (primaryHref) {
+                    window.location.href = primaryHref;
+                } else {
+                    closeModal();
+                }
+            });
+        }
+
+        var secondaryBtn = modal.querySelector(".btn-secondary-action");
+        if (secondaryBtn) {
+            secondaryBtn.addEventListener("click", function () {
+                if (secondaryHref) {
+                    window.location.href = secondaryHref;
+                } else {
+                    closeModal();
+                }
+            });
+        }
+
+        if (allowBackdropClose === true) {
+            modal.addEventListener("click", function (e) {
+                if (e.target === modal) closeModal();
+            });
+        }
+    };
+})();
+/*END SHOW MODAL 2 BUTTONS*/
 /*END SHOW MODAL*/
 
 /*END SELECT ALL*/

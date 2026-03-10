@@ -3,11 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.UI;
+using System.Web.UI.WebControls;
 
 public partial class home_login : System.Web.UI.Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
+        bool switchHomeRequested = string.Equals((Request.QueryString["switch"] ?? "").Trim(), "home", StringComparison.OrdinalIgnoreCase);
+        if (switchHomeRequested)
+            PortalActiveMode_cl.SetMode(PortalActiveMode_cl.ModeHome);
         // Ensure postback keeps the friendly URL (/dang-nhap) when this page is rewritten.
         if (this.Form != null && Request != null)
         {
@@ -16,6 +20,10 @@ public partial class home_login : System.Web.UI.Page
         }
 
         CaptureReturnUrlFromQuery();
+
+        PlaceHolder phSwitchHomeMode = FindControlRecursive(this, "ph_switch_home_mode") as PlaceHolder;
+        if (phSwitchHomeMode != null)
+            phSwitchHomeMode.Visible = (!PortalActiveMode_cl.IsHomeActive() && PortalActiveMode_cl.HasHomeCredential());
 
         if (!IsPostBack)
         {
@@ -32,33 +40,64 @@ public partial class home_login : System.Web.UI.Page
 
             if (taikhoan_cl.exist_taikhoan(_tk))
             {
+                bool validHomeCredential = false;
                 using (dbDataContext db = new dbDataContext())
                 {
                     taikhoan_tb acc = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == _tk);
                     bool canLoginHome = acc != null && PortalScope_cl.CanLoginHome(acc.taikhoan, acc.phanloai, acc.permission);
+                    validHomeCredential = canLoginHome;
                     if (canLoginHome)
                     {
-                        string _url_back = Session["url_back_home"] as string;
-                        if (!string.IsNullOrEmpty(_url_back))
-                            Response.Redirect(_url_back, false);
-                        else
-                            Response.Redirect("/home/quan-ly-tin/default.aspx", false);
+                        PortalActiveMode_cl.SetMode(PortalActiveMode_cl.ModeHome);
+                        bool forceChangePassword = AccountResetSecurity_cl.ShouldForceHomePassword(db, acc.taikhoan);
+                        bool forceChangePin = AccountResetSecurity_cl.ShouldForceHomePin(db, acc.taikhoan);
+                        if (forceChangePassword)
+                        {
+                            Response.Redirect("/home/DoiMatKhau.aspx?force=1", false);
+                            Context.ApplicationInstance.CompleteRequest();
+                            return;
+                        }
+                        if (forceChangePin)
+                        {
+                            Response.Redirect("/home/DoiPin.aspx?force=1", false);
+                            Context.ApplicationInstance.CompleteRequest();
+                            return;
+                        }
+
+                        Session["home_modal_msg"] = "Bạn đã đăng nhập. Vui lòng đăng xuất để đăng nhập tài khoản khác.";
+                        Session["home_modal_title"] = "Thông báo";
+                        Session["home_modal_type"] = "warning";
+
+                        // Luồng home: luôn về trang chủ sau đăng nhập/auto-redirect.
+                        Session["url_back_home"] = "";
+                        Response.Redirect("/home/default.aspx", false);
 
                         Context.ApplicationInstance.CompleteRequest();
                         return;
                     }
                 }
 
-                check_login_cl.del_all_cookie_session_home();
-                string scope = "";
-                using (dbDataContext dbScope = new dbDataContext())
+                if (!validHomeCredential)
                 {
-                    taikhoan_tb accScope = dbScope.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == _tk);
-                    if (accScope != null)
-                        scope = PortalScope_cl.ResolveScope(accScope.taikhoan, accScope.phanloai, accScope.permission);
+                    check_login_cl.del_all_cookie_session_home();
+                    string scope = "";
+                    using (dbDataContext dbScope = new dbDataContext())
+                    {
+                        taikhoan_tb accScope = dbScope.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == _tk);
+                        if (accScope != null)
+                            scope = PortalScope_cl.ResolveScope(accScope.taikhoan, accScope.phanloai, accScope.permission);
+                    }
+                    string targetPortal = scope == PortalScope_cl.ScopeShop ? "trang shop" : "trang admin";
+                    if (scope == PortalScope_cl.ScopeShop)
+                    {
+                        Session["thongbao_shop"] = thongbao_class.metro_dialog_onload("Thông báo", "Tài khoản này chỉ được phép đăng nhập ở trang shop.", "false", "false", "OK", "alert", "");
+                        Response.Redirect("/shop/login.aspx", false);
+                        Context.ApplicationInstance.CompleteRequest();
+                        return;
+                    }
+
+                    Session["thongbao_home"] = "modal|Thông báo|Tài khoản này chỉ được phép đăng nhập ở " + targetPortal + ".|warning|2500";
                 }
-                string targetPortal = scope == PortalScope_cl.ScopeShop ? "trang shop" : "trang admin";
-                Session["thongbao_home"] = "modal|Thông báo|Tài khoản này chỉ được phép đăng nhập ở " + targetPortal + ".|warning|2500";
             }
             #endregion
 
@@ -75,10 +114,17 @@ public partial class home_login : System.Web.UI.Page
             {
                 string _phone = AccountAuth_cl.NormalizePhone(txt_user.Text);
                 string _pass = txt_pass.Text ?? "";
+                string rawUser = (txt_user.Text ?? "").Trim();
 
                 if (string.IsNullOrEmpty(_phone))
                 {
                     Helper_Tabler_cl.ShowModal(this.Page, "Vui lòng nhập số điện thoại.", "Thông báo", true, "warning");
+                    return;
+                }
+
+                if (rawUser.Contains("@"))
+                {
+                    Helper_Tabler_cl.ShowModal(this.Page, "Trang home chỉ cho phép đăng nhập bằng số điện thoại.", "Thông báo", true, "warning");
                     return;
                 }
 
@@ -134,7 +180,15 @@ public partial class home_login : System.Web.UI.Page
                 if (!PortalScope_cl.CanLoginHome(fullAccount.taikhoan, fullAccount.phanloai, fullAccount.permission))
                 {
                     string scope = PortalScope_cl.ResolveScope(fullAccount.taikhoan, fullAccount.phanloai, fullAccount.permission);
-                    string targetPortal = scope == PortalScope_cl.ScopeShop ? "trang shop" : "trang admin";
+                    if (scope == PortalScope_cl.ScopeShop)
+                    {
+                        Session["thongbao_shop"] = thongbao_class.metro_dialog_onload("Thông báo", "Tài khoản này chỉ được phép đăng nhập ở trang shop.", "false", "false", "OK", "alert", "");
+                        Response.Redirect("/shop/login.aspx", false);
+                        Context.ApplicationInstance.CompleteRequest();
+                        return;
+                    }
+
+                    string targetPortal = "trang admin";
                     Helper_Tabler_cl.ShowModal(this.Page, "Tài khoản này chỉ được phép đăng nhập ở " + targetPortal + ".", "Thông báo", true, "warning");
                     return;
                 }
@@ -143,6 +197,9 @@ public partial class home_login : System.Web.UI.Page
                 {
                     db.SubmitChanges();
                 }
+
+                bool forceChangePasswordAfterLogin = AccountResetSecurity_cl.ShouldForceHomePassword(db, fullAccount.taikhoan);
+                bool forceChangePinAfterLogin = AccountResetSecurity_cl.ShouldForceHomePin(db, fullAccount.taikhoan);
 
                 // ✅ Đăng nhập OK (GIỮ LOGIC)
                 string _taikhoan_mahoa = mahoa_cl.mahoa_Bcorn(account.TaiKhoan);
@@ -158,12 +215,27 @@ public partial class home_login : System.Web.UI.Page
 
                 Session["taikhoan_home"] = _taikhoan_mahoa;
                 Session["matkhau_home"] = _matkhau_mahoa;
+                PortalActiveMode_cl.SetMode(PortalActiveMode_cl.ModeHome);
 
-                string _url_back = Session["url_back_home"]?.ToString();
-                if (!string.IsNullOrEmpty(_url_back))
-                    Response.Redirect(_url_back, false);
-                else
-                    Response.Redirect("/home/default.aspx", false);
+                if (forceChangePasswordAfterLogin)
+                {
+                    Session["thongbao_home"] = thongbao_class.metro_notifi_onload("Thông báo", "Mật khẩu này là mật khẩu tạm thời. Vui lòng đổi lại ngay.", "1800", "warning");
+                    Response.Redirect("/home/DoiMatKhau.aspx?force=1", false);
+                    Context.ApplicationInstance.CompleteRequest();
+                    return;
+                }
+
+                if (forceChangePinAfterLogin)
+                {
+                    Session["thongbao_home"] = thongbao_class.metro_notifi_onload("Thông báo", "PIN này là PIN tạm thời. Vui lòng đổi lại ngay.", "1800", "warning");
+                    Response.Redirect("/home/DoiPin.aspx?force=1", false);
+                    Context.ApplicationInstance.CompleteRequest();
+                    return;
+                }
+
+                // Luồng home: luôn về trang chủ sau đăng nhập thành công.
+                Session["url_back_home"] = "";
+                Response.Redirect("/home/default.aspx", false);
 
                 Context.ApplicationInstance.CompleteRequest();
             }
@@ -174,88 +246,6 @@ public partial class home_login : System.Web.UI.Page
             Helper_Tabler_cl.ShowModal(this.Page, "Có lỗi xảy ra. Vui lòng thử lại.", "Thông báo", true, "warning");
         }
     }
-
-    #region khôi phục mật khẩu
-    protected void but_show_form_quenmk_Click(object sender, EventArgs e)
-    {
-        pn_khoiphuc.Visible = true;
-        txt_email_khoiphuc.Focus();
-    }
-
-    protected void but_close_form_quenmk_Click(object sender, EventArgs e)
-    {
-        txt_email_khoiphuc.Text = "";
-        pn_khoiphuc.Visible = false;
-    }
-
-    protected void but_nhanma_Click(object sender, EventArgs e)
-    {
-        using (dbDataContext db = new dbDataContext())
-        {
-            String_cl str_cl = new String_cl();
-            string _email = txt_email_khoiphuc.Text.Trim().ToLower();
-
-            if (str_cl.KiemTra_Email(_email) == false)
-            {
-                Helper_Tabler_cl.ShowModal(this.Page, "Email không hợp lệ.", "Thông báo", true, "warning");
-                return;
-            }
-
-            var scopedAccounts = db.taikhoan_tbs
-                .Where(p => (p.email ?? "").Trim().ToLower() == _email)
-                .ToList()
-                .Where(p => PortalScope_cl.CanLoginHome(p.taikhoan, p.phanloai, p.permission))
-                .ToList();
-
-            if (scopedAccounts.Count > 1)
-            {
-                Helper_Tabler_cl.ShowModal(this.Page, "Email này đang trùng nhiều tài khoản trong hệ AhaSale. Vui lòng liên hệ quản trị để xử lý.", "Thông báo", true, "warning");
-                return;
-            }
-
-            taikhoan_tb q = scopedAccounts.FirstOrDefault();
-            if (q == null)
-            {
-                Helper_Tabler_cl.ShowModal(this.Page, "Email này không tồn tại trong hệ thống.", "Thông báo", true, "warning");
-                return;
-            }
-
-            // THÔNG BÁO QUA EMAIL (GIỮ LOGIC)
-            List<string> emailAddresses = new List<string> { _email };
-
-            string _tenmien = HttpContext.Current.Request.Url.Host.ToUpper();
-            string _tieude = "Khôi phục mật khẩu";
-
-            string _ma = Guid.NewGuid().ToString().ToLower();
-            string _link_khoiphuc = $"{Request.Url.Scheme}://{Request.Url.Authority}{"/home/khoi-phuc-mat-khau.aspx?code=" + _ma}";
-            DateTime _hsd = AhaTime_cl.Now.AddMinutes(5);
-
-            string _noidung = "<div style='color:red'>Ai đó đã yêu cầu đặt lại mật khẩu của bạn tại " + _tenmien + "</div>";
-            _noidung += "<div style='color:red'>Nếu không phải là bạn, vui lòng bỏ qua email này.<hr/></div>";
-            _noidung += "<div>Tài khoản của bạn: <b>" + q.taikhoan + "</b></div>";
-            _noidung += "<div><a href='" + _link_khoiphuc + "'><b>Nhấp vào đây</b></a> để đặt lại mật khẩu của bạn.</div>";
-            _noidung += "<div>Thời gian hết hạn: " + _hsd.ToString("dd/MM/yyyy HH:mm") + "</div>";
-
-            if (q.hsd_makhoiphuc == null || q.hsd_makhoiphuc.Value < AhaTime_cl.Now)
-            {
-                q.makhoiphuc = _ma;
-                q.hansudung = null;
-                q.hsd_makhoiphuc = _hsd;
-                db.SubmitChanges();
-
-                foreach (var _email_nhan in emailAddresses)
-                    guiEmail_cl.SendEmail(_email_nhan, _tieude, _noidung, _tenmien, "");
-            }
-
-            txt_email_khoiphuc.Text = "";
-            pn_khoiphuc.Visible = false;
-
-            Helper_Tabler_cl.ShowModal(this.Page,
-                "Chúng tôi đã gửi yêu cầu khôi phục vào email của bạn. Vui lòng kiểm tra cả Hộp thư rác và làm theo hướng dẫn.",
-                "Thông báo", true, "warning");
-        }
-    }
-    #endregion
 
     private void CaptureReturnUrlFromQuery()
     {
@@ -301,5 +291,23 @@ public partial class home_login : System.Web.UI.Page
             return "";
 
         return value;
+    }
+
+    private static Control FindControlRecursive(Control root, string id)
+    {
+        if (root == null || string.IsNullOrEmpty(id))
+            return null;
+
+        if (string.Equals(root.ID, id, StringComparison.Ordinal))
+            return root;
+
+        foreach (Control child in root.Controls)
+        {
+            Control found = FindControlRecursive(child, id);
+            if (found != null)
+                return found;
+        }
+
+        return null;
     }
 }

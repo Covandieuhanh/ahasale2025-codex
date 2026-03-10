@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.UI;
@@ -62,8 +63,9 @@ public partial class home_lich_su_quyen_lao_dong : System.Web.UI.Page
         lb_so_du_da_ghi_nhan.Text = summary.TongSoDaGhiNhan.ToString("#,##0.##");
 
         lb_moc_hople.Text =
-            "Điểm nhận sẽ đủ điều kiện ghi nhận sau " + summary.SoPhutChoHopLe + " phút. "
-            + "Mốc đang áp dụng: " + summary.MocHopLe.ToString("dd/MM/yyyy HH:mm:ss");
+            (summary.DieuKienHopLeText ?? HanhViGhiNhanHoSo_cl.GetDieuKienHopLeText())
+            + " Mốc hệ thống hiện tại: " + AhaTime_cl.Now.ToString("dd/MM/yyyy HH:mm:ss")
+            + " Điểm đã duyệt của hồ sơ này được ghi nhận vào dữ liệu chờ chi trả lương, không cộng trực tiếp vào Số dư điểm trong hồ sơ.";
 
         var hanhViRows = summary.Rows.Select(p => new
         {
@@ -98,8 +100,48 @@ public partial class home_lich_su_quyen_lao_dong : System.Web.UI.Page
             })
             .ToList();
 
+        Dictionary<Guid, decimal> daChiTraTheoYeuCau = new Dictionary<Guid, decimal>();
+        if (dsYeuCauRaw.Count > 0)
+        {
+            var refToIdMap = dsYeuCauRaw.ToDictionary(
+                p => HanhViGhiNhanHoSo_cl.GetPayoutRefId(p.IdYeuCauRut),
+                p => p.IdYeuCauRut,
+                StringComparer.OrdinalIgnoreCase);
+
+            var payoutRows = db.LichSu_DongA_tbs
+                .Where(p =>
+                    p.taikhoan == tk
+                    && p.KyHieu9HanhVi_1_9.HasValue
+                    && p.KyHieu9HanhVi_1_9.Value >= fromKy
+                    && p.KyHieu9HanhVi_1_9.Value <= toKy
+                    && p.LoaiHoSo_Vi == LoaiHoSoVi
+                    && p.CongTru.HasValue
+                    && p.CongTru.Value == false
+                    && p.id_rutdiem != null
+                    && p.id_rutdiem.StartsWith(HanhViGhiNhanHoSo_cl.PayoutRefPrefix))
+                .Select(p => new
+                {
+                    RefId = p.id_rutdiem,
+                    SoDiem = p.dongA
+                })
+                .ToList();
+
+            foreach (var payout in payoutRows)
+            {
+                Guid idYeuCau;
+                if (!refToIdMap.TryGetValue((payout.RefId ?? "").Trim(), out idYeuCau))
+                    continue;
+
+                decimal current = 0m;
+                if (daChiTraTheoYeuCau.ContainsKey(idYeuCau))
+                    current = daChiTraTheoYeuCau[idYeuCau];
+                daChiTraTheoYeuCau[idYeuCau] = current + (payout.SoDiem ?? 0m);
+            }
+        }
+
         var dsYeuCau = dsYeuCauRaw.Select(p => new
         {
+            DaChiTra = daChiTraTheoYeuCau.ContainsKey(p.IdYeuCauRut) ? daChiTraTheoYeuCau[p.IdYeuCauRut] : 0m,
             p.IdYeuCauRut,
             p.NgayTao,
             p.NgayCapNhat,
@@ -110,7 +152,27 @@ public partial class home_lich_su_quyen_lao_dong : System.Web.UI.Page
             TrangThaiText = HanhViGhiNhanHoSo_cl.GetTrangThaiText(p.TrangThai),
             p.NguoiDuyet,
             p.GhiChu
-        }).ToList();
+        }).ToList()
+        .Select(p =>
+        {
+            bool daChiTraXong =
+                p.TrangThaiCode == HanhViGhiNhanHoSo_cl.TrangThaiDaDuyet
+                && (p.TongQuyen - p.DaChiTra) <= 0m;
+            return new
+            {
+                p.IdYeuCauRut,
+                p.NgayTao,
+                p.NgayCapNhat,
+                p.KyHieu9HanhVi_1_9,
+                p.TenHanhVi,
+                p.TongQuyen,
+                TrangThaiCode = daChiTraXong ? "3" : p.TrangThaiCode,
+                TrangThaiText = daChiTraXong ? "Đã chi trả" : p.TrangThaiText,
+                p.NguoiDuyet,
+                p.GhiChu
+            };
+        })
+        .ToList();
 
         RepeaterYeuCauGhiNhan.DataSource = dsYeuCau;
         RepeaterYeuCauGhiNhan.DataBind();

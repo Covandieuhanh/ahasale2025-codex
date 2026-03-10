@@ -18,7 +18,7 @@ public partial class home_danh_gia_tu_toi : System.Web.UI.Page
                 ViewState["taikhoan"] = mahoa_cl.giaima_Bcorn(_tk);
             else
                 ViewState["taikhoan"] = "";
-            string taiKhoanHienTai = ViewState["taikhoan"]?.ToString() ?? "";
+            string taiKhoanHienTai = Convert.ToString(ViewState["taikhoan"]) ?? "";
             using (dbDataContext db = new dbDataContext())
             {
                 var data =

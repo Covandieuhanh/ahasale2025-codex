@@ -1,7 +1,80 @@
 ﻿<%@ Control Language="C#" AutoEventWireup="true" CodeFile="Header_uc.ascx.cs" Inherits="Uc_Home_Header_uc" %>
 <style>
+    :root {
+        --aha-top-icon-bg: #ffffff;
+        --aha-top-icon-border: #d9e2ec;
+        --aha-top-icon-text: #111111;
+    }
+
+    html[data-bs-theme="dark"],
+    body[data-bs-theme="dark"],
+    body.theme-dark,
+    body.dark,
+    body.dark-mode {
+        --aha-top-icon-bg: #1f2937;
+        --aha-top-icon-border: #334155;
+        --aha-top-icon-text: #f3f4f6;
+    }
+
     .notif-item {
         position: relative;
+    }
+
+    .home-top-circle-btn {
+        width: 46px;
+        height: 46px;
+        min-width: 46px;
+        min-height: 46px;
+        border-radius: 999px;
+        border: 1px solid var(--aha-top-icon-border);
+        background: var(--aha-top-icon-bg);
+        color: var(--aha-top-icon-text);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all .2s ease;
+    }
+
+    .site-header .home-top-circle-btn i,
+    .site-header .home-top-circle-btn .ti,
+    .site-header .d-lg-none .btn.btn-icon.bg-white i,
+    .site-header .d-lg-none .btn.btn-icon.bg-white .ti {
+        font-size: 22px;
+        color: var(--aha-top-icon-text) !important;
+    }
+
+    .site-header .d-lg-none .btn.btn-icon.bg-white {
+        border: 1px solid var(--aha-top-icon-border) !important;
+        background: var(--aha-top-icon-bg) !important;
+    }
+
+    .home-top-circle-btn:hover {
+        border-color: #c8d4e1;
+        background: #f8fafc;
+        transform: translateY(-1px);
+    }
+
+    #notifPopup {
+        background: var(--aha-home-dd-bg, #ffffff) !important;
+        border: 1px solid var(--aha-home-dd-border, #dbe6ef);
+        color: var(--aha-home-dd-text, #102a43);
+    }
+
+    .home-dropdown-avatar {
+        width: 88px !important;
+        height: 88px !important;
+        min-width: 88px !important;
+        min-height: 88px !important;
+        max-width: 88px !important;
+        max-height: 88px !important;
+        aspect-ratio: 1 / 1;
+        border-radius: 50% !important;
+        display: inline-block;
+        overflow: hidden;
+        background-size: cover !important;
+        background-position: center center !important;
+        background-repeat: no-repeat !important;
+        flex: 0 0 88px;
     }
 
     .notif-kebab {
@@ -9,64 +82,181 @@
         right: 12px;
         bottom: 12px;
     }
+
+    @media (min-width: 992px) {
+        .site-header .brand-center-mobile {
+            display: none !important;
+        }
+
+        .site-header #navbar-menu {
+            width: 100%;
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+            align-items: center;
+            column-gap: 16px;
+        }
+
+        .site-header .header-left-nav {
+            justify-self: start;
+            min-width: 0;
+        }
+
+        .site-header .header-right-nav {
+            justify-self: end;
+            min-width: 0;
+        }
+
+        .site-header .brand-center-desktop {
+            justify-self: center;
+            display: inline-flex;
+            align-items: center;
+            font-weight: 700;
+            color: #ffffff !important;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .site-header .brand-center-desktop img {
+            height: 30px !important;
+            width: auto;
+        }
+    }
+
+    .site-header .brand-center-mobile,
+    .site-header .brand-center-mobile span,
+    .site-header .brand-center-desktop,
+    .site-header .brand-center-desktop span {
+        color: #ffffff !important;
+    }
+
+    @media (max-width: 575.98px) {
+        .site-header .container-fluid {
+            padding-left: 6px;
+            padding-right: 6px;
+        }
+
+        .site-header .brand-center-mobile {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            max-width: 132px;
+            z-index: 1;
+            pointer-events: auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .site-header .brand-center-mobile img {
+            height: 24px !important;
+            width: auto;
+        }
+
+        .site-header .brand-center-mobile span {
+            display: inline-block;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 1.05rem;
+            font-weight: 700;
+        }
+
+        .site-header .d-lg-none.ms-auto.d-flex {
+            gap: 4px !important;
+        }
+
+        .site-header .d-lg-none.ms-auto.d-flex .btn,
+        .site-header .d-lg-none.ms-auto.d-flex .home-top-circle-btn {
+            width: 34px;
+            height: 34px;
+            min-width: 34px;
+            min-height: 34px;
+            padding: 0;
+        }
+
+        .site-header .d-lg-none a[title="Tin đã lưu"] {
+            display: none !important;
+        }
+
+        .site-header .d-lg-none.ms-auto.d-flex .btn .ti,
+        .site-header .d-lg-none.ms-auto.d-flex .home-top-circle-btn .ti {
+            font-size: 18px !important;
+        }
+    }
+
+    @media (max-width: 389.98px) {
+        .site-header .brand-center-mobile span {
+            font-size: .96rem;
+        }
+    }
 </style>
 <header class="navbar navbar-expand-lg fixed-top d-print-none site-header">
     <div class="container-fluid position-relative">
 
         <!-- MOBILE: Hamburger -->
-        <button class="btn btn-icon d-lg-none" type="button"
+        <button class="btn btn-icon home-top-circle-btn bg-white d-lg-none" type="button"
             data-bs-toggle="offcanvas" data-bs-target="#mobileMenu"
             aria-controls="mobileMenu" aria-label="Menu">
             <i class="ti ti-menu-2"></i>
         </button>
 
-        <!-- BRAND -->
-        <a class="navbar-brand fw-bold d-flex align-items-center me-lg-3 brand-center-mobile d-lg-inline-flex" href="<%= ((ViewState["portal_scope"] ?? "").ToString() == PortalScope_cl.ScopeShop) ? "/shop/default.aspx" : "/" %>">
-            <img src="/uploads/images/logo-aha-trang.png" class="me-2 d-none d-lg-inline-block" style="height: 32px" alt="AhaSale" />
-            <span class="d-none d-lg-inline">AhaSale</span>
-            <span class="d-lg-none">AhaSale</span>
+        <!-- BRAND MOBILE -->
+        <a class="navbar-brand fw-bold d-flex align-items-center brand-center-mobile d-lg-none"
+            href="<%= ((ViewState["portal_scope"] ?? "").ToString() == PortalScope_cl.ScopeShop) ? "/shop/default.aspx" : "/" %>">
+            <img src="/uploads/images/logo-aha-trang.png" class="me-2" style="height: 28px" alt="AhaSale" />
+            <span>AhaSale</span>
         </a>
 
         <!-- DESKTOP NAV -->
         <div class="collapse navbar-collapse d-none d-lg-flex" id="navbar-menu">
-            <ul class="navbar-nav me-auto align-items-lg-center gap-lg-2">
+            <ul class="navbar-nav align-items-lg-center gap-lg-2 header-left-nav">
+                <% if (PortalRequest_cl.IsShopPortalRequest()) { %>
+                <li class="nav-item"><a class="nav-link fw-semibold" href="/dang-nhap?switch=home">Chuyển sang home (cá nhân)</a></li>
+                <% } else { %>
                 <%=show_danhmuc_nav %>
+                <li class="nav-item"><a class="nav-link fw-semibold" href="/shop/login.aspx?switch=shop">Chuyển sang shop</a></li>
+                <% } %>
                 <asp:PlaceHolder ID="phDonBan" runat="server" Visible="false"></asp:PlaceHolder>
                <%-- <li class="nav-item"><a class="nav-link fw-semibold" href="#">Bất động sản</a></li>
                 <li class="nav-item"><a class="nav-link fw-semibold" href="#">Việc làm</a></li>--%>
             </ul>
 
+            <a class="brand-center-desktop"
+                href="<%= ((ViewState["portal_scope"] ?? "").ToString() == PortalScope_cl.ScopeShop) ? "/shop/default.aspx" : "/" %>">
+                <img src="/uploads/images/logo-aha-trang.png" class="me-2" alt="AhaSale" />
+                <span>AhaSale</span>
+            </a>
+
             <!-- DESKTOP RIGHT -->
-            <div class="navbar-nav flex-row align-items-center gap-2">
-                <asp:PlaceHolder ID="phTopDesktopHomeUtilities" runat="server" Visible="true">
+            <div class="navbar-nav flex-row align-items-center gap-2 header-right-nav">
+                <asp:PlaceHolder ID="phTopDesktopHomeUtilities" runat="server" Visible="false">
                     <div class="position-relative d-none d-lg-block">
                         <a href="/home/quan-ly-tin/tin-da-luu.aspx"
-                            class="btn btn-icon bg-white rounded-circle"
+                            class="home-top-circle-btn"
                             title="Tin đã lưu">
-                            <i class="ti ti-heart text-success"></i>
+                            <i class="ti ti-heart"></i>
                         </a>
-
                     </div>
-                    <asp:UpdatePanel ID="UpdatePanel4" runat="server" UpdateMode="Conditional">
-                        <ContentTemplate>
-                            <a class="btn btn-icon bg-white rounded-circle position-relative"
-                                href="/home/gio-hang.aspx"
-                                title="Giỏ hàng">
-                                <i class="ti ti-shopping-cart text-success"></i>
-                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill"
-                                    style="background: #FFF3CD; color: #856404; font-size: 11px; min-width: 18px; height: 18px; line-height: 18px; padding: 0;">0
-                                </span>
-                            </a>
-                        </ContentTemplate>
-                    </asp:UpdatePanel>
+                    <div class="position-relative d-none d-lg-block">
+                        <a href="/home/gio-hang.aspx"
+                            class="home-top-circle-btn position-relative"
+                            title="Giỏ hàng">
+                            <i class="ti ti-shopping-cart"></i>
+                            <span id="badgeGioHangDesktop" runat="server" class="badge position-absolute top-0 end-0"
+                                style="background: #FFF3CD; color: #856404; font-size: 11px; min-width: 18px; height: 18px; line-height: 18px; padding: 0 4px;">
+                                <asp:Label ID="lb_sl_giohang_desktop" runat="server" Text="0"></asp:Label>
+                            </span>
+                        </a>
+                    </div>
                 </asp:PlaceHolder>
-                <asp:PlaceHolder ID="phTopNotificationDesktop" runat="server" Visible="true">
+                <asp:PlaceHolder ID="phTopNotificationDesktop" runat="server" Visible="false">
                     <asp:UpdatePanel ID="UpdatePanel1" runat="server" UpdateMode="Conditional">
                         <ContentTemplate>
                             <div class="nav-item position-relative">
                                 <asp:LinkButton ID="but_show_form_thongbao"
                                     runat="server"
-                                    CssClass="btn btn-icon rounded-circle position-relative"
+                                    CssClass="home-top-circle-btn position-relative"
                                     OnClick="but_show_form_thongbao_Click"
                                     OnClientClick="showNotif();">
                                     <i class="ti ti-bell"></i>
@@ -84,30 +274,33 @@
                     </asp:UpdatePanel>
                 </asp:PlaceHolder>
                 <asp:PlaceHolder ID="PlaceHolder1" runat="server">
+                    <% if (!PortalRequest_cl.IsShopPortalRequest() && string.IsNullOrEmpty(PortalRequest_cl.GetCurrentAccountEncrypted())) { %>
                     <a href="/dang-nhap" class="btn btn-dark rounded-pill  px-3">Đăng nhập</a>
                     <a href="/home/dangky.aspx"
                         class="btn flex-fill"
                         style="border-radius: 999px; background: #e9f7ef; color: #146c43; border: 1px solid rgba(25,135,84,.45);">Đăng ký
                     </a>
+                    <% } %>
                 </asp:PlaceHolder>
 
-                <%--<a href="/home/quan-ly-tin/default.aspx" class="btn btn-dark rounded-pill fw-semibold px-3">Đăng tin</a>--%>
-
                 <!-- USER DROPDOWN -->
-                <div class="nav-item dropdown">
-                    <a id="userMenuToggle" href="#" class="home-account-toggle"
-                        data-bs-toggle="dropdown" aria-expanded="false">
-                        <span class="home-account-avatar" style="background-image: url('<%= ViewState["anhdaidien"] %>')"></span>
-                        <span class="home-account-name"><%: (ViewState["hoten"] ?? "Tài khoản").ToString() %></span>
-                        <i class="ti ti-chevron-down home-account-caret"></i>
-                    </a>
+                <asp:PlaceHolder ID="phTopDesktopAccount" runat="server" Visible="true">
+                    <% if (!string.IsNullOrEmpty(PortalRequest_cl.GetCurrentAccountEncrypted())) { %>
+                    <div class="nav-item aha-account">
+                        <a id="userMenuToggle" href="#" class="home-account-toggle"
+                            aria-expanded="false">
+                            <span class="home-account-avatar" style="background-image: url('<%= ViewState["anhdaidien"] %>')"></span>
+                            <span class="home-account-name"><%: (ViewState["hoten"] ?? "Tài khoản").ToString() %></span>
+                            <i class="ti ti-chevron-down home-account-caret"></i>
+                        </a>
 
-                    <div class="dropdown-menu dropdown-menu-end p-3 account-dropdown"
-                        id="accountMenuHostDesktop"
-                        style="width: 360px; border-radius: 16px;">
+                        <div class="account-dropdown account-menu-host"
+                            id="accountMenuHostDesktop"
+                            style="width: 360px; border-radius: 16px;">
+                        </div>
                     </div>
-                </div>
-
+                    <% } %>
+                </asp:PlaceHolder>
             </div>
         </div>
 
@@ -116,12 +309,13 @@
             <asp:PlaceHolder ID="phTopMobileHomeUtilities" runat="server" Visible="true">
                 <asp:UpdatePanel ID="UpdatePanel8" runat="server" UpdateMode="Conditional">
                     <ContentTemplate>
-                        <a class="btn btn-icon bg-white rounded-circle position-relative"
+                        <a class="btn btn-icon home-top-circle-btn bg-white position-relative"
                             href="/home/gio-hang.aspx"
                             title="Giỏ hàng">
                             <i class="ti ti-shopping-cart text-success"></i>
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill"
-                                style="background: #FFF3CD; color: #856404; font-size: 11px; min-width: 18px; height: 18px; line-height: 18px; padding: 0;">0
+                            <span id="badgeGioHangMobile" runat="server" class="position-absolute top-0 start-100 translate-middle badge rounded-pill"
+                                style="background: #FFF3CD; color: #856404; font-size: 11px; min-width: 18px; height: 18px; line-height: 18px; padding: 0 4px;">
+                                <asp:Label ID="lb_sl_giohang_mobile" runat="server" Text="0"></asp:Label>
                             </span>
                         </a>
                     </ContentTemplate>
@@ -133,7 +327,7 @@
                     <ContentTemplate>
                         <asp:LinkButton ID="LinkButton1"
                             runat="server"
-                            CssClass="btn btn-icon rounded-circle position-relative"
+                            CssClass="btn btn-icon home-top-circle-btn bg-white position-relative"
                             OnClick="but_show_form_thongbao_Click">
                             <i class="ti ti-bell"></i>
                             <span id="badgeThongBaoMobile" runat="server" class="badge bg-red position-absolute top-0 end-0"
@@ -147,23 +341,25 @@
             <!--FAVORITE -->
             <asp:PlaceHolder ID="phTopMobileFavorite" runat="server" Visible="true">
                 <a href="/home/quan-ly-tin/tin-da-luu.aspx"
-                    class="btn btn-icon bg-white rounded-circle"
+                    class="btn btn-icon home-top-circle-btn bg-white"
                     title="Tin đã lưu">
                     <i class="ti ti-heart text-success"></i>
                 </a>
             </asp:PlaceHolder>
 
             <!-- account -->
-            <button type="button"
-                class="btn btn-icon bg-white rounded-circle position-relative p-0"
-                data-bs-toggle="offcanvas"
-                data-bs-target="#accountMenuCanvas"
-                aria-controls="accountMenuCanvas"
-                aria-label="Tài khoản"
-                style="width: 40px; height: 40px; overflow: hidden;">
-                <span class="d-block w-100 h-100"
-                    style="background-image: url('<%= ViewState["anhdaidien"] %>'); background-size: cover; background-position: center; border-radius: 50%;"></span>
-            </button>
+            <asp:PlaceHolder ID="phTopMobileAccount" runat="server" Visible="true">
+                <button type="button"
+                    class="btn btn-icon home-top-circle-btn bg-white position-relative p-0"
+                    data-bs-toggle="offcanvas"
+                    data-bs-target="#accountMenuCanvas"
+                    aria-controls="accountMenuCanvas"
+                    aria-label="Tài khoản"
+                    style="overflow: hidden;">
+                    <span class="d-block w-100 h-100"
+                        style="background-image: url('<%= ViewState["anhdaidien"] %>'); background-size: cover; background-position: center; border-radius: 50%;"></span>
+                </button>
+            </asp:PlaceHolder>
 
         </div>
 
@@ -218,7 +414,7 @@
                     <div class="fw-bold" style="font-size: 1.05rem;">Thông báo</div>
 
                     <div class="d-flex gap-2">
-                        <a href="<%= ((ViewState["portal_scope"] ?? "").ToString() == PortalScope_cl.ScopeShop) ? "/shop/default.aspx" : "/home/quan-ly-thong-bao/default.aspx" %>" class="btn btn-sm btn-success" style="border-radius: 10px;">Xem tất cả
+                        <a href="<%= ((ViewState["portal_scope"] ?? "").ToString() == PortalScope_cl.ScopeShop) ? "/shop/default.aspx" : "/home/quan-ly-tin/default.aspx" %>" class="btn btn-sm btn-success" style="border-radius: 10px;">Xem tất cả
                         </a>
                     </div>
                 </div>
@@ -326,7 +522,7 @@
 
             </div>
             <div class="notif-foot p-3">
-                <a href="<%= ((ViewState["portal_scope"] ?? "").ToString() == PortalScope_cl.ScopeShop) ? "/shop/default.aspx" : "/home/quan-ly-thong-bao/default.aspx" %>" class="btn btn-outline-secondary w-100" style="border-radius: 12px;">Quản lý thông báo
+                <a href="<%= ((ViewState["portal_scope"] ?? "").ToString() == PortalScope_cl.ScopeShop) ? "/shop/default.aspx" : "/home/quan-ly-tin/default.aspx" %>" class="btn btn-outline-secondary w-100" style="border-radius: 12px;">Quản lý thông báo
                 </a>
             </div>
         </ContentTemplate>
@@ -335,6 +531,8 @@
 
 <!-- ✅ CHÈN MENU USER THẬT Ở ĐÂY -->
 <div id="accountMenuContent" style="display: none;">
+    <div class="account-menu-shell">
+        <div class="account-menu-body">
     <asp:UpdatePanel ID="UpdatePanelGuestCard" runat="server" Visible="false" UpdateMode="Conditional">
         <ContentTemplate>
             <div class="card border-0 shadow-sm mb-3" style="border-radius: 14px;">
@@ -362,6 +560,13 @@
                             </a>
                         </div>
                     </div>
+                    <asp:PlaceHolder ID="phGuestSwitchHome" runat="server" Visible="false">
+                        <div class="mt-2">
+                            <a href="/dang-nhap?switch=home"
+                                class="btn btn-warning w-100"
+                                style="border-radius: 12px;">Chuyển sang tài khoản cá nhân</a>
+                        </div>
+                    </asp:PlaceHolder>
                 </div>
             </div>
 
@@ -376,7 +581,7 @@
                 <div class="card border-0 bg-light mb-3" style="border-radius: 14px; overflow: hidden;">
                     <div class="p-3">
                         <div class="d-flex align-items-center gap-3">
-                            <span class="avatar avatar-lg rounded-circle"
+                            <span class="avatar avatar-lg rounded-circle home-dropdown-avatar"
                                 style="background-image: url('<%= ViewState["anhdaidien"] %>')"></span>
 
                             <div class="flex-fill">
@@ -436,7 +641,7 @@
                                         <span class="d-block text-muted" style="font-size: 11px; line-height: 1.1; white-space: normal;">Hồ sơ quyền ưu đãi
                                         </span>
                                         <span class="d-block fw-semibold" style="line-height: 1.2;">
-                                            <%= ViewState["DuVi1_Evocher_30PhanTram"] %>
+                                            <%= ViewState["HoSo_UuDai_Real"] ?? ViewState["DuVi1_Evocher_30PhanTram"] %>
                                         </span>
                                     </span>
 
@@ -458,7 +663,7 @@
                                         <span class="d-block text-muted" style="font-size: 11px; line-height: 1.1; white-space: normal;">Hồ sơ hành vi lao động
                                         </span>
                                         <span class="d-block fw-semibold" style="line-height: 1.2;">
-                                            <%= ViewState["DuVi2_LaoDong_50PhanTram"] %>
+                                            <%= ViewState["HoSo_LaoDong_Real"] ?? ViewState["DuVi2_LaoDong_50PhanTram"] %>
                                         </span>
                                     </span>
 
@@ -480,7 +685,7 @@
                                         <span class="d-block text-muted" style="font-size: 11px; line-height: 1.1; white-space: normal;">Hồ sơ chỉ số gắn kết
                                         </span>
                                         <span class="d-block fw-semibold" style="line-height: 1.2;">
-                                            <%= ViewState["DuVi3_GanKet_20PhanTram"] %>
+                                            <%= ViewState["HoSo_GanKet_Real"] ?? ViewState["DuVi3_GanKet_20PhanTram"] %>
                                         </span>
                                     </span>
 
@@ -560,17 +765,17 @@
                         </asp:PlaceHolder>
 
                         <asp:PlaceHolder ID="phMenuHomeCopyLink" runat="server" Visible="true">
-                            <asp:LinkButton
-                                ID="but_copy_link_gioithieu"
-                                runat="server"
-                                CssClass="list-group-item d-flex align-items-center justify-content-between py-3"
-                                OnClick="but_copy_link_gioithieu_Click">
+                            <a class="list-group-item d-flex align-items-center justify-content-between py-3"
+                               href="javascript:void(0);"
+                               data-copy-ref="1"
+                               data-ref-link="<%= System.Web.HttpUtility.HtmlAttributeEncode("https://ahasale.vn/home/page/gioi-thieu-nguoi-dung.aspx?u=" + (ViewState["taikhoan"] ?? "").ToString()) %>"
+                               onclick="return copyReferralLink(this);">
                                 <span class="d-flex align-items-center gap-2">
                                     <i class="ti ti-link text-secondary"></i>
                                     <span class="fw-medium">Copy link giới thiệu</span>
                                 </span>
                                 <i class="ti ti-chevron-right text-secondary"></i>
-                            </asp:LinkButton>
+                            </a>
                         </asp:PlaceHolder>
 
                         <asp:PlaceHolder ID="phMenuHomeDoiPin" runat="server" Visible="true">
@@ -679,7 +884,7 @@
                             <a class="list-group-item d-flex align-items-center justify-content-between py-3" href="/shop/cho-thanh-toan">
                                 <div class="d-flex align-items-center gap-2">
                                     <i class="ti ti-credit-card text-secondary"></i>
-                                    <span class="fw-medium">Chờ thanh toán</span>
+                                    <span class="fw-medium">Chờ trao đổi</span>
                                 </div>
                                 <i class="ti ti-chevron-right text-secondary"></i>
                             </a>
@@ -702,19 +907,27 @@
                             </a>
                         </asp:PlaceHolder>
 
+                        <asp:PlaceHolder ID="phSwitchToShop" runat="server" Visible="false">
+                            <a class="list-group-item d-flex align-items-center justify-content-between py-3" href="/shop/login.aspx?switch=shop">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="ti ti-building-store text-success"></i>
+                                    <span class="fw-semibold text-success">Chuyển sang gian hàng đối tác</span>
+                                </div>
+                                <i class="ti ti-chevron-right text-success"></i>
+                            </a>
+                        </asp:PlaceHolder>
 
-                        <!-- Đăng xuất: list-item + chữ đỏ -->
-                        <asp:LinkButton
-                            ID="but_dangxuat"
-                            runat="server"
-                            CssClass="list-group-item d-flex align-items-center justify-content-between py-3"
-                            OnClick="dangxuat_Click">
-                            <span class="d-flex align-items-center gap-2">
-                                <i class="ti ti-logout text-danger"></i>
-                                <span class="fw-semibold text-danger">Đăng xuất</span>
-                            </span>
-                            <i class="ti ti-chevron-right text-danger"></i>
-                        </asp:LinkButton>
+                        <asp:PlaceHolder ID="phSwitchToHome" runat="server" Visible="false">
+                            <a class="list-group-item d-flex align-items-center justify-content-between py-3" href="/dang-nhap?switch=home">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="ti ti-user-circle text-warning"></i>
+                                    <span class="fw-semibold text-warning">Chuyển sang tài khoản cá nhân</span>
+                                </div>
+                                <i class="ti ti-chevron-right text-warning"></i>
+                            </a>
+                        </asp:PlaceHolder>
+
+
                     </div>
                 </div>
             </asp:PlaceHolder>
@@ -861,6 +1074,20 @@
             </div>
         </div>
     </asp:PlaceHolder>
+        </div>
+        <asp:PlaceHolder ID="phAccountLogoutFooter" runat="server" Visible="false">
+            <div class="account-logout-sticky">
+                <asp:LinkButton
+                    ID="but_dangxuat"
+                    runat="server"
+                    CssClass="account-logout-btn"
+                    OnClick="dangxuat_Click">
+                    <i class="ti ti-logout"></i>
+                    <span>Đăng xuất</span>
+                </asp:LinkButton>
+            </div>
+        </asp:PlaceHolder>
+    </div>
 </div>
 
 <script>
@@ -888,40 +1115,188 @@
 </script>
 
 <script>
-    function mountAccountMenu() {
-        const tpl = document.getElementById('accountMenuContent');
-        const hostDesktop = document.getElementById('accountMenuHostDesktop');
-        const hostMobile = document.getElementById('accountMenuHostMobile');
-        if (!tpl) return;
+    function ensureCenterNotice() {
+        var existing = document.getElementById('ahaCenterNotice');
+        if (existing) return existing;
 
-        tpl.style.display = 'none';
+        var wrap = document.createElement('div');
+        wrap.id = 'ahaCenterNotice';
+        wrap.style.cssText = 'position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:99999;background:rgba(0,0,0,0.35);';
 
-        if (hostDesktop) hostDesktop.innerHTML = '';
-        if (hostMobile) hostMobile.innerHTML = '';
+        var card = document.createElement('div');
+        card.id = 'ahaCenterNoticeCard';
+        card.style.cssText = 'min-width:240px;max-width:85vw;background:#fff;border-radius:14px;padding:16px 18px;box-shadow:0 12px 30px rgba(0,0,0,.2);text-align:center;font-weight:600;';
 
-        if (hostDesktop) {
-            const d = tpl.cloneNode(true);
-            d.removeAttribute('id');
-            d.style.display = '';
-            hostDesktop.appendChild(d);
-        }
-
-        if (hostMobile) {
-            const m = tpl.cloneNode(true);
-            m.removeAttribute('id');
-            m.style.display = '';
-            hostMobile.appendChild(m);
-        }
+        wrap.appendChild(card);
+        document.body.appendChild(wrap);
+        return wrap;
     }
 
-    document.addEventListener('DOMContentLoaded', mountAccountMenu);
+    function showCenterNotice(message, type) {
+        var wrap = ensureCenterNotice();
+        var card = document.getElementById('ahaCenterNoticeCard');
+        if (!wrap || !card) return;
+
+        card.style.color = (type === 'success') ? '#0f5132' : '#664d03';
+        card.style.background = (type === 'success') ? '#d1e7dd' : '#fff3cd';
+        card.style.border = (type === 'success') ? '1px solid #badbcc' : '1px solid #ffecb5';
+        card.textContent = message || '';
+
+        wrap.style.display = 'flex';
+        clearTimeout(wrap._hideTimer);
+        wrap._hideTimer = setTimeout(function () {
+            wrap.style.display = 'none';
+        }, 2200);
+    }
+
+    function copyReferralLink(el) {
+        try {
+            var link = (el && el.getAttribute('data-ref-link')) ? el.getAttribute('data-ref-link') : '';
+            if (!link || link.slice(-2) === 'u=') {
+                showCenterNotice('Không có link giới thiệu để sao chép.', 'warning');
+                return false;
+            }
+
+            function showSuccess() {
+                showCenterNotice('Đã sao chép link giới thiệu thành công.', 'success');
+            }
+
+            function showFail() {
+                showCenterNotice('Không thể sao chép link. Vui lòng thử lại.', 'warning');
+            }
+
+            function fallbackCopy(text) {
+                var ta = document.createElement('textarea');
+                ta.value = text;
+                ta.setAttribute('readonly', '');
+                ta.style.position = 'fixed';
+                ta.style.top = '-1000px';
+                document.body.appendChild(ta);
+                ta.select();
+                try {
+                    var ok = document.execCommand('copy');
+                    if (ok) showSuccess();
+                    else showFail();
+                } catch (e) {
+                    showFail();
+                }
+                document.body.removeChild(ta);
+            }
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(link).then(showSuccess).catch(function () {
+                    fallbackCopy(link);
+                });
+            } else {
+                fallbackCopy(link);
+            }
+        } catch (e) { }
+
+        return false;
+    }
+
+    function bindCopyReferralHandler() {
+        document.addEventListener('click', function (ev) {
+            if (ev.defaultPrevented) return;
+            var target = ev.target;
+            if (!target) return;
+            var el = target.closest('[data-copy-ref="1"]');
+            if (!el) return;
+            ev.preventDefault();
+            copyReferralLink(el);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', bindCopyReferralHandler);
+</script>
+
+<script>
+    function cloneAccountNode(source) {
+        if (!source) return null;
+        var node = source.cloneNode(true);
+        node.removeAttribute('id');
+        node.querySelectorAll('[id]').forEach(function (el) {
+            el.removeAttribute('id');
+        });
+        node.querySelectorAll('script').forEach(function (el) {
+            el.remove();
+        });
+        return node;
+    }
+
+    function mountAccountMenuOnce() {
+        var tpl = document.getElementById('accountMenuContent');
+        var hostDesktop = document.getElementById('accountMenuHostDesktop');
+        if (!tpl || !hostDesktop) return;
+        if (hostDesktop.children && hostDesktop.children.length > 0) return;
+        hostDesktop.innerHTML = tpl.innerHTML;
+        tpl.style.display = 'none';
+    }
+
+    function syncAccountMenuToMobile() {
+        var hostDesktop = document.getElementById('accountMenuHostDesktop');
+        var hostMobile = document.getElementById('accountMenuHostMobile');
+        if (!hostDesktop || !hostMobile) return;
+        var clone = cloneAccountNode(hostDesktop);
+        if (!clone) return;
+        hostMobile.innerHTML = clone.innerHTML;
+    }
+
+    function setupAccountDropdown() {
+        var toggle = document.getElementById('userMenuToggle');
+        var wrapper = toggle ? toggle.closest('.aha-account') : null;
+        if (!toggle || !wrapper) return;
+        if (toggle.getAttribute('data-dropdown-bound') === '1') return;
+        toggle.setAttribute('data-dropdown-bound', '1');
+        wrapper.classList.remove('is-open');
+        toggle.setAttribute('aria-expanded', 'false');
+
+        function closeMenu() {
+            wrapper.classList.remove('is-open');
+            toggle.setAttribute('aria-expanded', 'false');
+        }
+
+        function openMenu() {
+            wrapper.classList.add('is-open');
+            toggle.setAttribute('aria-expanded', 'true');
+        }
+
+        toggle.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (wrapper.classList.contains('is-open')) {
+                closeMenu();
+            } else {
+                openMenu();
+            }
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!wrapper.contains(e.target)) {
+                closeMenu();
+            }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closeMenu();
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        mountAccountMenuOnce();
+        setupAccountDropdown();
+    });
 
     if (window.Sys && window.Sys.WebForms && Sys.WebForms.PageRequestManager) {
-        Sys.WebForms.PageRequestManager.getInstance().add_endRequest(mountAccountMenu);
+        Sys.WebForms.PageRequestManager.getInstance().add_endRequest(function () {
+            mountAccountMenuOnce();
+            setupAccountDropdown();
+        });
     }
 
     document.addEventListener('shown.bs.offcanvas', function (e) {
-        if (e.target && e.target.id === 'accountMenuCanvas') mountAccountMenu();
+        if (e.target && e.target.id === 'accountMenuCanvas') {
+            syncAccountMenuToMobile();
+        }
     });
 </script>
 

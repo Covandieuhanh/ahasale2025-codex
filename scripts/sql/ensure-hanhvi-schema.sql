@@ -24,16 +24,41 @@ BEGIN TRY
     IF COL_LENGTH(N'dbo.YeuCauRutQuyen_tb', N'KyHieu9HanhVi_1_9') IS NULL
         THROW 51004, N'Missing required column dbo.YeuCauRutQuyen_tb.KyHieu9HanhVi_1_9', 1;
 
-    /* Lich su ledger indexes */
-    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.LichSu_DongA_tb') AND name = N'IX_LichSu_DongA_tb_TaiKhoan_HoSo_Ngay_Id')
-        EXEC(N'CREATE NONCLUSTERED INDEX IX_LichSu_DongA_tb_TaiKhoan_HoSo_Ngay_Id
-               ON dbo.LichSu_DongA_tb (taikhoan_idx ASC, LoaiHoSo_Vi ASC, ngay DESC, id DESC)
-               INCLUDE (dongA, CongTru, KyHieu9HanhVi_1_9);');
+    /* Lich su ledger indexes (support both legacy and normalized column names) */
+    DECLARE @col_taikhoan NVARCHAR(128) = NULL;
+    DECLARE @col_id_rutdiem NVARCHAR(128) = NULL;
 
-    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.LichSu_DongA_tb') AND name = N'IX_LichSu_DongA_tb_IdRutDiem')
-        EXEC(N'CREATE NONCLUSTERED INDEX IX_LichSu_DongA_tb_IdRutDiem
-               ON dbo.LichSu_DongA_tb (id_rutdiem_idx ASC)
-               INCLUDE (LoaiHoSo_Vi, KyHieu9HanhVi_1_9, dongA, ngay, taikhoan_idx);');
+    IF COL_LENGTH(N'dbo.LichSu_DongA_tb', N'taikhoan_idx') IS NOT NULL
+        SET @col_taikhoan = N'taikhoan_idx';
+
+    IF COL_LENGTH(N'dbo.LichSu_DongA_tb', N'id_rutdiem_idx') IS NOT NULL
+        SET @col_id_rutdiem = N'id_rutdiem_idx';
+
+    IF @col_taikhoan IS NOT NULL
+       AND COL_LENGTH(N'dbo.LichSu_DongA_tb', N'LoaiHoSo_Vi') IS NOT NULL
+       AND COL_LENGTH(N'dbo.LichSu_DongA_tb', N'ngay') IS NOT NULL
+       AND COL_LENGTH(N'dbo.LichSu_DongA_tb', N'id') IS NOT NULL
+       AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.LichSu_DongA_tb') AND name = N'IX_LichSu_DongA_tb_TaiKhoan_HoSo_Ngay_Id')
+    BEGIN
+        DECLARE @sql_idx_tk NVARCHAR(MAX) = N'CREATE NONCLUSTERED INDEX IX_LichSu_DongA_tb_TaiKhoan_HoSo_Ngay_Id
+               ON dbo.LichSu_DongA_tb (' + QUOTENAME(@col_taikhoan) + N' ASC, LoaiHoSo_Vi ASC, ngay DESC, id DESC)
+               INCLUDE (dongA, CongTru, KyHieu9HanhVi_1_9);';
+        EXEC(@sql_idx_tk);
+    END
+
+    IF @col_id_rutdiem IS NOT NULL
+       AND @col_taikhoan IS NOT NULL
+       AND COL_LENGTH(N'dbo.LichSu_DongA_tb', N'LoaiHoSo_Vi') IS NOT NULL
+       AND COL_LENGTH(N'dbo.LichSu_DongA_tb', N'KyHieu9HanhVi_1_9') IS NOT NULL
+       AND COL_LENGTH(N'dbo.LichSu_DongA_tb', N'dongA') IS NOT NULL
+       AND COL_LENGTH(N'dbo.LichSu_DongA_tb', N'ngay') IS NOT NULL
+       AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.LichSu_DongA_tb') AND name = N'IX_LichSu_DongA_tb_IdRutDiem')
+    BEGIN
+        DECLARE @sql_idx_rut NVARCHAR(MAX) = N'CREATE NONCLUSTERED INDEX IX_LichSu_DongA_tb_IdRutDiem
+               ON dbo.LichSu_DongA_tb (' + QUOTENAME(@col_id_rutdiem) + N' ASC)
+               INCLUDE (LoaiHoSo_Vi, KyHieu9HanhVi_1_9, dongA, ngay, ' + QUOTENAME(@col_taikhoan) + N');';
+        EXEC(@sql_idx_rut);
+    END
 
     /* Distribution detail table indexes/default */
     IF NOT EXISTS
@@ -58,6 +83,36 @@ BEGIN TRY
         EXEC(N'CREATE NONCLUSTERED INDEX IX_VLNH_LSBH_CT_TaiKhoan_Nhan_ThoiGian
                ON dbo.ViLoiNhuan_LichSuBanHang_ChiTiet_tb (TaiKhoan_Nhan ASC, ThoiGian DESC)
                INCLUDE (id_LichSuBanHang, DongANhanDuoc, LoaiHanhVi);');
+
+    /* Backfill compatibility when legacy LoaiVi still exists */
+    IF COL_LENGTH(N'dbo.ViLoiNhuan_LichSuBanHang_ChiTiet_tb', N'LoaiVi') IS NOT NULL
+    BEGIN
+        EXEC(N'UPDATE dbo.ViLoiNhuan_LichSuBanHang_ChiTiet_tb
+               SET LoaiHanhVi = ISNULL(LoaiHanhVi, LoaiVi)
+               WHERE LoaiHanhVi IS NULL AND LoaiVi IS NOT NULL;');
+    END;
+
+    EXEC(N'UPDATE dbo.ViLoiNhuan_LichSuBanHang_ChiTiet_tb
+           SET LoaiHanhVi = 0
+           WHERE LoaiHanhVi IS NULL;');
+
+    /* If unique index still keyed by legacy LoaiVi then rebuild on LoaiHanhVi */
+    IF EXISTS
+    (
+        SELECT 1
+        FROM sys.indexes i
+        JOIN sys.index_columns ic
+          ON ic.object_id = i.object_id
+         AND ic.index_id = i.index_id
+        JOIN sys.columns c
+          ON c.object_id = ic.object_id
+         AND c.column_id = ic.column_id
+        WHERE i.object_id = OBJECT_ID(N'dbo.ViLoiNhuan_LichSuBanHang_ChiTiet_tb')
+          AND i.name = N'UX_VLNH_LSBH_CT_NoDup'
+          AND c.name = N'LoaiVi'
+          AND ic.key_ordinal > 0
+    )
+        EXEC(N'DROP INDEX UX_VLNH_LSBH_CT_NoDup ON dbo.ViLoiNhuan_LichSuBanHang_ChiTiet_tb;');
 
     IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.ViLoiNhuan_LichSuBanHang_ChiTiet_tb') AND name = N'UX_VLNH_LSBH_CT_NoDup')
         EXEC(N'CREATE UNIQUE NONCLUSTERED INDEX UX_VLNH_LSBH_CT_NoDup

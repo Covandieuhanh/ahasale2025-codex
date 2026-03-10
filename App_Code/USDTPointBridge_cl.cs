@@ -198,22 +198,27 @@ public static class USDTPointBridge_cl
                     linked_transfer_id = tx.id
                 };
             }
-            catch (SqlException ex) when (ex.Number == 2601 || ex.Number == 2627)
+            catch (SqlException ex)
             {
-                tran.Rollback();
-                using (dbDataContext db2 = new dbDataContext())
+                if (ex.Number == 2601 || ex.Number == 2627)
                 {
-                    EnsureBridgeTable(db2);
-                    var existed = GetDepositByTxHash(db2, txHash);
-                    if (existed != null)
+                    tran.Rollback();
+                    using (dbDataContext db2 = new dbDataContext())
                     {
-                        if (!IsReplayPayloadConsistent(request, existed))
-                            return Error("Duplicate tx_hash with mismatched payload.", txHash, request.usdt_amount, 0, treasuryAccount, "security_replay_mismatch");
-                        return BuildAlreadyProcessedResult(txHash, treasuryAccount, existed);
+                        EnsureBridgeTable(db2);
+                        var existed = GetDepositByTxHash(db2, txHash);
+                        if (existed != null)
+                        {
+                            if (!IsReplayPayloadConsistent(request, existed))
+                                return Error("Duplicate tx_hash with mismatched payload.", txHash, request.usdt_amount, 0, treasuryAccount, "security_replay_mismatch");
+                            return BuildAlreadyProcessedResult(txHash, treasuryAccount, existed);
+                        }
                     }
-                }
 
-                return Error("Duplicate transaction detected.", txHash, request.usdt_amount, 0, treasuryAccount, "duplicate_tx");
+                    return Error("Duplicate transaction detected.", txHash, request.usdt_amount, 0, treasuryAccount, "duplicate_tx");
+                }
+                tran.Rollback();
+                return Error("Bridge internal sql error.", txHash, request.usdt_amount, 0, treasuryAccount, "internal_sql_error");
             }
             catch
             {

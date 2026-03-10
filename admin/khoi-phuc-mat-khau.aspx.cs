@@ -83,7 +83,7 @@ public partial class admin_khoi_phuc_mat_khau : System.Web.UI.Page
                 // Đặt thuộc tính Secure để chỉ cho phép truyền cookie qua kết nối an toàn
                 _ck.Secure = true;
                 //chỉ định tên miền mà cookie được áp dụng. Bằng cách này, cookie chỉ được gửi đến máy chủ từ tên miền đã chỉ định, các miền con sẽ đc áp dụng theo
-                //_ck.Domain = "https://bcorn.net";//bị ảnh hưởng khi ở localhost
+                //_ck.Domain = "https://ahasale.vn";//bị ảnh hưởng khi ở localhost
                 Response.Cookies.Add(_ck);
 
                 //lưu session
@@ -91,7 +91,7 @@ public partial class admin_khoi_phuc_mat_khau : System.Web.UI.Page
                 Session["matkhau"] = _matkhau_mahoa;
                 Session["thongbao"] = thongbao_class.metro_notifi_onload("Thông báo", "Đăng nhập thành công.", "1000", "warning");
 
-                string _url_back = Session["url_back"]?.ToString();
+                string _url_back = Convert.ToString(Session["url_back"]);
 
                 if (!string.IsNullOrEmpty(_url_back))
                 {

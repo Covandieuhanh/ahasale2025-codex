@@ -23,7 +23,7 @@
 
 <title></title>
 <meta name="description" content="Mô tả ngắn và hấp dẫn về nội dung của trang web của bạn." />
-<link rel="canonical" href="https://bcorn.net" />--%>
+<link rel="canonical" href="https://ahasale.vn" />--%>
 
 
     <%--Favicon & icon Mobile & meta--%>
@@ -32,12 +32,12 @@
     <%--css nguồn--%>
     <link href="/Metro-UI-CSS-master/css/metro-all.min.css" rel="stylesheet" />
     <%--dành riêng cho trang login--%>
-    <link href="/css/login.css?v=2026-03-02.1" rel="stylesheet" />
-    <link href="/css/aha-ui-refresh.css?v=2026-03-02.1" rel="stylesheet" />
+    <link href="/assetscss/login.css?v=2026-03-02.1" rel="stylesheet" />
+    <link href="/assetscss/aha-ui-refresh.css?v=2026-03-02.1" rel="stylesheet" />
     <%--viết thêm dựa vào metro--%>
-    <link href="/css/bcorn-with-metro.css" rel="stylesheet" />
+    <link href="/assetscss/bcorn-with-metro.css" rel="stylesheet" />
     <%--sửa lại css metro theo ý mình--%>
-    <link href="/css/fix-metro.css" rel="stylesheet" />
+    <link href="/assetscss/fix-metro.css" rel="stylesheet" />
     <!-- jquery nên để trước các js khác -->
     <%--<script src="/js/jquery-3.7.1.min.js"></script>--%>
     <style>
@@ -91,7 +91,12 @@
                                         <asp:Label ID="Label1" runat="server" Text=""></asp:Label>
                                     </div>
                                     <div class="mt-5">
-                                        <asp:TextBox MaxLength="50" TextMode="Password" ID="txt_pass" runat="server" data-role="input" data-prepend="<span class='mif-key'>" placeholder="Nhập mật khẩu mới"></asp:TextBox>
+                                        <div class="aha-password-field">
+                                            <asp:TextBox MaxLength="50" TextMode="Password" ID="txt_pass" runat="server" data-role="input" data-prepend="<span class='mif-key'>" placeholder="Nhập mật khẩu mới"></asp:TextBox>
+                                            <button type="button" class="aha-password-toggle js-toggle-password" aria-label="Hiện mật khẩu">
+                                                <span class="aha-password-toggle-label">Hiện</span>
+                                            </button>
+                                        </div>
                                     </div>
                                     <div class="mt-5">
                                         <div style="float: left">
@@ -126,7 +131,7 @@
         </div>
     </form>
     <script src="/Metro-UI-CSS-master/js/metro.min.js"></script>
-    <script src="/js/aha-ui-refresh.js?v=2026-03-02.2"></script>
+    <script src="/js/aha-ui-refresh.js?v=2026-03-07.2"></script>
 
     <%=ViewState["thongbao"] %>
 </body>

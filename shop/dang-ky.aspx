@@ -25,7 +25,12 @@
             <label for="txt_email">Email (dùng để đăng nhập)</label>
             <asp:TextBox ID="txt_email" runat="server" CssClass="input" MaxLength="120"></asp:TextBox>
             <label for="txt_matkhau">Mật khẩu</label>
-            <asp:TextBox ID="txt_matkhau" runat="server" CssClass="input" TextMode="Password" MaxLength="120"></asp:TextBox>
+            <div class="aha-password-field">
+                <asp:TextBox ID="txt_matkhau" runat="server" CssClass="input js-password" TextMode="Password" MaxLength="120"></asp:TextBox>
+                <button type="button" class="aha-password-toggle js-toggle-password" aria-label="Hiện mật khẩu">
+                    <span class="aha-password-toggle-label">Hiện</span>
+                </button>
+            </div>
             <label for="txt_hoten">Họ tên / tên shop</label>
             <asp:TextBox ID="txt_hoten" runat="server" CssClass="input" MaxLength="120"></asp:TextBox>
             <label for="txt_dienthoai">Số điện thoại</label>
@@ -39,5 +44,6 @@
             </div>
         </div>
     </form>
+    <script src="/js/aha-ui-refresh.js?v=2026-03-10.1"></script>
 </body>
 </html>

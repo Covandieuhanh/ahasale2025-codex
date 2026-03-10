@@ -30,9 +30,58 @@ public partial class home_don_ban : System.Web.UI.Page
     private const string OFFLINE_CART_SESSION_KEY = "offline_pos_cart_home_don_ban";
     private const string STATUS_FILTER_KEY = "status_filter_donban_home";
 
+    private string GetRequestQueryValue(string key)
+    {
+        if (string.IsNullOrEmpty(key))
+            return "";
+
+        string[] queryValues = Request.QueryString.GetValues(key);
+        if (queryValues != null)
+        {
+            for (int i = 0; i < queryValues.Length; i++)
+            {
+                string item = (queryValues[i] ?? "").Trim();
+                if (!string.IsNullOrEmpty(item))
+                    return item;
+            }
+        }
+
+        string value = (Request.QueryString[key] ?? "").Trim();
+        if (!string.IsNullOrEmpty(value))
+        {
+            string[] splitByComma = value.Split(',');
+            for (int i = 0; i < splitByComma.Length; i++)
+            {
+                string item = (splitByComma[i] ?? "").Trim();
+                if (!string.IsNullOrEmpty(item))
+                    return item;
+            }
+        }
+
+        string rawUrl = Request.RawUrl ?? "";
+        int qPos = rawUrl.IndexOf('?');
+        if (qPos < 0 || qPos >= rawUrl.Length - 1)
+            return "";
+
+        var query = HttpUtility.ParseQueryString(rawUrl.Substring(qPos + 1));
+        value = (query[key] ?? "").Trim();
+        if (string.IsNullOrEmpty(value))
+            return "";
+
+        string[] rawSplitByComma = value.Split(',');
+        for (int i = 0; i < rawSplitByComma.Length; i++)
+        {
+            string item = (rawSplitByComma[i] ?? "").Trim();
+            if (!string.IsNullOrEmpty(item))
+                return item;
+        }
+
+        return value;
+    }
+
     private bool IsCreateStandaloneMode()
     {
-        string raw = (Request.QueryString["taodon"] ?? "").Trim();
+        string raw = GetRequestQueryValue("taodon");
         return raw == "1" || raw.Equals("true", StringComparison.OrdinalIgnoreCase);
     }
 
@@ -53,6 +102,32 @@ public partial class home_don_ban : System.Web.UI.Page
     private string ResolveDonBanListUrl()
     {
         return PortalRequest_cl.IsShopPortalRequest() ? "/shop/don-ban" : "/home/don-ban.aspx";
+    }
+
+    private void EnsurePortalLogin()
+    {
+        if (PortalRequest_cl.IsShopPortalRequest())
+            check_login_cl.check_login_shop("none", "none", true);
+        else
+            check_login_cl.check_login_home("none", "none", true);
+    }
+
+    private string EnsureCurrentAccountInViewState()
+    {
+        string tk = (ViewState["taikhoan"] ?? "").ToString().Trim().ToLowerInvariant();
+        if (!string.IsNullOrEmpty(tk))
+            return tk;
+
+        string tkEncrypted = PortalRequest_cl.GetCurrentAccountEncrypted();
+        if (string.IsNullOrEmpty(tkEncrypted))
+            return "";
+
+        tk = mahoa_cl.giaima_Bcorn(tkEncrypted);
+        tk = (tk ?? "").Trim().ToLowerInvariant();
+        if (!string.IsNullOrEmpty(tk))
+            ViewState["taikhoan"] = tk;
+
+        return tk;
     }
 
     private string NormalizeReturnUrl(string raw)
@@ -86,7 +161,7 @@ public partial class home_don_ban : System.Web.UI.Page
 
     private string ResolveCreateModeBackUrl()
     {
-        string fromQuery = NormalizeReturnUrl(Request.QueryString["return_url"] ?? "");
+        string fromQuery = NormalizeReturnUrl(GetRequestQueryValue("return_url"));
         if (!string.IsNullOrEmpty(fromQuery))
             return fromQuery;
 
@@ -105,6 +180,24 @@ public partial class home_don_ban : System.Web.UI.Page
 
         url += "&return_url=" + HttpUtility.UrlEncode(ResolveDonBanListUrl());
         return url;
+    }
+
+    protected string BuildOrderDetailUrl(object orderIdObj)
+    {
+        string id = (orderIdObj ?? "").ToString().Trim();
+        if (string.IsNullOrEmpty(id))
+            return "#";
+
+        string back = ResolveDonBanListUrl();
+        var query = HttpUtility.ParseQueryString(string.Empty);
+        query["id"] = id;
+        query["mode"] = "sell";
+        query["return_url"] = back;
+
+        string basePath = PortalRequest_cl.IsShopPortalRequest()
+            ? "/shop/don-chi-tiet"
+            : "/home/don-chi-tiet.aspx";
+        return basePath + "?" + query.ToString();
     }
 
     private class DonBanRowVm
@@ -274,6 +367,10 @@ public partial class home_don_ban : System.Web.UI.Page
 
         using (dbDataContext db = new dbDataContext())
         {
+            taikhoan_tb acc = db.taikhoan_tbs.FirstOrDefault(x => x.taikhoan == tk);
+            if (acc != null && PortalScope_cl.CanLoginShop(acc.taikhoan, acc.phanloai, acc.permission))
+                return true;
+
             // ✅ điều kiện: đã có bản ghi duyệt thành công TrangThai = 1
             return db.DangKy_GianHangDoiTac_tbs.Any(x => x.taikhoan == tk && x.TrangThai == 1);
         }
@@ -283,12 +380,13 @@ public partial class home_don_ban : System.Web.UI.Page
     {
         bool createMode = IsCreateStandaloneMode();
         up_main.Visible = !createMode;
-        up_chitiet.Visible = !createMode;
+
+        EnsurePortalLogin();
+        EnsureCurrentAccountInViewState();
 
         if (!IsPostBack)
         {
             Session["url_back_home"] = HttpContext.Current.Request.Url.AbsoluteUri.ToLower();
-            check_login_cl.check_login_home("none", "none", true);
 
             // ✅ CHỈ CHO VÀO NẾU ĐÃ ĐƯỢC DUYỆT GIAN HÀNG ĐỐI TÁC
             if (!IsDuyetGianHangDoiTac())
@@ -316,7 +414,7 @@ public partial class home_don_ban : System.Web.UI.Page
                 BindSearchResults("");
                 BindCartUI();
 
-                string idsp = (Request.QueryString["idsp"] ?? "").Trim();
+                string idsp = GetRequestQueryValue("idsp");
                 if (!string.IsNullOrEmpty(idsp))
                 {
                     AddProductToCartById(idsp, false);
@@ -376,15 +474,6 @@ public partial class home_don_ban : System.Web.UI.Page
             case "da-huy": return "Đã hủy";
             default: return "Tất cả trạng thái";
         }
-    }
-
-    private void CloseChiTietModal()
-    {
-        Repeater2.DataSource = null;
-        Repeater2.DataBind();
-        ViewState["iddh"] = null;
-        pn_chitiet.Visible = false;
-        up_chitiet.Update();
     }
 
     #region main - phân trang - tìm kiếm
@@ -515,28 +604,28 @@ public partial class home_don_ban : System.Web.UI.Page
 
     protected void but_quaylai_Click(object sender, EventArgs e)
     {
-        check_login_cl.check_login_home("none", "none", true);
+        EnsurePortalLogin();
         ViewState["current_page_donban_home"] = int.Parse(ViewState["current_page_donban_home"].ToString()) - 1;
         show_main();
     }
 
     protected void but_xemtiep_Click(object sender, EventArgs e)
     {
-        check_login_cl.check_login_home("none", "none", true);
+        EnsurePortalLogin();
         ViewState["current_page_donban_home"] = int.Parse(ViewState["current_page_donban_home"].ToString()) + 1;
         show_main();
     }
 
     protected void txt_timkiem_TextChanged(object sender, EventArgs e)
     {
-        check_login_cl.check_login_home("none", "none", true);
+        EnsurePortalLogin();
         ViewState["current_page_donban_home"] = 1;
         show_main();
     }
 
     protected void but_loc_trangthai_Click(object sender, EventArgs e)
     {
-        check_login_cl.check_login_home("none", "none", true);
+        EnsurePortalLogin();
         LinkButton button = (LinkButton)sender;
         ViewState[STATUS_FILTER_KEY] = (button.CommandArgument ?? "all").ToString();
         ViewState["current_page_donban_home"] = 1;
@@ -545,53 +634,6 @@ public partial class home_don_ban : System.Web.UI.Page
     #endregion
 
     #region chi tiết đơn hàng
-    protected void LinkButton1_Click(object sender, EventArgs e)
-    {
-        using (dbDataContext db = new dbDataContext())
-        {
-            LinkButton button = (LinkButton)sender;
-            string _iddh = button.CommandArgument;
-
-            var q = db.DonHang_tbs.FirstOrDefault(p => p.id.ToString() == _iddh);
-            if (q != null)
-            {
-                but_dagiaohang.Visible = false;
-                but_huydonhang.Visible = false;
-
-                ViewState["iddh"] = _iddh;
-
-                var q_ct = from ob1 in db.DonHang_ChiTiet_tbs.Where(p => p.id_donhang == _iddh)
-                           join ob2 in db.BaiViet_tbs on ob1.idsp equals ob2.id.ToString() into SanPhamGroup
-                           from ob2 in SanPhamGroup.DefaultIfEmpty()
-                           select new
-                           {
-                               ob1.id,
-                               ob2.name_en,
-                               ob1.id_donhang,
-                               name = ob2 != null ? ob2.name : "",
-                               image = ob2 != null ? ob2.image : "",
-                               PhanTram_GiamGia_ThanhToan_BangEvoucher = ob1.PhanTram_GiamGia_ThanhToan_BangEvoucher,
-                               ob1.giaban,
-                               ob1.soluong,
-                               ob1.thanhtien,
-                           };
-
-                Repeater2.DataSource = q_ct;
-                Repeater2.DataBind();
-
-                pn_chitiet.Visible = true;
-                up_chitiet.Update();
-            }
-        }
-    }
-
-
-    protected void but_close_form_chitiet_Click(object sender, EventArgs e)
-    {
-        CloseChiTietModal();
-    }
-
-
     protected void but_dagiaohang_Click(object sender, EventArgs e)
     {
         using (dbDataContext db = new dbDataContext())
@@ -631,7 +673,6 @@ public partial class home_don_ban : System.Web.UI.Page
 
                 show_main();
                 up_main.Update();
-                CloseChiTietModal();
 
                 Helper_Tabler_cl.ShowModal(this.Page, "Xử lý thành công.", "Thông báo", true, "success");
             }
@@ -663,7 +704,6 @@ public partial class home_don_ban : System.Web.UI.Page
             {
                 show_main();
                 up_main.Update();
-                CloseChiTietModal();
 
                 Helper_Tabler_cl.ShowModal(this.Page, "Không thể hủy đơn hàng này.", "Thông báo", true, "warning");
                 return;
@@ -677,7 +717,6 @@ public partial class home_don_ban : System.Web.UI.Page
 
                 show_main();
                 up_main.Update();
-                CloseChiTietModal();
 
                 Helper_Tabler_cl.ShowModal(this.Page, "Đã hủy đơn Offline (không phát sinh hoàn Hồ sơ).", "Thông báo", true, "success");
                 return;
@@ -742,7 +781,7 @@ public partial class home_don_ban : System.Web.UI.Page
                 lsHoan2.CongTru = true;
                 lsHoan2.id_donhang = iddh;
                 lsHoan2.LoaiHoSo_Vi = 2;
-                lsHoan2.ghichu = $"Hoàn Hồ sơ ưu đãi 30% đơn {iddh}: +{hoanViUuDai30:#,##0.##} Quyền ưu đãi";
+                lsHoan2.ghichu = string.Format("Hoàn Hồ sơ ưu đãi 30% đơn {0}: +{1:#,##0.##} Quyền ưu đãi", iddh, hoanViUuDai30);
 
                 db.LichSu_DongA_tbs.InsertOnSubmit(lsHoan2);
             }
@@ -756,7 +795,7 @@ public partial class home_don_ban : System.Web.UI.Page
                 lsHoan1.CongTru = true;
                 lsHoan1.id_donhang = iddh;
                 lsHoan1.LoaiHoSo_Vi = 1;
-                lsHoan1.ghichu = $"Hoàn Hồ sơ tiêu dùng đơn {iddh}: +{hoanViTieuDung:#,##0.##} Quyền tiêu dùng";
+                lsHoan1.ghichu = string.Format("Hoàn Hồ sơ tiêu dùng đơn {0}: +{1:#,##0.##} Quyền tiêu dùng", iddh, hoanViTieuDung);
 
                 db.LichSu_DongA_tbs.InsertOnSubmit(lsHoan1);
             }
@@ -779,14 +818,13 @@ public partial class home_don_ban : System.Web.UI.Page
             // ===== 7) UI =====
             show_main();
             up_main.Update();
-            CloseChiTietModal();
 
             string msg =
                 "Hủy đơn thành công.<br/>" +
-                $"ID đơn: <b>{iddh}</b><br/>" +
-                $"Đã hoàn tổng: <b>{tongHoanA:#,##0.##} Quyền</b><br/>" +
-                $"- Hồ sơ ưu đãi 30%: <b>+{hoanViUuDai30:#,##0.##} Quyền ưu đãi</b><br/>" +
-                $"- Hồ sơ tiêu dùng: <b>+{hoanViTieuDung:#,##0.##} Quyền tiêu dùng</b>";
+                string.Format("ID đơn: <b>{0}</b><br/>", iddh) +
+                string.Format("Đã hoàn tổng: <b>{0:#,##0.##} Quyền</b><br/>", tongHoanA) +
+                string.Format("- Hồ sơ ưu đãi 30%: <b>+{0:#,##0.##} Quyền ưu đãi</b><br/>", hoanViUuDai30) +
+                string.Format("- Hồ sơ tiêu dùng: <b>+{0:#,##0.##} Quyền tiêu dùng</b>", hoanViTieuDung);
 
             Helper_Tabler_cl.ShowModal(this.Page, msg, "Thông báo", true, "success");
         }
@@ -797,7 +835,7 @@ public partial class home_don_ban : System.Web.UI.Page
     #region tạo đơn offline (POS)
     protected void but_show_form_taodon_Click(object sender, EventArgs e)
     {
-        check_login_cl.check_login_home("none", "none", true);
+        EnsurePortalLogin();
         Response.Redirect(BuildCreateOrderEntryUrl(""), false);
         Context.ApplicationInstance.CompleteRequest();
     }
@@ -817,7 +855,7 @@ public partial class home_don_ban : System.Web.UI.Page
 
     protected void txt_sp_search_TextChanged(object sender, EventArgs e)
     {
-        check_login_cl.check_login_home("none", "none", true);
+        EnsurePortalLogin();
 
         BindSearchResults(txt_sp_search.Text.Trim());
         BindCartUI();
@@ -827,7 +865,7 @@ public partial class home_don_ban : System.Web.UI.Page
 
     protected void RepeaterSearch_ItemCommand(object source, RepeaterCommandEventArgs e)
     {
-        check_login_cl.check_login_home("none", "none", true);
+        EnsurePortalLogin();
 
         if (e.CommandName != "add") return;
 
@@ -843,7 +881,7 @@ public partial class home_don_ban : System.Web.UI.Page
 
     protected void RepeaterCart_ItemCommand(object source, RepeaterCommandEventArgs e)
     {
-        check_login_cl.check_login_home("none", "none", true);
+        EnsurePortalLogin();
 
         string idsp = (e.CommandArgument ?? "").ToString();
         if (string.IsNullOrEmpty(idsp)) return;
@@ -873,7 +911,7 @@ public partial class home_don_ban : System.Web.UI.Page
         else if (e.CommandName == "updateqty")
         {
             TextBox txt = e.Item.FindControl("txt_qty") as TextBox;
-            int qty = Number_cl.Check_Int((txt?.Text ?? "0").Trim());
+            int qty = Number_cl.Check_Int(((txt != null ? txt.Text : "0")).Trim());
             qty = ClampInt(qty, 0, 999);
 
             if (qty <= 0) cart.Remove(item);
@@ -882,7 +920,7 @@ public partial class home_don_ban : System.Web.UI.Page
         else if (e.CommandName == "updatediscount")
         {
             TextBox txt = e.Item.FindControl("txt_discount") as TextBox;
-            int pt = Number_cl.Check_Int((txt?.Text ?? "0").Trim());
+            int pt = Number_cl.Check_Int(((txt != null ? txt.Text : "0")).Trim());
             pt = ClampInt(pt, 0, 50);
             item.PhanTramGiamGia = pt;
         }
@@ -895,7 +933,7 @@ public partial class home_don_ban : System.Web.UI.Page
 
     protected void but_clear_cart_Click(object sender, EventArgs e)
     {
-        check_login_cl.check_login_home("none", "none", true);
+        EnsurePortalLogin();
 
         ClearCart();
         BindCartUI();
@@ -904,7 +942,7 @@ public partial class home_don_ban : System.Web.UI.Page
 
     protected void but_taodon_Click(object sender, EventArgs e)
     {
-        check_login_cl.check_login_home("none", "none", true);
+        EnsurePortalLogin();
 
         var cart = GetCart();
         if (cart == null || cart.Count == 0)
@@ -1014,7 +1052,33 @@ public partial class home_don_ban : System.Web.UI.Page
                     "false", "false", "OK", "alert", ""
                 );
 
-                Response.Redirect(ResolveCreateModeBackUrl(), false);
+                if (PortalRequest_cl.IsShopPortalRequest())
+                {
+                    string sellerAccount = (ViewState["taikhoan"] ?? "").ToString();
+                    var donChoKhac = QueryDonChoTraoDoiBySeller(db, sellerAccount)
+                        .FirstOrDefault(p => p.id.ToString() != id_donhang);
+
+                    if (donChoKhac == null)
+                    {
+                        DonHangStateMachine_cl.SetExchangeStatus(dh, DonHangStateMachine_cl.Exchange_ChoTraoDoi);
+                        dh.chothanhtoan = true;
+                        db.SubmitChanges();
+                    }
+                    else
+                    {
+                        Session["thongbao_home"] = thongbao_class.metro_dialog_onload(
+                            "Thông báo",
+                            "Bạn đang có 1 đơn chờ Trao đổi khác (ID: <b>" + donChoKhac.id + "</b>). Hệ thống chuyển bạn đến trang chờ trao đổi của đơn đang hoạt động.",
+                            "false", "false", "OK", "alert", ""
+                        );
+                    }
+
+                    Response.Redirect("/shop/cho-thanh-toan", false);
+                }
+                else
+                {
+                    Response.Redirect(ResolveCreateModeBackUrl(), false);
+                }
                 Context.ApplicationInstance.CompleteRequest();
                 return;
             }
@@ -1098,7 +1162,6 @@ public partial class home_don_ban : System.Web.UI.Page
         LinkButton button = (LinkButton)sender;
         ViewState["iddh"] = button.CommandArgument;
         but_dagiaohang_Click(sender, EventArgs.Empty);
-        if (pn_chitiet.Visible) CloseChiTietModal();
     }
 
     protected void but_huydonhang_row_Click(object sender, EventArgs e)
@@ -1106,7 +1169,6 @@ public partial class home_don_ban : System.Web.UI.Page
         LinkButton button = (LinkButton)sender;
         ViewState["iddh"] = button.CommandArgument;
         but_huydonhang_Click(sender, EventArgs.Empty);
-        if (pn_chitiet.Visible) CloseChiTietModal();
     }
 
 }

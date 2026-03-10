@@ -207,6 +207,10 @@
         }
 
         .menu-item:hover { background: #f6fbff; }
+        .menu-item-active {
+            background: #ecf9f2;
+            color: #0b6f48;
+        }
 
         .menu-badge {
             font-size: 11px;
@@ -346,19 +350,26 @@
         }
 
         .product-card {
-            border: 1px solid #dce7f2;
+            border: none;
             border-radius: var(--radius-md);
             overflow: hidden;
             background: #fff;
             display: flex;
             flex-direction: column;
             min-height: 100%;
+            box-shadow: 0 2px 14px rgba(0,0,0,.06);
+            transition: transform .18s ease, box-shadow .18s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(16, 42, 67, .16);
         }
 
         .product-thumb {
             position: relative;
             width: 100%;
-            padding-top: 78%;
+            padding-top: 100%;
             background: #f4f8fd;
             overflow: hidden;
             display: block;
@@ -382,7 +393,7 @@
 
         .product-name {
             font-size: 15px;
-            font-weight: 800;
+            font-weight: 700;
             line-height: 1.35;
             color: var(--shop-ink-900);
             min-height: 40px;
@@ -393,9 +404,38 @@
         }
 
         .product-price {
-            color: #0f8f5d;
-            font-size: 18px;
+            color: #d63939;
+            font-size: 16px;
             font-weight: 800;
+        }
+
+        .product-badges {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .product-badge {
+            display: inline-flex;
+            align-items: center;
+            min-height: 22px;
+            border-radius: 999px;
+            padding: 0 8px;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .product-badge-public {
+            color: #0f4c81;
+            background: #e8f2ff;
+            border: 1px solid #c5dbfa;
+        }
+
+        .product-badge-internal {
+            color: #9a3412;
+            background: #fff3e8;
+            border: 1px solid #ffd9bf;
         }
 
         .product-meta {
@@ -538,11 +578,23 @@
                                 <div class="menu-group-title">Trang chính</div>
                                 <a class="menu-item" href="/shop/default.aspx"><span>Trang chủ shop</span><span class="menu-badge">Dashboard</span></a>
                                 <asp:HyperLink ID="lnk_public_shop" runat="server" CssClass="menu-item" Target="_blank"><span>Xem trang công khai</span><span class="menu-badge">Public</span></asp:HyperLink>
+                                <asp:PlaceHolder ID="ph_switch_to_home" runat="server" Visible="false">
+                                    <asp:HyperLink ID="lnk_switch_to_home" runat="server" CssClass="menu-item"><span>Chuyển sang tài khoản cá nhân</span><span class="menu-badge">Home</span></asp:HyperLink>
+                                </asp:PlaceHolder>
+
+                                <asp:PlaceHolder ID="ph_menu_company_space" runat="server" Visible="false">
+                                    <div class="menu-group-title">Không gian shop công ty</div>
+                                    <asp:HyperLink ID="lnk_space_public" runat="server" CssClass="menu-item"><span>Không gian 1: Công khai</span><span class="menu-badge">Shop thường</span></asp:HyperLink>
+                                    <asp:HyperLink ID="lnk_space_internal" runat="server" CssClass="menu-item"><span>Không gian 2: Nội bộ</span><span class="menu-badge">Sản phẩm thẻ</span></asp:HyperLink>
+                                </asp:PlaceHolder>
 
                                 <div class="menu-group-title">Vận hành gian hàng</div>
                                 <a class="menu-item" href="/shop/quan-ly-tin"><span>Quản lý tin shop</span><span class="menu-badge">Đăng/Sửa</span></a>
+                                <asp:PlaceHolder ID="ph_menu_ban_san_pham" runat="server" Visible="false">
+                                    <a class="menu-item" href="/shop/noi-bo/ban-san-pham"><span>Bán sản phẩm nội bộ</span><span class="menu-badge">Không gian 2</span></a>
+                                </asp:PlaceHolder>
                                 <a class="menu-item" href="/shop/don-ban"><span>Đơn bán</span><span class="menu-badge">Theo dõi</span></a>
-                                <a class="menu-item" href="/shop/cho-thanh-toan"><span>Chờ thanh toán</span><span class="menu-badge">Xử lý</span></a>
+                                <a class="menu-item" href="/shop/cho-thanh-toan"><span>Chờ trao đổi</span><span class="menu-badge">Xử lý</span></a>
                                 <a class="menu-item" href="/shop/khach-hang"><span>Khách hàng</span><span class="menu-badge">Danh sách</span></a>
 
                                 <div class="menu-group-title">Hồ sơ shop</div>
@@ -564,8 +616,8 @@
             <main class="shop-main">
                 <section class="hero">
                     <div>
-                        <h1>Trang chủ gian hàng</h1>
-                        <p>Hiển thị toàn bộ sản phẩm thuộc tài khoản shop của bạn. Mọi thao tác quản lý gom trong menu avatar góc phải.</p>
+                        <h1><asp:Label ID="lb_space_hero_title" runat="server" Text="Không gian 1: Gian hàng công khai"></asp:Label></h1>
+                        <p><asp:Label ID="lb_space_hero_desc" runat="server" Text="Giống shop thường: quản lý sản phẩm công khai, đơn bán, khách hàng và trao đổi."></asp:Label></p>
                     </div>
                     <asp:HyperLink ID="lnk_public_shop_top" runat="server" CssClass="hero-link" Target="_blank"></asp:HyperLink>
                 </section>
@@ -584,7 +636,7 @@
                         <div class="stat-value"><asp:Label ID="lb_total_sold" runat="server"></asp:Label></div>
                     </article>
                     <article class="stat-card">
-                        <div class="stat-label">Đơn chờ thanh toán</div>
+                        <div class="stat-label">Đơn chờ trao đổi</div>
                         <div class="stat-value"><asp:Label ID="lb_pending_orders" runat="server"></asp:Label></div>
                     </article>
                 </section>
@@ -592,8 +644,8 @@
                 <section class="shop-card">
                     <div class="shop-card-head">
                         <div>
-                            <h2 class="shop-card-title">Sản phẩm của gian hàng</h2>
-                            <div class="shop-card-sub">Trang chủ shop chỉ hiển thị sản phẩm do chính tài khoản shop này đăng.</div>
+                            <h2 class="shop-card-title"><asp:Label ID="lb_space_product_title" runat="server" Text="Sản phẩm của gian hàng"></asp:Label></h2>
+                            <div class="shop-card-sub"><asp:Label ID="lb_space_product_desc" runat="server" Text="Trang chủ shop chỉ hiển thị sản phẩm do chính tài khoản shop này đăng."></asp:Label></div>
                         </div>
                     </div>
 
@@ -617,13 +669,16 @@
                                         <div class="product-body">
                                             <a class="product-name" href="/shop/san-pham/<%# Eval("id") %>"><%# Eval("name") %></a>
                                             <div class="product-price"><%# FormatCurrency(Eval("giaban")) %> đ</div>
+                                            <div class="product-badges">
+                                                <span class="<%# BuildProductChannelCss(Eval("KenhRaw")) %>"><%# BuildProductChannelLabel(Eval("KenhRaw")) %></span>
+                                            </div>
                                             <div class="product-meta">
-                                                <span><%# Eval("ngaytao", "{0:dd/MM/yyyy}") %></span>
+                                                <span>Ngày đăng: <%# Eval("ngaytao", "{0:dd/MM/yyyy}") %></span>
                                                 <span>Lượt xem: <%# Eval("LuotTruyCap") %></span>
                                             </div>
                                             <div class="product-actions">
                                                 <a class="btn-strong" href="/shop/san-pham/<%# Eval("id") %>">Xem sản phẩm</a>
-                                                <a class="btn-soft" href="<%# BuildCreateOrderUrl(Eval("id")) %>">Tạo đơn</a>
+                                                <a class="btn-soft" href="<%# BuildSellActionUrl(Eval("id"), Eval("KenhRaw")) %>"><%# BuildSellActionText(Eval("KenhRaw")) %></a>
                                             </div>
                                         </div>
                                     </article>

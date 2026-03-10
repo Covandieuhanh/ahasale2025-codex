@@ -23,7 +23,7 @@
 
     <title></title>
     <meta name="description" content="Mô tả ngắn và hấp dẫn về nội dung của trang web của bạn." />
-    <link rel="canonical" href="https://bcorn.net" />--%>
+    <link rel="canonical" href="https://ahasale.vn" />--%>
 
     <%--Favicon & icon Mobile--%>
     <asp:Literal ID="literal_fav_icon" runat="server"></asp:Literal>
@@ -32,12 +32,12 @@
     <link href="/Metro-UI-CSS-master/css/metro-all.min.css" rel="stylesheet" />
     <link href="/Metro-UI-CSS-master/css/icons.css" rel="stylesheet" />
     <%--dành riêng cho trang admin--%>
-    <link href="/css/home-style.css" rel="stylesheet" />
+    <link href="/assetscss/home-style.css" rel="stylesheet" />
     <%--viết thêm dựa vào metro--%>
-    <link href="/css/bcorn-with-metro.css" rel="stylesheet" />
+    <link href="/assetscss/bcorn-with-metro.css" rel="stylesheet" />
     <%--sửa lại css metro theo ý mình--%>
-    <link href="/css/fix-metro.css" rel="stylesheet" />
-    <link href="/css/aha-ui-refresh.css?v=2026-03-02.1" rel="stylesheet" />
+    <link href="/assetscss/fix-metro.css" rel="stylesheet" />
+    <link href="/assetscss/aha-ui-refresh.css?v=2026-03-02.1" rel="stylesheet" />
     <!-- jquery nên để trước các js khác -->
     <%--<script src="/js/jquery-3.7.1.min.js"></script>--%>
     <asp:ContentPlaceHolder ID="head" runat="server"></asp:ContentPlaceHolder>
@@ -212,7 +212,7 @@
 
         <script src="/Metro-UI-CSS-master/js/metro.min.js"></script>
         <script src="/js/bcorn.js"></script>
-        <script src="/js/aha-ui-refresh.js?v=2026-03-02.1"></script>
+        <script src="/js/aha-ui-refresh.js?v=2026-03-07.2"></script>
         <asp:ContentPlaceHolder ID="foot" runat="server"></asp:ContentPlaceHolder>
         <%=ViewState["thongbao_home"] %>
     </form>

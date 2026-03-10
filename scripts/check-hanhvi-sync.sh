@@ -5,6 +5,12 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
 EXIT_CODE=0
+SEARCH_PATHS=(App_Code admin home scripts/sql)
+USE_RG=0
+
+if command -v rg >/dev/null 2>&1 && [ "${AHA_FORCE_GREP:-0}" != "1" ]; then
+  USE_RG=1
+fi
 
 ok() {
   echo "[OK] $1"
@@ -19,13 +25,50 @@ fail() {
   EXIT_CODE=1
 }
 
+scan_regex() {
+  local pattern="$1"
+  if [ "$USE_RG" -eq 1 ]; then
+    rg -n -S -- "$pattern" "${SEARCH_PATHS[@]}" --glob '!**/Bin/**'
+    return $?
+  fi
+
+  local found=1
+  while IFS= read -r -d '' file; do
+    if grep -nE -- "$pattern" "$file"; then
+      found=0
+    fi
+  done < <(find "${SEARCH_PATHS[@]}" -type d -name Bin -prune -o -type f -print0)
+  return "$found"
+}
+
+token_exists() {
+  local token="$1"
+  if [ "$USE_RG" -eq 1 ]; then
+    rg -q -S -- "$token" "${SEARCH_PATHS[@]}" --glob '!**/Bin/**'
+    return $?
+  fi
+
+  while IFS= read -r -d '' file; do
+    if grep -qF -- "$token" "$file"; then
+      return 0
+    fi
+  done < <(find "${SEARCH_PATHS[@]}" -type d -name Bin -prune -o -type f -print0)
+  return 1
+}
+
 echo "== HanhVi Sync Guard =="
 echo "Workspace: $ROOT_DIR"
 echo
+if [ "$USE_RG" -eq 1 ]; then
+  ok "Using rg for source scan."
+else
+  warn "rg not found (or forced off). Using grep fallback for source scan."
+fi
+echo
 
 echo "1) Check legacy naming in active source..."
-LEGACY_REGEX='KyHieu9ViCon_1_9|(^|[^A-Za-z0-9_])LoaiVi([^A-Za-z0-9_]|$)|HoSoCon9Cap_cl|GetTenHoSoConTheoLoai|GetLoaiHoSoConByCapGiaTri|GetLoaiHoSoTongTheoHoSoCon|\bhosocon\b|\bvicon\b|\bViCon\b|\bHoSoCon\b|\bTenHoSoCon\b|\bLoaiHoSoCon\b'
-if rg -n -S "$LEGACY_REGEX" App_Code admin home scripts/sql --glob '!**/Bin/**' > /tmp/ahasale_hanhvi_guard_legacy.log; then
+LEGACY_REGEX='KyHieu9ViCon_1_9|(^|[^A-Za-z0-9_])LoaiVi([^A-Za-z0-9_]|$)|HoSoCon9Cap_cl|GetTenHoSoConTheoLoai|GetLoaiHoSoConByCapGiaTri|GetLoaiHoSoTongTheoHoSoCon|(^|[^A-Za-z0-9_])(hosocon|vicon|ViCon|HoSoCon|TenHoSoCon|LoaiHoSoCon)([^A-Za-z0-9_]|$)'
+if scan_regex "$LEGACY_REGEX" > /tmp/ahasale_hanhvi_guard_legacy.log; then
   fail "Found legacy naming tokens. First 80 matches:"
   sed -n '1,80p' /tmp/ahasale_hanhvi_guard_legacy.log
 else
@@ -53,7 +96,7 @@ REQUIRED_TOKENS=(
   "GetLoaiHanhViByCapGiaTri"
 )
 for token in "${REQUIRED_TOKENS[@]}"; do
-  if rg -q -S "$token" App_Code admin home scripts/sql --glob '!**/Bin/**'; then
+  if token_exists "$token"; then
     ok "Token present: $token"
   else
     fail "Missing required token: $token"

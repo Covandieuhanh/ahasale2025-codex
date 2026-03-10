@@ -15,6 +15,6 @@ RUN ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default \
 
 WORKDIR /app
 
-EXPOSE 80
+EXPOSE 80 443
 
 CMD ["/start-web.sh"]

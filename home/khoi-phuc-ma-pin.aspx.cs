@@ -1,93 +1,88 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.Linq;
-using System.Text.RegularExpressions;
-using System.Web;
 using System.Web.UI;
-using System.Web.UI.WebControls;
 
-public partial class admin_khoi_phuc_mat_khau : System.Web.UI.Page
+public partial class home_khoi_phuc_ma_pin : System.Web.UI.Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
         if (!IsPostBack)
         {
-            if (string.IsNullOrWhiteSpace(Request.QueryString["code"]))
-            {
-                Label2.Text = "Trang bạn yêu cầu không hợp lệ.";
-                return;
-            }
-            string _code = Request.QueryString["code"].ToString().ToLower();
-
-            using (dbDataContext db = new dbDataContext())
-            {
-                var q = db.taikhoan_tbs.FirstOrDefault(p => p.makhoiphuc == _code);
-                if (q == null)
-                {
-                    Label2.Text = "Trang bạn yêu cầu không hợp lệ.";
-                    return;
-                }
-                if (q.hsd_makhoiphuc.Value < AhaTime_cl.Now)
-                {
-                    Label2.Text = "Mã này đã hết hạn.";
-                    return;
-                }
-                ViewState["taikhoan"] = q.taikhoan;
-
-                PlaceHolder1.Visible = false;
-                UpdatePanel1.Visible = true;
-                Label1.Text = "Đặt lại mã pin cho <b>" + q.taikhoan + "</b><div>Thời gian hết hạn: <b>" + q.hsd_makhoiphuc.Value.ToString("dd/MM/yyyy HH:mm") + "'</b></div>";
-            }
-
+            PortalActiveMode_cl.SetMode(PortalActiveMode_cl.ModeHome);
+            txt_phone.Focus();
         }
     }
-    protected void Button1_Click(object sender, EventArgs e)
+
+    protected void btnSendOtp_Click(object sender, EventArgs e)
     {
-        string _pin = txt_pin.Text.Trim();
-
-        if (string.IsNullOrEmpty(_pin))
-        {
-            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                thongbao_class.metro_dialog("Thông báo", "Vui lòng nhập mã pin mới.", "false", "false", "OK", "alert", ""), true);
-            return;
-        }
-
-        if (!Regex.IsMatch(_pin, @"^\d{4}$"))
-        {
-            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                thongbao_class.metro_dialog("Thông báo", "Mã pin phải gồm đúng 4 chữ số.", "false", "false", "OK", "alert", ""), true);
-            return;
-        }
-
         using (dbDataContext db = new dbDataContext())
         {
-            var q = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == ViewState["taikhoan"].ToString());
-            if (q != null)
+            string rawPhone = txt_phone.Text ?? "";
+            string phone = AccountAuth_cl.NormalizePhone(rawPhone);
+
+            if (string.IsNullOrEmpty(phone))
             {
-                if (q.hsd_makhoiphuc.Value < AhaTime_cl.Now)
-                {
-                    Label2.Text = "Mã này đã hết hạn.";
-                    PlaceHolder1.Visible = true;
-                    UpdatePanel1.Visible = false;
-                    return;
-                }
-                q.mapin_thanhtoan = PinSecurity_cl.HashPin(_pin);
-                q.hsd_makhoiphuc = q.hsd_makhoiphuc.Value.AddYears(-1);
-                db.SubmitChanges();
-
-                string _url_back = Session["url_back_home"]?.ToString();
-
-                if (!string.IsNullOrEmpty(_url_back))
-                {
-                    Response.Redirect(_url_back, false);
-                }
-                else
-                {
-                    Response.Redirect("/home/default.aspx", false);
-                }
-
-                Context.ApplicationInstance.CompleteRequest();
+                Helper_Tabler_cl.ShowModal(this.Page, "Vui lòng nhập số điện thoại.", "Thông báo", true, "warning");
+                return;
             }
+
+            if (!AccountAuth_cl.IsValidPhone(phone))
+            {
+                Helper_Tabler_cl.ShowModal(this.Page, "Số điện thoại không hợp lệ.", "Thông báo", true, "warning");
+                return;
+            }
+
+            AccountLoginInfo account = AccountAuth_cl.FindHomeAccountByPhone(db, phone);
+            if (account != null && account.IsAmbiguous)
+            {
+                Helper_Tabler_cl.ShowModal(this.Page, "Số điện thoại đang trùng nhiều tài khoản home. Vui lòng liên hệ admin.", "Thông báo", true, "warning");
+                return;
+            }
+
+            if (account == null || string.IsNullOrEmpty(account.TaiKhoan))
+            {
+                Helper_Tabler_cl.ShowModal(this.Page, "Số điện thoại không tồn tại trong hệ thống.", "Thông báo", true, "warning");
+                return;
+            }
+
+            taikhoan_tb q = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == account.TaiKhoan);
+            if (q == null || !PortalScope_cl.CanLoginHome(q.taikhoan, q.phanloai, q.permission))
+            {
+                Helper_Tabler_cl.ShowModal(this.Page, "Tài khoản này không thuộc hệ home.", "Thông báo", true, "warning");
+                return;
+            }
+
+            if (q.block == true)
+            {
+                Helper_Tabler_cl.ShowModal(this.Page, "Tài khoản đã bị khóa.", "Thông báo", true, "warning");
+                return;
+            }
+
+            int requestId;
+            string error;
+            bool usedFallback;
+            string devOtp;
+
+            bool sent = HomeOtp_cl.TrySendOtp(db, phone, q.taikhoan, HomeOtp_cl.TypePin,
+                out requestId, out error, out usedFallback, out devOtp);
+
+            if (!sent)
+            {
+                Helper_Tabler_cl.ShowModal(this.Page, error, "Thông báo", true, "warning");
+                return;
+            }
+
+            if (requestId <= 0)
+            {
+                Helper_Tabler_cl.ShowModal(this.Page, "Không tạo được yêu cầu OTP. Vui lòng thử lại.", "Thông báo", true, "warning");
+                return;
+            }
+
+            Session["home_otp_dev_code"] = usedFallback ? devOtp : "";
+            Session["home_otp_dev_type"] = HomeOtp_cl.TypePin;
+
+            Response.Redirect("/home/xac-nhan-otp.aspx?type=pin&id=" + requestId, false);
+            Context.ApplicationInstance.CompleteRequest();
         }
     }
 }

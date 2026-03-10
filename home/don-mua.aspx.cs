@@ -108,13 +108,18 @@ public partial class home_don_mua : System.Web.UI.Page
         }
     }
 
-    private void CloseChiTietModal()
+    protected string BuildOrderDetailUrl(object orderIdObj)
     {
-        Repeater2.DataSource = null;
-        Repeater2.DataBind();
-        ViewState["iddh"] = null;
-        pn_chitiet.Visible = false;
-        up_chitiet.Update();
+        string id = (orderIdObj ?? "").ToString().Trim();
+        if (string.IsNullOrEmpty(id))
+            return "#";
+
+        string back = "/home/don-mua.aspx";
+        var query = HttpUtility.ParseQueryString(string.Empty);
+        query["id"] = id;
+        query["mode"] = "buy";
+        query["return_url"] = back;
+        return "/home/don-chi-tiet.aspx?" + query.ToString();
     }
 
     #region main - phân trang - tìm kiếm
@@ -271,51 +276,6 @@ public partial class home_don_mua : System.Web.UI.Page
     #endregion
 
     #region chi tiết đơn hàng
-    protected void LinkButton1_Click(object sender, EventArgs e)
-    {
-        using (dbDataContext db = new dbDataContext())
-        {
-            LinkButton button = (LinkButton)sender;
-            string _iddh = button.CommandArgument;
-
-            var q = db.DonHang_tbs.FirstOrDefault(p => p.id.ToString() == _iddh);
-            if (q != null)
-            {
-                but_danhanhang.Visible = false;
-                but_huydonhang.Visible = false;
-
-                ViewState["iddh"] = _iddh;
-
-                var q_ct = from ob1 in db.DonHang_ChiTiet_tbs.Where(p => p.id_donhang == _iddh)
-                           join ob2 in db.BaiViet_tbs on ob1.idsp equals ob2.id.ToString() into SanPhamGroup
-                           from ob2 in SanPhamGroup.DefaultIfEmpty()
-                           select new
-                           {
-                               ob1.id,
-                               ob1.id_donhang,
-                               name = ob2 != null ? ob2.name : "",
-                               ob2.name_en,
-                               image = ob2 != null ? ob2.image : "",
-                               PhanTram_GiamGia_ThanhToan_BangEvoucher = ob1.PhanTram_GiamGia_ThanhToan_BangEvoucher, // ✅ NEW
-                               ob1.giaban,
-                               ob1.soluong,
-                               ob1.thanhtien,
-                           };
-
-                Repeater2.DataSource = q_ct;
-                Repeater2.DataBind();
-
-                pn_chitiet.Visible = !pn_chitiet.Visible;
-                up_chitiet.Update();
-            }
-        }
-    }
-
-    protected void but_close_form_chitiet_Click(object sender, EventArgs e)
-    {
-        CloseChiTietModal();
-    }
-
     protected void but_danhanhang_Click(object sender, EventArgs e)
     {
         using (dbDataContext db = new dbDataContext())
@@ -394,7 +354,7 @@ public partial class home_don_mua : System.Web.UI.Page
                         ls2.ngay = now;
                         ls2.CongTru = true;
                         ls2.id_donhang = iddh;
-                        ls2.ghichu = $"|SHOPONLY|CREDIT_SELLER| Bán đơn hàng số {iddh} (Hồ sơ ưu đãi ShopOnly)";
+                        ls2.ghichu = string.Format("|SHOPONLY|CREDIT_SELLER| Bán đơn hàng số {0} (Hồ sơ ưu đãi ShopOnly)", iddh);
                         ls2.LoaiHoSo_Vi = 2;
                         db.LichSu_DongA_tbs.InsertOnSubmit(ls2);
                     }
@@ -407,7 +367,7 @@ public partial class home_don_mua : System.Web.UI.Page
                         ls1.ngay = now;
                         ls1.CongTru = true;
                         ls1.id_donhang = iddh;
-                        ls1.ghichu = $"|SHOPONLY|CREDIT_SELLER| Bán đơn hàng số {iddh} (Hồ sơ tiêu dùng ShopOnly)";
+                        ls1.ghichu = string.Format("|SHOPONLY|CREDIT_SELLER| Bán đơn hàng số {0} (Hồ sơ tiêu dùng ShopOnly)", iddh);
                         ls1.LoaiHoSo_Vi = 1;
                         db.LichSu_DongA_tbs.InsertOnSubmit(ls1);
                     }
@@ -446,7 +406,6 @@ public partial class home_don_mua : System.Web.UI.Page
 
                 show_main();
                 up_main.Update();
-                CloseChiTietModal();
 
                 Helper_Tabler_cl.ShowModal(this.Page, "Xử lý thành công.", "Thông báo", true, "success");
             }
@@ -537,7 +496,7 @@ public partial class home_don_mua : System.Web.UI.Page
                 lsHoan2.CongTru = true;
                 lsHoan2.id_donhang = iddh;
                 lsHoan2.LoaiHoSo_Vi = 2;
-                lsHoan2.ghichu = $"Hoàn Hồ sơ ưu đãi đơn {iddh}: +{hoanViUuDai30:#,##0.##} Quyền ưu đãi";
+                lsHoan2.ghichu = string.Format("Hoàn Hồ sơ ưu đãi đơn {0}: +{1:#,##0.##} Quyền ưu đãi", iddh, hoanViUuDai30);
                 db.LichSu_DongA_tbs.InsertOnSubmit(lsHoan2);
             }
 
@@ -550,7 +509,7 @@ public partial class home_don_mua : System.Web.UI.Page
                 lsHoan1.CongTru = true;
                 lsHoan1.id_donhang = iddh;
                 lsHoan1.LoaiHoSo_Vi = 1;
-                lsHoan1.ghichu = $"Hoàn Hồ sơ tiêu dùng đơn {iddh}: +{hoanViTieuDung:#,##0.##} Quyền tiêu dùng";
+                lsHoan1.ghichu = string.Format("Hoàn Hồ sơ tiêu dùng đơn {0}: +{1:#,##0.##} Quyền tiêu dùng", iddh, hoanViTieuDung);
                 db.LichSu_DongA_tbs.InsertOnSubmit(lsHoan1);
             }
 
@@ -572,14 +531,13 @@ public partial class home_don_mua : System.Web.UI.Page
             // ===== 7) UI =====
             show_main();
             up_main.Update();
-            CloseChiTietModal();
 
             string msg =
                 "Hủy đơn thành công.<br/>" +
-                $"ID đơn: <b>{iddh}</b><br/>" +
-                $"Đã hoàn tổng: <b>{tongHoanA:#,##0.##} Quyền</b><br/>" +
-                $"- Hồ sơ ưu đãi: <b>+{hoanViUuDai30:#,##0.##} Quyền ưu đãi</b><br/>" +
-                $"- Hồ sơ tiêu dùng: <b>+{hoanViTieuDung:#,##0.##} Quyền tiêu dùng</b>";
+                string.Format("ID đơn: <b>{0}</b><br/>", iddh) +
+                string.Format("Đã hoàn tổng: <b>{0:#,##0.##} Quyền</b><br/>", tongHoanA) +
+                string.Format("- Hồ sơ ưu đãi: <b>+{0:#,##0.##} Quyền ưu đãi</b><br/>", hoanViUuDai30) +
+                string.Format("- Hồ sơ tiêu dùng: <b>+{0:#,##0.##} Quyền tiêu dùng</b>", hoanViTieuDung);
 
             Helper_Tabler_cl.ShowModal(this.Page, msg, "Thông báo", true, "success");
         }
@@ -590,7 +548,6 @@ public partial class home_don_mua : System.Web.UI.Page
         LinkButton button = (LinkButton)sender;
         ViewState["iddh"] = button.CommandArgument;
         but_danhanhang_Click(sender, EventArgs.Empty);
-        if (pn_chitiet.Visible) CloseChiTietModal();
     }
 
     protected void but_huydonhang_row_Click(object sender, EventArgs e)
@@ -598,7 +555,6 @@ public partial class home_don_mua : System.Web.UI.Page
         LinkButton button = (LinkButton)sender;
         ViewState["iddh"] = button.CommandArgument;
         but_huydonhang_Click(sender, EventArgs.Empty);
-        if (pn_chitiet.Visible) CloseChiTietModal();
     }
     #endregion
 }

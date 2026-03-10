@@ -8,7 +8,7 @@
           <ItemTemplate>
             <a class="dm-item" href='/<%# Eval("name_en") %>-<%# Eval("id") %>'>
               <span class="dm-img">
-                <img src='<%# Eval("image") %>' alt="<%# Eval("name") %>" loading="lazy" />
+                <img src='<%# string.IsNullOrWhiteSpace((Eval("image") + "").Trim()) ? "/uploads/images/macdinh.jpg" : (Eval("image") + "").Trim() %>' alt="<%# Eval("name") %>" loading="lazy" />
               </span>
               <span class="dm-name"><%# Eval("name") %></span>
             </a>

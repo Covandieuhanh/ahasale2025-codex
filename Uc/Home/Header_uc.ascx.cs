@@ -17,9 +17,75 @@ public partial class Uc_Home_Header_uc : System.Web.UI.UserControl
 
     protected void Page_Load(object sender, EventArgs e)
     {
-        if (!IsPostBack)
+        try
         {
+            // Luôn dựng lại trạng thái menu/account cho mọi request để tránh
+            // lệch Visible của PlaceHolder sau postback/async postback trên mobile.
             BuildDanhMucTabler(1, 3, false, "web", "0");
+
+            // Luôn nạp lại số dư hồ sơ ở mỗi request để không bị giữ ViewState cũ
+            // (đặc biệt sau khi thay đổi logic từ DuVi* -> Vi*That).
+            RefreshLoggedUserHeaderState();
+        }
+        catch (Exception ex)
+        {
+            SafeFallbackForGuestHeader();
+            Log_cl.Add_Log(ex.Message, "header_uc", ex.StackTrace);
+        }
+    }
+
+    private void SafeFallbackForGuestHeader()
+    {
+        try
+        {
+            show_danhmuc_nav = "";
+            show_danhmuc_mobile = "";
+            if (phDangNhap != null) phDangNhap.Visible = true;
+            if (PlaceHolder1 != null) PlaceHolder1.Visible = true;
+            if (phTopDesktopAccount != null) phTopDesktopAccount.Visible = false;
+            if (PlaceHolderLogged != null) PlaceHolderLogged.Visible = false;
+            if (phAccountLogoutFooter != null) phAccountLogoutFooter.Visible = false;
+            if (UpdatePanelGuestCard != null) UpdatePanelGuestCard.Visible = true;
+            if (phMenuHomeYeuCau != null) phMenuHomeYeuCau.Visible = false;
+            if (phMenuHomeCopyLink != null) phMenuHomeCopyLink.Visible = false;
+            if (phMenuHomeDoiPin != null) phMenuHomeDoiPin.Visible = false;
+            if (phMenuHomeKhachHang != null) phMenuHomeKhachHang.Visible = false;
+            if (phMenuHomeDonMua != null) phMenuHomeDonMua.Visible = false;
+            if (phMenuHomeLichSuTraoDoi != null) phMenuHomeLichSuTraoDoi.Visible = false;
+            if (phMenuShopTinhNang != null) phMenuShopTinhNang.Visible = false;
+            if (phUtilityHome != null) phUtilityHome.Visible = false;
+            if (phMenuHomeExtra != null) phMenuHomeExtra.Visible = false;
+            if (phTopDesktopHomeUtilities != null) phTopDesktopHomeUtilities.Visible = false;
+            if (phTopNotificationDesktop != null) phTopNotificationDesktop.Visible = false;
+            if (phTopMobileAccount != null) phTopMobileAccount.Visible = true;
+            if (phTopMobileHomeUtilities != null) phTopMobileHomeUtilities.Visible = true;
+            if (phTopMobileFavorite != null) phTopMobileFavorite.Visible = true;
+            if (phTopNotificationMobile != null) phTopNotificationMobile.Visible = true;
+            if (badgeThongBaoDesktop != null) badgeThongBaoDesktop.Visible = false;
+            if (badgeThongBaoMobile != null) badgeThongBaoMobile.Visible = false;
+        }
+        catch
+        {
+        }
+    }
+
+    private void RefreshLoggedUserHeaderState()
+    {
+        try
+        {
+            string tkEnc = PortalRequest_cl.GetCurrentAccountEncrypted();
+            if (string.IsNullOrEmpty(tkEnc))
+                return;
+
+            using (dbDataContext db = new dbDataContext())
+            {
+                lay_thongtin_nguoidung(db);
+                show_soluong_thongbao(db);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log_cl.Add_Log(ex.Message, "header_uc_refresh", ex.StackTrace);
         }
     }
 
@@ -31,12 +97,19 @@ public partial class Uc_Home_Header_uc : System.Web.UI.UserControl
         using (dbDataContext db = new dbDataContext())
         {
             string _tk_enc = PortalRequest_cl.GetCurrentAccountEncrypted();
+            bool isShopPortalRequest = PortalRequest_cl.IsShopPortalRequest();
+            bool hasHomeCredential = PortalActiveMode_cl.HasHomeCredential();
+            bool hasShopCredential = PortalActiveMode_cl.HasShopCredential();
+            bool homeModeActive = PortalActiveMode_cl.IsHomeActive();
+            bool shopModeActive = PortalActiveMode_cl.IsShopActive();
 
             if (!string.IsNullOrEmpty(_tk_enc)) // có đăng nhập
             {
                 phDangNhap.Visible = false;
                 PlaceHolder1.Visible = false;
-                PlaceHolderLogged.Visible = true;
+            if (phTopDesktopAccount != null) phTopDesktopAccount.Visible = true;
+            PlaceHolderLogged.Visible = true;
+            if (phAccountLogoutFooter != null) phAccountLogoutFooter.Visible = true;
                 UpdatePanelGuestCard.Visible = false;
 
                 lay_thongtin_nguoidung(db);
@@ -60,6 +133,7 @@ public partial class Uc_Home_Header_uc : System.Web.UI.UserControl
                     if (phTopMobileFavorite != null) phTopMobileFavorite.Visible = false;
                     if (phTopNotificationDesktop != null) phTopNotificationDesktop.Visible = false;
                     if (phTopNotificationMobile != null) phTopNotificationMobile.Visible = false;
+                    if (phTopMobileAccount != null) phTopMobileAccount.Visible = true;
                 }
                 else
                 {
@@ -71,6 +145,7 @@ public partial class Uc_Home_Header_uc : System.Web.UI.UserControl
                     if (phTopMobileFavorite != null) phTopMobileFavorite.Visible = true;
                     if (phTopNotificationDesktop != null) phTopNotificationDesktop.Visible = true;
                     if (phTopNotificationMobile != null) phTopNotificationMobile.Visible = true;
+                    if (phTopMobileAccount != null) phTopMobileAccount.Visible = true;
                 }
 
                 if (phDonBan != null) phDonBan.Visible = laGianHangDoiTac;
@@ -86,12 +161,17 @@ public partial class Uc_Home_Header_uc : System.Web.UI.UserControl
                 if (phMenuHomeLichSuTraoDoi != null) phMenuHomeLichSuTraoDoi.Visible = !laGianHangDoiTac;
                 if (phUtilityHome != null) phUtilityHome.Visible = !laGianHangDoiTac;
                 if (phMenuHomeExtra != null) phMenuHomeExtra.Visible = !laGianHangDoiTac;
+                if (phSwitchToShop != null) phSwitchToShop.Visible = !laGianHangDoiTac && hasShopCredential;
+                if (phSwitchToHome != null) phSwitchToHome.Visible = laGianHangDoiTac && hasHomeCredential;
+                if (phGuestSwitchHome != null) phGuestSwitchHome.Visible = false;
             }
             else // chưa đăng nhập
             {
                 phDangNhap.Visible = true;
-                PlaceHolder1.Visible = true;
+                PlaceHolder1.Visible = !isShopPortalRequest;
+                if (phTopDesktopAccount != null) phTopDesktopAccount.Visible = false;
                 PlaceHolderLogged.Visible = false;
+                if (phAccountLogoutFooter != null) phAccountLogoutFooter.Visible = false;
                 UpdatePanelGuestCard.Visible = true;
 
                 if (phDonBan != null) phDonBan.Visible = false;
@@ -110,21 +190,28 @@ public partial class Uc_Home_Header_uc : System.Web.UI.UserControl
                 if (phMenuHomeLichSuTraoDoi != null) phMenuHomeLichSuTraoDoi.Visible = false;
                 if (phUtilityHome != null) phUtilityHome.Visible = false;
                 if (phMenuHomeExtra != null) phMenuHomeExtra.Visible = false;
-                if (phTopDesktopHomeUtilities != null) phTopDesktopHomeUtilities.Visible = true;
-                if (phTopMobileHomeUtilities != null) phTopMobileHomeUtilities.Visible = true;
-                if (phTopMobileFavorite != null) phTopMobileFavorite.Visible = true;
-                if (phTopNotificationDesktop != null) phTopNotificationDesktop.Visible = true;
-                if (phTopNotificationMobile != null) phTopNotificationMobile.Visible = true;
+                if (phTopDesktopHomeUtilities != null) phTopDesktopHomeUtilities.Visible = false;
+                if (phTopMobileHomeUtilities != null) phTopMobileHomeUtilities.Visible = !isShopPortalRequest;
+                if (phTopMobileFavorite != null) phTopMobileFavorite.Visible = !isShopPortalRequest;
+                if (phTopNotificationDesktop != null) phTopNotificationDesktop.Visible = false;
+                if (phTopNotificationMobile != null) phTopNotificationMobile.Visible = !isShopPortalRequest;
+                if (phTopMobileAccount != null) phTopMobileAccount.Visible = !isShopPortalRequest;
                 badgeThongBaoDesktop.Visible = false;
                 badgeThongBaoMobile.Visible = false;
+                if (phSwitchToShop != null) phSwitchToShop.Visible = false;
+                if (phSwitchToHome != null) phSwitchToHome.Visible = false;
+                if (phGuestSwitchHome != null) phGuestSwitchHome.Visible = (!homeModeActive && shopModeActive && hasHomeCredential);
             }
 
             // Shop portal chỉ hiển thị nút quay về trang chủ shop ở top-nav/mobile-nav.
             string portalScope = (ViewState["portal_scope"] ?? "").ToString();
+            if (string.IsNullOrEmpty(portalScope))
+                portalScope = isShopPortalRequest ? PortalScope_cl.ScopeShop : PortalScope_cl.ScopeHome;
+
             if (string.Equals(portalScope, PortalScope_cl.ScopeShop, StringComparison.OrdinalIgnoreCase))
             {
-                show_danhmuc_nav = @"<li class=""nav-item""><a class=""nav-link fw-semibold"" href=""/shop/default.aspx"">Trang chủ shop</a></li>";
-                show_danhmuc_mobile = @"<a href=""/shop/default.aspx"" class=""list-group-item list-group-item-action fw-semibold"">Trang chủ shop</a>";
+                show_danhmuc_nav = "";
+                show_danhmuc_mobile = @"<a href=""/dang-nhap?switch=home"" class=""list-group-item list-group-item-action fw-semibold"">Chuyển sang home</a>";
                 return;
             }
 
@@ -426,10 +513,21 @@ public partial class Uc_Home_Header_uc : System.Web.UI.UserControl
 
             ViewState["DongA"] = (q.DongA ?? 0m).ToString("#,##0");
 
-            // ✅ 3 trường mới (decimal(18,2))
-            ViewState["DuVi1_Evocher_30PhanTram"] = (q.DuVi1_Evocher_30PhanTram ?? 0m).ToString("#,##0.00");
-            ViewState["DuVi2_LaoDong_50PhanTram"] = (q.DuVi2_LaoDong_50PhanTram ?? 0m).ToString("#,##0.00");
-            ViewState["DuVi3_GanKet_20PhanTram"] = (q.DuVi3_GanKet_20PhanTram ?? 0m).ToString("#,##0.00");
+            // Dropdown hồ sơ phải hiển thị SỐ DƯ THẬT đã ghi nhận (Vi*That),
+            // không hiển thị phần điểm nhận/chờ xử lý (DuVi*).
+            string soDuUuDaiThat = (q.Vi1That_Evocher_30PhanTram ?? 0m).ToString("#,##0.00");
+            string soDuLaoDongThat = (q.Vi2That_LaoDong_50PhanTram ?? 0m).ToString("#,##0.00");
+            string soDuGanKetThat = (q.Vi3That_GanKet_20PhanTram ?? 0m).ToString("#,##0.00");
+
+            // Key mới (ưu tiên render)
+            ViewState["HoSo_UuDai_Real"] = soDuUuDaiThat;
+            ViewState["HoSo_LaoDong_Real"] = soDuLaoDongThat;
+            ViewState["HoSo_GanKet_Real"] = soDuGanKetThat;
+
+            // Giữ key cũ để tránh ảnh hưởng đoạn code đang dùng tên cũ.
+            ViewState["DuVi1_Evocher_30PhanTram"] = soDuUuDaiThat;
+            ViewState["DuVi2_LaoDong_50PhanTram"] = soDuLaoDongThat;
+            ViewState["DuVi3_GanKet_20PhanTram"] = soDuGanKetThat;
 
             // ✅ NEW: 2 trường hồ sơ shop only (null -> 0)
             ViewState["HoSo_TieuDung_ShopOnly"] = (q.HoSo_TieuDung_ShopOnly ?? 0m).ToString("#,##0.00");
@@ -465,7 +563,7 @@ public partial class Uc_Home_Header_uc : System.Web.UI.UserControl
     {
         check_login_cl.check_login_home("none", "none", false);
 
-        string tk = ViewState["taikhoan"]?.ToString() ?? "";
+        string tk = Convert.ToString(ViewState["taikhoan"]) ?? "";
         if (string.IsNullOrEmpty(tk))
         {
             Helper_Tabler_cl.ShowToast(Page, "Bạn chưa đăng nhập", "warning");
@@ -476,9 +574,9 @@ public partial class Uc_Home_Header_uc : System.Web.UI.UserControl
         string safeUrl = HttpUtility.JavaScriptStringEncode(url);
 
         // copy clipboard (navigator.clipboard + fallback)
-        string jsCopy = $@"
+        string jsCopy = string.Format(@"
 (function(){{
-    var text = '{safeUrl}';
+    var text = '{0}';
     function fallbackCopy(t) {{
         var ta = document.createElement('textarea');
         ta.value = t;
@@ -495,7 +593,7 @@ public partial class Uc_Home_Header_uc : System.Web.UI.UserControl
     }} else {{
         fallbackCopy(text);
     }}
-}})();";
+}})();", safeUrl);
 
         ScriptManager.RegisterStartupScript(Page, Page.GetType(), "copy_ref_link_" + Guid.NewGuid().ToString("N"), jsCopy, true);
 
@@ -526,6 +624,10 @@ public partial class Uc_Home_Header_uc : System.Web.UI.UserControl
             lb_sl_thongbao_mobile.Text = "0";
             badgeThongBaoDesktop.Visible = false;
             badgeThongBaoMobile.Visible = false;
+            lb_sl_giohang_desktop.Text = "0";
+            lb_sl_giohang_mobile.Text = "0";
+            badgeGioHangDesktop.Visible = false;
+            badgeGioHangMobile.Visible = false;
             return;
         }
 
@@ -537,6 +639,15 @@ public partial class Uc_Home_Header_uc : System.Web.UI.UserControl
         lb_sl_thongbao_mobile.Text = badgeText;
         badgeThongBaoDesktop.Visible = coThongBao;
         badgeThongBaoMobile.Visible = coThongBao;
+
+        int soLuongGioHang = db.GioHang_tbs.Count(p => p.taikhoan == _tk);
+        string gioHangBadgeText = soLuongGioHang < 100 ? soLuongGioHang.ToString() : "99+";
+        bool coGioHang = soLuongGioHang > 0;
+
+        lb_sl_giohang_desktop.Text = gioHangBadgeText;
+        lb_sl_giohang_mobile.Text = gioHangBadgeText;
+        badgeGioHangDesktop.Visible = coGioHang;
+        badgeGioHangMobile.Visible = coGioHang;
     }
 
     public void show_noidung_thongbao(dbDataContext db)
@@ -570,7 +681,7 @@ public partial class Uc_Home_Header_uc : System.Web.UI.UserControl
                             : (ob1.link.Contains("?") ? ob1.link + "&" : ob1.link + "?")
                     };
 
-        if (ViewState["sapxep_thongbao"]?.ToString() == "2")
+        if (Convert.ToString(ViewState["sapxep_thongbao"]) == "2")
         {
             query = query
                 .Where(p => p.daxem == false)

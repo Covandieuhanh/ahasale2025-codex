@@ -64,7 +64,7 @@ public class xulyanh_cl
 
     private static ImageFormat GetImageFormatFromFileName(string fileName)
     {
-        string extension = Path.GetExtension(fileName)?.ToLower();
+        string extension = (Path.GetExtension(fileName) ?? string.Empty).ToLower();
 
         switch (extension)
         {
