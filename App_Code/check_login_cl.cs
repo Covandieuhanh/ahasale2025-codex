@@ -616,24 +616,6 @@ public class check_login_cl
                                             return;
                                         }
                                     }
-                                    else if (canLoginHome)
-                                    {
-                                        bool forceHomePassword = AccountResetSecurity_cl.ShouldForceHomePassword(db, _ob.taikhoan);
-                                        if (forceHomePassword && !IsHomePasswordChangePath())
-                                        {
-                                            HttpContext.Current.Session["thongbao_home"] = thongbao_class.metro_notifi_onload("Thông báo", "Mật khẩu hiện tại là mật khẩu tạm thời. Vui lòng đổi lại ngay.", "1800", "warning");
-                                            HttpContext.Current.Response.Redirect("/home/DoiMatKhau.aspx?force=1");
-                                            return;
-                                        }
-
-                                        bool forceHomePin = AccountResetSecurity_cl.ShouldForceHomePin(db, _ob.taikhoan);
-                                        if (forceHomePin && !IsHomePinChangePath())
-                                        {
-                                            HttpContext.Current.Session["thongbao_home"] = thongbao_class.metro_notifi_onload("Thông báo", "PIN hiện tại là PIN tạm thời. Vui lòng đổi lại ngay.", "1800", "warning");
-                                            HttpContext.Current.Response.Redirect("/home/DoiPin.aspx?force=1");
-                                            return;
-                                        }
-                                    }
                                 }
 
                                 string _quyen = _ob.permission ?? "";

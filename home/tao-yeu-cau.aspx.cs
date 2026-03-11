@@ -104,7 +104,7 @@ public partial class home_tao_yeu_cau : System.Web.UI.Page
 
             if (hasHanhVi)
             {
-                lb_hientai.Text = HanhVi9Cap_cl.GetTenCapDoTheoCapGiaTri(CapHienTai, GiaTriHienTai);
+                lb_hientai.Text = HanhVi9Cap_cl.GetTenCapDoKhongPhanTramTheoCapGiaTri(CapHienTai, GiaTriHienTai);
                 lb_mota_hientai.Text = GetMoTaFromDB(CapHienTai, GiaTriHienTai);
             }
             else
@@ -173,11 +173,11 @@ public partial class home_tao_yeu_cau : System.Web.UI.Page
             x.NguoiDuyet,
             x.GhiChuAdmin,
             HienTaiText = HanhVi9Cap_cl.GetLoaiHanhViByCapGiaTri(x.CapHienTai, x.GiaTriHienTai).HasValue
-                ? HanhVi9Cap_cl.GetTenCapDoTheoCapGiaTri(x.CapHienTai, x.GiaTriHienTai)
+                ? HanhVi9Cap_cl.GetTenCapDoKhongPhanTramTheoCapGiaTri(x.CapHienTai, x.GiaTriHienTai)
                 : "Chưa có hành vi",
             YeuCauText = HanhVi9Cap_cl.GetLoaiHanhViByCapGiaTri(x.CapYeuCau, x.GiaTriYeuCau).HasValue
-                ? HanhVi9Cap_cl.GetTenCapDoTheoCapGiaTri(x.CapYeuCau, x.GiaTriYeuCau)
-                : ("Cấp " + x.CapYeuCau + " - " + x.GiaTriYeuCau),
+                ? HanhVi9Cap_cl.GetTenCapDoKhongPhanTramTheoCapGiaTri(x.CapYeuCau, x.GiaTriYeuCau)
+                : ("Cấp " + x.CapYeuCau),
             TrangThaiText = GetTrangThaiText(x.TrangThai),
             TrangThaiCss = GetTrangThaiCss(x.TrangThai)
         }).ToList();
@@ -225,7 +225,7 @@ public partial class home_tao_yeu_cau : System.Web.UI.Page
 
         ddl_level.Items.Add(
             new System.Web.UI.WebControls.ListItem(
-                order + ". " + HanhVi9Cap_cl.GetTenCapDoTheoCapGiaTri(c, v),
+                order + ". " + HanhVi9Cap_cl.GetTenCapDoKhongPhanTramTheoCapGiaTri(c, v),
                 c + "_" + v
             )
         );
@@ -280,7 +280,7 @@ public partial class home_tao_yeu_cau : System.Web.UI.Page
         ViewState["CapYeuCau"] = CapYeuCau;
         ViewState["GiaTriYeuCau"] = GiaTriYeuCau;
 
-        lb_yeucau.Text = HanhVi9Cap_cl.GetTenCapDoTheoCapGiaTri(CapYeuCau, GiaTriYeuCau);
+        lb_yeucau.Text = HanhVi9Cap_cl.GetTenCapDoKhongPhanTramTheoCapGiaTri(CapYeuCau, GiaTriYeuCau);
         lb_mota_yeucau.Text = GetMoTaFromDB(CapYeuCau, GiaTriYeuCau);
 
         // KHÔNG HIỂN THỊ TRÁCH NHIỆM Ở PHẦN YÊU CẦU

@@ -61,10 +61,6 @@ public partial class Uc_Home_Footer_uc : System.Web.UI.UserControl
         string legalLine = GetTextBlock(db, HomeTextContent_cl.KeyFooterLegalLine, "CÔNG TY CỔ PHẦN ĐÀO TẠO AHA SALE - Người đại diện theo pháp luật: Trần Đức Cường; GPKDKD: 3603907499 do Sở tài chính tỉnh Đồng Nai cấp ngày 29/03/2023;");
         string policyText = GetTextBlock(db, HomeTextContent_cl.KeyFooterPolicyUsageText, "Chính sách sử dụng");
         string policyUrl = GetTextBlock(db, HomeTextContent_cl.KeyFooterPolicyUsageUrl, "/home/noi-dung-footer.aspx?slug=quy-che-hoat-dong-san");
-        string linkedinUrl = GetTextBlock(db, HomeTextContent_cl.KeyFooterSocialLinkedin, "#");
-        string youtubeUrl = GetTextBlock(db, HomeTextContent_cl.KeyFooterSocialYoutube, "#");
-        string facebookUrl = GetTextBlock(db, HomeTextContent_cl.KeyFooterSocialFacebook, "#");
-
         lnk_contact_email.Text = Server.HtmlEncode(contactEmail);
         lnk_contact_email.NavigateUrl = "mailto:" + contactEmail;
 
@@ -76,9 +72,9 @@ public partial class Uc_Home_Footer_uc : System.Web.UI.UserControl
         lnk_policy_usage.Text = Server.HtmlEncode(policyText);
         lnk_policy_usage.NavigateUrl = NormalizePublicUrl(policyUrl, "/home/noi-dung-footer.aspx?slug=quy-che-hoat-dong-san");
 
-        lnk_social_linkedin.NavigateUrl = NormalizePublicUrl(linkedinUrl, "#");
-        lnk_social_youtube.NavigateUrl = NormalizePublicUrl(youtubeUrl, "#");
-        lnk_social_facebook.NavigateUrl = NormalizePublicUrl(facebookUrl, "#");
+        BindSocialLink(db, lnk_social_linkedin, HomeTextContent_cl.KeyFooterSocialLinkedin);
+        BindSocialLink(db, lnk_social_youtube, HomeTextContent_cl.KeyFooterSocialYoutube);
+        BindSocialLink(db, lnk_social_facebook, HomeTextContent_cl.KeyFooterSocialFacebook);
     }
 
     private string GetTextBlock(dbDataContext db, string key, string defaultValue)
@@ -114,5 +110,26 @@ public partial class Uc_Home_Footer_uc : System.Web.UI.UserControl
             DisplayName = (item == null || string.IsNullOrWhiteSpace(item.DisplayName)) ? "Nội dung" : item.DisplayName,
             Url = HomeFooterArticle_cl.ResolveLinkUrl(item)
         };
+    }
+
+    private void BindSocialLink(dbDataContext db, System.Web.UI.WebControls.HyperLink link, string key)
+    {
+        if (link == null) return;
+        HomeTextContent_cl.TextContentItem item = HomeTextContent_cl.GetEffectiveByKey(db, key);
+        if (item == null || !item.IsEnabled)
+        {
+            link.Visible = false;
+            return;
+        }
+
+        string url = (item.TextContent ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(url) || url == "#")
+        {
+            link.Visible = false;
+            return;
+        }
+
+        link.Visible = true;
+        link.NavigateUrl = NormalizePublicUrl(url, "#");
     }
 }

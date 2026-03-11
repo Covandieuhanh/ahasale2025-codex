@@ -50,6 +50,53 @@ public static class HanhVi9Cap_cl
         return null;
     }
 
+    public static string EnsureDisplayWithPercent(int? loaiHanhVi, string currentLabel)
+    {
+        string percentLabel = GetTenHanhViTheoLoai(loaiHanhVi);
+        if (string.IsNullOrWhiteSpace(currentLabel))
+            return percentLabel == "-" ? "" : percentLabel;
+
+        if (currentLabel.Contains("%"))
+            return currentLabel;
+
+        if (string.IsNullOrEmpty(percentLabel) || percentLabel == "-")
+            return currentLabel;
+
+        int idx = percentLabel.IndexOf('=');
+        string behaviorName = idx >= 0 ? percentLabel.Substring(idx + 1).Trim() : percentLabel;
+
+        if (!string.IsNullOrEmpty(behaviorName) && currentLabel.Contains(behaviorName))
+            return currentLabel.Replace(behaviorName, percentLabel);
+
+        return percentLabel + " " + currentLabel;
+    }
+
+    public static string EnsureDisplayWithoutPercent(int? loaiHanhVi, string currentLabel)
+    {
+        if (!string.IsNullOrEmpty(currentLabel) && currentLabel.Contains("%"))
+        {
+            int idx = currentLabel.IndexOf("=");
+            if (idx >= 0 && idx + 1 < currentLabel.Length)
+                return currentLabel.Substring(idx + 1).Trim();
+            return currentLabel.Replace("%", "").Replace("=", "").Trim();
+        }
+
+        string percentLabel = GetTenHanhViTheoLoai(loaiHanhVi);
+        if (string.IsNullOrEmpty(percentLabel) || percentLabel == "-")
+            return currentLabel ?? "";
+
+        int eqIdx = percentLabel.IndexOf('=');
+        if (eqIdx >= 0 && eqIdx + 1 < percentLabel.Length)
+            return percentLabel.Substring(eqIdx + 1).Trim();
+
+        return percentLabel;
+    }
+
+    public static string GetTenHanhViKhongPhanTram(int? loaiHanhVi)
+    {
+        return EnsureDisplayWithoutPercent(loaiHanhVi, GetTenHanhViTheoLoai(loaiHanhVi));
+    }
+
     public static string GetTenCapDoTheoCapGiaTri(int cap, int giaTri)
     {
         int? loaiHanhVi = GetLoaiHanhViByCapGiaTri(cap, giaTri);
@@ -57,6 +104,15 @@ public static class HanhVi9Cap_cl
             return GetTenHanhViTheoLoai(loaiHanhVi);
 
         return "Cấp " + cap + " - " + giaTri;
+    }
+
+    public static string GetTenCapDoKhongPhanTramTheoCapGiaTri(int cap, int giaTri)
+    {
+        int? loaiHanhVi = GetLoaiHanhViByCapGiaTri(cap, giaTri);
+        if (loaiHanhVi.HasValue)
+            return GetTenHanhViKhongPhanTram(loaiHanhVi);
+
+        return "Cấp " + cap;
     }
 
     public static int? GetLoaiHoSoTongTheoHanhVi(int? loaiHanhVi)

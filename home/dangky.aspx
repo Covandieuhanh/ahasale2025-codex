@@ -68,6 +68,55 @@
             border-radius: 10px;
             border: 1px solid rgba(98,105,118,.16);
         }
+
+        html[data-bs-theme="dark"] .aha-reg-wrap,
+        body[data-bs-theme="dark"] .aha-reg-wrap {
+            background: linear-gradient(
+                180deg,
+                rgba(15, 23, 42, .65) 0%,
+                rgba(11, 18, 32, .98) 100%
+            ) !important;
+        }
+
+        html[data-bs-theme="dark"] .aha-reg-wrap:before,
+        body[data-bs-theme="dark"] .aha-reg-wrap:before {
+            background:
+                radial-gradient(circle at 30% 30%, rgba(34,197,94,.18), transparent 55%),
+                radial-gradient(circle at 70% 40%, rgba(45,212,191,.14), transparent 60%) !important;
+        }
+
+        html[data-bs-theme="dark"] .aha-reg-card,
+        body[data-bs-theme="dark"] .aha-reg-card {
+            border-color: #223246 !important;
+            box-shadow: 0 14px 36px rgba(0,0,0,.45) !important;
+            background: #0f172a !important;
+        }
+
+        html[data-bs-theme="dark"] .aha-reg-card .text-secondary,
+        body[data-bs-theme="dark"] .aha-reg-card .text-secondary {
+            color: #94a3b8 !important;
+        }
+
+        html[data-bs-theme="dark"] .aha-reg-card .form-control-plaintext,
+        body[data-bs-theme="dark"] .aha-reg-card .form-control-plaintext {
+            color: #e5e7eb;
+        }
+
+        html[data-bs-theme="dark"] .aha-refbox,
+        body[data-bs-theme="dark"] .aha-refbox {
+            background: #111d34 !important;
+            border-color: #223246 !important;
+        }
+
+        html[data-bs-theme="dark"] .aha-note,
+        body[data-bs-theme="dark"] .aha-note {
+            color: #94a3b8 !important;
+        }
+
+        html[data-bs-theme="dark"] .aha-preview img,
+        body[data-bs-theme="dark"] .aha-preview img {
+            border-color: #223246 !important;
+        }
     </style>
 </asp:Content>
 

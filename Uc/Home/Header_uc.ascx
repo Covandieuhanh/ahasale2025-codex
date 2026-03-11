@@ -603,99 +603,9 @@
                             </a>
                         </div>
 
-                        <!-- 4 hồ sơ: 1 cột / 4 dòng -->
-                        <div class="d-flex flex-column gap-2 mt-3">
-
-                            <asp:PlaceHolder ID="phHoSoHomeMacDinh" runat="server" Visible="false">
-                                <!-- 1) Hồ sơ quyền tiêu dùng -->
-                                <a href="/home/lich-su-giao-dich.aspx"
-                                    class="badge bg-white text-dark border w-100 text-start px-3 py-2"
-                                    style="border-radius: 999px; display: flex; align-items: center; gap: 10px;">
-                                    <span class="avatar avatar-xs rounded-circle bg-white border d-flex align-items-center justify-content-center"
-                                        style="width: 22px; height: 22px;">
-                                        <img src="/uploads/images/dong-a.png" alt="Quyền tiêu dùng"
-                                            style="width: 14px; height: 14px; object-fit: contain;">
-                                    </span>
-
-                                    <span class="flex-fill" style="min-width: 0;">
-                                        <span class="d-block text-muted" style="font-size: 11px; line-height: 1.1; white-space: normal;">Hồ sơ quyền tiêu dùng
-                                        </span>
-                                        <span class="d-block fw-semibold" style="line-height: 1.2;">
-                                            <%= ViewState["DongA"] %>
-                                        </span>
-                                    </span>
-
-                                    <i class="ti ti-chevron-right text-muted"></i>
-                                </a>
-
-                                <!-- 2) Hồ sơ quyền ưu đãi -->
-                                <a href="/home/lich-su-quyen-uu-dai.aspx"
-                                    class="badge bg-white text-dark border w-100 text-start px-3 py-2"
-                                    style="border-radius: 999px; display: flex; align-items: center; gap: 10px;">
-                                    <span class="avatar avatar-xs rounded-circle bg-success-lt text-success d-flex align-items-center justify-content-center"
-                                        style="width: 22px; height: 22px;">
-                                        <i class="ti ti-ticket"></i>
-                                    </span>
-
-                                    <span class="flex-fill" style="min-width: 0;">
-                                        <span class="d-block text-muted" style="font-size: 11px; line-height: 1.1; white-space: normal;">Hồ sơ quyền ưu đãi
-                                        </span>
-                                        <span class="d-block fw-semibold" style="line-height: 1.2;">
-                                            <%= ViewState["HoSo_UuDai_Real"] ?? ViewState["DuVi1_Evocher_30PhanTram"] %>
-                                        </span>
-                                    </span>
-
-                                    <i class="ti ti-chevron-right text-muted"></i>
-                                </a>
-                            </asp:PlaceHolder>
-
-                            <asp:PlaceHolder ID="phHoSoLaoDong" runat="server" Visible="false">
-                                <!-- 3) Hồ sơ lao động -->
-                                <a href="/home/lich-su-quyen-lao-dong.aspx"
-                                    class="badge bg-white text-dark border w-100 text-start px-3 py-2"
-                                    style="border-radius: 999px; display: flex; align-items: center; gap: 10px;">
-                                    <span class="avatar avatar-xs rounded-circle bg-warning-lt text-warning d-flex align-items-center justify-content-center"
-                                        style="width: 22px; height: 22px;">
-                                        <i class="ti ti-briefcase"></i>
-                                    </span>
-
-                                    <span class="flex-fill" style="min-width: 0;">
-                                        <span class="d-block text-muted" style="font-size: 11px; line-height: 1.1; white-space: normal;">Hồ sơ hành vi lao động
-                                        </span>
-                                        <span class="d-block fw-semibold" style="line-height: 1.2;">
-                                            <%= ViewState["HoSo_LaoDong_Real"] ?? ViewState["DuVi2_LaoDong_50PhanTram"] %>
-                                        </span>
-                                    </span>
-
-                                    <i class="ti ti-chevron-right text-muted"></i>
-                                </a>
-                            </asp:PlaceHolder>
-
-                            <asp:PlaceHolder ID="phHoSoGanKet" runat="server" Visible="false">
-                                <!-- 4) Hồ sơ gắn kết -->
-                                <a href="/home/lich-su-quyen-gan-ket.aspx"
-                                    class="badge bg-white text-dark border w-100 text-start px-3 py-2"
-                                    style="border-radius: 999px; display: flex; align-items: center; gap: 10px;">
-                                    <span class="avatar avatar-xs rounded-circle bg-primary-lt text-primary d-flex align-items-center justify-content-center"
-                                        style="width: 22px; height: 22px;">
-                                        <i class="ti ti-heart-handshake"></i>
-                                    </span>
-
-                                    <span class="flex-fill" style="min-width: 0;">
-                                        <span class="d-block text-muted" style="font-size: 11px; line-height: 1.1; white-space: normal;">Hồ sơ chỉ số gắn kết
-                                        </span>
-                                        <span class="d-block fw-semibold" style="line-height: 1.2;">
-                                            <%= ViewState["HoSo_GanKet_Real"] ?? ViewState["DuVi3_GanKet_20PhanTram"] %>
-                                        </span>
-                                    </span>
-
-                                    <i class="ti ti-chevron-right text-muted"></i>
-                                </a>
-                            </asp:PlaceHolder>
-
-                            <!-- ✅ NEW: 2 hồ sơ shop (chỉ hiện khi là gian hàng đối tác) -->
-                            <asp:PlaceHolder ID="phHoSoShopOnly" runat="server" Visible="false">
-
+                        <!-- ✅ 2 hồ sơ shop (chỉ hiện khi là gian hàng đối tác) -->
+                        <asp:PlaceHolder ID="phHoSoShopOnly" runat="server" Visible="false">
+                            <div class="d-flex flex-column gap-2 mt-3">
                                 <!-- 5) Hồ sơ tiêu dùng shop -->
                                 <a href="/shop/ho-so-tieu-dung"
                                     class="badge bg-white text-dark border w-100 text-start px-3 py-2"
@@ -736,10 +646,8 @@
 
                                     <i class="ti ti-chevron-right text-muted"></i>
                                 </a>
-
-                            </asp:PlaceHolder>
-
-                        </div>
+                            </div>
+                        </asp:PlaceHolder>
 
                     </div>
 
@@ -772,7 +680,7 @@
                                onclick="return copyReferralLink(this);">
                                 <span class="d-flex align-items-center gap-2">
                                     <i class="ti ti-link text-secondary"></i>
-                                    <span class="fw-medium">Copy link giới thiệu</span>
+                                    <span class="fw-medium">Sao chép Link giới thiệu</span>
                                 </span>
                                 <i class="ti ti-chevron-right text-secondary"></i>
                             </a>
@@ -782,7 +690,7 @@
                             <a class="list-group-item d-flex align-items-center justify-content-between py-3" href="/home/DoiPin.aspx">
                                 <div class="d-flex align-items-center gap-2">
                                     <i class="ti ti-key text-secondary"></i>
-                                    <span class="fw-medium">Đổi pin</span>
+                                <span class="fw-medium">Đổi mã pin thẻ</span>
                                 </div>
                                 <i class="ti ti-chevron-right text-secondary"></i>
                             </a>
@@ -791,36 +699,14 @@
                         <a class="list-group-item d-flex align-items-center justify-content-between py-3" href="<%= ((ViewState["portal_scope"] ?? "").ToString() == PortalScope_cl.ScopeShop) ? "/shop/doi-mat-khau" : "/home/DoiMatKhau.aspx" %>">
                             <div class="d-flex align-items-center gap-2">
                                 <i class="ti ti-lock text-secondary"></i>
-                                <span class="fw-medium">Đổi pass</span>
+                            <span class="fw-medium">Đổi mật khẩu tài khoản</span>
                             </div>
                             <i class="ti ti-chevron-right text-secondary"></i>
                         </a>
 
-                        <!-- QR gọn / pro: 1 dòng + thumbnail -->
-                        <a class="list-group-item d-flex align-items-center justify-content-between py-3" href="#">
-                            <div class="d-flex align-items-center gap-2">
-                                <i class="ti ti-qrcode text-secondary"></i>
-                                <div>
-                                    <div class="fw-medium">Mã QR của tôi</div>
-                                </div>
-                            </div>
+                        <%-- Ẩn: Mã QR của tôi --%>
 
-                            <div class="d-flex align-items-center gap-2">
-                                <img src="<%=ViewState["qr_code"] %>" alt="QR"
-                                    style="width: 50px; height: 50px; border-radius: 10px; object-fit: cover; border: 1px solid rgba(0,0,0,.08);">
-                                <i class="ti ti-chevron-right text-secondary"></i>
-                            </div>
-                        </a>
-
-                        <asp:PlaceHolder ID="phMenuHomeKhachHang" runat="server" Visible="true">
-                            <a class="list-group-item d-flex align-items-center justify-content-between py-3" href="/home/khach-hang.aspx">
-                                <div class="d-flex align-items-center gap-2">
-                                    <i class="ti ti-users text-secondary"></i>
-                                    <span class="fw-medium">Khách hàng</span>
-                                </div>
-                                <i class="ti ti-chevron-right text-secondary"></i>
-                            </a>
-                        </asp:PlaceHolder>
+                        <asp:PlaceHolder ID="phMenuHomeKhachHang" runat="server" Visible="false"></asp:PlaceHolder>
 
                         <asp:PlaceHolder ID="phMenuHomeDonMua" runat="server" Visible="true">
                             <a class="list-group-item d-flex align-items-center justify-content-between py-3" href="/home/don-mua.aspx">
@@ -1022,22 +908,95 @@
         <!-- ================= ƯU ĐÃI ================= -->
         <div class="text-secondary small fw-semibold px-1 mb-2">Ưu đãi, khuyến mãi</div>
         <div class="card border-0 bg-light mb-3" style="border-radius: 14px;">
-            <div class="list-group list-group-flush" style="border-radius: 14px; overflow: hidden;">
-                <a class="list-group-item d-flex align-items-center justify-content-between py-3" href="#">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="ti ti-sparkles text-secondary"></i>
-                        <span class="fw-medium">Aha ưu đãi</span>
-                    </div>
-                    <i class="ti ti-chevron-right text-secondary"></i>
-                </a>
+            <div class="p-3">
+                <div class="d-flex flex-column gap-2">
+                    <asp:PlaceHolder ID="phHoSoHomeMacDinh" runat="server" Visible="false">
+                        <!-- 1) Hồ sơ quyền tiêu dùng -->
+                        <a href="/home/lich-su-giao-dich.aspx"
+                            class="badge bg-white text-dark border w-100 text-start px-3 py-2"
+                            style="border-radius: 999px; display: flex; align-items: center; gap: 10px;">
+                            <span class="avatar avatar-xs rounded-circle bg-white border d-flex align-items-center justify-content-center"
+                                style="width: 22px; height: 22px;">
+                                <img src="/uploads/images/dong-a.png" alt="Quyền tiêu dùng"
+                                    style="width: 14px; height: 14px; object-fit: contain;">
+                            </span>
 
-                <a class="list-group-item d-flex align-items-center justify-content-between py-3" href="#">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="ti ti-ticket text-secondary"></i>
-                        <span class="fw-medium">Ưu đãi của tôi</span>
-                    </div>
-                    <i class="ti ti-chevron-right text-secondary"></i>
-                </a>
+                            <span class="flex-fill" style="min-width: 0;">
+                                <span class="d-block text-muted" style="font-size: 11px; line-height: 1.1; white-space: normal;">Hồ sơ quyền tiêu dùng
+                                </span>
+                                <span class="d-block fw-semibold" style="line-height: 1.2;">
+                                    <%= ViewState["DongA"] %>
+                                </span>
+                            </span>
+
+                            <i class="ti ti-chevron-right text-muted"></i>
+                        </a>
+
+                        <!-- 2) Hồ sơ quyền ưu đãi -->
+                        <a href="/home/lich-su-quyen-uu-dai.aspx"
+                            class="badge bg-white text-dark border w-100 text-start px-3 py-2"
+                            style="border-radius: 999px; display: flex; align-items: center; gap: 10px;">
+                            <span class="avatar avatar-xs rounded-circle bg-success-lt text-success d-flex align-items-center justify-content-center"
+                                style="width: 22px; height: 22px;">
+                                <i class="ti ti-ticket"></i>
+                            </span>
+
+                            <span class="flex-fill" style="min-width: 0;">
+                                <span class="d-block text-muted" style="font-size: 11px; line-height: 1.1; white-space: normal;">Hồ sơ quyền ưu đãi
+                                </span>
+                                <span class="d-block fw-semibold" style="line-height: 1.2;">
+                                    <%= ViewState["HoSo_UuDai_Real"] ?? ViewState["DuVi1_Evocher_30PhanTram"] %>
+                                </span>
+                            </span>
+
+                            <i class="ti ti-chevron-right text-muted"></i>
+                        </a>
+                    </asp:PlaceHolder>
+
+                    <asp:PlaceHolder ID="phHoSoLaoDong" runat="server" Visible="false">
+                        <!-- 3) Hồ sơ lao động -->
+                        <a href="/home/lich-su-quyen-lao-dong.aspx"
+                            class="badge bg-white text-dark border w-100 text-start px-3 py-2"
+                            style="border-radius: 999px; display: flex; align-items: center; gap: 10px;">
+                            <span class="avatar avatar-xs rounded-circle bg-warning-lt text-warning d-flex align-items-center justify-content-center"
+                                style="width: 22px; height: 22px;">
+                                <i class="ti ti-briefcase"></i>
+                            </span>
+
+                            <span class="flex-fill" style="min-width: 0;">
+                                <span class="d-block text-muted" style="font-size: 11px; line-height: 1.1; white-space: normal;">Hồ sơ hành vi lao động
+                                </span>
+                                <span class="d-block fw-semibold" style="line-height: 1.2;">
+                                    <%= ViewState["HoSo_LaoDong_Real"] ?? ViewState["DuVi2_LaoDong_50PhanTram"] %>
+                                </span>
+                            </span>
+
+                            <i class="ti ti-chevron-right text-muted"></i>
+                        </a>
+                    </asp:PlaceHolder>
+
+                    <asp:PlaceHolder ID="phHoSoGanKet" runat="server" Visible="false">
+                        <!-- 4) Hồ sơ gắn kết -->
+                        <a href="/home/lich-su-quyen-gan-ket.aspx"
+                            class="badge bg-white text-dark border w-100 text-start px-3 py-2"
+                            style="border-radius: 999px; display: flex; align-items: center; gap: 10px;">
+                            <span class="avatar avatar-xs rounded-circle bg-primary-lt text-primary d-flex align-items-center justify-content-center"
+                                style="width: 22px; height: 22px;">
+                                <i class="ti ti-heart-handshake"></i>
+                            </span>
+
+                            <span class="flex-fill" style="min-width: 0;">
+                                <span class="d-block text-muted" style="font-size: 11px; line-height: 1.1; white-space: normal;">Hồ sơ chỉ số gắn kết
+                                </span>
+                                <span class="d-block fw-semibold" style="line-height: 1.2;">
+                                    <%= ViewState["HoSo_GanKet_Real"] ?? ViewState["DuVi3_GanKet_20PhanTram"] %>
+                                </span>
+                            </span>
+
+                            <i class="ti ti-chevron-right text-muted"></i>
+                        </a>
+                    </asp:PlaceHolder>
+                </div>
             </div>
         </div>
 

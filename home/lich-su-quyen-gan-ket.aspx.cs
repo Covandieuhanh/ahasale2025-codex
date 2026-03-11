@@ -70,7 +70,7 @@ public partial class home_lich_su_quyen_gan_ket : System.Web.UI.Page
         var hanhViRows = summary.Rows.Select(p => new
         {
             p.KyHieu9HanhVi_1_9,
-            p.TenHanhVi,
+            TenHanhVi = HanhVi9Cap_cl.EnsureDisplayWithoutPercent(p.KyHieu9HanhVi_1_9, p.TenHanhVi),
             p.SoDuDiemNhan,
             p.SoDuHanhViHopLe,
             p.SoDuDangChoDuyet,
@@ -146,7 +146,7 @@ public partial class home_lich_su_quyen_gan_ket : System.Web.UI.Page
             p.NgayTao,
             p.NgayCapNhat,
             p.KyHieu9HanhVi_1_9,
-            TenHanhVi = HanhVi9Cap_cl.GetTenHanhViTheoLoai(p.KyHieu9HanhVi_1_9),
+            TenHanhVi = HanhVi9Cap_cl.GetTenHanhViKhongPhanTram(p.KyHieu9HanhVi_1_9),
             p.TongQuyen,
             TrangThaiCode = HanhViGhiNhanHoSo_cl.NormalizeTrangThai(p.TrangThai),
             TrangThaiText = HanhViGhiNhanHoSo_cl.GetTrangThaiText(p.TrangThai),
@@ -184,7 +184,13 @@ public partial class home_lich_su_quyen_gan_ket : System.Web.UI.Page
         using (dbDataContext db = new dbDataContext())
         {
             string tk = GetCurrentUser();
-            var list_all = HoSoLichSuTongHop_cl.LayLichSuTongHop(db, tk, LoaiHoSoVi);
+            var list_all = HoSoLichSuTongHop_cl.LayLichSuTongHop(db, tk, LoaiHoSoVi)
+                .Select(p =>
+                {
+                    p.TenHanhVi = HanhVi9Cap_cl.EnsureDisplayWithoutPercent(p.KyHieu9HanhVi_1_9, p.TenHanhVi);
+                    return p;
+                })
+                .ToList();
 
             int _Tong_Record = list_all.Count;
             int show = 30; if (show <= 0) show = 30;
@@ -284,7 +290,7 @@ public partial class home_lich_su_quyen_gan_ket : System.Web.UI.Page
             }
 
             ViewState["yeucau_kyhieu_uudai"] = kyHieu.ToString();
-            lb_yeucau_hanhvi.Text = row.TenHanhVi;
+            lb_yeucau_hanhvi.Text = HanhVi9Cap_cl.EnsureDisplayWithoutPercent(row.KyHieu9HanhVi_1_9, row.TenHanhVi);
             lb_yeucau_hople.Text = row.SoDuHanhViHopLe.ToString("#,##0.##");
             txt_so_diem_yeucau.Text = "";
 

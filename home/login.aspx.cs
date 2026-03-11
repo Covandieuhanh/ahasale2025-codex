@@ -49,20 +49,6 @@ public partial class home_login : System.Web.UI.Page
                     if (canLoginHome)
                     {
                         PortalActiveMode_cl.SetMode(PortalActiveMode_cl.ModeHome);
-                        bool forceChangePassword = AccountResetSecurity_cl.ShouldForceHomePassword(db, acc.taikhoan);
-                        bool forceChangePin = AccountResetSecurity_cl.ShouldForceHomePin(db, acc.taikhoan);
-                        if (forceChangePassword)
-                        {
-                            Response.Redirect("/home/DoiMatKhau.aspx?force=1", false);
-                            Context.ApplicationInstance.CompleteRequest();
-                            return;
-                        }
-                        if (forceChangePin)
-                        {
-                            Response.Redirect("/home/DoiPin.aspx?force=1", false);
-                            Context.ApplicationInstance.CompleteRequest();
-                            return;
-                        }
 
                         Session["home_modal_msg"] = "Bạn đã đăng nhập. Vui lòng đăng xuất để đăng nhập tài khoản khác.";
                         Session["home_modal_title"] = "Thông báo";
@@ -198,9 +184,6 @@ public partial class home_login : System.Web.UI.Page
                     db.SubmitChanges();
                 }
 
-                bool forceChangePasswordAfterLogin = AccountResetSecurity_cl.ShouldForceHomePassword(db, fullAccount.taikhoan);
-                bool forceChangePinAfterLogin = AccountResetSecurity_cl.ShouldForceHomePin(db, fullAccount.taikhoan);
-
                 // ✅ Đăng nhập OK (GIỮ LOGIC)
                 string _taikhoan_mahoa = mahoa_cl.mahoa_Bcorn(account.TaiKhoan);
                 string _matkhau_mahoa = mahoa_cl.mahoa_Bcorn(account.MatKhau);
@@ -216,22 +199,6 @@ public partial class home_login : System.Web.UI.Page
                 Session["taikhoan_home"] = _taikhoan_mahoa;
                 Session["matkhau_home"] = _matkhau_mahoa;
                 PortalActiveMode_cl.SetMode(PortalActiveMode_cl.ModeHome);
-
-                if (forceChangePasswordAfterLogin)
-                {
-                    Session["thongbao_home"] = thongbao_class.metro_notifi_onload("Thông báo", "Mật khẩu này là mật khẩu tạm thời. Vui lòng đổi lại ngay.", "1800", "warning");
-                    Response.Redirect("/home/DoiMatKhau.aspx?force=1", false);
-                    Context.ApplicationInstance.CompleteRequest();
-                    return;
-                }
-
-                if (forceChangePinAfterLogin)
-                {
-                    Session["thongbao_home"] = thongbao_class.metro_notifi_onload("Thông báo", "PIN này là PIN tạm thời. Vui lòng đổi lại ngay.", "1800", "warning");
-                    Response.Redirect("/home/DoiPin.aspx?force=1", false);
-                    Context.ApplicationInstance.CompleteRequest();
-                    return;
-                }
 
                 // Luồng home: luôn về trang chủ sau đăng nhập thành công.
                 Session["url_back_home"] = "";

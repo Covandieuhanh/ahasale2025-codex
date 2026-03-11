@@ -607,7 +607,8 @@ html[data-bs-theme="dark"] input[type="text"],
 html[data-bs-theme="dark"] input[type="password"],
 html[data-bs-theme="dark"] input[type="number"],
 html[data-bs-theme="dark"] input[type="email"],
-html[data-bs-theme="dark"] input[type="tel"] {
+html[data-bs-theme="dark"] input[type="tel"],
+html[data-bs-theme="dark"] input[type="file"] {
     background: var(--aha-surface-1) !important;
     color: var(--aha-ink-900) !important;
     border-color: var(--aha-border) !important;
