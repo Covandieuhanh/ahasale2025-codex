@@ -118,8 +118,20 @@ public partial class home_edit_info : System.Web.UI.Page
         txt_diachi.Text = q_tk.diachi;
         txt_gioithieu.Text = q_tk.gioithieu;
 
-        Literal4.Text = q_tk.gioithieu;
-        Literal5.Text = q_tk.diachi;
+        bool isShopAccount = ShopSlug_cl.IsShopAccount(db, q_tk);
+        phProfileShopToggle.Visible = isShopAccount;
+
+        var profileSettings = HomeProfileSetting_cl.GetSettings(db, q_tk.taikhoan, isShopAccount);
+        if (ddl_profile_template.Items.FindByValue(profileSettings.TemplateKey) != null)
+            ddl_profile_template.SelectedValue = profileSettings.TemplateKey;
+        hf_profile_accent.Value = string.IsNullOrWhiteSpace(profileSettings.AccentColor) ? "#22c55e" : profileSettings.AccentColor;
+        chk_profile_contact.Checked = profileSettings.ShowContact;
+        chk_profile_social.Checked = profileSettings.ShowSocial;
+        chk_profile_reviews.Checked = profileSettings.ShowReviews;
+        if (chk_profile_shop != null) chk_profile_shop.Checked = profileSettings.ShowShop;
+        if (chk_profile_products != null) chk_profile_products.Checked = profileSettings.ShowProducts;
+
+        // left summary card removed -> no Literal4/Literal5
         #endregion
 
         #region thông tin cửa hàng (chỉ load nếu KHÔNG khóa - để khỏi “vô tình” hiển thị)
@@ -476,6 +488,19 @@ public partial class home_edit_info : System.Web.UI.Page
                 q.motangan_shop = _c7;
                 q.diachi_shop = _c8;
             }
+
+            bool isShopAccount = ShopSlug_cl.IsShopAccount(db, q);
+            var settings = new HomeProfileSetting_cl.ProfileSettings
+            {
+                TemplateKey = ddl_profile_template.SelectedValue,
+                AccentColor = hf_profile_accent.Value,
+                ShowContact = chk_profile_contact.Checked,
+                ShowSocial = chk_profile_social.Checked,
+                ShowReviews = chk_profile_reviews.Checked,
+                ShowShop = (chk_profile_shop != null && chk_profile_shop.Checked),
+                ShowProducts = (chk_profile_products != null && chk_profile_products.Checked)
+            };
+            HomeProfileSetting_cl.Upsert(db, q.taikhoan, settings, q.taikhoan, isShopAccount);
 
             db.SubmitChanges();
             show_main(db);

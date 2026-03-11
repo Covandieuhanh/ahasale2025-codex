@@ -561,7 +561,7 @@
 
                         <div class="ct-cell ct-loc">
                             <i class="ti ti-map-pin ct-loc-icon"></i>
-                            <asp:DropDownList ID="ddl_Location" runat="server" CssClass="ct-select js-choices" />
+                            <asp:DropDownList ID="ddl_Location" runat="server" CssClass="ct-select js-choices" data-choices-search="1" data-choices-placeholder="Tìm tỉnh thành" />
                         </div>
 
                         <asp:LinkButton ID="btn_Search" runat="server"
@@ -583,8 +583,11 @@
                     if (el.tagName !== 'SELECT') return;
 
                     if (el.dataset.choicesDone) return;
+                    var enableSearch = (el.dataset.choicesSearch === '1');
+                    var searchPlaceholder = el.dataset.choicesPlaceholder || 'Tìm kiếm...';
                     new Choices(el, {
-                        searchEnabled: false,
+                        searchEnabled: enableSearch,
+                        searchPlaceholderValue: enableSearch ? searchPlaceholder : null,
                         shouldSort: false,
                         itemSelectText: '',
                         position: 'bottom'

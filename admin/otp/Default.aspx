@@ -1,5 +1,5 @@
 <%@ Page Title="Quản lý OTP" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master"
-    AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_otp_Default" %>
+    AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_otp_Default" EnableViewState="false" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="Server">
     <style>
@@ -61,6 +61,24 @@
 
 <asp:Content ID="Content2" ContentPlaceHolderID="main" runat="Server">
     <div class="p-3">
+                <asp:PlaceHolder ID="ph_otp_locked" runat="server" Visible="false" EnableViewState="false">
+                    <div class="otp-card p-4 mb-4">
+                        <div class="otp-section-title mb-2">Bảo mật cấu hình OTP</div>
+                        <h3>Nhập mật khẩu admin để mở khóa</h3>
+                        <div class="otp-grid">
+                            <div>
+                                <label class="fw-600">Mật khẩu admin</label>
+                                <asp:TextBox ID="txt_unlock_password" runat="server" TextMode="Password" placeholder="Nhập mật khẩu admin"></asp:TextBox>
+                            </div>
+                            <div class="d-flex align-items-end">
+                                <asp:Button ID="but_unlock_config" runat="server" Text="Mở khóa cấu hình OTP" CssClass="button success" OnClick="but_unlock_config_Click" />
+                            </div>
+                        </div>
+                        <div class="otp-note mt-2">Sau khi mở khóa, bạn có thể chỉnh sửa cấu hình SMS/Email OTP.</div>
+                    </div>
+                </asp:PlaceHolder>
+
+                <asp:PlaceHolder ID="ph_otp_config" runat="server" Visible="false" EnableViewState="false">
                 <div class="otp-card p-4 mb-4">
                     <div class="otp-section-title mb-2">Cấu hình OTP (SMS)</div>
                     <h3>Thiết lập đơn vị gửi OTP</h3>
@@ -190,6 +208,7 @@
                         <asp:Button ID="but_save_email" runat="server" Text="Lưu cấu hình Email" CssClass="button success" OnClick="but_save_email_Click" />
                     </div>
                 </div>
+                </asp:PlaceHolder>
 
                 <div class="otp-card p-4 mb-4">
                     <div class="otp-section-title mb-2">Tạo OTP thủ công</div>

@@ -237,7 +237,7 @@ VALUES
                     requestId = (result != null) ? Convert.ToInt32(result) : 0;
                 }
 
-                bool sent = SmsOtp_cl.SendOtp(cleanPhone, otp, out error, out usedFallback);
+                bool sent = SmsOtp_cl.SendOtp(db, cleanPhone, otp, out error, out usedFallback);
                 if (!sent)
                 {
                     using (SqlCommand cmdFail = conn.CreateCommand())

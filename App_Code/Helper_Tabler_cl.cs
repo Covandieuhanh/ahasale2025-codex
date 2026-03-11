@@ -17,10 +17,13 @@ public static class Helper_Tabler_cl
     function _doShow() {{
         if (window.show_toast) {{
             show_toast('{0}','{1}',{2},{3},'{4}');
-        }} else {{
-            // chưa có hàm -> chờ thêm 100ms
-            setTimeout(_doShow, 100);
+            return;
         }}
+        if (window.Metro && Metro.notify && typeof Metro.notify.create === 'function') {{
+            Metro.notify.create('{0}','{4}', {{keepOpen: false, cls: '{1}'}});
+            return;
+        }}
+        alert(('{4}' ? '{4}' + ':\n' : '') + '{0}');
     }}
     if (document.readyState === 'complete') _doShow();
     else window.addEventListener('load', _doShow);
@@ -46,9 +49,19 @@ public static class Helper_Tabler_cl
     function _doShow() {{
         if (window.show_modal) {{
             show_modal('{0}','{1}',{2},'{3}');
-        }} else {{
-            setTimeout(_doShow, 100);
+            return;
         }}
+        if (window.Metro && Metro.dialog && typeof Metro.dialog.create === 'function') {{
+            Metro.dialog.create({{
+                title: '{1}',
+                content: '<div>{0}</div>',
+                closeButton: true,
+                overlayClickClose: {2},
+                actions: [{{caption: 'OK', cls: 'js-dialog-close {3}'}}]
+            }});
+            return;
+        }}
+        alert(('{1}' ? '{1}' + ':\n' : '') + '{0}');
     }}
     if (document.readyState === 'complete') _doShow();
     else window.addEventListener('load', _doShow);

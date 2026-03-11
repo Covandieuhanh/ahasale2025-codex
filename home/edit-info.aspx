@@ -101,53 +101,10 @@
                 <div class="container-xl wrap py-4">
                     <div class="row g-3">
 
-                        <!-- left profile card -->
-                        <div class="col-lg-4">
-                            <div class="card card-soft shadow-sm">
-                                <div class="card-body">
-                                    <div class="text-center">
-                                        <img src="<%= ViewState["avt_query"] %>" class="avatar-100" alt="avatar" />
-                                    </div>
-
-                                    <div class="text-center fw-bold mt-2">
-                                        <small><%= ViewState["hoten_query"] %></small>
-                                    </div>
-
-                                    <div class="mt-3 p-3 rounded bg-muted-lt text-center">
-                                        <small><asp:Literal ID="Literal4" runat="server"></asp:Literal></small>
-                                    </div>
-
-                                    <div class="text-center mt-3">
-                                        <a class="text-decoration-none" href="tel:<%= ViewState["sdt_query"] %>">
-                                            <small><i class="ti ti-phone me-1"></i><%= ViewState["sdt_query"] %></small>
-                                        </a>
-                                    </div>
-
-                                    <div class="text-center mt-2">
-                                        <i class="ti ti-map-pin"></i>
-                                        <small><asp:Literal ID="Literal5" runat="server"></asp:Literal></small>
-                                    </div>
-
-                                    <div class="d-flex align-items-center justify-content-between gap-2 mt-3 p-2 rounded bg-dark-lt">
-                                        <div><%= ViewState["phanloai_query"] %></div>
-                                        <div class="btn btn-outline-secondary btn-sm">
-                                            <img src="/uploads/images/dong-a.png" alt="A" style="width:18px;height:18px;object-fit:contain" />
-                                            <span class="fw-bold ms-1"><%= ViewState["DongA_query"] %></span>
-                                        </div>
-                                    </div>
-
-                                    <div class="d-flex gap-2 mt-3">
-                                        <asp:Button ID="but_show_form_naptien" runat="server" Text="Nạp Quyền tiêu dùng"
-                                            CssClass="btn btn-warning w-100" />
-                                        <asp:Button ID="Button4" runat="server" Text="Lịch sử Trao đổi"
-                                            CssClass="btn btn-outline-dark w-100" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <!-- left profile card đã ẩn theo yêu cầu để gọn giao diện -->
 
                         <!-- right edit tabs -->
-                        <div class="col-lg-8">
+                        <div class="col-lg-12">
                             <div class="card card-soft shadow-sm">
                                 <div class="card-body">
 
@@ -219,6 +176,66 @@
                                                     <label class="form-label">Giới thiệu</label>
                                                     <asp:TextBox ID="txt_gioithieu" runat="server" TextMode="MultiLine" Rows="3"
                                                         CssClass="form-control" placeholder="Tối đa 60 ký tự"></asp:TextBox>
+                                                </div>
+
+                                                <div class="col-12">
+                                                    <div class="card card-soft">
+                                                        <div class="card-body">
+                                                            <div class="fw-bold mb-1">Giao diện hồ sơ</div>
+                                                            <div class="text-muted small mb-3">Chọn mẫu và bật/tắt khối hiển thị. Mặc định đã tối ưu sẵn.</div>
+
+                                                            <div class="row g-3">
+                                                                <div class="col-lg-4">
+                                                                    <label class="form-label">Template</label>
+                                                                    <asp:DropDownList ID="ddl_profile_template" runat="server" CssClass="form-select">
+                                                                        <asp:ListItem Value="classic" Text="Classic Card"></asp:ListItem>
+                                                                        <asp:ListItem Value="pro" Text="Professional Split"></asp:ListItem>
+                                                                        <asp:ListItem Value="creator" Text="Creator / Shop"></asp:ListItem>
+                                                                    </asp:DropDownList>
+                                                                </div>
+                                                                <div class="col-lg-4">
+                                                                    <label class="form-label">Màu chủ đạo</label>
+                                                                    <input id="input_profile_accent" type="color" class="form-control form-control-color" value="#22c55e" />
+                                                                    <asp:HiddenField ID="hf_profile_accent" runat="server" Value="#22c55e" />
+                                                                </div>
+                                                                <div class="col-lg-4">
+                                                                    <label class="form-label">Hiển thị CTA</label>
+                                                                    <div class="form-check form-switch mt-2">
+                                                                        <input id="chk_profile_contact" runat="server" type="checkbox" class="form-check-input" />
+                                                                        <label class="form-check-label">Nút Liên hệ</label>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="col-lg-4">
+                                                                    <div class="form-check form-switch mt-2">
+                                                                        <input id="chk_profile_social" runat="server" type="checkbox" class="form-check-input" />
+                                                                        <label class="form-check-label">Liên kết mạng xã hội</label>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-lg-4">
+                                                                    <div class="form-check form-switch mt-2">
+                                                                        <input id="chk_profile_reviews" runat="server" type="checkbox" class="form-check-input" />
+                                                                        <label class="form-check-label">Đánh giá người dùng</label>
+                                                                    </div>
+                                                                </div>
+
+                                                                <asp:PlaceHolder ID="phProfileShopToggle" runat="server" Visible="false">
+                                                                    <div class="col-lg-4">
+                                                                        <div class="form-check form-switch mt-2">
+                                                                            <input id="chk_profile_shop" runat="server" type="checkbox" class="form-check-input" />
+                                                                            <label class="form-check-label">Giới thiệu cửa hàng</label>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-lg-4">
+                                                                        <div class="form-check form-switch mt-2">
+                                                                            <input id="chk_profile_products" runat="server" type="checkbox" class="form-check-input" />
+                                                                            <label class="form-check-label">Sản phẩm đang bán</label>
+                                                                        </div>
+                                                                    </div>
+                                                                </asp:PlaceHolder>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
 
                                                 <!-- social links cá nhân -->
@@ -522,6 +539,24 @@
                 };
                 xhr.send(formData);
             } else messageDiv.innerHTML = "Vui lòng chọn file.";
+        }
+
+        function syncProfileAccent() {
+            var picker = document.getElementById('input_profile_accent');
+            var hidden = document.getElementById('<%= hf_profile_accent.ClientID %>');
+            if (!picker || !hidden) return;
+            if (hidden.value) picker.value = hidden.value;
+            picker.addEventListener('input', function () {
+                hidden.value = picker.value || '#22c55e';
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            syncProfileAccent();
+        });
+
+        if (window.Sys && Sys.WebForms && Sys.WebForms.PageRequestManager) {
+            Sys.WebForms.PageRequestManager.getInstance().add_endRequest(syncProfileAccent);
         }
     </script>
 </asp:Content>

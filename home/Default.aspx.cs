@@ -23,6 +23,136 @@ public partial class home_Default : System.Web.UI.Page
     }
     private const decimal VND_PER_A = 1000m;
     private const bool PROFILE_COMMERCE_ENABLED = true;
+    private const string CONTACT_SOURCE_PREFIX = "home_profile:";
+    private const string TIMELINE_POST_TYPE = "home_post";
+    private const int TIMELINE_COMMENT_MAX_LEN = 500;
+    private const int TIMELINE_COMMENT_MAX_PER_POST = 10;
+    private static bool _timelineCommentSchemaEnsured = false;
+    private static readonly object TimelineCommentSchemaLock = new object();
+
+    protected bool TimelineIsOwner
+    {
+        get
+        {
+            return ResolveIsOwner();
+        }
+    }
+
+    private string ResolveProfileUser()
+    {
+        string user = Convert.ToString(ViewState["user_query"]) ?? "";
+        if (!string.IsNullOrWhiteSpace(user)) return user;
+
+        user = (Request.QueryString["user"] ?? "").Trim().ToLower();
+        if (string.IsNullOrWhiteSpace(user))
+        {
+            string path = (Request.Path ?? "").Trim().ToLower();
+            if (path.EndsWith(".info", StringComparison.OrdinalIgnoreCase))
+                user = Path.GetFileNameWithoutExtension(path).Trim().ToLower();
+        }
+
+        if (!string.IsNullOrWhiteSpace(user))
+            ViewState["user_query"] = user;
+
+        return user;
+    }
+
+    private bool ResolveIsOwner()
+    {
+        object cachedObj = ViewState["profile_is_owner"];
+        if (cachedObj != null && cachedObj is bool)
+            return (bool)cachedObj;
+
+        string tkEnc = PortalRequest_cl.GetCurrentAccountEncrypted();
+        if (string.IsNullOrWhiteSpace(tkEnc)) return false;
+
+        string tk = mahoa_cl.giaima_Bcorn(tkEnc);
+        string user = ResolveProfileUser();
+        bool isOwner = !string.IsNullOrWhiteSpace(user)
+            && string.Equals(tk, user, StringComparison.OrdinalIgnoreCase);
+
+        ViewState["profile_is_owner"] = isOwner;
+        return isOwner;
+    }
+
+    private static string ExtractField(string note, string prefix)
+    {
+        if (string.IsNullOrWhiteSpace(note)) return "";
+        string[] lines = note.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        foreach (string raw in lines)
+        {
+            string line = raw.Trim();
+            if (line.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                return line.Substring(prefix.Length).Trim();
+            }
+        }
+        return "";
+    }
+
+    private static string ExtractEmailFromNote(string note)
+    {
+        return ExtractField(note, "Email:");
+    }
+
+    private static string ExtractMessageFromNote(string note)
+    {
+        if (string.IsNullOrWhiteSpace(note)) return "";
+        string[] lines = note.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        List<string> filtered = new List<string>();
+        foreach (string raw in lines)
+        {
+            string line = raw.Trim();
+            if (!line.StartsWith("Email:", StringComparison.OrdinalIgnoreCase))
+                filtered.Add(line);
+        }
+        string merged = string.Join(" ", filtered).Trim();
+        string message = ExtractField(merged, "Noi dung:");
+        if (!string.IsNullOrEmpty(message)) return message;
+        message = ExtractField(merged, "Nội dung:");
+        if (!string.IsNullOrEmpty(message)) return message;
+        return merged;
+    }
+
+    private string GetContactSourceKey(string userQuery)
+    {
+        string key = (userQuery ?? "").Trim().ToLowerInvariant();
+        return CONTACT_SOURCE_PREFIX + key;
+    }
+
+
+    private void LoadContactLeads(string userQuery)
+    {
+        string login = Convert.ToString(ViewState["taikhoan"]) ?? "";
+        bool isOwner = !string.IsNullOrWhiteSpace(userQuery)
+            && string.Equals(login, userQuery, StringComparison.OrdinalIgnoreCase);
+
+        phOwnerLeads.Visible = isOwner;
+        if (!isOwner) return;
+
+        using (dbDataContext db = new dbDataContext())
+        {
+            string key = GetContactSourceKey(userQuery);
+            var list = db.data_yeucau_tuvan_tables
+                .Where(p => p.kyhieu_nguon == key && (p.bin == null || p.bin == false))
+                .OrderByDescending(p => p.ngay)
+                .Take(50)
+                .ToList();
+
+            var view = list.Select(p => new
+            {
+                Ten = p.ten ?? "",
+                Sdt = p.sdt ?? "",
+                Email = ExtractEmailFromNote(p.noidung),
+                NoiDung = ExtractMessageFromNote(p.noidung),
+                Ngay = p.ngay
+            }).ToList();
+
+            rptContactLeads.DataSource = view;
+            rptContactLeads.DataBind();
+            phNoContactLeads.Visible = view.Count == 0;
+        }
+    }
 
     private bool IsProfileCommerceEnabled()
     {
@@ -492,9 +622,14 @@ public partial class home_Default : System.Web.UI.Page
 
                 ViewState["laGianHangDoiTac"] = laGianHangDoiTac ? "1" : "0";
 
-                // Trang cá nhân bên home chỉ hiển thị hồ sơ cá nhân, không hiển thị khối cửa hàng/sản phẩm.
-                phCuaHang.Visible = false;
-                phSanPhamCuaHang.Visible = false;
+                var profileSettings = HomeProfileSetting_cl.GetSettings(db, q_tk.taikhoan, laGianHangDoiTac);
+                ViewState["profile_template"] = string.IsNullOrEmpty(profileSettings.TemplateKey) ? "classic" : profileSettings.TemplateKey;
+                ViewState["profile_accent"] = string.IsNullOrEmpty(profileSettings.AccentColor) ? "#22c55e" : profileSettings.AccentColor;
+                ViewState["profile_show_social"] = profileSettings.ShowSocial ? "1" : "0";
+                ViewState["profile_show_reviews"] = profileSettings.ShowReviews ? "1" : "0";
+                ViewState["profile_show_contact"] = profileSettings.ShowContact ? "1" : "0";
+                ViewState["profile_show_shop"] = profileSettings.ShowShop ? "1" : "0";
+                ViewState["profile_show_products"] = profileSettings.ShowProducts ? "1" : "0";
 
                 var link = db.MangXaHoi_tbs.Where(x => x.TaiKhoan == q_tk.taikhoan).ToList();
                 var linkCaNhan = link.Where(x => x.Kieu == "Cá nhân").ToList();
@@ -502,7 +637,7 @@ public partial class home_Default : System.Web.UI.Page
                 rptMangXaHoiCH.DataSource = link.Where(x => x.Kieu == "Cửa hàng");
                 rptMangXaHoiCN.DataBind();
                 rptMangXaHoiCH.DataBind();
-                phNoSocialLinks.Visible = linkCaNhan.Count == 0;
+                phNoSocialLinks.Visible = profileSettings.ShowSocial && linkCaNhan.Count == 0;
 
                 string _tk1 = PortalRequest_cl.GetCurrentAccountEncrypted();
                 if (!string.IsNullOrEmpty(_tk1))
@@ -533,7 +668,26 @@ public partial class home_Default : System.Web.UI.Page
                 {
                     ViewState["taikhoan"] = "";
                 }
-                phOwnerEditButton.Visible = ViewState["taikhoan"].ToString() == q_tk.taikhoan;
+                bool isOwner = string.Equals(
+                    Convert.ToString(ViewState["taikhoan"]) ?? "",
+                    q_tk.taikhoan,
+                    StringComparison.OrdinalIgnoreCase
+                );
+                ViewState["profile_is_owner"] = isOwner;
+                phOwnerEditButton.Visible = isOwner;
+                phOwnerEditButtonSide.Visible = isOwner;
+                phHeroEditRow.Visible = isOwner;
+                phContactCta.Visible = !isOwner && profileSettings.ShowContact;
+                phNavLeads.Visible = isOwner;
+                phTimelineEditor.Visible = isOwner;
+
+                phSocialLinksBlock.Visible = profileSettings.ShowSocial;
+                phReviewsBlock.Visible = profileSettings.ShowReviews;
+
+                bool showShop = laGianHangDoiTac && profileSettings.ShowShop;
+                bool showProducts = laGianHangDoiTac && profileSettings.ShowProducts;
+                phCuaHang.Visible = showShop;
+                phSanPhamCuaHang.Visible = showProducts;
 
                 string metaTags = string.Format(@"
                     <title>Hồ sơ {0}</title>
@@ -550,7 +704,7 @@ public partial class home_Default : System.Web.UI.Page
                 bool hasSdt = !string.IsNullOrWhiteSpace(q_tk.dienthoai);
                 ViewState["sdt_query"] = hasSdt ? q_tk.dienthoai.Trim() : "Chưa cập nhật";
                 ViewState["sdt_href_query"] = hasSdt ? ("tel:" + q_tk.dienthoai.Trim()) : "#";
-                ViewState["DongA_query"] = (q_tk.DongA ?? 0m).ToString("#,##0.##");
+                // Không hiển thị Điểm A trên hồ sơ công khai
 
                 if (string.Equals(scopeQuery, PortalScope_cl.ScopeShop, StringComparison.OrdinalIgnoreCase))
                 {
@@ -580,16 +734,43 @@ public partial class home_Default : System.Web.UI.Page
                     Literal12.Text = "0";
                 #endregion
 
-                LoadDanhGia(1);
+                if (profileSettings.ShowReviews)
+                    LoadDanhGia(1);
                 set_dulieu_macdinh();
+                if (showShop || showProducts)
+                    ShowCuaHang(db);
+                LoadContactLeads(q_tk.taikhoan);
+                LoadTimeline(db, q_tk.taikhoan, isOwner);
             }
         }
         else
         {
-            int totalPages = ViewState["TotalPages"] != null ? (int)ViewState["TotalPages"] : 1;
-            DisplayPaging(totalPages);
+            bool showReviews = (ViewState["profile_show_reviews"] ?? "1").ToString() == "1";
+            if (showReviews)
+            {
+                int totalPages = ViewState["TotalPages"] != null ? (int)ViewState["TotalPages"] : 1;
+                DisplayPaging(totalPages);
+            }
+            LoadContactLeads(Convert.ToString(ViewState["user_query"]) ?? "");
         }
     }
+
+    protected void Page_PreRender(object sender, EventArgs e)
+    {
+        string action = Convert.ToString(ViewState["link_hoso_congkhai"]) ?? "";
+        if (string.IsNullOrWhiteSpace(action))
+        {
+            string user = ResolveProfileUser();
+            if (!string.IsNullOrWhiteSpace(user))
+                action = "/" + user.Trim().ToLowerInvariant() + ".info";
+        }
+
+        if (!string.IsNullOrWhiteSpace(action) && this.Form != null)
+        {
+            this.Form.Action = action;
+        }
+    }
+
 
     #region trao đổi (đặt hàng)
     private string BuildExchangePageUrl(string idsp, int soLuong, string userBanCheo)
@@ -906,6 +1087,486 @@ public partial class home_Default : System.Web.UI.Page
             pnlPaging.Controls.Add(lb);
             pnlPaging.Controls.Add(new LiteralControl(" "));
         }
+    }
+
+    private void LoadTimeline(dbDataContext db, string taiKhoan, bool isOwner)
+    {
+        if (string.IsNullOrWhiteSpace(taiKhoan))
+        {
+            phTimelineSection.Visible = false;
+            phNavTimeline.Visible = false;
+            return;
+        }
+
+        var posts = db.BaiViet_tbs
+            .Where(p => p.nguoitao == taiKhoan
+                && p.phanloai == TIMELINE_POST_TYPE
+                && (p.bin == false || p.bin == null))
+            .OrderByDescending(p => p.ngaytao ?? new DateTime(1753, 1, 1))
+            .ToList();
+
+        string currentUser = Convert.ToString(ViewState["taikhoan"]) ?? "";
+        bool canComment = !string.IsNullOrWhiteSpace(currentUser);
+
+        List<int> postIds = posts.Select(p => p.id).ToList();
+        Dictionary<int, List<TimelineCommentItem>> commentsByPost = LoadTimelineComments(db, postIds, currentUser, taiKhoan);
+
+        var view = posts.Select(p =>
+        {
+            List<TimelineCommentItem> comments = commentsByPost.ContainsKey(p.id)
+                ? commentsByPost[p.id]
+                : new List<TimelineCommentItem>();
+
+            return new TimelinePostView
+            {
+                id = p.id,
+                content_post = p.content_post,
+                image = p.image,
+                ngaytao = p.ngaytao,
+                Comments = comments,
+                CommentCount = comments.Count,
+                CanComment = canComment
+            };
+        }).ToList();
+
+        rptTimeline.DataSource = view;
+        rptTimeline.DataBind();
+        phTimelineEmpty.Visible = !posts.Any();
+        phTimelineSection.Visible = posts.Any() || isOwner;
+        phNavTimeline.Visible = posts.Any() || isOwner;
+    }
+
+    private void ResetTimelineForm()
+    {
+        txtTimelineContent.Text = "";
+        hfTimelineImage.Value = "";
+        imgTimelinePreview.ImageUrl = "";
+        imgTimelinePreview.Style["display"] = "none";
+        ViewState["timeline_edit_id"] = null;
+        btnTimelineSave.Text = "Đăng bài";
+        btnTimelineCancel.Visible = false;
+    }
+
+    protected void btnTimelineSave_Click(object sender, EventArgs e)
+    {
+        if (!ResolveIsOwner()) return;
+
+        string content = (txtTimelineContent.Text ?? "").Trim();
+        string imageUrl = (hfTimelineImage.Value ?? "").Trim();
+
+        if (string.IsNullOrWhiteSpace(content) && string.IsNullOrWhiteSpace(imageUrl))
+        {
+            Helper_Tabler_cl.ShowToast(this.Page, "Vui lòng nhập nội dung hoặc chọn ảnh.", "warning", true, 2500, "Thông báo");
+            return;
+        }
+
+        string taiKhoan = ResolveProfileUser();
+        if (string.IsNullOrWhiteSpace(taiKhoan)) return;
+
+        using (dbDataContext db = new dbDataContext())
+        {
+            int editId = 0;
+            if (ViewState["timeline_edit_id"] != null)
+                int.TryParse(ViewState["timeline_edit_id"].ToString(), out editId);
+
+            if (editId > 0)
+            {
+                var post = db.BaiViet_tbs.FirstOrDefault(p => p.id == editId && p.nguoitao == taiKhoan && p.phanloai == TIMELINE_POST_TYPE);
+                if (post != null)
+                {
+                    post.content_post = content;
+                    post.image = imageUrl;
+                }
+            }
+            else
+            {
+                BaiViet_tb post = new BaiViet_tb
+                {
+                    name = "Bài viết",
+                    name_en = "home-post-" + DateTime.Now.Ticks,
+                    content_post = content,
+                    image = imageUrl,
+                    bin = false,
+                    ngaytao = DateTime.Now,
+                    nguoitao = taiKhoan,
+                    phanloai = TIMELINE_POST_TYPE
+                };
+                db.BaiViet_tbs.InsertOnSubmit(post);
+            }
+
+            db.SubmitChanges();
+        }
+
+        ResetTimelineForm();
+        using (dbDataContext db = new dbDataContext())
+        {
+            LoadTimeline(db, taiKhoan, true);
+        }
+    }
+
+    protected void btnTimelineCancel_Click(object sender, EventArgs e)
+    {
+        ResetTimelineForm();
+    }
+
+    protected void rptTimeline_ItemCommand(object source, RepeaterCommandEventArgs e)
+    {
+        string command = (e.CommandName ?? "").Trim().ToLowerInvariant();
+
+        if (command == "comment")
+        {
+            string currentUser = PortalRequest_cl.GetCurrentAccount();
+            if (string.IsNullOrWhiteSpace(currentUser))
+            {
+                Helper_Tabler_cl.ShowToast(this.Page, "Bạn cần đăng nhập tài khoản home để bình luận.", "warning", true, 2500, "Thông báo");
+                return;
+            }
+
+            int postId = 0;
+            if (!int.TryParse(Convert.ToString(e.CommandArgument), out postId)) return;
+
+            TextBox txtComment = e.Item.FindControl("txtTimelineComment") as TextBox;
+            string content = (txtComment == null ? "" : (txtComment.Text ?? "")).Trim();
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                Helper_Tabler_cl.ShowToast(this.Page, "Vui lòng nhập nội dung bình luận.", "warning", true, 2500, "Thông báo");
+                return;
+            }
+
+            if (content.Length > TIMELINE_COMMENT_MAX_LEN)
+                content = content.Substring(0, TIMELINE_COMMENT_MAX_LEN);
+
+            string taiKhoan = ResolveProfileUser();
+            if (string.IsNullOrWhiteSpace(taiKhoan)) return;
+
+            using (dbDataContext db = new dbDataContext())
+            {
+                var post = db.BaiViet_tbs.FirstOrDefault(p => p.id == postId && p.phanloai == TIMELINE_POST_TYPE && (p.bin == false || p.bin == null));
+                if (post == null)
+                {
+                    Helper_Tabler_cl.ShowToast(this.Page, "Không tìm thấy bài viết để bình luận.", "warning", true, 2500, "Thông báo");
+                    return;
+                }
+
+                string error;
+                if (!TryInsertTimelineComment(db, postId, currentUser, content, out error))
+                {
+                    Helper_Tabler_cl.ShowToast(this.Page, string.IsNullOrWhiteSpace(error) ? "Không thể gửi bình luận." : error, "error", true, 2500, "Thông báo");
+                    return;
+                }
+
+                if (txtComment != null) txtComment.Text = "";
+                LoadTimeline(db, taiKhoan, ResolveIsOwner());
+            }
+            return;
+        }
+
+        if (!ResolveIsOwner()) return;
+
+        int id = 0;
+        if (!int.TryParse(Convert.ToString(e.CommandArgument), out id)) return;
+
+        string taiKhoanEdit = ResolveProfileUser();
+        if (string.IsNullOrWhiteSpace(taiKhoanEdit)) return;
+
+        using (dbDataContext db = new dbDataContext())
+        {
+            var post = db.BaiViet_tbs.FirstOrDefault(p => p.id == id && p.nguoitao == taiKhoanEdit && p.phanloai == TIMELINE_POST_TYPE);
+            if (post == null) return;
+
+            if (string.Equals(command, "edit", StringComparison.OrdinalIgnoreCase))
+            {
+                ViewState["timeline_edit_id"] = id;
+                txtTimelineContent.Text = post.content_post ?? "";
+                hfTimelineImage.Value = post.image ?? "";
+                if (!string.IsNullOrWhiteSpace(post.image))
+                {
+                    imgTimelinePreview.ImageUrl = post.image;
+                    imgTimelinePreview.Style["display"] = "block";
+                }
+                else
+                {
+                    imgTimelinePreview.ImageUrl = "";
+                    imgTimelinePreview.Style["display"] = "none";
+                }
+                btnTimelineSave.Text = "Cập nhật";
+                btnTimelineCancel.Visible = true;
+            }
+            else if (string.Equals(command, "delete", StringComparison.OrdinalIgnoreCase))
+            {
+                post.bin = true;
+                db.SubmitChanges();
+                ResetTimelineForm();
+            }
+
+            LoadTimeline(db, taiKhoanEdit, true);
+        }
+    }
+
+    protected string FormatTimelineTime(object raw)
+    {
+        if (raw == null) return "";
+        DateTime dt;
+        if (!DateTime.TryParse(raw.ToString(), out dt)) return "";
+        return dt.ToString("dd/MM/yyyy HH:mm");
+    }
+
+    protected string FormatTimelineContent(object raw)
+    {
+        string text = (raw ?? "").ToString().Trim();
+        if (string.IsNullOrWhiteSpace(text)) return "";
+        return HttpUtility.HtmlEncode(text).Replace("\r\n", "\n").Replace("\n", "<br/>");
+    }
+
+    protected void DeleteTimelineComment_Command(object sender, CommandEventArgs e)
+    {
+        string currentUser = PortalRequest_cl.GetCurrentAccount();
+        if (string.IsNullOrWhiteSpace(currentUser))
+        {
+            Helper_Tabler_cl.ShowToast(this.Page, "Bạn cần đăng nhập tài khoản home để thao tác.", "warning", true, 2500, "Thông báo");
+            return;
+        }
+
+        long commentId = 0;
+        if (!long.TryParse(Convert.ToString(e.CommandArgument), out commentId))
+            return;
+
+        string profileOwner = ResolveProfileUser();
+        if (string.IsNullOrWhiteSpace(profileOwner)) return;
+
+        using (dbDataContext db = new dbDataContext())
+        {
+            string error;
+            if (!TryDeleteTimelineComment(db, commentId, currentUser, profileOwner, out error))
+            {
+                Helper_Tabler_cl.ShowToast(this.Page, string.IsNullOrWhiteSpace(error) ? "Không thể xóa bình luận." : error, "warning", true, 2500, "Thông báo");
+                return;
+            }
+
+            LoadTimeline(db, profileOwner, ResolveIsOwner());
+        }
+    }
+
+    private Dictionary<int, List<TimelineCommentItem>> LoadTimelineComments(dbDataContext db, List<int> postIds, string currentUser, string profileOwner)
+    {
+        Dictionary<int, List<TimelineCommentItem>> dict = new Dictionary<int, List<TimelineCommentItem>>();
+        if (postIds == null || postIds.Count == 0) return dict;
+
+        EnsureTimelineCommentSchema(db == null ? "" : db.Connection.ConnectionString);
+
+        using (SqlConnection conn = new SqlConnection(db.Connection.ConnectionString))
+        using (SqlCommand cmd = conn.CreateCommand())
+        {
+            List<string> placeholders = new List<string>();
+            for (int i = 0; i < postIds.Count; i++)
+            {
+                string key = "@p" + i;
+                placeholders.Add(key);
+                cmd.Parameters.AddWithValue(key, postIds[i]);
+            }
+
+            cmd.CommandText = @"
+SELECT c.id, c.post_id, c.taikhoan, c.noidung, c.ngaytao,
+       tk.hoten, tk.anhdaidien
+FROM Home_Timeline_Comment_tb c
+LEFT JOIN taikhoan_tb tk ON tk.taikhoan = c.taikhoan
+WHERE c.post_id IN (" + string.Join(",", placeholders) + @")
+  AND (c.bin = 0 OR c.bin IS NULL)
+ORDER BY c.post_id ASC, c.ngaytao ASC";
+
+            conn.Open();
+            using (SqlDataReader reader = cmd.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    int postId = reader["post_id"] == DBNull.Value ? 0 : Convert.ToInt32(reader["post_id"]);
+                    if (postId == 0) continue;
+
+                    if (!dict.ContainsKey(postId))
+                        dict[postId] = new List<TimelineCommentItem>();
+
+                    string tk = reader["taikhoan"] == DBNull.Value ? "" : reader["taikhoan"].ToString();
+                    string hoten = reader["hoten"] == DBNull.Value ? "" : reader["hoten"].ToString();
+                    string displayName = string.IsNullOrWhiteSpace(hoten) ? tk : hoten;
+                    string avatar = ResolveProductImage(reader["anhdaidien"]);
+                    DateTime? ngaytao = null;
+                    if (reader["ngaytao"] != DBNull.Value)
+                        ngaytao = Convert.ToDateTime(reader["ngaytao"]);
+
+                    bool canDelete = !string.IsNullOrWhiteSpace(currentUser)
+                        && (string.Equals(currentUser, tk, StringComparison.OrdinalIgnoreCase)
+                            || string.Equals(currentUser, profileOwner, StringComparison.OrdinalIgnoreCase));
+
+                    dict[postId].Add(new TimelineCommentItem
+                    {
+                        Id = reader["id"] == DBNull.Value ? 0 : Convert.ToInt64(reader["id"]),
+                        PostId = postId,
+                        TaiKhoan = tk,
+                        DisplayName = displayName,
+                        Avatar = avatar,
+                        Content = reader["noidung"] == DBNull.Value ? "" : reader["noidung"].ToString(),
+                        NgayTao = ngaytao,
+                        CanDelete = canDelete,
+                        ProfileUrl = ShopSlug_cl.GetPublicUrlByTaiKhoan(db, tk)
+                    });
+                }
+            }
+        }
+
+        foreach (int postId in postIds)
+        {
+            if (!dict.ContainsKey(postId))
+                continue;
+
+            List<TimelineCommentItem> list = dict[postId];
+            if (list.Count > TIMELINE_COMMENT_MAX_PER_POST)
+            {
+                dict[postId] = list.Skip(Math.Max(0, list.Count - TIMELINE_COMMENT_MAX_PER_POST)).ToList();
+            }
+        }
+
+        return dict;
+    }
+
+    private bool TryInsertTimelineComment(dbDataContext db, int postId, string taiKhoan, string content, out string error)
+    {
+        error = "";
+        if (string.IsNullOrWhiteSpace(taiKhoan))
+        {
+            error = "Bạn cần đăng nhập tài khoản home.";
+            return false;
+        }
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            error = "Vui lòng nhập nội dung bình luận.";
+            return false;
+        }
+
+        EnsureTimelineCommentSchema(db.Connection.ConnectionString);
+
+        using (SqlConnection conn = new SqlConnection(db.Connection.ConnectionString))
+        using (SqlCommand cmd = conn.CreateCommand())
+        {
+            cmd.CommandText = @"
+INSERT INTO Home_Timeline_Comment_tb (post_id, taikhoan, noidung, ngaytao, bin)
+VALUES (@post_id, @taikhoan, @noidung, @ngaytao, 0)";
+            cmd.Parameters.AddWithValue("@post_id", postId);
+            cmd.Parameters.AddWithValue("@taikhoan", taiKhoan);
+            cmd.Parameters.AddWithValue("@noidung", content);
+            cmd.Parameters.AddWithValue("@ngaytao", DateTime.Now);
+            conn.Open();
+            cmd.ExecuteNonQuery();
+        }
+
+        return true;
+    }
+
+    private bool TryDeleteTimelineComment(dbDataContext db, long commentId, string currentUser, string profileOwner, out string error)
+    {
+        error = "";
+        if (string.IsNullOrWhiteSpace(currentUser))
+        {
+            error = "Bạn cần đăng nhập tài khoản home.";
+            return false;
+        }
+
+        EnsureTimelineCommentSchema(db.Connection.ConnectionString);
+
+        using (SqlConnection conn = new SqlConnection(db.Connection.ConnectionString))
+        using (SqlCommand cmd = conn.CreateCommand())
+        {
+            cmd.CommandText = @"SELECT taikhoan FROM Home_Timeline_Comment_tb WHERE id = @id AND (bin = 0 OR bin IS NULL)";
+            cmd.Parameters.AddWithValue("@id", commentId);
+            conn.Open();
+            object rawOwner = cmd.ExecuteScalar();
+            string owner = rawOwner == null ? "" : rawOwner.ToString();
+
+            if (string.IsNullOrWhiteSpace(owner))
+            {
+                error = "Bình luận không tồn tại.";
+                return false;
+            }
+
+            bool canDelete = string.Equals(currentUser, owner, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(currentUser, profileOwner, StringComparison.OrdinalIgnoreCase);
+
+            if (!canDelete)
+            {
+                error = "Bạn không có quyền xóa bình luận này.";
+                return false;
+            }
+
+            cmd.CommandText = "UPDATE Home_Timeline_Comment_tb SET bin = 1 WHERE id = @id";
+            cmd.ExecuteNonQuery();
+        }
+
+        return true;
+    }
+
+    private void EnsureTimelineCommentSchema(string connectionString)
+    {
+        if (_timelineCommentSchemaEnsured || string.IsNullOrWhiteSpace(connectionString))
+            return;
+
+        lock (TimelineCommentSchemaLock)
+        {
+            if (_timelineCommentSchemaEnsured) return;
+
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            using (SqlCommand cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = @"
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'dbo' AND TABLE_NAME = 'Home_Timeline_Comment_tb')
+BEGIN
+    CREATE TABLE dbo.Home_Timeline_Comment_tb (
+        id BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        post_id INT NOT NULL,
+        taikhoan NVARCHAR(50) NOT NULL,
+        noidung NVARCHAR(1000) NOT NULL,
+        ngaytao DATETIME NULL,
+        bin BIT NULL
+    )
+END
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Home_Timeline_Comment_post' AND object_id = OBJECT_ID('dbo.Home_Timeline_Comment_tb'))
+BEGIN
+    CREATE INDEX IX_Home_Timeline_Comment_post ON dbo.Home_Timeline_Comment_tb (post_id, ngaytao DESC)
+END
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Home_Timeline_Comment_user' AND object_id = OBJECT_ID('dbo.Home_Timeline_Comment_tb'))
+BEGIN
+    CREATE INDEX IX_Home_Timeline_Comment_user ON dbo.Home_Timeline_Comment_tb (taikhoan)
+END";
+                conn.Open();
+                cmd.ExecuteNonQuery();
+            }
+
+            _timelineCommentSchemaEnsured = true;
+        }
+    }
+
+    private class TimelinePostView
+    {
+        public int id { get; set; }
+        public string content_post { get; set; }
+        public string image { get; set; }
+        public DateTime? ngaytao { get; set; }
+        public List<TimelineCommentItem> Comments { get; set; }
+        public int CommentCount { get; set; }
+        public bool CanComment { get; set; }
+    }
+
+    private class TimelineCommentItem
+    {
+        public long Id { get; set; }
+        public int PostId { get; set; }
+        public string TaiKhoan { get; set; }
+        public string DisplayName { get; set; }
+        public string Avatar { get; set; }
+        public string Content { get; set; }
+        public DateTime? NgayTao { get; set; }
+        public bool CanDelete { get; set; }
+        public string ProfileUrl { get; set; }
     }
 
     private bool IsMyShop()

@@ -6,34 +6,69 @@ using System.Text;
 
 public static class SmsOtp_cl
 {
+    private const string DefaultTemplate = "Ma OTP AhaSale cua ban la: {OTP}. Het han sau 5 phut.";
+
     public static bool SendOtp(string phone, string otp, out string error, out bool usedFallback)
+    {
+        return SendOtpInternal(null, phone, otp, out error, out usedFallback);
+    }
+
+    public static bool SendOtp(dbDataContext db, string phone, string otp, out string error, out bool usedFallback)
+    {
+        return SendOtpInternal(db, phone, otp, out error, out usedFallback);
+    }
+
+    private static bool SendOtpInternal(dbDataContext db, string phone, string otp, out string error, out bool usedFallback)
     {
         error = "";
         usedFallback = false;
 
-        string endpoint = ConfigurationManager.AppSettings["SmsOtp.Endpoint"] ?? "";
-        string apiKey = ConfigurationManager.AppSettings["SmsOtp.ApiKey"] ?? "";
-        string sender = ConfigurationManager.AppSettings["SmsOtp.Sender"] ?? "";
-        string template = ConfigurationManager.AppSettings["SmsOtp.Template"] ?? "Ma OTP AhaSale cua ban la: {OTP}. Het han sau 5 phut.";
-        string method = ConfigurationManager.AppSettings["SmsOtp.Method"] ?? "";
-        string rawParams = ConfigurationManager.AppSettings["SmsOtp.Params"] ?? "";
-        bool devMode = IsTruthy(ConfigurationManager.AppSettings["SmsOtp.DevMode"]);
+        string endpoint = "";
+        string apiKey = "";
+        string sender = "";
+        string template = "";
+        string method = "";
+        string rawParams = "";
+        bool devMode = false;
 
         try
         {
-            SmsOtpConfig cfg = OtpConfig_cl.GetSmsConfig();
+            SmsOtpConfig cfg = (db != null) ? OtpConfig_cl.GetSmsConfig(db) : OtpConfig_cl.GetSmsConfig();
             if (cfg != null)
             {
-                if (!string.IsNullOrWhiteSpace(cfg.Endpoint)) endpoint = cfg.Endpoint;
-                if (!string.IsNullOrWhiteSpace(cfg.ApiKey)) apiKey = cfg.ApiKey;
-                if (!string.IsNullOrWhiteSpace(cfg.Sender)) sender = cfg.Sender;
-                if (!string.IsNullOrWhiteSpace(cfg.Template)) template = cfg.Template;
-                if (!string.IsNullOrWhiteSpace(cfg.Method)) method = cfg.Method;
-                if (!string.IsNullOrWhiteSpace(cfg.Params)) rawParams = cfg.Params;
+                endpoint = cfg.Endpoint ?? "";
+                apiKey = cfg.ApiKey ?? "";
+                sender = cfg.Sender ?? "";
+                template = cfg.Template ?? "";
+                method = cfg.Method ?? "";
+                rawParams = cfg.Params ?? "";
                 devMode = cfg.DevMode;
             }
+            else
+            {
+                endpoint = ConfigurationManager.AppSettings["SmsOtp.Endpoint"] ?? "";
+                apiKey = ConfigurationManager.AppSettings["SmsOtp.ApiKey"] ?? "";
+                sender = ConfigurationManager.AppSettings["SmsOtp.Sender"] ?? "";
+                template = ConfigurationManager.AppSettings["SmsOtp.Template"] ?? "";
+                method = ConfigurationManager.AppSettings["SmsOtp.Method"] ?? "";
+                rawParams = ConfigurationManager.AppSettings["SmsOtp.Params"] ?? "";
+                devMode = IsTruthy(ConfigurationManager.AppSettings["SmsOtp.DevMode"]);
+            }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Log_cl.Add_Log("[SMS OTP CFG] " + ex.Message, phone ?? "", ex.StackTrace);
+            endpoint = ConfigurationManager.AppSettings["SmsOtp.Endpoint"] ?? "";
+            apiKey = ConfigurationManager.AppSettings["SmsOtp.ApiKey"] ?? "";
+            sender = ConfigurationManager.AppSettings["SmsOtp.Sender"] ?? "";
+            template = ConfigurationManager.AppSettings["SmsOtp.Template"] ?? "";
+            method = ConfigurationManager.AppSettings["SmsOtp.Method"] ?? "";
+            rawParams = ConfigurationManager.AppSettings["SmsOtp.Params"] ?? "";
+            devMode = IsTruthy(ConfigurationManager.AppSettings["SmsOtp.DevMode"]);
+        }
+
+        if (string.IsNullOrWhiteSpace(template))
+            template = DefaultTemplate;
 
         string message = (template ?? "").Replace("{OTP}", otp ?? "");
 

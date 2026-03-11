@@ -11,6 +11,20 @@ public partial class admin_otp_Default : System.Web.UI.Page
 {
     private const string ScopeHome = "home";
     private const string ScopeShop = "shop";
+    private const string OtpSavedSessionKey = "otp_saved_config_notice";
+    private const string OtpConfigUnlockSessionKey = "otp_config_unlocked";
+
+    protected void Page_Init(object sender, EventArgs e)
+    {
+        // Ensure consistent control tree before ViewState loads.
+        SetupOtpConfigGate();
+    }
+
+    protected override object LoadPageStateFromPersistenceMedium()
+    {
+        // Ignore stale viewstate to avoid InvalidCastException after UI structure changes.
+        return null;
+    }
 
     protected void Page_Load(object sender, EventArgs e)
     {
@@ -23,6 +37,7 @@ public partial class admin_otp_Default : System.Web.UI.Page
             BindAccounts();
             BindTabs();
             BindLog();
+            ShowSavedConfigNotice();
         }
     }
 
@@ -100,6 +115,9 @@ public partial class admin_otp_Default : System.Web.UI.Page
 
     protected void but_save_config_Click(object sender, EventArgs e)
     {
+        if (!IsOtpConfigUnlocked())
+            return;
+
         using (dbDataContext db = new dbDataContext())
         {
             SmsOtpConfig cfg = new SmsOtpConfig
@@ -117,11 +135,17 @@ public partial class admin_otp_Default : System.Web.UI.Page
             OtpConfig_cl.SaveSmsConfig(db, cfg, adminTk);
         }
 
-        Helper_Tabler_cl.ShowModal(this.Page, "Đã lưu cấu hình OTP.", "Thông báo", true, "success");
+        Session[OtpSavedSessionKey] = "sms";
+        string redirectUrl = Request.RawUrl;
+        Response.Redirect(string.IsNullOrEmpty(redirectUrl) ? ("/admin/otp/default.aspx?scope=" + CurrentScope) : redirectUrl, false);
+        Context.ApplicationInstance.CompleteRequest();
     }
 
     protected void but_save_email_Click(object sender, EventArgs e)
     {
+        if (!IsOtpConfigUnlocked())
+            return;
+
         using (dbDataContext db = new dbDataContext())
         {
             int port = 0;
@@ -145,7 +169,73 @@ public partial class admin_otp_Default : System.Web.UI.Page
             OtpConfig_cl.SaveEmailConfig(db, cfg, adminTk);
         }
 
-        Helper_Tabler_cl.ShowModal(this.Page, "Đã lưu cấu hình Email OTP.", "Thông báo", true, "success");
+        Session[OtpSavedSessionKey] = "email";
+        string redirectUrl = Request.RawUrl;
+        Response.Redirect(string.IsNullOrEmpty(redirectUrl) ? ("/admin/otp/default.aspx?scope=" + CurrentScope) : redirectUrl, false);
+        Context.ApplicationInstance.CompleteRequest();
+    }
+
+    private void ShowSavedConfigNotice()
+    {
+        string flag = Session[OtpSavedSessionKey] as string;
+        if (string.IsNullOrEmpty(flag))
+            return;
+
+        Session[OtpSavedSessionKey] = null;
+
+        if (string.Equals(flag, "sms", StringComparison.OrdinalIgnoreCase))
+            Helper_Tabler_cl.ShowModal(this.Page, "Đã lưu cấu hình OTP (SMS) thành công.", "Thông báo", true, "success");
+        else if (string.Equals(flag, "email", StringComparison.OrdinalIgnoreCase))
+            Helper_Tabler_cl.ShowModal(this.Page, "Đã lưu cấu hình Email OTP.", "Thông báo", true, "success");
+    }
+
+    protected void but_unlock_config_Click(object sender, EventArgs e)
+    {
+        string pwd = (Request.Form["txt_unlock_password"] ?? Request.Form["ctl00$main$txt_unlock_password"] ?? "").Trim();
+        if (string.IsNullOrEmpty(pwd))
+        {
+            Helper_Tabler_cl.ShowModal(this.Page, "Vui lòng nhập mật khẩu admin.", "Thông báo", true, "warning");
+            return;
+        }
+
+        string adminTk = GetCurrentAdminAccount();
+        if (string.IsNullOrEmpty(adminTk))
+        {
+            Helper_Tabler_cl.ShowModal(this.Page, "Không xác định được tài khoản admin.", "Thông báo", true, "warning");
+            return;
+        }
+
+        using (dbDataContext db = new dbDataContext())
+        {
+            taikhoan_tb acc = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == adminTk);
+            if (acc == null)
+            {
+                Helper_Tabler_cl.ShowModal(this.Page, "Không xác định được tài khoản admin.", "Thông báo", true, "warning");
+                return;
+            }
+
+            if (!string.Equals(pwd, acc.matkhau ?? "", StringComparison.Ordinal))
+            {
+                Helper_Tabler_cl.ShowModal(this.Page, "Mật khẩu admin không đúng.", "Thông báo", true, "warning");
+                return;
+            }
+        }
+
+        Session[OtpConfigUnlockSessionKey] = "1";
+        Response.Redirect(Request.RawUrl, false);
+        Context.ApplicationInstance.CompleteRequest();
+    }
+
+    private void SetupOtpConfigGate()
+    {
+        bool unlocked = IsOtpConfigUnlocked();
+        ph_otp_locked.Visible = !unlocked;
+        ph_otp_config.Visible = unlocked;
+    }
+
+    private bool IsOtpConfigUnlocked()
+    {
+        return string.Equals(Session[OtpConfigUnlockSessionKey] as string, "1", StringComparison.Ordinal);
     }
 
     private void BindParamInputs(string raw)
@@ -460,21 +550,25 @@ ORDER BY id DESC";
                 else
                 {
                     cmd.CommandText = @"
-IF EXISTS (SELECT 1 FROM dbo.Shop_Otp_tb WHERE otp_type LIKE 'home_%')
-BEGIN
-    SELECT TOP 200 id, taikhoan, phone, otp_code, otp_type, status, sent_at, expires_at
+SELECT TOP 200 id, taikhoan, phone, otp_code, otp_type, status, sent_at, expires_at
+FROM (
+    SELECT id, taikhoan, phone, otp_code, otp_type, status, sent_at, expires_at
     FROM dbo.Shop_Otp_tb
     WHERE otp_type LIKE 'home_%'
-    AND (@kw = '' OR taikhoan LIKE @kw OR phone LIKE @kw)
-    ORDER BY sent_at DESC, id DESC
-END
-ELSE
-BEGIN
-    SELECT TOP 200 id, taikhoan, phone, otp_code, otp_type, status, sent_at, expires_at
-    FROM dbo.Home_Otp_tb
-    WHERE (@kw = '' OR taikhoan LIKE @kw OR phone LIKE @kw)
-    ORDER BY id DESC
-END";
+    UNION ALL
+    SELECT h.id, h.taikhoan, h.phone, h.otp_code, h.otp_type, h.status, h.sent_at, h.expires_at
+    FROM dbo.Home_Otp_tb h
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM dbo.Shop_Otp_tb s
+        WHERE s.otp_type = 'home_' + h.otp_type
+          AND s.phone = h.phone
+          AND s.otp_code = h.otp_code
+          AND ABS(DATEDIFF(SECOND, s.sent_at, h.sent_at)) <= 10
+    )
+) AS t
+WHERE (@kw = '' OR taikhoan LIKE @kw OR phone LIKE @kw)
+ORDER BY sent_at DESC, id DESC";
                 }
 
                 cmd.Parameters.AddWithValue("@kw", string.IsNullOrEmpty(search) ? "" : "%" + search + "%");
