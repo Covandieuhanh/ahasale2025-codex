@@ -103,7 +103,7 @@ public partial class home_quan_ly_bai_Them : System.Web.UI.Page
             DanhSachTP.Items.Add(new ListItem("Nhấn để chọn", ""));
             foreach (var tp in thanhPhos)
             {
-                DanhSachTP.Items.Add(new ListItem(tp.Ten, tp.Ten));
+                DanhSachTP.Items.Add(new ListItem(TinhThanhDisplay_cl.Format(tp.Ten), tp.Ten));
             }
         }
     }

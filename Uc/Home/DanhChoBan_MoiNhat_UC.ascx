@@ -919,7 +919,7 @@
                                                             <path d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10z"></path>
                                                             <circle cx="12" cy="11" r="2"></circle>
                                                         </svg>
-                                                        <span class="loc-text text-muted"><%# Eval("ThanhPho") %></span>
+                                                        <span class="loc-text text-muted"><%# Eval("ThanhPhoDisplay") %></span>
                                                     </div>
 
                                                     <div class="kebab-wrap">

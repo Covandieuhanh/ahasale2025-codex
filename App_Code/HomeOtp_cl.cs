@@ -168,6 +168,14 @@ WHERE id = @id AND otp_type = @type";
         try
         {
             EnsureSchema(db);
+            try
+            {
+                ShopOtp_cl.EnsureSchemaSafe(db);
+            }
+            catch
+            {
+                // Ignore mirror schema errors.
+            }
 
             DateTime now = AhaTime_cl.Now;
             DateTime expires = now.AddMinutes(ExpireMinutes);
@@ -239,6 +247,10 @@ VALUES
                         cmdFail.Parameters.AddWithValue("@id", requestId);
                         cmdFail.ExecuteNonQuery();
                     }
+                    if (string.IsNullOrEmpty(devOtp))
+                        devOtp = otp;
+                    usedFallback = true;
+                    MirrorToShopLog(conn, cleanTk, cleanPhone, otp, cleanType, StatusSendFailed, now, expires);
                     return false;
                 }
 
@@ -247,6 +259,7 @@ VALUES
                     devOtp = otp;
                 }
 
+                MirrorToShopLog(conn, cleanTk, cleanPhone, otp, cleanType, StatusSent, now, expires);
                 return true;
             }
         }
@@ -282,6 +295,14 @@ VALUES
         try
         {
             EnsureSchema(db);
+            try
+            {
+                ShopOtp_cl.EnsureSchemaSafe(db);
+            }
+            catch
+            {
+                // Ignore mirror schema errors.
+            }
 
             DateTime now = AhaTime_cl.Now;
             DateTime expires = now.AddMinutes(ExpireMinutes);
@@ -341,6 +362,11 @@ VALUES
 
                     object result = cmdInsert.ExecuteScalar();
                     requestId = (result != null) ? Convert.ToInt32(result) : 0;
+                }
+
+                if (requestId > 0)
+                {
+                    MirrorToShopLog(conn, cleanTk, cleanPhone, otp, cleanType, StatusSent, now, expires);
                 }
             }
 
@@ -600,6 +626,46 @@ WHERE id = @id";
             cmd.Parameters.AddWithValue("@status", status);
             cmd.Parameters.AddWithValue("@id", requestId);
             cmd.ExecuteNonQuery();
+        }
+    }
+
+    private static void MirrorToShopLog(SqlConnection conn, string taiKhoan, string phone, string otp, string otpType,
+                                        int status, DateTime sentAt, DateTime expiresAt)
+    {
+        if (conn == null)
+            return;
+
+        string cleanTk = (taiKhoan ?? "").Trim();
+        string cleanPhone = (phone ?? "").Trim();
+        string cleanOtp = (otp ?? "").Trim();
+        string cleanType = (otpType ?? "").Trim().ToLowerInvariant();
+        if (string.IsNullOrEmpty(cleanTk) || string.IsNullOrEmpty(cleanPhone) || string.IsNullOrEmpty(cleanOtp) || string.IsNullOrEmpty(cleanType))
+            return;
+
+        try
+        {
+            using (SqlCommand cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = @"
+INSERT INTO dbo.Shop_Otp_tb
+    (taikhoan, phone, otp_code, otp_type, status, attempt_count, sent_at, expires_at, client_ip, user_agent)
+VALUES
+    (@tk, @phone, @otp, @type, @status, 0, @sent_at, @expires_at, @ip, @ua);";
+                cmd.Parameters.AddWithValue("@tk", cleanTk);
+                cmd.Parameters.AddWithValue("@phone", cleanPhone);
+                cmd.Parameters.AddWithValue("@otp", cleanOtp);
+                cmd.Parameters.AddWithValue("@type", "home_" + cleanType);
+                cmd.Parameters.AddWithValue("@status", status);
+                cmd.Parameters.AddWithValue("@sent_at", sentAt);
+                cmd.Parameters.AddWithValue("@expires_at", expiresAt);
+                cmd.Parameters.AddWithValue("@ip", "");
+                cmd.Parameters.AddWithValue("@ua", "");
+                cmd.ExecuteNonQuery();
+            }
+        }
+        catch (Exception ex)
+        {
+            Log_cl.Add_Log("[HOME OTP MIRROR] " + ex.Message, cleanPhone, ex.StackTrace);
         }
     }
 

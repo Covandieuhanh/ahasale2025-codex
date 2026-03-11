@@ -190,7 +190,8 @@ public partial class home_page_chi_tiet_bai_viet : System.Web.UI.Page
 
                 Label1.Text = q.description;
 
-                string thanhPho = string.IsNullOrWhiteSpace(q.ThanhPho) ? "Không có" : q.ThanhPho;
+                string thanhPhoRaw = string.IsNullOrWhiteSpace(q.ThanhPho) ? "Không có" : q.ThanhPho;
+                string thanhPho = TinhThanhDisplay_cl.Format(thanhPhoRaw);
                 Label2.Text = string.Format("<a href='{0}' target='_blank' class='text-muted'>", q.LinkMap) +
                               string.Format("<i class='ti ti-map-pin'></i> {0}</a>", thanhPho);
 

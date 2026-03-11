@@ -275,7 +275,7 @@ public partial class home_quan_ly_bai_Default : System.Web.UI.Page
             DanhSachTP.Items.Add(new ListItem("Nhấn để chọn", ""));
             foreach (var tp in ThamPhos)
             {
-                DanhSachTP.Items.Add(new ListItem(tp.Ten, tp.Ten));
+                DanhSachTP.Items.Add(new ListItem(TinhThanhDisplay_cl.Format(tp.Ten), tp.Ten));
             }
         }
         BindCompanyShopOptions(IsCompanyShopPortalCached(), true);

@@ -68,8 +68,34 @@ public partial class home_khoi_phuc_ma_pin : System.Web.UI.Page
 
             if (requestId <= 0)
             {
-                Helper_Tabler_cl.ShowModal(this.Page, "Không tạo được yêu cầu OTP. Vui lòng thử lại.", "Thông báo", true, "warning");
-                return;
+                string manualOtp;
+                string manualError;
+                if (!HomeOtp_cl.CreateManualOtp(db, phone, q.taikhoan, HomeOtp_cl.TypePin, out requestId, out manualOtp, out manualError))
+                {
+                    Helper_Tabler_cl.ShowModal(this.Page, "Không tạo được yêu cầu OTP. Vui lòng thử lại.", "Thông báo", true, "warning");
+                    return;
+                }
+                sent = false;
+                usedFallback = true;
+                devOtp = manualOtp;
+            }
+            else
+            {
+                HomeOtpRequestInfo info;
+                string lookupError;
+                if (!HomeOtp_cl.TryGetOtpInfo(db, requestId, HomeOtp_cl.TypePin, out info, out lookupError))
+                {
+                    string manualOtp;
+                    string manualError;
+                    if (!HomeOtp_cl.CreateManualOtp(db, phone, q.taikhoan, HomeOtp_cl.TypePin, out requestId, out manualOtp, out manualError))
+                    {
+                        Helper_Tabler_cl.ShowModal(this.Page, "Không tạo được yêu cầu OTP. Vui lòng thử lại.", "Thông báo", true, "warning");
+                        return;
+                    }
+                    sent = false;
+                    usedFallback = true;
+                    devOtp = manualOtp;
+                }
             }
 
             if (!sent)

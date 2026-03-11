@@ -125,7 +125,14 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
 
         using (dbDataContext db = new dbDataContext())
         {
-            var list = db.ThanhPhos.ToList();
+            var list = db.ThanhPhos
+                .ToList()
+                .Select(tp => new
+                {
+                    tp.id,
+                    Ten = TinhThanhDisplay_cl.Format(tp.Ten)
+                })
+                .ToList();
             ddl_Location.DataSource = list;
             ddl_Location.DataTextField = "Ten";
             ddl_Location.DataValueField = "id";
@@ -215,6 +222,7 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
         string keyword = txt_Search.Text.Trim();
         string thanhPho = ddl_Location.SelectedValue;
         string selectedDanhMuc = ddl_Category.SelectedValue;
+        Dictionary<long, string> thanhPhoMap = null;
 
         IQueryable<TinItem> list_all;
         List<string> danhMucIds_Search = null;
@@ -450,7 +458,10 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
 
         if (!string.IsNullOrEmpty(thanhPho))
         {
-            list_all = list_all.Where(p => p.ThanhPho == thanhPho);
+            if (thanhPhoMap == null)
+                thanhPhoMap = db.ThanhPhos.ToDictionary(p => p.id, p => p.Ten);
+            string thanhPhoTen = TinhThanhDisplay_cl.ResolveNameFromId(thanhPho, thanhPhoMap);
+            list_all = list_all.Where(p => p.ThanhPho == thanhPho || p.ThanhPho == thanhPhoTen);
         }
 
 
@@ -482,6 +493,14 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
             if (!loaded.Any(x => x.id == it.id)) loaded.Add(it);
 
         Session[SS_LoadedKey] = loaded;
+
+        if (thanhPhoMap == null)
+            thanhPhoMap = db.ThanhPhos.ToDictionary(p => p.id, p => p.Ten);
+        foreach (var it in loaded)
+        {
+            string name = TinhThanhDisplay_cl.ResolveNameFromId(it.ThanhPho, thanhPhoMap);
+            it.ThanhPhoDisplay = TinhThanhDisplay_cl.Format(name);
+        }
 
         RepeaterTin.DataSource = loaded;
         RepeaterTin.DataBind();
@@ -1202,6 +1221,7 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
         public string name { get; set; }
         public string name_en { get; set; }
         public string ThanhPho { get; set; }
+        public string ThanhPhoDisplay { get; set; }
         public DateTime? ngaytao { get; set; }
         public DateTime? ngayxem { get; set; }
         public decimal? giaban { get; set; }

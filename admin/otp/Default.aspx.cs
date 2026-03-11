@@ -14,6 +14,7 @@ public partial class admin_otp_Default : System.Web.UI.Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
+        DisablePageCache();
         if (!IsPostBack)
         {
             check_login_cl.check_login_admin("1", "1");
@@ -23,6 +24,16 @@ public partial class admin_otp_Default : System.Web.UI.Page
             BindTabs();
             BindLog();
         }
+    }
+
+    private void DisablePageCache()
+    {
+        Response.Cache.SetCacheability(HttpCacheability.NoCache);
+        Response.Cache.SetNoStore();
+        Response.Cache.SetRevalidation(HttpCacheRevalidation.AllCaches);
+        Response.Cache.SetExpires(DateTime.UtcNow.AddMinutes(-10));
+        Response.Cache.AppendCacheExtension("no-store, no-cache, must-revalidate, max-age=0");
+        Response.AppendHeader("Pragma", "no-cache");
     }
 
     private string CurrentScope
@@ -422,7 +433,6 @@ public partial class admin_otp_Default : System.Web.UI.Page
 
     private DataTable FetchOtpLog(string scope, string keyword)
     {
-        string tableName = scope == ScopeShop ? "Shop_Otp_tb" : "Home_Otp_tb";
         string search = (keyword ?? "").Trim();
 
         using (dbDataContext db = new dbDataContext())
@@ -430,42 +440,69 @@ public partial class admin_otp_Default : System.Web.UI.Page
             if (scope == ScopeShop)
                 ShopOtp_cl.EnsureSchemaSafe(db);
             else
+            {
                 HomeOtp_cl.EnsureSchemaSafe(db);
+                ShopOtp_cl.EnsureSchemaSafe(db);
+            }
 
             using (SqlConnection conn = new SqlConnection(db.Connection.ConnectionString))
             using (SqlCommand cmd = conn.CreateCommand())
             {
-            cmd.CommandText = @"
+                if (scope == ScopeShop)
+                {
+                    cmd.CommandText = @"
 SELECT TOP 200 id, taikhoan, phone, otp_code, otp_type, status, sent_at, expires_at
-FROM dbo." + tableName + @"
-WHERE (@kw = '' OR taikhoan LIKE @kw OR phone LIKE @kw)
+FROM dbo.Shop_Otp_tb
+WHERE otp_type NOT LIKE 'home_%'
+AND (@kw = '' OR taikhoan LIKE @kw OR phone LIKE @kw)
 ORDER BY id DESC";
-            cmd.Parameters.AddWithValue("@kw", string.IsNullOrEmpty(search) ? "" : "%" + search + "%");
-            conn.Open();
+                }
+                else
+                {
+                    cmd.CommandText = @"
+IF EXISTS (SELECT 1 FROM dbo.Shop_Otp_tb WHERE otp_type LIKE 'home_%')
+BEGIN
+    SELECT TOP 200 id, taikhoan, phone, otp_code, otp_type, status, sent_at, expires_at
+    FROM dbo.Shop_Otp_tb
+    WHERE otp_type LIKE 'home_%'
+    AND (@kw = '' OR taikhoan LIKE @kw OR phone LIKE @kw)
+    ORDER BY sent_at DESC, id DESC
+END
+ELSE
+BEGIN
+    SELECT TOP 200 id, taikhoan, phone, otp_code, otp_type, status, sent_at, expires_at
+    FROM dbo.Home_Otp_tb
+    WHERE (@kw = '' OR taikhoan LIKE @kw OR phone LIKE @kw)
+    ORDER BY id DESC
+END";
+                }
 
-            DataTable dt = new DataTable();
-            using (SqlDataAdapter da = new SqlDataAdapter(cmd))
-            {
-                da.Fill(dt);
-            }
+                cmd.Parameters.AddWithValue("@kw", string.IsNullOrEmpty(search) ? "" : "%" + search + "%");
+                conn.Open();
 
-            dt.Columns.Add("type_text", typeof(string));
-            dt.Columns.Add("status_text", typeof(string));
-            dt.Columns.Add("status_class", typeof(string));
-            dt.Columns.Add("time_text", typeof(string));
+                DataTable dt = new DataTable();
+                using (SqlDataAdapter da = new SqlDataAdapter(cmd))
+                {
+                    da.Fill(dt);
+                }
 
-            foreach (DataRow row in dt.Rows)
-            {
-                string otpType = Convert.ToString(row["otp_type"] ?? "");
-                int status = Convert.ToInt32(row["status"] ?? 0);
-                DateTime sentAt = Convert.ToDateTime(row["sent_at"] ?? DateTime.MinValue);
-                DateTime expAt = Convert.ToDateTime(row["expires_at"] ?? DateTime.MinValue);
+                dt.Columns.Add("type_text", typeof(string));
+                dt.Columns.Add("status_text", typeof(string));
+                dt.Columns.Add("status_class", typeof(string));
+                dt.Columns.Add("time_text", typeof(string));
 
-                row["type_text"] = GetTypeText(otpType);
-                row["status_text"] = GetStatusText(status);
-                row["status_class"] = GetStatusClass(status);
-                row["time_text"] = sentAt.ToString("dd/MM/yyyy HH:mm") + " (HSD " + expAt.ToString("dd/MM/yyyy HH:mm") + ")";
-            }
+                foreach (DataRow row in dt.Rows)
+                {
+                    string otpType = Convert.ToString(row["otp_type"] ?? "");
+                    int status = Convert.ToInt32(row["status"] ?? 0);
+                    DateTime sentAt = Convert.ToDateTime(row["sent_at"] ?? DateTime.MinValue);
+                    DateTime expAt = Convert.ToDateTime(row["expires_at"] ?? DateTime.MinValue);
+
+                    row["type_text"] = GetTypeText(otpType);
+                    row["status_text"] = GetStatusText(status);
+                    row["status_class"] = GetStatusClass(status);
+                    row["time_text"] = sentAt.ToString("dd/MM/yyyy HH:mm") + " (HSD " + expAt.ToString("dd/MM/yyyy HH:mm") + ")";
+                }
 
                 return dt;
             }
@@ -474,7 +511,11 @@ ORDER BY id DESC";
 
     private string GetTypeText(string otpType)
     {
-        if (string.Equals(otpType, HomeOtp_cl.TypePin, StringComparison.OrdinalIgnoreCase))
+        string cleanType = (otpType ?? "").Trim();
+        if (cleanType.StartsWith("home_", StringComparison.OrdinalIgnoreCase))
+            cleanType = cleanType.Substring(5);
+
+        if (string.Equals(cleanType, HomeOtp_cl.TypePin, StringComparison.OrdinalIgnoreCase))
             return "Mã PIN";
         return "Mật khẩu";
     }
