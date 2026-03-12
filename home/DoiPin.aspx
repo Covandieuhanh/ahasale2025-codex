@@ -13,6 +13,9 @@
                     <div class="card card-md">
                         <div class="card-body">
                             <h2 class="h2 text-center mb-4">Đổi mã PIN</h2>
+                            <div class="alert alert-info mb-4" role="alert">
+                                Mã PIN chỉ được đặt bằng <strong>4 chữ số</strong>.
+                            </div>
 
                             <!-- PIN hiện tại -->
                             <div class="mb-3">

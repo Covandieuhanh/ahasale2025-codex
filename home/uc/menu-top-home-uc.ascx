@@ -170,7 +170,7 @@
                         <div class="mt-3 ">
                             <div class="fw-600">Mã pin hiện tại</div>
                             <div class="aha-password-field">
-                                <asp:TextBox ID="TextBox4" placeholder="Nhập mã gồm 4 ký tự" runat="server" data-role="input" TextMode="Password" MaxLength="4"></asp:TextBox>
+                                <asp:TextBox ID="TextBox4" placeholder="Nhập mã gồm 4 số" runat="server" data-role="input" TextMode="Password" MaxLength="4" Attributes="inputmode:numeric;pattern:[0-9]*"></asp:TextBox>
                                 <button type="button" class="aha-password-toggle js-toggle-password" aria-label="Hiện mã PIN hiện tại">
                                     <span class="aha-password-toggle-label">Hiện</span>
                                 </button>
@@ -179,7 +179,7 @@
                         <div class="mt-3 ">
                             <div class="fw-600">Mã pin mới</div>
                             <div class="aha-password-field">
-                                <asp:TextBox ID="TextBox5" placeholder="Nhập mã gồm 4 ký tự" runat="server" data-role="input" TextMode="Password" MaxLength="4"></asp:TextBox>
+                                <asp:TextBox ID="TextBox5" placeholder="Nhập mã gồm 4 số" runat="server" data-role="input" TextMode="Password" MaxLength="4" Attributes="inputmode:numeric;pattern:[0-9]*"></asp:TextBox>
                                 <button type="button" class="aha-password-toggle js-toggle-password" aria-label="Hiện mã PIN mới">
                                     <span class="aha-password-toggle-label">Hiện</span>
                                 </button>
@@ -188,7 +188,7 @@
                         <div class="mt-3 ">
                             <div class="fw-600">Nhập lại mã pin mới</div>
                             <div class="aha-password-field">
-                                <asp:TextBox ID="TextBox6" placeholder="Nhập mã gồm 4 ký tự" runat="server" data-role="input" TextMode="Password" MaxLength="4"></asp:TextBox>
+                                <asp:TextBox ID="TextBox6" placeholder="Nhập mã gồm 4 số" runat="server" data-role="input" TextMode="Password" MaxLength="4" Attributes="inputmode:numeric;pattern:[0-9]*"></asp:TextBox>
                                 <button type="button" class="aha-password-toggle js-toggle-password" aria-label="Hiện xác nhận mã PIN mới">
                                     <span class="aha-password-toggle-label">Hiện</span>
                                 </button>

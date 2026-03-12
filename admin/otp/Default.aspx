@@ -1,5 +1,5 @@
 <%@ Page Title="Quản lý OTP" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master"
-    AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_otp_Default" EnableViewState="false" %>
+    AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="admin_otp_Default" EnableViewState="false" EnableEventValidation="false" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="Server">
     <style>

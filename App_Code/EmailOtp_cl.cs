@@ -41,7 +41,9 @@ public static class EmailOtp_cl
 
                 MailMessage message = new MailMessage();
                 message.To.Add(email);
-                string fromAddress = string.IsNullOrWhiteSpace(cfg.FromEmail) ? cfg.Username : cfg.FromEmail;
+                string fromAddress = string.IsNullOrWhiteSpace(cfg.FromEmail) ? "" : cfg.FromEmail.Trim();
+                if (string.IsNullOrWhiteSpace(fromAddress))
+                    fromAddress = "hotro@ahasale.vn";
                 message.From = new MailAddress(fromAddress, cfg.FromName ?? "AhaSale");
                 message.Subject = subject;
                 message.Body = body;
@@ -50,9 +52,12 @@ public static class EmailOtp_cl
                 using (SmtpClient client = new SmtpClient(cfg.Host, cfg.Port))
                 {
                     client.EnableSsl = cfg.UseSsl;
-                    if (!string.IsNullOrWhiteSpace(cfg.Username))
+                    string smtpUser = string.IsNullOrWhiteSpace(cfg.Username) ? "" : cfg.Username.Trim();
+                    if (string.IsNullOrWhiteSpace(smtpUser))
+                        smtpUser = fromAddress;
+                    if (!string.IsNullOrWhiteSpace(smtpUser))
                     {
-                        client.Credentials = new NetworkCredential(cfg.Username, cfg.Password ?? "");
+                        client.Credentials = new NetworkCredential(smtpUser, cfg.Password ?? "");
                     }
                     client.Send(message);
                 }

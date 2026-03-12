@@ -12,6 +12,9 @@
                     <div class="card card-md">
                         <div class="card-body">
                             <h2 class="h2 text-center mb-4">Đặt lại mã PIN</h2>
+                            <div class="alert alert-info mb-4" role="alert">
+                                Mã PIN chỉ được đặt bằng <strong>4 chữ số</strong>.
+                            </div>
 
                             <asp:Panel ID="pn_error" runat="server" Visible="false">
                                 <div class="alert alert-warning" role="alert">

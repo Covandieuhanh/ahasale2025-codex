@@ -18,6 +18,9 @@ public partial class admin_otp_Default : System.Web.UI.Page
     {
         // Ensure consistent control tree before ViewState loads.
         SetupOtpConfigGate();
+        // ViewState is disabled, so repopulate dropdown items before postback data loads.
+        BindTypeOptions();
+        BindAccounts();
     }
 
     protected override object LoadPageStateFromPersistenceMedium()
@@ -33,8 +36,6 @@ public partial class admin_otp_Default : System.Web.UI.Page
         {
             check_login_cl.check_login_admin("1", "1");
             BindConfig();
-            BindTypeOptions();
-            BindAccounts();
             BindTabs();
             BindLog();
             ShowSavedConfigNotice();
@@ -100,10 +101,10 @@ public partial class admin_otp_Default : System.Web.UI.Page
             EmailOtpConfig emailCfg = OtpConfig_cl.GetEmailConfig(db) ?? new EmailOtpConfig();
             txt_email_host.Text = emailCfg.Host ?? "";
             txt_email_port.Text = emailCfg.Port > 0 ? emailCfg.Port.ToString() : "";
-            txt_email_user.Text = emailCfg.Username ?? "";
+            txt_email_user.Text = string.IsNullOrWhiteSpace(emailCfg.Username) ? "hotro@ahasale.vn" : emailCfg.Username;
             txt_email_pass.Text = emailCfg.Password ?? "";
             txt_email_from_name.Text = emailCfg.FromName ?? "";
-            txt_email_from.Text = emailCfg.FromEmail ?? "";
+            txt_email_from.Text = string.IsNullOrWhiteSpace(emailCfg.FromEmail) ? "hotro@ahasale.vn" : emailCfg.FromEmail;
             txt_email_subject.Text = string.IsNullOrEmpty(emailCfg.SubjectTemplate) ? "[AhaSale] Mã OTP của bạn" : emailCfg.SubjectTemplate;
             txt_email_body.Text = string.IsNullOrEmpty(emailCfg.BodyTemplate)
                 ? "Ma OTP cua ban la: {OTP}. Het han sau {EXPIRE} phut."
