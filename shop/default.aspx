@@ -285,7 +285,7 @@
         .stats {
             margin-top: 14px;
             display: grid;
-            grid-template-columns: repeat(4, minmax(120px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
             gap: 12px;
         }
 
@@ -307,6 +307,42 @@
             line-height: 1.1;
             font-weight: 800;
             color: var(--shop-ink-900);
+        }
+
+        .top-products {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+        }
+
+        .top-product {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 10px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--shop-line);
+            background: #fff;
+        }
+
+        .top-product img {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 1px solid #e1e8f0;
+            background: #f3f6fa;
+        }
+
+        .top-product-title {
+            font-weight: 800;
+            color: var(--shop-ink-900);
+            line-height: 1.2;
+        }
+
+        .top-product-meta {
+            font-size: 12px;
+            color: var(--shop-ink-500);
         }
 
         .shop-card {
@@ -639,6 +675,50 @@
                         <div class="stat-label">Đơn chờ trao đổi</div>
                         <div class="stat-value"><asp:Label ID="lb_pending_orders" runat="server"></asp:Label></div>
                     </article>
+                    <article class="stat-card">
+                        <div class="stat-label">Tổng đơn</div>
+                        <div class="stat-value"><asp:Label ID="lb_total_orders" runat="server"></asp:Label></div>
+                    </article>
+                    <article class="stat-card">
+                        <div class="stat-label">Doanh thu</div>
+                        <div class="stat-value"><asp:Label ID="lb_total_revenue" runat="server"></asp:Label></div>
+                    </article>
+                    <article class="stat-card">
+                        <div class="stat-label">Tỷ lệ phản hồi</div>
+                        <div class="stat-value"><asp:Label ID="lb_response_rate" runat="server"></asp:Label></div>
+                    </article>
+                </section>
+
+                <section class="shop-card">
+                    <div class="shop-card-head">
+                        <div>
+                            <h2 class="shop-card-title">Top sản phẩm</h2>
+                            <div class="shop-card-sub">Ưu tiên theo bán chạy, nếu chưa có sẽ theo lượt xem.</div>
+                        </div>
+                    </div>
+                    <div class="shop-card-body">
+                        <asp:PlaceHolder ID="ph_top_products" runat="server" Visible="false">
+                            <div class="top-products">
+                                <asp:Repeater ID="rpt_top_products" runat="server">
+                                    <ItemTemplate>
+                                        <a class="top-product" href="/shop/san-pham/<%# Eval("Id") %>">
+                                            <img src="<%# Eval("Image") %>" alt="<%# Eval("Name") %>" loading="lazy" decoding="async" />
+                                            <div>
+                                                <div class="top-product-title"><%# Eval("Name") %></div>
+                                                <div class="top-product-meta">Đã bán: <%# Eval("Sold") %> · Lượt xem: <%# Eval("Views") %></div>
+                                            </div>
+                                        </a>
+                                    </ItemTemplate>
+                                </asp:Repeater>
+                            </div>
+                        </asp:PlaceHolder>
+                        <asp:PlaceHolder ID="ph_empty_top_products" runat="server" Visible="false">
+                            <div class="empty-state">
+                                <h3>Chưa có dữ liệu top sản phẩm</h3>
+                                <p>Hãy đăng bán sản phẩm và có giao dịch để hệ thống tự tổng hợp.</p>
+                            </div>
+                        </asp:PlaceHolder>
+                    </div>
                 </section>
 
                 <section class="shop-card">
@@ -663,7 +743,7 @@
                                 <ItemTemplate>
                                     <article class="product-card">
                                         <a class="product-thumb" href="/shop/san-pham/<%# Eval("id") %>">
-                                            <img src="<%# ResolveProductImage(Eval("image")) %>" alt="<%# Eval("name") %>" />
+                                            <img src="<%# ResolveProductImage(Eval("image")) %>" alt="<%# Eval("name") %>" loading="lazy" decoding="async" />
                                         </a>
 
                                         <div class="product-body">

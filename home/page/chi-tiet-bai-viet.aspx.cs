@@ -41,6 +41,87 @@ public partial class home_page_chi_tiet_bai_viet : System.Web.UI.Page
         }
     }
 
+    private string BuildQuickInfoHtml(string category, string area, DateTime? createdAt)
+    {
+        var sb = new StringBuilder();
+        if (!string.IsNullOrWhiteSpace(category))
+        {
+            sb.Append("<span class='product-chip'>Danh mục: ");
+            sb.Append(HttpUtility.HtmlEncode(category));
+            sb.Append("</span>");
+        }
+        if (!string.IsNullOrWhiteSpace(area))
+        {
+            sb.Append("<span class='product-chip'>Khu vực: ");
+            sb.Append(HttpUtility.HtmlEncode(area));
+            sb.Append("</span>");
+        }
+        if (createdAt.HasValue)
+        {
+            sb.Append("<span class='product-chip'>Ngày đăng: ");
+            sb.Append(createdAt.Value.ToString("dd/MM/yyyy"));
+            sb.Append("</span>");
+        }
+        return sb.ToString();
+    }
+
+    private void BindRelatedProducts(dbDataContext db, BaiViet_tb current)
+    {
+        if (db == null || current == null)
+            return;
+
+        string currentCategory = (current.id_DanhMuc ?? "").Trim();
+        string seller = (current.nguoitao ?? "").Trim();
+
+        var baseQuery = AccountVisibility_cl.FilterVisibleProducts(db, db.BaiViet_tbs)
+            .Where(p => p.id != current.id && (p.bin == false || p.bin == null));
+
+        if (!string.IsNullOrEmpty(currentCategory))
+            baseQuery = baseQuery.Where(p => p.id_DanhMuc == currentCategory || p.nguoitao == seller);
+        else
+            baseQuery = baseQuery.Where(p => p.nguoitao == seller);
+
+        var related = baseQuery
+            .OrderByDescending(p => p.ngaytao)
+            .Take(6)
+            .Select(p => new
+            {
+                p.id,
+                p.name,
+                p.name_en,
+                p.image,
+                p.giaban
+            })
+            .ToList()
+            .Select(p => new
+            {
+                Id = p.id,
+                Name = p.name,
+                Url = BuildProductDetailUrl(p.id, p.name_en, p.name),
+                Image = ResolveMediaUrlOrFallback(p.image, "/uploads/images/macdinh.jpg"),
+                Price = (p.giaban ?? 0m).ToString("#,##0.##")
+            })
+            .ToList();
+
+        ph_related_products.Visible = related.Count > 0;
+        rpt_related_products.DataSource = related;
+        rpt_related_products.DataBind();
+    }
+
+    private string BuildProductDetailUrl(int id, string slugRaw, string nameRaw)
+    {
+        if (id <= 0) return "#";
+        string slug = (slugRaw ?? "").Trim().ToLowerInvariant();
+        if (string.IsNullOrEmpty(slug))
+        {
+            slug = (nameRaw ?? "").Trim().ToLowerInvariant();
+            slug = Regex.Replace(slug, @"[^a-z0-9\-]+", "-").Trim('-');
+        }
+        if (string.IsNullOrEmpty(slug))
+            slug = "san-pham";
+        return "/" + slug + "-" + id.ToString() + ".html";
+    }
+
     private string RenderMainMediaHtml(string mediaUrl, string title)
     {
         const string fallback = "/uploads/images/macdinh.jpg";
@@ -56,7 +137,7 @@ public partial class home_page_chi_tiet_bai_viet : System.Web.UI.Page
                    "</video>";
         }
 
-        return "<img src='" + safeUrl + "' alt='" + safeAlt + "' style='max-width:100%;max-height:100%;object-fit:contain' />";
+        return "<img src='" + safeUrl + "' alt='" + safeAlt + "' class='product-main-media zoomable' style='max-width:100%;max-height:100%;object-fit:contain' />";
     }
 
     private string RenderThumbMediaHtml(string mediaUrl)
@@ -74,7 +155,7 @@ public partial class home_page_chi_tiet_bai_viet : System.Web.UI.Page
                    "</video>";
         }
 
-        return "<img src='" + safeUrl + "' onclick=\"changeMainMedia('" + encodedForJs + "','image')\" />";
+        return "<img src='" + safeUrl + "' loading='lazy' decoding='async' onclick=\"changeMainMedia('" + encodedForJs + "','image')\" />";
     }
 
     private string ResolveMediaUrlOrFallback(string mediaUrl, string fallback)
@@ -228,6 +309,22 @@ public partial class home_page_chi_tiet_bai_viet : System.Web.UI.Page
                 // ✅ GIÁ BÁN VNĐ
                 Label5.Text = q.giaban.Value.ToString("#,##0.##");
 
+                string categoryName = "";
+                if (!string.IsNullOrWhiteSpace(q.id_DanhMuc))
+                {
+                    int catId;
+                    if (int.TryParse(q.id_DanhMuc, out catId))
+                    {
+                        var cat = db.DanhMuc_tbs.FirstOrDefault(p => p.id == catId);
+                        if (cat != null)
+                            categoryName = (cat.name ?? "").Trim();
+                    }
+                }
+
+                string quickInfoHtml = BuildQuickInfoHtml(categoryName, thanhPho, q.ngaytao);
+                lb_quick_info.Text = quickInfoHtml;
+                lb_quick_info.Visible = !string.IsNullOrWhiteSpace(quickInfoHtml);
+
                 Label4.Text = SanitizeContentHtml(q.content_post);
                 ViewState["giaban"] = q.giaban;
                 ViewState["idmn"] = q.id_DanhMuc;
@@ -321,6 +418,7 @@ public partial class home_page_chi_tiet_bai_viet : System.Web.UI.Page
                         PlaceHolder1.Visible = true;
                     }
                 }
+                phMobileCta.Visible = PlaceHolder1.Visible;
                 #endregion
 
                 if (ViewState["taikhoan"] != null)
@@ -348,6 +446,8 @@ public partial class home_page_chi_tiet_bai_viet : System.Web.UI.Page
 
                     db.SubmitChanges();
                 }
+
+                BindRelatedProducts(db, q);
             }
         }
         else

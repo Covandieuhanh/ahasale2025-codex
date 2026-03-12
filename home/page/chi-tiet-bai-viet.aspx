@@ -11,16 +11,24 @@
         /* ====== Gallery ====== */
         .gallery-main {
             width: 100%;
-            height: 360px;
+            height: 460px;
             background: #f6f8fb;
             border-radius: 12px;
             overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
+            position: relative;
         }
         .gallery-main img,
         .gallery-main video { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .gallery-main img.zoomable {
+            transition: transform .25s ease;
+            cursor: zoom-in;
+        }
+        .gallery-main:hover img.zoomable {
+            transform: scale(1.04);
+        }
 
         .thumbs {
             display: flex;
@@ -78,6 +86,99 @@
             border-radius: 50%;
         }
 
+        .product-sidebar {
+            position: sticky;
+            top: 90px;
+        }
+
+        .product-quick-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .product-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            color: #334e68;
+        }
+
+        .related-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .related-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            background: #fff;
+            overflow: hidden;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, .06);
+        }
+
+        .related-card img {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .related-body {
+            padding: 10px 12px 12px;
+        }
+
+        .related-title {
+            font-weight: 700;
+            color: #0f172a;
+            line-height: 1.3;
+            max-height: 38px;
+            overflow: hidden;
+        }
+
+        .related-price {
+            margin-top: 6px;
+            color: #dc2626;
+            font-weight: 700;
+        }
+
+        .mobile-cta {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 2000;
+            background: #ffffff;
+            border-top: 1px solid #e2e8f0;
+            box-shadow: 0 -10px 24px rgba(15, 23, 42, .12);
+            padding: 10px 14px;
+            display: none;
+        }
+
+        .mobile-cta .cta-wrap {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            gap: 10px;
+        }
+
+        .mobile-cta .btn {
+            flex: 1;
+            min-height: 44px;
+            font-weight: 700;
+        }
+
+        body.mobile-cta-enabled {
+            padding-bottom: 84px;
+        }
+
         /* Paging giữ cơ chế cũ */
         .pagination a, .pagination .current-page {
             padding: 6px 10px;
@@ -110,6 +211,38 @@
             background-color: rgba(34, 197, 94, 0.18);
             color: #86efac;
             border-color: rgba(34, 197, 94, 0.45);
+        }
+
+        html[data-bs-theme="dark"] .product-chip {
+            background: rgba(15, 23, 42, .7);
+            border-color: #223246;
+            color: #cbd5f5;
+        }
+
+        html[data-bs-theme="dark"] .related-card {
+            background: #0f172a;
+            border-color: #223246;
+        }
+
+        html[data-bs-theme="dark"] .related-title {
+            color: #e2e8f0;
+        }
+
+        html[data-bs-theme="dark"] .mobile-cta {
+            background: #0f172a;
+            border-color: #223246;
+        }
+
+        @media (max-width: 991px) {
+            .gallery-main { height: 340px; }
+            .product-sidebar { position: static; }
+            .related-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .mobile-cta { display: block; }
+        }
+
+        @media (max-width: 640px) {
+            .gallery-main { height: 280px; }
+            .related-grid { grid-template-columns: 1fr; }
         }
     </style>
 </asp:Content>
@@ -150,12 +283,14 @@
                     <div class="col-lg-4">
 
                         <!-- PRODUCT INFO / ACTIONS -->
-                        <div class="card shadow-sm">
+                        <div class="card shadow-sm product-sidebar">
                             <div class="card-body">
 
                                 <div class="h3 mb-1">
                                     <asp:Label ID="Label3" runat="server" Text=""></asp:Label>
                                 </div>
+
+                                <asp:Label ID="lb_quick_info" runat="server" CssClass="product-quick-info" />
 
                                 <div class="text-muted mb-2">
                                     <asp:Label ID="Label1" runat="server" Text=""></asp:Label>
@@ -245,6 +380,31 @@
             </div>
         </ContentTemplate>
     </asp:UpdatePanel>
+
+    <asp:PlaceHolder ID="ph_related_products" runat="server" Visible="false">
+        <div class="container-xl product-wrap pb-3">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <div class="card-title fw-bold">Sản phẩm liên quan</div>
+                </div>
+                <div class="card-body">
+                    <div class="related-grid">
+                        <asp:Repeater ID="rpt_related_products" runat="server">
+                            <ItemTemplate>
+                                <a class="related-card" href="<%# Eval("Url") %>">
+                                    <img src="<%# Eval("Image") %>" alt="<%# HttpUtility.HtmlEncode((Eval("Name") ?? "").ToString()) %>" loading="lazy" decoding="async" />
+                                    <div class="related-body">
+                                        <div class="related-title"><%# Eval("Name") %></div>
+                                        <div class="related-price"><%# Eval("Price") %> đ</div>
+                                    </div>
+                                </a>
+                            </ItemTemplate>
+                        </asp:Repeater>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </asp:PlaceHolder>
 
     <!-- ====== REVIEWS ====== -->
     <asp:UpdatePanel ID="Review" runat="server" UpdateMode="Conditional">
@@ -349,6 +509,15 @@
 
         </ContentTemplate>
     </asp:UpdatePanel>
+
+    <asp:PlaceHolder ID="phMobileCta" runat="server" Visible="false">
+        <div class="mobile-cta" id="mobileCta">
+            <div class="cta-wrap">
+                <button type="button" class="btn btn-outline-info" onclick="triggerTraoDoi()">Trao đổi</button>
+                <button type="button" class="btn btn-outline-success" onclick="triggerAddToCart()">Thêm vào giỏ</button>
+            </div>
+        </div>
+    </asp:PlaceHolder>
 
     <asp:UpdateProgress ID="UpdateProgress2" runat="server" AssociatedUpdatePanelID="up_main">
         <ProgressTemplate>
@@ -496,6 +665,13 @@
             };
         });
 
+        document.addEventListener("click", function (ev) {
+            var target = ev.target;
+            if (target && target.classList && target.classList.contains("product-main-media")) {
+                openMediaModal(target.src);
+            }
+        });
+
         closeBtn.onclick = function () {
             modal.style.display = "none";
         };
@@ -505,6 +681,11 @@
                 modal.style.display = "none";
             }
         };
+
+        var mobileCta = document.getElementById("mobileCta");
+        if (mobileCta) {
+            document.body.classList.add("mobile-cta-enabled");
+        }
     });
 
     function guessVideoMimeByUrl(url) {
@@ -530,8 +711,26 @@
                 "<video controls playsinline preload='metadata' style='max-width:100%;max-height:100%;object-fit:contain'>" +
                 "<source src='" + src + "' type='" + guessVideoMimeByUrl(src) + "'></video>";
         } else {
-            host.innerHTML = "<img src='" + src + "' alt='media' style='max-width:100%;max-height:100%;object-fit:contain' />";
+            host.innerHTML = "<img src='" + src + "' alt='media' class='product-main-media zoomable' style='max-width:100%;max-height:100%;object-fit:contain' />";
         }
+    }
+
+    function openMediaModal(src) {
+        var modal = document.getElementById("imgModal");
+        var modalImg = document.getElementById("modalImage");
+        if (!modal || !modalImg) return;
+        modal.style.display = "block";
+        modalImg.src = src;
+    }
+
+    function triggerTraoDoi() {
+        var btn = document.getElementById('<%= but_traodoi.ClientID %>');
+        if (btn) btn.click();
+    }
+
+    function triggerAddToCart() {
+        var btn = document.getElementById('<%= but_themvaogio.ClientID %>');
+        if (btn) btn.click();
     }
 </script>
 </asp:Content>

@@ -1,13 +1,32 @@
 using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Web;
 
 public partial class shop_public : System.Web.UI.Page
 {
     private const string HomeLoginFlag = "home_login";
+
+    private class ShopPublicProductView
+    {
+        public int id { get; set; }
+        public string name { get; set; }
+        public string name_en { get; set; }
+        public string image { get; set; }
+        public decimal? giaban { get; set; }
+        public DateTime? ngaytao { get; set; }
+        public int LuotTruyCap { get; set; }
+        public string CategoryId { get; set; }
+        public string CategoryName { get; set; }
+        public string AreaRaw { get; set; }
+        public string AreaLabel { get; set; }
+        public long DateTicks { get; set; }
+        public int SoldCount { get; set; }
+    }
 
     protected void Page_Load(object sender, EventArgs e)
     {
@@ -149,7 +168,7 @@ public partial class shop_public : System.Web.UI.Page
 
     private void BindShopProducts(dbDataContext db, string taiKhoanShop)
     {
-        var products = db.BaiViet_tbs
+        var rawProducts = db.BaiViet_tbs
             .Where(p => p.nguoitao == taiKhoanShop)
             .Where(p => db.taikhoan_tbs.Any(acc => acc.taikhoan == p.nguoitao && acc.block != true))
             .Where(p => p.bin == false && p.phanloai == "sanpham")
@@ -162,9 +181,63 @@ public partial class shop_public : System.Web.UI.Page
                 p.image,
                 p.giaban,
                 p.ngaytao,
-                LuotTruyCap = (p.LuotTruyCap ?? 0)
+                LuotTruyCap = (p.LuotTruyCap ?? 0),
+                CategoryId = p.id_DanhMuc,
+                AreaRaw = p.ThanhPho,
+                SoldCount = (p.soluong_daban ?? 0)
             })
             .ToList();
+
+        var categoryIds = rawProducts
+            .Select(p => (p.CategoryId ?? "").Trim())
+            .Where(p => !string.IsNullOrEmpty(p))
+            .Distinct()
+            .ToList();
+
+        var categoryIdInts = new List<int>();
+        foreach (var idRaw in categoryIds)
+        {
+            int idInt;
+            if (int.TryParse(idRaw, out idInt))
+                categoryIdInts.Add(idInt);
+        }
+
+        var categoryMap = db.DanhMuc_tbs
+            .Where(dm => categoryIdInts.Contains(dm.id))
+            .ToList()
+            .ToDictionary(dm => dm.id.ToString(), dm => (dm.name ?? "").Trim());
+
+        var products = rawProducts.Select(p =>
+        {
+            string categoryName = "";
+            string categoryKey = (p.CategoryId ?? "").Trim();
+            if (!string.IsNullOrEmpty(categoryKey) && categoryMap.ContainsKey(categoryKey))
+                categoryName = categoryMap[categoryKey];
+
+            string areaLabel = "";
+            string areaRaw = (p.AreaRaw ?? "").Trim();
+            if (!string.IsNullOrEmpty(areaRaw))
+                areaLabel = TinhThanhDisplay_cl.Format(areaRaw);
+
+            long dateTicks = p.ngaytao.HasValue ? p.ngaytao.Value.Ticks : 0;
+
+            return new ShopPublicProductView
+            {
+                id = p.id,
+                name = p.name,
+                name_en = p.name_en,
+                image = p.image,
+                giaban = p.giaban,
+                ngaytao = p.ngaytao,
+                LuotTruyCap = p.LuotTruyCap,
+                CategoryId = categoryKey,
+                CategoryName = categoryName,
+                AreaRaw = areaRaw.ToLowerInvariant(),
+                AreaLabel = string.IsNullOrEmpty(areaLabel) ? "Không rõ" : areaLabel,
+                DateTicks = dateTicks,
+                SoldCount = p.SoldCount
+            };
+        }).ToList();
 
         rp_products.DataSource = products;
         rp_products.DataBind();
@@ -172,6 +245,54 @@ public partial class shop_public : System.Web.UI.Page
         bool hasProducts = products.Count > 0;
         ph_products.Visible = hasProducts;
         ph_empty_products.Visible = !hasProducts;
+
+        BuildFilterOptions(products, categoryMap);
+    }
+
+    private void BuildFilterOptions(List<ShopPublicProductView> products, Dictionary<string, string> categoryMap)
+    {
+        var sbSuggest = new StringBuilder();
+        sbSuggest.Append("<datalist id='shopSuggest'>");
+        foreach (string name in products.Select(p => (string)(p.name ?? "")).Where(s => !string.IsNullOrWhiteSpace(s)).Distinct())
+        {
+            sbSuggest.Append("<option value=\"");
+            sbSuggest.Append(HttpUtility.HtmlAttributeEncode(name));
+            sbSuggest.Append("\"></option>");
+        }
+        sbSuggest.Append("</datalist>");
+        lit_shop_suggest.Text = sbSuggest.ToString();
+
+        var sbCat = new StringBuilder();
+        sbCat.Append("<option value=\"\">Tất cả danh mục</option>");
+        foreach (var kv in categoryMap.OrderBy(k => k.Value))
+        {
+            sbCat.Append("<option value=\"");
+            sbCat.Append(HttpUtility.HtmlAttributeEncode(kv.Key));
+            sbCat.Append("\">");
+            sbCat.Append(HttpUtility.HtmlEncode(kv.Value));
+            sbCat.Append("</option>");
+        }
+        lit_category_options.Text = sbCat.ToString();
+
+        var areas = products
+            .Select(p => (string)p.AreaRaw)
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Distinct()
+            .OrderBy(s => s)
+            .ToList();
+
+        var sbArea = new StringBuilder();
+        sbArea.Append("<option value=\"\">Tất cả khu vực</option>");
+        foreach (var area in areas)
+        {
+            string label = TinhThanhDisplay_cl.Format(area);
+            sbArea.Append("<option value=\"");
+            sbArea.Append(HttpUtility.HtmlAttributeEncode(area.ToLowerInvariant()));
+            sbArea.Append("\">");
+            sbArea.Append(HttpUtility.HtmlEncode(label));
+            sbArea.Append("</option>");
+        }
+        lit_area_options.Text = sbArea.ToString();
     }
 
     private void RedirectToRoot()

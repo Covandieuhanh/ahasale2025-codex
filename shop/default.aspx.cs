@@ -13,6 +13,19 @@ public partial class shop_default : System.Web.UI.Page
     private const string ShopSpacePublic = "public";
     private const string ShopSpaceInternal = "internal";
 
+    private class ShopProductSummary
+    {
+        public int id { get; set; }
+        public string name { get; set; }
+        public string name_en { get; set; }
+        public string image { get; set; }
+        public decimal? giaban { get; set; }
+        public DateTime? ngaytao { get; set; }
+        public int LuotTruyCap { get; set; }
+        public string KenhRaw { get; set; }
+        public int SoldCount { get; set; }
+    }
+
     private string ResolveShopSpace(bool isCompanyShop)
     {
         if (!isCompanyShop)
@@ -158,17 +171,17 @@ public partial class shop_default : System.Web.UI.Page
 
         var products = source
             .OrderByDescending(p => p.ngaytao)
-            .Select(p => new
+            .Select(p => new ShopProductSummary
             {
-                p.id,
-                p.name,
-                p.name_en,
-                p.image,
-                p.giaban,
-                p.ngaytao,
+                id = p.id,
+                name = p.name,
+                name_en = p.name_en,
+                image = p.image,
+                giaban = p.giaban,
+                ngaytao = p.ngaytao,
                 LuotTruyCap = (p.LuotTruyCap ?? 0),
                 KenhRaw = p.phanloai,
-                PhanTram_ChiTra_ChoSan = p.banhang_thuong
+                SoldCount = (p.soluong_daban ?? 0)
             })
             .ToList();
 
@@ -183,11 +196,86 @@ public partial class shop_default : System.Web.UI.Page
             .ToList()
             .Sum() ?? 0;
         int pendingOrders = GetPendingOrdersCompat(db, tk);
+        int totalOrders = db.DonHang_tbs.Count(p => p.nguoiban == tk);
+
+        decimal totalRevenue = db.DonHang_ChiTiet_tbs
+            .Where(p => p.nguoiban_goc == tk || p.nguoiban_danglai == tk)
+            .Select(p => new { p.thanhtien, p.giaban, p.soluong })
+            .ToList()
+            .Sum(p => (p.thanhtien ?? ((p.giaban ?? 0m) * (p.soluong ?? 0))));
+
+        decimal responseRate = 100m;
+        if (totalOrders > 0)
+        {
+            int responded = totalOrders - pendingOrders;
+            if (responded < 0) responded = 0;
+            responseRate = Math.Round((responded * 100m) / totalOrders, 1);
+        }
 
         SetLabelText("lb_total_products", totalProducts.ToString("#,##0"));
         SetLabelText("lb_total_views", totalViews.ToString("#,##0"));
         SetLabelText("lb_total_sold", totalSold.ToString("#,##0"));
         SetLabelText("lb_pending_orders", pendingOrders.ToString("#,##0"));
+        SetLabelText("lb_total_orders", totalOrders.ToString("#,##0"));
+        SetLabelText("lb_total_revenue", totalRevenue.ToString("#,##0") + " đ");
+        SetLabelText("lb_response_rate", responseRate.ToString("0.#") + "%");
+
+        BindTopProducts(db, tk, products);
+    }
+
+    private void BindTopProducts(dbDataContext db, string tk, List<ShopProductSummary> products)
+    {
+        if (db == null || products == null)
+        {
+            SetControlVisible("ph_top_products", false);
+            SetControlVisible("ph_empty_top_products", true);
+            return;
+        }
+
+        var soldRows = db.DonHang_ChiTiet_tbs
+            .Where(p => p.nguoiban_goc == tk || p.nguoiban_danglai == tk)
+            .Select(p => new { p.idsp, p.soluong })
+            .ToList();
+
+        var soldMap = soldRows
+            .Where(p => !string.IsNullOrWhiteSpace(p.idsp))
+            .GroupBy(p => p.idsp)
+            .ToDictionary(g => g.Key, g => g.Sum(x => x.soluong ?? 0));
+
+        foreach (var product in products)
+        {
+            string key = product.id.ToString();
+            if (soldMap.ContainsKey(key))
+                product.SoldCount = soldMap[key];
+        }
+
+        var ordered = products
+            .OrderByDescending(p => p.SoldCount)
+            .ThenByDescending(p => p.LuotTruyCap)
+            .Take(5)
+            .ToList();
+
+        if (ordered.All(p => p.SoldCount == 0))
+        {
+            ordered = products
+                .OrderByDescending(p => p.LuotTruyCap)
+                .Take(5)
+                .ToList();
+        }
+
+        var view = ordered.Select(p => new
+        {
+            Id = p.id,
+            Name = p.name,
+            Image = ResolveProductImage(p.image),
+            Sold = p.SoldCount,
+            Views = p.LuotTruyCap
+        }).ToList();
+
+        bool hasTop = view.Count > 0;
+        SetControlVisible("ph_top_products", hasTop);
+        SetControlVisible("ph_empty_top_products", !hasTop);
+        BindRepeater("rpt_top_products", view);
     }
 
     protected string BuildProductChannelLabel(object raw)

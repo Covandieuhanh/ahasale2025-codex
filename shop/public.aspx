@@ -183,6 +183,61 @@
             padding: 7px 12px;
         }
 
+        .filters {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .filter-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .filter-field label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--shop-muted);
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+
+        .filter-input,
+        .filter-select {
+            height: 38px;
+            border-radius: 10px;
+            border: 1px solid var(--shop-line);
+            padding: 0 10px;
+            font-size: 14px;
+            outline: none;
+            background: #fff;
+        }
+
+        .filter-actions {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+        }
+
+        .filter-btn {
+            height: 38px;
+            border-radius: 10px;
+            border: 1px solid var(--shop-line);
+            background: #f7fbff;
+            font-weight: 700;
+            cursor: pointer;
+            padding: 0 12px;
+        }
+
+        .filter-count {
+            font-size: 12px;
+            color: var(--shop-muted);
+            margin-top: 6px;
+        }
+
         .grid {
             display: flex;
             flex-wrap: wrap;
@@ -301,6 +356,12 @@
             border: 1px solid #c5dbfa;
         }
 
+        .card-badge-category {
+            color: #0f5132;
+            background: #e7f8ef;
+            border: 1px solid #b9eccf;
+        }
+
         .card-price {
             margin-top: 8px;
             color: #d63939;
@@ -374,6 +435,11 @@
             .products-head { padding: 14px; }
             .products-title { font-size: 21px; }
             .grid { padding: 12px; gap: 12px; }
+            .filters { grid-template-columns: 1fr 1fr; }
+        }
+
+        @media (max-width: 420px) {
+            .filters { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -433,6 +499,46 @@
                     <div class="public-url">
                         URL: <asp:Label ID="lb_public_url" runat="server" />
                     </div>
+                    <div class="filters">
+                        <div class="filter-field">
+                            <label for="shopSearch">Tìm kiếm</label>
+                            <input id="shopSearch" class="filter-input" type="text" placeholder="Tìm theo tên sản phẩm" list="shopSuggest" />
+                            <asp:Literal ID="lit_shop_suggest" runat="server"></asp:Literal>
+                        </div>
+                        <div class="filter-field">
+                            <label for="shopCategory">Danh mục</label>
+                            <select id="shopCategory" class="filter-select">
+                                <asp:Literal ID="lit_category_options" runat="server"></asp:Literal>
+                            </select>
+                        </div>
+                        <div class="filter-field">
+                            <label for="shopArea">Khu vực</label>
+                            <select id="shopArea" class="filter-select">
+                                <asp:Literal ID="lit_area_options" runat="server"></asp:Literal>
+                            </select>
+                        </div>
+                        <div class="filter-field">
+                            <label for="shopMinPrice">Giá từ</label>
+                            <input id="shopMinPrice" class="filter-input" type="number" min="0" placeholder="0" />
+                        </div>
+                        <div class="filter-field">
+                            <label for="shopMaxPrice">Giá đến</label>
+                            <input id="shopMaxPrice" class="filter-input" type="number" min="0" placeholder="Không giới hạn" />
+                        </div>
+                        <div class="filter-field">
+                            <label for="shopSort">Sắp xếp</label>
+                            <select id="shopSort" class="filter-select">
+                                <option value="new">Mới nhất</option>
+                                <option value="price_asc">Giá thấp → cao</option>
+                                <option value="price_desc">Giá cao → thấp</option>
+                                <option value="sold_desc">Bán chạy</option>
+                            </select>
+                        </div>
+                        <div class="filter-actions">
+                            <button type="button" class="filter-btn" id="btnClearFilters">Xóa lọc</button>
+                            <div class="filter-count" id="shopFilterCount"></div>
+                        </div>
+                    </div>
                 </div>
 
                 <asp:PlaceHolder ID="ph_empty_products" runat="server" Visible="false">
@@ -440,22 +546,36 @@
                 </asp:PlaceHolder>
 
                 <asp:PlaceHolder ID="ph_products" runat="server" Visible="true">
-                    <div class="grid">
+                    <div class="grid" id="shopProductGrid">
                         <asp:Repeater ID="rp_products" runat="server">
                             <ItemTemplate>
-                                <div class="grid-item">
+                                <div class="grid-item"
+                                    data-name="<%# HttpUtility.HtmlAttributeEncode((Eval("name") ?? "").ToString()) %>"
+                                    data-price="<%# Eval("giaban") %>"
+                                    data-category="<%# Eval("CategoryId") %>"
+                                    data-area="<%# Eval("AreaRaw") %>"
+                                    data-date="<%# Eval("DateTicks") %>"
+                                    data-sold="<%# Eval("SoldCount") %>"
+                                    data-index="<%# Container.ItemIndex %>">
                                     <article class="card">
                                         <a class="card-link" href="<%# ResolveProductUrl(Eval("id"), Eval("name_en")) %>">
-                                            <img class="card-image" src="<%# ResolveProductImage(Eval("image")) %>" alt="<%# HttpUtility.HtmlEncode((Eval("name") ?? "").ToString()) %>" />
+                                            <img class="card-image" src="<%# ResolveProductImage(Eval("image")) %>" alt="<%# HttpUtility.HtmlEncode((Eval("name") ?? "").ToString()) %>" loading="lazy" decoding="async" />
                                             <div class="card-body">
                                                 <h4 class="card-name"><%# HttpUtility.HtmlEncode((Eval("name") ?? "").ToString()) %></h4>
                                                 <div class="card-badges">
                                                     <span class="card-badge card-badge-public">Công khai</span>
+                                                    <asp:PlaceHolder ID="phCategoryBadge" runat="server" Visible='<%# !string.IsNullOrWhiteSpace(Eval("CategoryName") as string) %>'>
+                                                        <span class="card-badge card-badge-category"><%# Eval("CategoryName") %></span>
+                                                    </asp:PlaceHolder>
                                                 </div>
                                                 <div class="card-price"><%# FormatCurrency(Eval("giaban")) %> đ</div>
                                                 <div class="card-meta-row">
                                                     <div class="card-meta">Ngày đăng: <%# FormatDate(Eval("ngaytao")) %></div>
                                                     <div class="card-meta">Lượt xem: <%# Eval("LuotTruyCap") %></div>
+                                                </div>
+                                                <div class="card-meta-row">
+                                                    <div class="card-meta">Khu vực: <%# Eval("AreaLabel") %></div>
+                                                    <div class="card-meta">Đã bán: <%# Eval("SoldCount") %></div>
                                                 </div>
                                             </div>
                                         </a>
@@ -472,5 +592,103 @@
             </section>
         </div>
     </form>
+
+    <script type="text/javascript">
+        (function () {
+            var searchInput = document.getElementById("shopSearch");
+            var categorySelect = document.getElementById("shopCategory");
+            var areaSelect = document.getElementById("shopArea");
+            var minPriceInput = document.getElementById("shopMinPrice");
+            var maxPriceInput = document.getElementById("shopMaxPrice");
+            var sortSelect = document.getElementById("shopSort");
+            var clearBtn = document.getElementById("btnClearFilters");
+            var grid = document.getElementById("shopProductGrid");
+            var countEl = document.getElementById("shopFilterCount");
+
+            if (!grid) return;
+
+            function parseNumber(value) {
+                var num = parseFloat(value);
+                return isNaN(num) ? 0 : num;
+            }
+
+            function getFilterValue(el) {
+                return el ? (el.value || "").trim().toLowerCase() : "";
+            }
+
+            function applyFilters() {
+                var keyword = getFilterValue(searchInput);
+                var category = getFilterValue(categorySelect);
+                var area = getFilterValue(areaSelect);
+                var minPrice = parseNumber(minPriceInput && minPriceInput.value ? minPriceInput.value : "");
+                var maxPrice = parseNumber(maxPriceInput && maxPriceInput.value ? maxPriceInput.value : "");
+                var sortMode = getFilterValue(sortSelect);
+
+                var items = Array.prototype.slice.call(grid.querySelectorAll(".grid-item"));
+                var visible = [];
+
+                items.forEach(function (item) {
+                    var name = (item.getAttribute("data-name") || "").toLowerCase();
+                    var price = parseNumber(item.getAttribute("data-price"));
+                    var cat = (item.getAttribute("data-category") || "").toLowerCase();
+                    var areaValue = (item.getAttribute("data-area") || "").toLowerCase();
+
+                    var ok = true;
+                    if (keyword && name.indexOf(keyword) < 0) ok = false;
+                    if (category && cat !== category) ok = false;
+                    if (area && areaValue !== area) ok = false;
+                    if (minPrice > 0 && price < minPrice) ok = false;
+                    if (maxPrice > 0 && price > maxPrice) ok = false;
+
+                    item.style.display = ok ? "" : "none";
+                    if (ok) visible.push(item);
+                });
+
+                if (sortMode) {
+                    visible.sort(function (a, b) {
+                        if (sortMode === "price_asc") {
+                            return parseNumber(a.getAttribute("data-price")) - parseNumber(b.getAttribute("data-price"));
+                        }
+                        if (sortMode === "price_desc") {
+                            return parseNumber(b.getAttribute("data-price")) - parseNumber(a.getAttribute("data-price"));
+                        }
+                        if (sortMode === "sold_desc") {
+                            return parseNumber(b.getAttribute("data-sold")) - parseNumber(a.getAttribute("data-sold"));
+                        }
+                        if (sortMode === "new") {
+                            return parseNumber(b.getAttribute("data-date")) - parseNumber(a.getAttribute("data-date"));
+                        }
+                        return parseNumber(a.getAttribute("data-index")) - parseNumber(b.getAttribute("data-index"));
+                    });
+                    visible.forEach(function (item) { grid.appendChild(item); });
+                }
+
+                if (countEl) {
+                    countEl.textContent = "Hiển thị " + visible.length + " / " + items.length;
+                }
+            }
+
+            if (searchInput) searchInput.addEventListener("input", applyFilters);
+            if (categorySelect) categorySelect.addEventListener("change", applyFilters);
+            if (areaSelect) areaSelect.addEventListener("change", applyFilters);
+            if (minPriceInput) minPriceInput.addEventListener("input", applyFilters);
+            if (maxPriceInput) maxPriceInput.addEventListener("input", applyFilters);
+            if (sortSelect) sortSelect.addEventListener("change", applyFilters);
+
+            if (clearBtn) {
+                clearBtn.addEventListener("click", function () {
+                    if (searchInput) searchInput.value = "";
+                    if (categorySelect) categorySelect.value = "";
+                    if (areaSelect) areaSelect.value = "";
+                    if (minPriceInput) minPriceInput.value = "";
+                    if (maxPriceInput) maxPriceInput.value = "";
+                    if (sortSelect) sortSelect.value = "new";
+                    applyFilters();
+                });
+            }
+
+            applyFilters();
+        })();
+    </script>
 </body>
 </html>
