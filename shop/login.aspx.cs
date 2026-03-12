@@ -85,7 +85,10 @@ public partial class shop_login : System.Web.UI.Page
     {
         bool switchShopRequested = string.Equals((Request.QueryString["switch"] ?? "").Trim(), "shop", StringComparison.OrdinalIgnoreCase);
         if (switchShopRequested)
+        {
             PortalActiveMode_cl.SetMode(PortalActiveMode_cl.ModeShop);
+            check_login_cl.del_all_cookie_session_home();
+        }
 
         if (ph_switch_shop_mode != null)
             ph_switch_shop_mode.Visible = (!PortalActiveMode_cl.IsShopActive() && PortalActiveMode_cl.HasShopCredential());
@@ -101,6 +104,7 @@ public partial class shop_login : System.Web.UI.Page
                     bool validShopCredential = IsValidActiveShopCredential(db, tk, mk, out acc);
                     if (validShopCredential && PortalActiveMode_cl.IsShopActive())
                     {
+                        check_login_cl.del_all_cookie_session_home();
                         if (AccountResetSecurity_cl.ShouldForceShopPassword(db, tk))
                             Response.Redirect("/shop/doi-mat-khau?force=1", false);
                         else
@@ -209,6 +213,7 @@ public partial class shop_login : System.Web.UI.Page
 
                 Session["taikhoan_shop"] = tkMaHoa;
                 Session["matkhau_shop"] = mkMaHoa;
+                check_login_cl.del_all_cookie_session_home();
 
                 if (forceChangePasswordAfterLogin)
                 {

@@ -476,6 +476,15 @@ public partial class home_don_ban : System.Web.UI.Page
         }
     }
 
+    private void SyncStatusFilterDropdown(string key)
+    {
+        if (ddl_status_filter == null) return;
+        var item = ddl_status_filter.Items.FindByValue(key);
+        if (item == null) return;
+        ddl_status_filter.ClearSelection();
+        item.Selected = true;
+    }
+
     #region main - phân trang - tìm kiếm
     public void show_main()
     {
@@ -556,6 +565,7 @@ public partial class home_don_ban : System.Web.UI.Page
                 list_all = list_all.Where(p => p.status_group == statusFilter).ToList();
 
             lb_status_filter.Text = ResolveStatusFilterLabel(statusFilter);
+            SyncStatusFilterDropdown(statusFilter);
 
             int _Tong_Record = list_all.Count;
 
@@ -628,6 +638,14 @@ public partial class home_don_ban : System.Web.UI.Page
         EnsurePortalLogin();
         LinkButton button = (LinkButton)sender;
         ViewState[STATUS_FILTER_KEY] = (button.CommandArgument ?? "all").ToString();
+        ViewState["current_page_donban_home"] = 1;
+        show_main();
+    }
+
+    protected void ddl_status_filter_SelectedIndexChanged(object sender, EventArgs e)
+    {
+        EnsurePortalLogin();
+        ViewState[STATUS_FILTER_KEY] = (ddl_status_filter.SelectedValue ?? "all").ToString();
         ViewState["current_page_donban_home"] = 1;
         show_main();
     }

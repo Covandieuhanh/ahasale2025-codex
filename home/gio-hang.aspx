@@ -136,6 +136,114 @@
             color: var(--checkout-text);
         }
 
+        .saved-address-panel {
+            margin-bottom: 12px;
+        }
+
+        .saved-address-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .saved-address-item {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 10px 12px;
+            border: 1px solid var(--checkout-border);
+            border-radius: 12px;
+            background: var(--checkout-card);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .saved-address-item.is-selected {
+            border-color: var(--checkout-primary);
+            box-shadow: 0 0 0 2px rgba(255, 91, 46, 0.12);
+        }
+
+        .saved-address-radio {
+            margin-top: 4px;
+        }
+
+        .saved-address-choice {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            flex: 1;
+            cursor: pointer;
+        }
+
+        .saved-address-content {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+        }
+
+        .saved-address-name {
+            font-weight: 600;
+            color: var(--checkout-text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .saved-address-text {
+            font-size: 0.95rem;
+            color: var(--checkout-muted);
+            white-space: pre-line;
+        }
+
+        .saved-address-new .saved-address-name {
+            color: var(--checkout-primary);
+        }
+
+        .saved-address-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(34, 197, 94, 0.15);
+            color: #16a34a;
+        }
+
+        .saved-address-delete {
+            border: none;
+            background: transparent;
+            color: #d63939;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .saved-address-set-default {
+            border: none;
+            background: transparent;
+            color: var(--checkout-primary);
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .saved-address-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .saved-address-manage {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--checkout-primary);
+            text-decoration: none;
+        }
+
         .table thead th {
             white-space: nowrap;
         }
@@ -809,6 +917,52 @@
                                         <div class="card checkout-card">
                                             <div class="card-header fw-bold">Thông tin nhận hàng</div>
                                             <div class="card-body">
+                                                <asp:Panel ID="pnl_saved_address" runat="server" CssClass="saved-address-panel" Visible="false">
+                                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                                        <label class="form-label mb-0">Chọn địa chỉ đã lưu</label>
+                                                        <a class="saved-address-manage" href="/home/dia-chi.aspx">Quản lý địa chỉ</a>
+                                                    </div>
+                                                    <div class="saved-address-list">
+                                                        <asp:Repeater ID="rpt_saved_address" runat="server" OnItemCommand="SavedAddress_ItemCommand">
+                                                            <ItemTemplate>
+                                                                <div class="saved-address-item">
+                                                                    <label class="saved-address-choice">
+                                                                        <input type="radio" name="checkout_saved_address" class="saved-address-radio js-addr-pick-checkout" <%# (Eval("IsDefault") != null && Convert.ToBoolean(Eval("IsDefault"))) ? "data-default=\"1\"" : "" %> />
+                                                                        <div class="saved-address-content">
+                                                                            <div class="saved-address-name">
+                                                                                <asp:Label runat="server" Text='<%# Eval("DisplayTitle") %>'></asp:Label>
+                                                                                <asp:Label runat="server" CssClass="saved-address-badge" Text="Mặc định"
+                                                                                    Visible='<%# (Eval("IsDefault") != null && Convert.ToBoolean(Eval("IsDefault"))) %>'></asp:Label>
+                                                                            </div>
+                                                                            <div class="saved-address-text">
+                                                                                <asp:Label runat="server" Text='<%# Eval("DisplayAddress") %>'></asp:Label>
+                                                                            </div>
+                                                                        </div>
+                                                                        <input type="hidden" class="js-addr-hoten" value='<%# System.Web.HttpUtility.HtmlAttributeEncode((Eval("HoTen") ?? "").ToString()) %>' />
+                                                                        <input type="hidden" class="js-addr-sdt" value='<%# System.Web.HttpUtility.HtmlAttributeEncode((Eval("Sdt") ?? "").ToString()) %>' />
+                                                                        <input type="hidden" class="js-addr-diachi" value='<%# System.Web.HttpUtility.HtmlAttributeEncode((Eval("DiaChi") ?? "").ToString()) %>' />
+                                                                    </label>
+                                                                    <div class="saved-address-actions">
+                                                                        <asp:LinkButton runat="server" CssClass="saved-address-set-default" CommandName="set-default" CommandArgument='<%# Eval("Id") %>'
+                                                                            Visible='<%# !(Eval("IsDefault") != null && Convert.ToBoolean(Eval("IsDefault"))) %>'>Đặt mặc định</asp:LinkButton>
+                                                                        <asp:LinkButton runat="server" CssClass="saved-address-delete" CommandName="delete" CommandArgument='<%# Eval("Id") %>'
+                                                                            OnClientClick="return confirm('Xoá địa chỉ này?');">Xoá</asp:LinkButton>
+                                                                    </div>
+                                                                </div>
+                                                            </ItemTemplate>
+                                                        </asp:Repeater>
+                                                        <div class="saved-address-item saved-address-new">
+                                                            <label class="saved-address-choice">
+                                                                <input type="radio" name="checkout_saved_address" class="saved-address-radio js-addr-pick-checkout" data-new="1" checked="checked" />
+                                                                <div class="saved-address-content">
+                                                                    <div class="saved-address-name">Nhập địa chỉ mới</div>
+                                                                    <div class="saved-address-text">Bạn có thể chỉnh sửa các ô bên dưới.</div>
+                                                                </div>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </asp:Panel>
+
                                                 <div class="mb-3">
                                                     <label class="form-label">Người nhận</label>
                                                     <asp:TextBox ID="txt_hoten_nguoinhan" runat="server" CssClass="form-control checkout-input"></asp:TextBox>
@@ -819,11 +973,34 @@
                                                     <asp:TextBox ID="txt_sdt_nguoinhan" runat="server" CssClass="form-control checkout-input" inputmode="numeric"></asp:TextBox>
                                                     <div class="field-error" id="err_checkout_sdt"></div>
                                                 </div>
-                                                <div class="mb-0">
-                                                    <label class="form-label">Địa chỉ</label>
-                                                    <asp:TextBox ID="txt_diachi_nguoinhan" runat="server" CssClass="form-control checkout-input" TextMode="MultiLine" Rows="3"></asp:TextBox>
-                                                    <div class="field-error" id="err_checkout_diachi"></div>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Tỉnh/Thành - Quận/Huyện - Phường/Xã</label>
+                                                    <div class="row g-2">
+                                                        <div class="col-md-4">
+                                                            <select id="checkout_tinh" class="form-select checkout-input"></select>
+                                                            <div class="field-error" id="err_checkout_tinh"></div>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <select id="checkout_quan" class="form-select checkout-input"></select>
+                                                            <div class="field-error" id="err_checkout_quan"></div>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <select id="checkout_phuong" class="form-select checkout-input"></select>
+                                                            <div class="field-error" id="err_checkout_phuong"></div>
+                                                        </div>
+                                                    </div>
                                                 </div>
+                                                <div class="mb-0">
+                                                    <label class="form-label">Địa chỉ chi tiết</label>
+                                                    <asp:TextBox ID="txt_diachi_chitiet" runat="server" TextMode="MultiLine" Rows="2" CssClass="form-control checkout-input"></asp:TextBox>
+                                                    <div class="field-error" id="err_checkout_chitiet"></div>
+                                                </div>
+
+                                                <asp:HiddenField ID="hf_tinh" runat="server" />
+                                                <asp:HiddenField ID="hf_quan" runat="server" />
+                                                <asp:HiddenField ID="hf_phuong" runat="server" />
+                                                <asp:HiddenField ID="hf_address_raw" runat="server" />
+                                                <asp:TextBox ID="txt_diachi_nguoinhan" runat="server" CssClass="form-control checkout-input d-none" TextMode="MultiLine" Rows="2"></asp:TextBox>
                                             </div>
                                         </div>
 
@@ -868,6 +1045,7 @@
 </asp:Content>
 
 <asp:Content ID="Content3" ContentPlaceHolderID="foot_sau" runat="Server">
+    <script src="<%= Helper_cl.VersionedUrl("~/js/aha-address-picker.js") %>"></script>
     <script>
         function ahaGetBtnText(btn) {
             if (!btn) return "";
@@ -969,18 +1147,24 @@
         function ahaValidateCheckout() {
             var hotenInput = document.getElementById("<%= txt_hoten_nguoinhan.ClientID %>");
             var sdtInput = document.getElementById("<%= txt_sdt_nguoinhan.ClientID %>");
-            var diachiInput = document.getElementById("<%= txt_diachi_nguoinhan.ClientID %>");
+            var detailInput = document.getElementById("<%= txt_diachi_chitiet.ClientID %>");
+            var tinhSelect = document.getElementById("checkout_tinh");
+            var quanSelect = document.getElementById("checkout_quan");
+            var phuongSelect = document.getElementById("checkout_phuong");
 
-            if (!hotenInput || !sdtInput || !diachiInput) return true;
+            if (!hotenInput || !sdtInput || !detailInput || !tinhSelect || !quanSelect || !phuongSelect) return true;
 
             var hoten = hotenInput.value.trim();
             var sdt = sdtInput.value.trim();
-            var diachi = diachiInput.value.trim();
+            var detail = detailInput.value.trim();
 
             var ok = true;
             var errHoten = document.getElementById("err_checkout_hoten");
             var errSdt = document.getElementById("err_checkout_sdt");
-            var errDiachi = document.getElementById("err_checkout_diachi");
+            var errTinh = document.getElementById("err_checkout_tinh");
+            var errQuan = document.getElementById("err_checkout_quan");
+            var errPhuong = document.getElementById("err_checkout_phuong");
+            var errChiTiet = document.getElementById("err_checkout_chitiet");
 
             if (hoten.length < 2) {
                 ahaSetFieldState(hotenInput, errHoten, "Vui lòng nhập họ tên người nhận.");
@@ -996,11 +1180,32 @@
                 ahaSetFieldState(sdtInput, errSdt, "");
             }
 
-            if (diachi.length < 6) {
-                ahaSetFieldState(diachiInput, errDiachi, "Vui lòng nhập địa chỉ nhận hàng chi tiết.");
+            if (!tinhSelect.value) {
+                ahaSetFieldState(tinhSelect, errTinh, "Chọn Tỉnh/Thành.");
                 ok = false;
             } else {
-                ahaSetFieldState(diachiInput, errDiachi, "");
+                ahaSetFieldState(tinhSelect, errTinh, "");
+            }
+
+            if (!quanSelect.value) {
+                ahaSetFieldState(quanSelect, errQuan, "Chọn Quận/Huyện.");
+                ok = false;
+            } else {
+                ahaSetFieldState(quanSelect, errQuan, "");
+            }
+
+            if (!phuongSelect.value) {
+                ahaSetFieldState(phuongSelect, errPhuong, "Chọn Phường/Xã.");
+                ok = false;
+            } else {
+                ahaSetFieldState(phuongSelect, errPhuong, "");
+            }
+
+            if (detail.length < 4) {
+                ahaSetFieldState(detailInput, errChiTiet, "Vui lòng nhập địa chỉ chi tiết.");
+                ok = false;
+            } else {
+                ahaSetFieldState(detailInput, errChiTiet, "");
             }
 
             return ok;
@@ -1041,13 +1246,16 @@
         function ahaBindCheckoutInputValidation() {
             var hotenInput = document.getElementById("<%= txt_hoten_nguoinhan.ClientID %>");
             var sdtInput = document.getElementById("<%= txt_sdt_nguoinhan.ClientID %>");
-            var diachiInput = document.getElementById("<%= txt_diachi_nguoinhan.ClientID %>");
-            if (!hotenInput || !sdtInput || !diachiInput) return;
+            var detailInput = document.getElementById("<%= txt_diachi_chitiet.ClientID %>");
+            var tinhSelect = document.getElementById("checkout_tinh");
+            var quanSelect = document.getElementById("checkout_quan");
+            var phuongSelect = document.getElementById("checkout_phuong");
+            if (!hotenInput || !sdtInput || !detailInput || !tinhSelect || !quanSelect || !phuongSelect) return;
 
             if (hotenInput.dataset.boundValidation === "1") return;
             hotenInput.dataset.boundValidation = "1";
             sdtInput.dataset.boundValidation = "1";
-            diachiInput.dataset.boundValidation = "1";
+            detailInput.dataset.boundValidation = "1";
 
             hotenInput.addEventListener("input", function () {
                 if (hotenInput.value.trim().length >= 2) {
@@ -1059,9 +1267,24 @@
                     ahaSetFieldState(sdtInput, document.getElementById("err_checkout_sdt"), "");
                 }
             });
-            diachiInput.addEventListener("input", function () {
-                if (diachiInput.value.trim().length >= 6) {
-                    ahaSetFieldState(diachiInput, document.getElementById("err_checkout_diachi"), "");
+            detailInput.addEventListener("input", function () {
+                if (detailInput.value.trim().length >= 4) {
+                    ahaSetFieldState(detailInput, document.getElementById("err_checkout_chitiet"), "");
+                }
+            });
+            tinhSelect.addEventListener("change", function () {
+                if (tinhSelect.value) {
+                    ahaSetFieldState(tinhSelect, document.getElementById("err_checkout_tinh"), "");
+                }
+            });
+            quanSelect.addEventListener("change", function () {
+                if (quanSelect.value) {
+                    ahaSetFieldState(quanSelect, document.getElementById("err_checkout_quan"), "");
+                }
+            });
+            phuongSelect.addEventListener("change", function () {
+                if (phuongSelect.value) {
+                    ahaSetFieldState(phuongSelect, document.getElementById("err_checkout_phuong"), "");
                 }
             });
         }
@@ -1146,10 +1369,102 @@
             }
         }
 
+        function ahaBindSavedAddressPicker() {
+            var radios = document.querySelectorAll(".js-addr-pick-checkout");
+            if (!radios.length) return;
+
+            var hotenInput = document.getElementById("<%= txt_hoten_nguoinhan.ClientID %>");
+            var sdtInput = document.getElementById("<%= txt_sdt_nguoinhan.ClientID %>");
+            var detailInput = document.getElementById("<%= txt_diachi_chitiet.ClientID %>");
+            var rawInput = document.getElementById("<%= hf_address_raw.ClientID %>");
+
+            function clearSelected() {
+                document.querySelectorAll(".saved-address-item.is-selected").forEach(function (el) {
+                    el.classList.remove("is-selected");
+                });
+            }
+
+            radios.forEach(function (radio) {
+                radio.addEventListener("change", function () {
+                    if (!radio.checked) return;
+                    var item = radio.closest(".saved-address-item");
+                    if (!item) return;
+
+                    clearSelected();
+                    item.classList.add("is-selected");
+
+                    if (radio.getAttribute("data-new") === "1") {
+                        return;
+                    }
+
+                    var hoten = item.querySelector(".js-addr-hoten");
+                    var sdt = item.querySelector(".js-addr-sdt");
+                    var diachi = item.querySelector(".js-addr-diachi");
+
+                    if (hotenInput && hoten) hotenInput.value = hoten.value;
+                    if (sdtInput && sdt) sdtInput.value = sdt.value;
+
+                    var rawAddress = diachi ? diachi.value : "";
+                    if (rawInput) rawInput.value = rawAddress;
+
+                    if (window.AhaAddressPicker && rawAddress) {
+                        window.AhaAddressPicker.applyRaw({
+                            provinceSelectId: "checkout_tinh",
+                            districtSelectId: "checkout_quan",
+                            wardSelectId: "checkout_phuong",
+                            detailInputId: "<%= txt_diachi_chitiet.ClientID %>",
+                            rawAddressId: "<%= hf_address_raw.ClientID %>"
+                        }, rawAddress);
+                    } else if (detailInput && rawAddress) {
+                        detailInput.value = rawAddress;
+                    }
+
+                    if (typeof ahaSetFieldState === "function") {
+                        if (hotenInput) ahaSetFieldState(hotenInput, document.getElementById("err_checkout_hoten"), "");
+                        if (sdtInput) ahaSetFieldState(sdtInput, document.getElementById("err_checkout_sdt"), "");
+                        if (detailInput) ahaSetFieldState(detailInput, document.getElementById("err_checkout_chitiet"), "");
+                        var tinhSelect = document.getElementById("checkout_tinh");
+                        var quanSelect = document.getElementById("checkout_quan");
+                        var phuongSelect = document.getElementById("checkout_phuong");
+                        if (tinhSelect) ahaSetFieldState(tinhSelect, document.getElementById("err_checkout_tinh"), "");
+                        if (quanSelect) ahaSetFieldState(quanSelect, document.getElementById("err_checkout_quan"), "");
+                        if (phuongSelect) ahaSetFieldState(phuongSelect, document.getElementById("err_checkout_phuong"), "");
+                    }
+                });
+            });
+
+            var defaultRadio = document.querySelector(".js-addr-pick-checkout[data-default='1']");
+            if (defaultRadio) {
+                defaultRadio.checked = true;
+                defaultRadio.dispatchEvent(new Event("change", { bubbles: true }));
+                return;
+            }
+
+            var checked = document.querySelector(".js-addr-pick-checkout:checked");
+            if (checked) {
+                var item = checked.closest(".saved-address-item");
+                if (item) item.classList.add("is-selected");
+            }
+        }
+
         document.addEventListener("DOMContentLoaded", function () {
             ahaCheckoutRecalc();
             ahaBindCheckoutInputValidation();
             ahaResetOpenCheckoutButton();
+            if (window.AhaAddressPicker) {
+                window.AhaAddressPicker.init({
+                    provinceSelectId: "checkout_tinh",
+                    districtSelectId: "checkout_quan",
+                    wardSelectId: "checkout_phuong",
+                    detailInputId: "<%= txt_diachi_chitiet.ClientID %>",
+                    hiddenAddressId: "<%= txt_diachi_nguoinhan.ClientID %>",
+                    hiddenProvinceId: "<%= hf_tinh.ClientID %>",
+                    hiddenDistrictId: "<%= hf_quan.ClientID %>",
+                    hiddenWardId: "<%= hf_phuong.ClientID %>",
+                    rawAddressId: "<%= hf_address_raw.ClientID %>"
+                });
+            }
+            ahaBindSavedAddressPicker();
         });
 
         if (window.Sys && Sys.WebForms && Sys.WebForms.PageRequestManager) {
@@ -1158,6 +1473,20 @@
                 ahaBindCheckoutInputValidation();
                 ahaResetCheckoutSubmitState();
                 ahaResetOpenCheckoutButton();
+                if (window.AhaAddressPicker) {
+                    window.AhaAddressPicker.init({
+                        provinceSelectId: "checkout_tinh",
+                        districtSelectId: "checkout_quan",
+                        wardSelectId: "checkout_phuong",
+                        detailInputId: "<%= txt_diachi_chitiet.ClientID %>",
+                        hiddenAddressId: "<%= txt_diachi_nguoinhan.ClientID %>",
+                        hiddenProvinceId: "<%= hf_tinh.ClientID %>",
+                        hiddenDistrictId: "<%= hf_quan.ClientID %>",
+                        hiddenWardId: "<%= hf_phuong.ClientID %>",
+                        rawAddressId: "<%= hf_address_raw.ClientID %>"
+                    });
+                }
+                ahaBindSavedAddressPicker();
             });
         }
     </script>

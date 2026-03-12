@@ -388,7 +388,7 @@ public partial class home_page_chi_tiet_bai_viet : System.Web.UI.Page
                 #endregion
 
                 #region k cho mua hàng sp mình bán
-                string _tk1 = Session["taikhoan_home"] as string;
+                string _tk1 = PortalActiveMode_cl.IsHomeActive() ? (Session["taikhoan_home"] as string) : "";
 
                 if (!string.IsNullOrEmpty(_tk1))
                 {

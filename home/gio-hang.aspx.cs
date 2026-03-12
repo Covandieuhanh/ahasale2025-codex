@@ -162,6 +162,40 @@ public partial class home_gio_hang : System.Web.UI.Page
         return changed;
     }
 
+    private string BuildReceiverAddress()
+    {
+        string tinh = (hf_tinh.Value ?? "").Trim();
+        string quan = (hf_quan.Value ?? "").Trim();
+        string phuong = (hf_phuong.Value ?? "").Trim();
+        string chiTiet = (txt_diachi_chitiet.Text ?? "").Trim();
+
+        string full = AddressFormat_cl.BuildFullAddress(chiTiet, phuong, quan, tinh);
+        txt_diachi_nguoinhan.Text = full;
+        return full;
+    }
+
+    private bool ValidateReceiverAddress()
+    {
+        string tinh = (hf_tinh.Value ?? "").Trim();
+        string quan = (hf_quan.Value ?? "").Trim();
+        string phuong = (hf_phuong.Value ?? "").Trim();
+        string chiTiet = (txt_diachi_chitiet.Text ?? "").Trim();
+
+        if (string.IsNullOrEmpty(tinh) || string.IsNullOrEmpty(quan) || string.IsNullOrEmpty(phuong))
+        {
+            Helper_Tabler_cl.ShowModal(this.Page, "Vui lòng chọn đầy đủ Tỉnh/Thành, Quận/Huyện và Phường/Xã.", "Thông báo", true, "warning");
+            return false;
+        }
+
+        if (chiTiet.Length < 4)
+        {
+            Helper_Tabler_cl.ShowModal(this.Page, "Vui lòng nhập địa chỉ chi tiết.", "Thông báo", true, "warning");
+            return false;
+        }
+
+        return true;
+    }
+
     private void SyncCheckoutQuantityFromRepeater(dbDataContext db, List<BaiVietViewModel> danhSach)
     {
         if (danhSach == null || danhSach.Count == 0)
@@ -212,6 +246,61 @@ public partial class home_gio_hang : System.Web.UI.Page
             decimal gia = vm.giaban ?? 0m;
             vm.ThanhTien = gia * qty;
             q.soluong = qty;
+        }
+    }
+
+    private void BindSavedAddresses(dbDataContext db, string taiKhoan)
+    {
+        if (db == null)
+        {
+            pnl_saved_address.Visible = false;
+            return;
+        }
+
+        var list = AddressHistory_cl.GetRecentAddresses(db, taiKhoan, 5, true);
+        if (list != null && list.Count > 0)
+        {
+            rpt_saved_address.DataSource = list;
+            rpt_saved_address.DataBind();
+            pnl_saved_address.Visible = true;
+        }
+        else
+        {
+            pnl_saved_address.Visible = false;
+        }
+    }
+
+    protected void SavedAddress_ItemCommand(object source, RepeaterCommandEventArgs e)
+    {
+        if (e == null)
+            return;
+
+        string command = (e.CommandName ?? "").Trim().ToLowerInvariant();
+        if (command != "delete" && command != "set-default")
+            return;
+
+        string tk = (ViewState["taikhoan"] ?? "").ToString();
+        if (string.IsNullOrEmpty(tk))
+            return;
+
+        long id;
+        if (!long.TryParse((e.CommandArgument ?? "").ToString(), out id))
+            return;
+
+        using (dbDataContext db = new dbDataContext())
+        {
+            if (command == "delete")
+            {
+                AddressHistory_cl.DeleteAddress(db, tk, id);
+                Helper_Tabler_cl.ShowToast(this.Page, "Đã xoá địa chỉ.", null, true, 2000, "Thông báo");
+            }
+            else if (command == "set-default")
+            {
+                AddressHistory_cl.SetDefaultAddress(db, tk, id);
+                Helper_Tabler_cl.ShowToast(this.Page, "Đã đặt làm mặc định.", null, true, 2000, "Thông báo");
+            }
+
+            BindSavedAddresses(db, tk);
         }
     }
 
@@ -451,8 +540,13 @@ public partial class home_gio_hang : System.Web.UI.Page
         {
             txt_hoten_nguoinhan.Text = q_tk.hoten;
             txt_sdt_nguoinhan.Text = q_tk.dienthoai;
-            txt_diachi_nguoinhan.Text = q_tk.diachi;
+            string diaChi = q_tk.diachi ?? "";
+            txt_diachi_nguoinhan.Text = diaChi;
+            txt_diachi_chitiet.Text = diaChi;
+            hf_address_raw.Value = diaChi;
         }
+
+        BindSavedAddresses(db, tk);
 
         pn_step1.Visible = false;
         pn_dathang.Visible = true;
@@ -497,6 +591,12 @@ public partial class home_gio_hang : System.Web.UI.Page
 
             var q_tk = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == tk);
             if (q_tk == null) return;
+
+            if (!ValidateReceiverAddress())
+                return;
+
+            string diaChiGiaoHang = BuildReceiverAddress();
+            AddressHistory_cl.UpsertAddress(db, tk, (txt_hoten_nguoinhan.Text ?? "").Trim(), (txt_sdt_nguoinhan.Text ?? "").Trim(), diaChiGiaoHang);
 
             // ✅ Số dư 2 ví
             decimal soDuA = (q_tk.DongA ?? 0m);
@@ -629,7 +729,7 @@ public partial class home_gio_hang : System.Web.UI.Page
 
                 _ob.hoten_nguoinhan = txt_hoten_nguoinhan.Text.Trim();
                 _ob.sdt_nguoinhan = txt_sdt_nguoinhan.Text.Trim();
-                _ob.diahchi_nguoinhan = txt_diachi_nguoinhan.Text.Trim();
+                _ob.diahchi_nguoinhan = diaChiGiaoHang;
                 _ob.online_offline = true;
                 _ob.chothanhtoan = false;
                 DonHangStateMachine_cl.SyncLegacyStatus(_ob);

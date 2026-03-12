@@ -11,7 +11,10 @@ public partial class home_login : System.Web.UI.Page
     {
         bool switchHomeRequested = string.Equals((Request.QueryString["switch"] ?? "").Trim(), "home", StringComparison.OrdinalIgnoreCase);
         if (switchHomeRequested)
+        {
             PortalActiveMode_cl.SetMode(PortalActiveMode_cl.ModeHome);
+            check_login_cl.del_all_cookie_session_shop();
+        }
         // Ensure postback keeps the friendly URL (/dang-nhap) when this page is rewritten.
         if (this.Form != null && Request != null)
         {
@@ -49,6 +52,7 @@ public partial class home_login : System.Web.UI.Page
                     if (canLoginHome)
                     {
                         PortalActiveMode_cl.SetMode(PortalActiveMode_cl.ModeHome);
+                        check_login_cl.del_all_cookie_session_shop();
 
                         Session["home_modal_msg"] = "Bạn đã đăng nhập. Vui lòng đăng xuất để đăng nhập tài khoản khác.";
                         Session["home_modal_title"] = "Thông báo";
@@ -199,6 +203,7 @@ public partial class home_login : System.Web.UI.Page
                 Session["taikhoan_home"] = _taikhoan_mahoa;
                 Session["matkhau_home"] = _matkhau_mahoa;
                 PortalActiveMode_cl.SetMode(PortalActiveMode_cl.ModeHome);
+                check_login_cl.del_all_cookie_session_shop();
 
                 // Luồng home: luôn về trang chủ sau đăng nhập thành công.
                 Session["url_back_home"] = "";

@@ -263,6 +263,8 @@ public partial class home_page_gioi_thieu_nguoi_dung : System.Web.UI.Page
 
                 Session["taikhoan_home"] = _taikhoan_mahoa;
                 Session["matkhau_home"] = _matkhau_mahoa;
+                PortalActiveMode_cl.SetMode(PortalActiveMode_cl.ModeHome);
+                check_login_cl.del_all_cookie_session_shop();
 
                 // THÔNG BÁO
                 Session["thongbao_home"] =
@@ -294,6 +296,9 @@ public partial class home_page_gioi_thieu_nguoi_dung : System.Web.UI.Page
     {
         try
         {
+            if (!PortalActiveMode_cl.IsHomeActive())
+                return "";
+
             string encoded = Session["taikhoan_home"] as string;
             if (!string.IsNullOrEmpty(encoded))
                 return mahoa_cl.giaima_Bcorn(encoded);

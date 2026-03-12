@@ -26,6 +26,9 @@ public partial class home_taikhoan : System.Web.UI.Page
 
     private string ReadHomeEncryptedAccount()
     {
+        if (!PortalActiveMode_cl.IsHomeActive() || PortalRequest_cl.IsShopPortalRequest())
+            return "";
+
         string tkEncrypted = Session["taikhoan_home"] as string;
         if (string.IsNullOrEmpty(tkEncrypted))
         {
@@ -39,6 +42,9 @@ public partial class home_taikhoan : System.Web.UI.Page
 
     private string ReadShopEncryptedAccount()
     {
+        if (!PortalActiveMode_cl.IsShopActive() || !PortalRequest_cl.IsShopPortalRequest())
+            return "";
+
         string tkEncrypted = Session["taikhoan_shop"] as string;
         if (string.IsNullOrEmpty(tkEncrypted))
         {
@@ -70,7 +76,9 @@ public partial class home_taikhoan : System.Web.UI.Page
 
     private bool IsShopModeWithLogin()
     {
-        return PortalActiveMode_cl.IsShopActive() && PortalActiveMode_cl.HasShopCredential();
+        return PortalRequest_cl.IsShopPortalRequest()
+            && PortalActiveMode_cl.IsShopActive()
+            && PortalActiveMode_cl.HasShopCredential();
     }
 
     private bool IsShopFlowReferrer()
@@ -179,10 +187,13 @@ public partial class home_taikhoan : System.Web.UI.Page
 
             // 4) Xác định người đang login (home hoặc shop bridge)
             bool isShopModeWithLogin = IsShopModeWithLogin();
-            if (!isShopModeWithLogin && PortalActiveMode_cl.HasShopCredential() && IsShopFlowReferrer())
+            if (PortalRequest_cl.IsShopPortalRequest())
             {
-                PortalActiveMode_cl.SetMode(PortalActiveMode_cl.ModeShop);
-                isShopModeWithLogin = IsShopModeWithLogin();
+                if (!isShopModeWithLogin && PortalActiveMode_cl.HasShopCredential() && IsShopFlowReferrer())
+                {
+                    PortalActiveMode_cl.SetMode(PortalActiveMode_cl.ModeShop);
+                    isShopModeWithLogin = IsShopModeWithLogin();
+                }
             }
             string tkB = ResolveCurrentLoginAccount(isShopModeWithLogin);
             string fallbackUrl = ResolveFallbackUrl(db, payer, loaiThe);

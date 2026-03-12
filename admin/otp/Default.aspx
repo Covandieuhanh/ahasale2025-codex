@@ -210,6 +210,7 @@
                 </div>
                 </asp:PlaceHolder>
 
+                <asp:PlaceHolder ID="ph_otp_manage" runat="server" Visible="false" EnableViewState="false">
                 <div class="otp-card p-4 mb-4">
                     <div class="otp-section-title mb-2">Tạo OTP thủ công</div>
                     <h3>Cấp OTP cho tài khoản</h3>
@@ -301,6 +302,7 @@
                         <div class="otp-note mt-3">Chưa có lịch sử OTP.</div>
                     </asp:PlaceHolder>
                 </div>
+                </asp:PlaceHolder>
             </div>
     </div>
 </asp:Content>

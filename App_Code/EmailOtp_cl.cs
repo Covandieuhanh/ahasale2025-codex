@@ -11,6 +11,18 @@ public static class EmailOtp_cl
 
         try
         {
+            // Ensure modern TLS for SMTP servers that disable legacy protocols.
+            try
+            {
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12
+                                                       | SecurityProtocolType.Tls11
+                                                       | SecurityProtocolType.Tls;
+            }
+            catch
+            {
+                // Ignore if platform does not support setting protocols.
+            }
+
             using (dbDataContext db = new dbDataContext())
             {
                 EmailOtpConfig cfg = OtpConfig_cl.GetEmailConfig(db);
@@ -52,6 +64,8 @@ public static class EmailOtp_cl
                 using (SmtpClient client = new SmtpClient(cfg.Host, cfg.Port))
                 {
                     client.EnableSsl = cfg.UseSsl;
+                    client.DeliveryMethod = SmtpDeliveryMethod.Network;
+                    client.UseDefaultCredentials = false;
                     string smtpUser = string.IsNullOrWhiteSpace(cfg.Username) ? "" : cfg.Username.Trim();
                     if (string.IsNullOrWhiteSpace(smtpUser))
                         smtpUser = fromAddress;
@@ -67,7 +81,10 @@ public static class EmailOtp_cl
         }
         catch (Exception ex)
         {
-            error = ex.Message;
+            string detail = ex.Message ?? "";
+            if (ex.InnerException != null && !string.IsNullOrWhiteSpace(ex.InnerException.Message))
+                detail = detail + " | " + ex.InnerException.Message;
+            error = string.IsNullOrWhiteSpace(detail) ? "Failure sending mail." : detail;
             Log_cl.Add_Log("[EMAIL OTP] " + ex.Message, email ?? "", ex.StackTrace);
             return false;
         }

@@ -29,6 +29,32 @@ public static class ShopOtp_cl
 
     private static readonly object SyncRoot = new object();
     private static bool _schemaEnsured;
+    private const int OtpCommandTimeoutSeconds = 10;
+    private const int OtpConnectTimeoutSeconds = 8;
+
+    private static SqlConnection CreateOtpConnection(dbDataContext db)
+    {
+        if (db == null) return null;
+        string baseConn = db.Connection.ConnectionString;
+        try
+        {
+            var builder = new SqlConnectionStringBuilder(baseConn);
+            if (builder.ConnectTimeout <= 0 || builder.ConnectTimeout > OtpConnectTimeoutSeconds)
+                builder.ConnectTimeout = OtpConnectTimeoutSeconds;
+            return new SqlConnection(builder.ConnectionString);
+        }
+        catch
+        {
+            return new SqlConnection(baseConn);
+        }
+    }
+
+    private static void ApplyTimeout(SqlCommand cmd)
+    {
+        if (cmd == null) return;
+        if (cmd.CommandTimeout <= 0 || cmd.CommandTimeout > OtpCommandTimeoutSeconds)
+            cmd.CommandTimeout = OtpCommandTimeoutSeconds;
+    }
 
     private static void EnsureSchema(dbDataContext db)
     {
@@ -182,12 +208,13 @@ WHERE id = @id AND otp_type = @type";
             DateTime now = AhaTime_cl.Now;
             DateTime expires = now.AddMinutes(ExpireMinutes);
 
-            using (SqlConnection conn = new SqlConnection(db.Connection.ConnectionString))
+            using (SqlConnection conn = CreateOtpConnection(db))
             {
                 conn.Open();
 
                 using (SqlCommand cmdCheck = conn.CreateCommand())
                 {
+                    ApplyTimeout(cmdCheck);
                     cmdCheck.CommandText = @"
 SELECT TOP 1 sent_at, status
 FROM dbo.Shop_Otp_tb
@@ -219,6 +246,7 @@ ORDER BY id DESC";
 
                 using (SqlCommand cmdInsert = conn.CreateCommand())
                 {
+                    ApplyTimeout(cmdInsert);
                     cmdInsert.CommandText = @"
 INSERT INTO dbo.Shop_Otp_tb
     (taikhoan, phone, otp_code, otp_type, status, attempt_count, sent_at, expires_at, client_ip, user_agent)
@@ -357,6 +385,7 @@ VALUES
                 {
                     using (SqlCommand cmdFail = conn.CreateCommand())
                     {
+                        ApplyTimeout(cmdFail);
                         cmdFail.CommandText = "UPDATE dbo.Shop_Otp_tb SET status = @status WHERE id = @id";
                         cmdFail.Parameters.AddWithValue("@status", StatusSendFailed);
                         cmdFail.Parameters.AddWithValue("@id", requestId);
@@ -372,6 +401,14 @@ VALUES
 
                 return true;
             }
+        }
+        catch (SqlException ex)
+        {
+            error = (ex.Number == -2)
+                ? "Hệ thống đang bận, vui lòng thử lại."
+                : "Có lỗi xảy ra. Vui lòng thử lại.";
+            Log_cl.Add_Log("[SHOP OTP] " + ex.Message, cleanEmail, ex.StackTrace);
+            return false;
         }
         catch (Exception ex)
         {
@@ -402,7 +439,7 @@ VALUES
         {
             EnsureSchema(db);
 
-            using (SqlConnection conn = new SqlConnection(db.Connection.ConnectionString))
+            using (SqlConnection conn = CreateOtpConnection(db))
             {
                 conn.Open();
                 bool isMismatch = false;
@@ -413,6 +450,7 @@ VALUES
 
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
+                    ApplyTimeout(cmd);
                     cmd.CommandText = @"
 SELECT otp_code, expires_at, status, attempt_count, phone
 FROM dbo.Shop_Otp_tb
@@ -483,6 +521,7 @@ WHERE id = @id AND otp_type = @type";
 
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
+                    ApplyTimeout(cmd);
                     cmd.CommandText = @"
 UPDATE dbo.Shop_Otp_tb
 SET status = @status, verified_at = @verified, last_attempt_at = @attempt
@@ -496,6 +535,14 @@ WHERE id = @id";
             }
 
             return true;
+        }
+        catch (SqlException ex)
+        {
+            error = (ex.Number == -2)
+                ? "Hệ thống đang bận, vui lòng thử lại."
+                : "Có lỗi xảy ra. Vui lòng thử lại.";
+            Log_cl.Add_Log("[SHOP OTP] " + ex.Message, "", ex.StackTrace);
+            return false;
         }
         catch (Exception ex)
         {
@@ -526,11 +573,12 @@ WHERE id = @id";
         {
             EnsureSchema(db);
 
-            using (SqlConnection conn = new SqlConnection(db.Connection.ConnectionString))
+            using (SqlConnection conn = CreateOtpConnection(db))
             {
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
+                    ApplyTimeout(cmd);
                     cmd.CommandText = @"
 SELECT taikhoan, expires_at, status
 FROM dbo.Shop_Otp_tb
@@ -567,6 +615,7 @@ WHERE id = @id AND otp_type = @type";
 
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
+                    ApplyTimeout(cmd);
                     cmd.CommandText = @"
 UPDATE dbo.Shop_Otp_tb
 SET status = @status, consumed_at = @consumed
@@ -580,6 +629,14 @@ WHERE id = @id";
 
             return true;
         }
+        catch (SqlException ex)
+        {
+            error = (ex.Number == -2)
+                ? "Hệ thống đang bận, vui lòng thử lại."
+                : "Có lỗi xảy ra. Vui lòng thử lại.";
+            Log_cl.Add_Log("[SHOP OTP] " + ex.Message, "", ex.StackTrace);
+            return false;
+        }
         catch (Exception ex)
         {
             error = "Có lỗi xảy ra. Vui lòng thử lại.";
@@ -592,6 +649,7 @@ WHERE id = @id";
     {
         using (SqlCommand cmd = conn.CreateCommand())
         {
+            ApplyTimeout(cmd);
             cmd.CommandText = "UPDATE dbo.Shop_Otp_tb SET status = @status WHERE id = @id";
             cmd.Parameters.AddWithValue("@status", status);
             cmd.Parameters.AddWithValue("@id", requestId);
@@ -603,6 +661,7 @@ WHERE id = @id";
     {
         using (SqlCommand cmd = conn.CreateCommand())
         {
+            ApplyTimeout(cmd);
             cmd.CommandText = @"
 UPDATE dbo.Shop_Otp_tb
 SET attempt_count = @attempt, last_attempt_at = @attempt_at, status = @status
@@ -625,6 +684,7 @@ WHERE id = @id";
             fallbackConn.Open();
             using (SqlCommand cmd = fallbackConn.CreateCommand())
             {
+                ApplyTimeout(cmd);
                 cmd.CommandText = @"
 SELECT TOP 1 id, expires_at, status
 FROM dbo.Shop_Otp_tb
@@ -652,6 +712,7 @@ ORDER BY id DESC";
 
                     using (SqlCommand cmdUpdate = fallbackConn.CreateCommand())
                     {
+                        ApplyTimeout(cmdUpdate);
                         cmdUpdate.CommandText = @"
 UPDATE dbo.Shop_Otp_tb
 SET status = @status, verified_at = @verified, consumed_at = @consumed, last_attempt_at = @attempt
@@ -666,6 +727,7 @@ WHERE id = @id";
 
                     using (SqlCommand cmdUpdateReq = fallbackConn.CreateCommand())
                     {
+                        ApplyTimeout(cmdUpdateReq);
                         cmdUpdateReq.CommandText = @"
 UPDATE dbo.Shop_Otp_tb
 SET status = @status, verified_at = @verified, last_attempt_at = @attempt

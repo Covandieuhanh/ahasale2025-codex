@@ -161,7 +161,9 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
 
             try
             {
-                string _tk = HttpContext.Current.Session["taikhoan_home"] as string;
+                string _tk = PortalActiveMode_cl.IsHomeActive()
+                    ? (HttpContext.Current.Session["taikhoan_home"] as string)
+                    : "";
                 if (!string.IsNullOrEmpty(_tk))
                     ViewState["taikhoan"] = mahoa_cl.giaima_Bcorn(_tk);
                 else

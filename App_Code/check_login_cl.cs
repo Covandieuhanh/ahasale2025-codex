@@ -416,9 +416,37 @@ public class check_login_cl
             bool isShopBridgePath = IsShopHomeBridgePath();
             bool isShopPortalRequest = HasShopPortalMarker();
             bool shopAccessRequested = isShopBridgePath && isShopPortalRequest;
+
+            // ✅ Tách rõ chế độ Home/Shop: portal nào thì chỉ nhận chế độ đó.
+            if (shopAccessRequested && !PortalActiveMode_cl.IsShopActive())
+            {
+                if (_chuyentrang)
+                {
+                    HttpContext.Current.Session["thongbao_shop"] = thongbao_class.metro_notifi_onload(
+                        "Thông báo",
+                        "Vui lòng chuyển sang tài khoản shop để tiếp tục.",
+                        "1200",
+                        "warning");
+                    HttpContext.Current.Response.Redirect("/shop/login.aspx");
+                }
+                return;
+            }
+
+            if (!shopAccessRequested && !PortalActiveMode_cl.IsHomeActive())
+            {
+                if (_chuyentrang)
+                {
+                    HttpContext.Current.Session["thongbao_home"] = thongbao_class.metro_notifi_onload(
+                        "Thông báo",
+                        "Vui lòng chuyển sang tài khoản cá nhân để tiếp tục.",
+                        "1200",
+                        "warning");
+                    HttpContext.Current.Response.Redirect("/dang-nhap");
+                }
+                return;
+            }
+
             bool allowShopBridge = shopAccessRequested && PortalActiveMode_cl.IsShopActive();
-            bool hasHomeCredential = PortalActiveMode_cl.HasHomeCredential();
-            bool homeModeBlocked = !shopAccessRequested && !PortalActiveMode_cl.IsHomeActive() && hasHomeCredential;
 
             // shop_portal phải ưu tiên phiên shop để tránh dính phiên home cũ.
             if (allowShopBridge)
@@ -461,17 +489,11 @@ public class check_login_cl
             #region KIỂM TRA TÍNH HỢP LỆ & QUYỀN CỦA TÀI KHOẢN
             if (!taikhoan_cl.exist_taikhoan(_tk)) // nếu tài khoản không tồn tại
             {
-                if (!shopFlow && !homeModeBlocked)
+                if (!shopFlow)
                     del_all_cookie_session_home(); // xóa toàn bộ Cookie và Session
                                                // lưu nội dung thông báo
                 if (_chuyentrang == true)
                 {
-                    if (homeModeBlocked)
-                    {
-                        HttpContext.Current.Session["thongbao_home"] = thongbao_class.metro_notifi_onload("Thông báo", "Bạn đang dùng chế độ gian hàng. Nhấn \"Chuyển sang tài khoản cá nhân\" để tiếp tục.", "1800", "warning");
-                        HttpContext.Current.Response.Redirect("/dang-nhap");
-                        return;
-                    }
                     if (shopFlow)
                     {
                         HttpContext.Current.Session["thongbao_shop"] = thongbao_class.metro_notifi_onload("Thông báo", "Vui lòng đăng nhập shop để tiếp tục.", "1000", "warning");

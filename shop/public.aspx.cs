@@ -345,6 +345,9 @@ public partial class shop_public : System.Web.UI.Page
 
     private string GetCurrentHomeAccount(dbDataContext db)
     {
+        if (!PortalActiveMode_cl.IsHomeActive())
+            return "";
+
         string tkEncrypted = Session["taikhoan_home"] as string;
         if (string.IsNullOrEmpty(tkEncrypted))
         {

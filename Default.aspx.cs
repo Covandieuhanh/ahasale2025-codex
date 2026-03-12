@@ -11,6 +11,14 @@ public partial class _Default : System.Web.UI.Page
     {
         if (!IsPostBack)
         {
+            // Nếu đang ở chế độ shop và có phiên shop, ép về đăng nhập Home để tránh nhầm portal.
+            if (!PortalActiveMode_cl.IsHomeActive() && PortalActiveMode_cl.HasShopCredential())
+            {
+                Response.Redirect("/dang-nhap", false);
+                Context.ApplicationInstance.CompleteRequest();
+                return;
+            }
+
             Session["url_back_home"] = HttpContext.Current.Request.Url.AbsoluteUri.ToLower();
             check_login_cl.check_login_home("none", "none", false);
 

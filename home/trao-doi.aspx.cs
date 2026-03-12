@@ -77,6 +77,40 @@ public partial class home_trao_doi : System.Web.UI.Page
         lb_tong_a.Text = QuyDoi_VND_To_A(tongVND).ToString("#,##0.##");
     }
 
+    private string BuildReceiverAddress()
+    {
+        string tinh = (hf_tinh.Value ?? "").Trim();
+        string quan = (hf_quan.Value ?? "").Trim();
+        string phuong = (hf_phuong.Value ?? "").Trim();
+        string chiTiet = (txt_diachi_chitiet.Text ?? "").Trim();
+
+        string full = AddressFormat_cl.BuildFullAddress(chiTiet, phuong, quan, tinh);
+        txt_diachi_nguoinhan.Text = full;
+        return full;
+    }
+
+    private bool ValidateReceiverAddress()
+    {
+        string tinh = (hf_tinh.Value ?? "").Trim();
+        string quan = (hf_quan.Value ?? "").Trim();
+        string phuong = (hf_phuong.Value ?? "").Trim();
+        string chiTiet = (txt_diachi_chitiet.Text ?? "").Trim();
+
+        if (string.IsNullOrEmpty(tinh) || string.IsNullOrEmpty(quan) || string.IsNullOrEmpty(phuong))
+        {
+            Helper_Tabler_cl.ShowModal(this.Page, "Vui lòng chọn đầy đủ Tỉnh/Thành, Quận/Huyện và Phường/Xã.", "Thông báo", true, "warning");
+            return false;
+        }
+
+        if (chiTiet.Length < 4)
+        {
+            Helper_Tabler_cl.ShowModal(this.Page, "Vui lòng nhập địa chỉ chi tiết.", "Thông báo", true, "warning");
+            return false;
+        }
+
+        return true;
+    }
+
     private string ResolveNguoiBanDangLai(dbDataContext db, BaiViet_tb sp)
     {
         string requested = (ViewState["user_bancheo"] ?? "").ToString().Trim();
@@ -91,6 +125,61 @@ public partial class home_trao_doi : System.Web.UI.Page
 
         bool isValid = db.BanSanPhamNay_tbs.Any(x => x.taikhoan_ban == requested && x.idsp == sp.id.ToString());
         return isValid ? requested : "";
+    }
+
+    private void BindSavedAddresses(dbDataContext db, string taiKhoan)
+    {
+        if (db == null)
+        {
+            pnl_saved_address.Visible = false;
+            return;
+        }
+
+        var list = AddressHistory_cl.GetRecentAddresses(db, taiKhoan, 5, true);
+        if (list != null && list.Count > 0)
+        {
+            rpt_saved_address.DataSource = list;
+            rpt_saved_address.DataBind();
+            pnl_saved_address.Visible = true;
+        }
+        else
+        {
+            pnl_saved_address.Visible = false;
+        }
+    }
+
+    protected void SavedAddress_ItemCommand(object source, System.Web.UI.WebControls.RepeaterCommandEventArgs e)
+    {
+        if (e == null)
+            return;
+
+        string command = (e.CommandName ?? "").Trim().ToLowerInvariant();
+        if (command != "delete" && command != "set-default")
+            return;
+
+        string tk = (ViewState["taikhoan"] ?? "").ToString();
+        if (string.IsNullOrEmpty(tk))
+            return;
+
+        long id;
+        if (!long.TryParse((e.CommandArgument ?? "").ToString(), out id))
+            return;
+
+        using (dbDataContext db = new dbDataContext())
+        {
+            if (command == "delete")
+            {
+                AddressHistory_cl.DeleteAddress(db, tk, id);
+                Helper_Tabler_cl.ShowToast(this.Page, "Đã xoá địa chỉ.", null, true, 2000, "Thông báo");
+            }
+            else if (command == "set-default")
+            {
+                AddressHistory_cl.SetDefaultAddress(db, tk, id);
+                Helper_Tabler_cl.ShowToast(this.Page, "Đã đặt làm mặc định.", null, true, 2000, "Thông báo");
+            }
+
+            BindSavedAddresses(db, tk);
+        }
     }
 
     private bool LoadProductAndReceiver()
@@ -125,8 +214,13 @@ public partial class home_trao_doi : System.Web.UI.Page
             {
                 txt_hoten_nguoinhan.Text = q_tk.hoten ?? "";
                 txt_sdt_nguoinhan.Text = q_tk.dienthoai ?? "";
-                txt_diachi_nguoinhan.Text = q_tk.diachi ?? "";
+                string diaChi = q_tk.diachi ?? "";
+                txt_diachi_nguoinhan.Text = diaChi;
+                txt_diachi_chitiet.Text = diaChi;
+                hf_address_raw.Value = diaChi;
             }
+
+            BindSavedAddresses(db, tk);
 
             UpdateTongTienLabel();
             return true;
@@ -190,6 +284,9 @@ public partial class home_trao_doi : System.Web.UI.Page
             Helper_Tabler_cl.ShowModal(this.Page, "Không xác định được sản phẩm.", "Thông báo", true, "warning");
             return;
         }
+
+        if (!ValidateReceiverAddress())
+            return;
 
         int sl = Number_cl.Check_Int((txt_soluong.Text ?? "").Trim());
         sl = ClampInt(sl, 1, 999);
@@ -283,10 +380,12 @@ public partial class home_trao_doi : System.Web.UI.Page
             dh.tongtien = tongVND;
             dh.hoten_nguoinhan = (txt_hoten_nguoinhan.Text ?? "").Trim();
             dh.sdt_nguoinhan = (txt_sdt_nguoinhan.Text ?? "").Trim();
-            dh.diahchi_nguoinhan = (txt_diachi_nguoinhan.Text ?? "").Trim();
+            dh.diahchi_nguoinhan = BuildReceiverAddress();
             dh.online_offline = true;
             dh.chothanhtoan = false;
             DonHangStateMachine_cl.SyncLegacyStatus(dh);
+
+            AddressHistory_cl.UpsertAddress(db, tk, dh.hoten_nguoinhan, dh.sdt_nguoinhan, dh.diahchi_nguoinhan);
 
             db.DonHang_tbs.InsertOnSubmit(dh);
             db.SubmitChanges();

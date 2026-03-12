@@ -137,6 +137,7 @@ if (typeof Sys !== "undefined" && Sys.WebForms && Sys.WebForms.PageRequestManage
 // Hàm init cho 1 element
 function initOneTomSelect(el) {
     if (!el) return;
+    if (el.getAttribute("data-no-tomselect") === "1") return;
 
     // Nếu đã có TomSelect thì destroy trước (tránh bị đúp)
     if (el.tomselect) {
@@ -159,6 +160,7 @@ function initAllTomSelect() {
     selects.forEach(function (el) {
         // Không apply cho dropdown disabled
         if (el.disabled) return;
+        if (el.getAttribute("data-no-tomselect") === "1") return;
 
         initOneTomSelect(el);
     });

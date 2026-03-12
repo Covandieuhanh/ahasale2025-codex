@@ -59,6 +59,9 @@ public partial class home_uc_menu_top_home_uc : System.Web.UI.UserControl
 
     private string GetCurrentHomeAccount()
     {
+        if (!PortalActiveMode_cl.IsHomeActive())
+            return "";
+
         string taiKhoanMaHoa = Session["taikhoan_home"] as string;
         if (string.IsNullOrEmpty(taiKhoanMaHoa))
             return "";
@@ -94,7 +97,7 @@ public partial class home_uc_menu_top_home_uc : System.Web.UI.UserControl
             ViewState["sapxep_thongbao"] = "1";//mặc định sx thông báo theo mới nhất lên đầu
             but_sapxep_moinhat.CssClass = "info small rounded";
 
-            string _tk = Session["taikhoan_home"] as string;
+            string _tk = PortalActiveMode_cl.IsHomeActive() ? (Session["taikhoan_home"] as string) : "";
 
             if (!string.IsNullOrEmpty(_tk))//nếu có khách đăng nhập
             {
@@ -124,7 +127,7 @@ public partial class home_uc_menu_top_home_uc : System.Web.UI.UserControl
 
     public void lay_thongtin_nguoidung(dbDataContext db)
     {
-        string _tk = Session["taikhoan_home"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
+        string _tk = PortalActiveMode_cl.IsHomeActive() ? (Session["taikhoan_home"] as string) : ""; // Sử dụng 'as' để tránh lỗi nếu là null
         if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
         {
             _tk = mahoa_cl.giaima_Bcorn(_tk);
@@ -150,6 +153,9 @@ public partial class home_uc_menu_top_home_uc : System.Web.UI.UserControl
     {
         using (dbDataContext db = new dbDataContext())
         {
+            if (!PortalActiveMode_cl.IsHomeActive())
+                return;
+
             string _tk = Session["taikhoan_home"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
             if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
             {

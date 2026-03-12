@@ -102,6 +102,41 @@ public partial class Uc_Home_Header_uc : System.Web.UI.UserControl
             bool hasShopCredential = PortalActiveMode_cl.HasShopCredential();
             bool homeModeActive = PortalActiveMode_cl.IsHomeActive();
             bool shopModeActive = PortalActiveMode_cl.IsShopActive();
+            bool showModeBadge = (homeModeActive && hasHomeCredential) || (shopModeActive && hasShopCredential);
+
+            if (phModeBadge != null)
+                phModeBadge.Visible = showModeBadge;
+
+            if (phModeBadgeMobile != null)
+                phModeBadgeMobile.Visible = showModeBadge;
+
+            if (lb_mode_badge != null)
+            {
+                if (showModeBadge)
+                {
+                    bool isShopMode = shopModeActive;
+                    lb_mode_badge.Text = isShopMode ? "Chế độ Shop" : "Chế độ Home";
+                    lb_mode_badge.CssClass = "mode-badge " + (isShopMode ? "mode-shop" : "mode-home");
+                }
+                else
+                {
+                    lb_mode_badge.Text = "";
+                }
+            }
+
+            if (lb_mode_badge_mobile != null)
+            {
+                if (showModeBadge)
+                {
+                    bool isShopMode = shopModeActive;
+                    lb_mode_badge_mobile.Text = isShopMode ? "Shop" : "Home";
+                    lb_mode_badge_mobile.CssClass = "mode-badge mode-mobile " + (isShopMode ? "mode-shop" : "mode-home");
+                }
+                else
+                {
+                    lb_mode_badge_mobile.Text = "";
+                }
+            }
 
             if (!string.IsNullOrEmpty(_tk_enc)) // có đăng nhập
             {

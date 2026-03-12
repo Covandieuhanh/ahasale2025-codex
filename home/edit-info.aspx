@@ -168,9 +168,30 @@
                                                 <div class="col-lg-6"></div>
 
                                                 <div class="col-12">
-                                                    <label class="form-label">Địa chỉ</label>
-                                                    <asp:TextBox ID="txt_diachi" runat="server" CssClass="form-control"></asp:TextBox>
+                                                    <label class="form-label">Tỉnh/Thành - Quận/Huyện - Phường/Xã</label>
+                                                    <div class="row g-2">
+                                                        <div class="col-md-4">
+                                                            <select id="profile_tinh" class="form-select"></select>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <select id="profile_quan" class="form-select"></select>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <select id="profile_phuong" class="form-select"></select>
+                                                        </div>
+                                                    </div>
                                                 </div>
+
+                                                <div class="col-12">
+                                                    <label class="form-label">Địa chỉ chi tiết</label>
+                                                    <asp:TextBox ID="txt_diachi_chitiet" runat="server" TextMode="MultiLine" Rows="2" CssClass="form-control"></asp:TextBox>
+                                                </div>
+
+                                                <asp:HiddenField ID="hf_profile_tinh" runat="server" />
+                                                <asp:HiddenField ID="hf_profile_quan" runat="server" />
+                                                <asp:HiddenField ID="hf_profile_phuong" runat="server" />
+                                                <asp:HiddenField ID="hf_profile_raw" runat="server" />
+                                                <asp:TextBox ID="txt_diachi" runat="server" CssClass="form-control d-none"></asp:TextBox>
 
                                                 <div class="col-12">
                                                     <label class="form-label">Giới thiệu</label>
@@ -348,9 +369,30 @@
                                                     </div>
 
                                                     <div class="col-12">
-                                                        <label class="form-label">Địa chỉ</label>
-                                                        <asp:TextBox ID="TextBox4" runat="server" CssClass="form-control"></asp:TextBox>
+                                                        <label class="form-label">Tỉnh/Thành - Quận/Huyện - Phường/Xã</label>
+                                                        <div class="row g-2">
+                                                            <div class="col-md-4">
+                                                                <select id="shop_tinh" class="form-select"></select>
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <select id="shop_quan" class="form-select"></select>
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <select id="shop_phuong" class="form-select"></select>
+                                                            </div>
+                                                        </div>
                                                     </div>
+
+                                                    <div class="col-12">
+                                                        <label class="form-label">Địa chỉ chi tiết</label>
+                                                        <asp:TextBox ID="txt_diachi_shop_chitiet" runat="server" TextMode="MultiLine" Rows="2" CssClass="form-control"></asp:TextBox>
+                                                    </div>
+
+                                                    <asp:HiddenField ID="hf_shop_tinh" runat="server" />
+                                                    <asp:HiddenField ID="hf_shop_quan" runat="server" />
+                                                    <asp:HiddenField ID="hf_shop_phuong" runat="server" />
+                                                    <asp:HiddenField ID="hf_shop_raw" runat="server" />
+                                                    <asp:TextBox ID="TextBox4" runat="server" CssClass="form-control d-none"></asp:TextBox>
 
                                                     <!-- social links cửa hàng -->
                                                     <div class="col-12">
@@ -423,6 +465,7 @@
 </asp:Content>
 
 <asp:Content ID="Content3" ContentPlaceHolderID="foot_sau" runat="Server">
+    <script src="<%= Helper_cl.VersionedUrl("~/js/aha-address-picker.js") %>"></script>
     <script>
         function setKieuFromTab() {
             var isCN = document.getElementById('target_cn')?.classList.contains('active');
@@ -435,6 +478,30 @@
 
         document.addEventListener('DOMContentLoaded', function () {
             setKieuFromTab();
+            if (window.AhaAddressPicker) {
+                window.AhaAddressPicker.init({
+                    provinceSelectId: "profile_tinh",
+                    districtSelectId: "profile_quan",
+                    wardSelectId: "profile_phuong",
+                    detailInputId: "<%= txt_diachi_chitiet.ClientID %>",
+                    hiddenAddressId: "<%= txt_diachi.ClientID %>",
+                    hiddenProvinceId: "<%= hf_profile_tinh.ClientID %>",
+                    hiddenDistrictId: "<%= hf_profile_quan.ClientID %>",
+                    hiddenWardId: "<%= hf_profile_phuong.ClientID %>",
+                    rawAddressId: "<%= hf_profile_raw.ClientID %>"
+                });
+                window.AhaAddressPicker.init({
+                    provinceSelectId: "shop_tinh",
+                    districtSelectId: "shop_quan",
+                    wardSelectId: "shop_phuong",
+                    detailInputId: "<%= txt_diachi_shop_chitiet.ClientID %>",
+                    hiddenAddressId: "<%= TextBox4.ClientID %>",
+                    hiddenProvinceId: "<%= hf_shop_tinh.ClientID %>",
+                    hiddenDistrictId: "<%= hf_shop_quan.ClientID %>",
+                    hiddenWardId: "<%= hf_shop_phuong.ClientID %>",
+                    rawAddressId: "<%= hf_shop_raw.ClientID %>"
+                });
+            }
         });
 
         function uploadFile() {

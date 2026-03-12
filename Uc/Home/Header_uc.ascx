@@ -20,6 +20,35 @@
         position: relative;
     }
 
+    .mode-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid transparent;
+        white-space: nowrap;
+    }
+
+    .mode-badge.mode-home {
+        background: #e7f5ff;
+        border-color: #a5d8ff;
+        color: #1c7ed6;
+    }
+
+    .mode-badge.mode-shop {
+        background: #fff4e6;
+        border-color: #ffd8a8;
+        color: #d9480f;
+    }
+
+    .mode-badge.mode-mobile {
+        font-size: 10px;
+        padding: 4px 8px;
+    }
+
     .home-top-circle-btn {
         width: 46px;
         height: 46px;
@@ -189,6 +218,10 @@
         .site-header .brand-center-mobile span {
             font-size: .96rem;
         }
+
+        .mode-badge.mode-mobile {
+            display: none;
+        }
     }
 </style>
 <header class="navbar navbar-expand-lg fixed-top d-print-none site-header">
@@ -215,7 +248,11 @@
                 <li class="nav-item"><a class="nav-link fw-semibold" href="/dang-nhap?switch=home">Chuyển sang home (cá nhân)</a></li>
                 <% } else { %>
                 <%=show_danhmuc_nav %>
+                <% if (PortalActiveMode_cl.IsShopActive()) { %>
+                <li class="nav-item"><a class="nav-link fw-semibold" href="/dang-nhap?switch=home">Chuyển sang home (cá nhân)</a></li>
+                <% } else { %>
                 <li class="nav-item"><a class="nav-link fw-semibold" href="/shop/login.aspx?switch=shop">Chuyển sang shop</a></li>
+                <% } %>
                 <% } %>
                 <asp:PlaceHolder ID="phDonBan" runat="server" Visible="false"></asp:PlaceHolder>
                <%-- <li class="nav-item"><a class="nav-link fw-semibold" href="#">Bất động sản</a></li>
@@ -230,6 +267,9 @@
 
             <!-- DESKTOP RIGHT -->
             <div class="navbar-nav flex-row align-items-center gap-2 header-right-nav">
+                <asp:PlaceHolder ID="phModeBadge" runat="server" Visible="false">
+                    <asp:Label ID="lb_mode_badge" runat="server" CssClass="mode-badge mode-home"></asp:Label>
+                </asp:PlaceHolder>
                 <asp:PlaceHolder ID="phTopDesktopHomeUtilities" runat="server" Visible="false">
                     <div class="position-relative d-none d-lg-block">
                         <a href="/home/quan-ly-tin/tin-da-luu.aspx"
@@ -306,6 +346,9 @@
 
         <!-- MOBILE RIGHT: notif + account offcanvas -->
         <div class="d-lg-none ms-auto d-flex align-items-center gap-2">
+            <asp:PlaceHolder ID="phModeBadgeMobile" runat="server" Visible="false">
+                <asp:Label ID="lb_mode_badge_mobile" runat="server" CssClass="mode-badge mode-mobile mode-home"></asp:Label>
+            </asp:PlaceHolder>
             <asp:PlaceHolder ID="phTopMobileHomeUtilities" runat="server" Visible="true">
                 <asp:UpdatePanel ID="UpdatePanel8" runat="server" UpdateMode="Conditional">
                     <ContentTemplate>

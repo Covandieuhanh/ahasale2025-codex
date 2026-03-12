@@ -19,8 +19,11 @@ public partial class admin_otp_Default : System.Web.UI.Page
         // Ensure consistent control tree before ViewState loads.
         SetupOtpConfigGate();
         // ViewState is disabled, so repopulate dropdown items before postback data loads.
-        BindTypeOptions();
-        BindAccounts();
+        if (IsOtpConfigUnlocked())
+        {
+            BindTypeOptions();
+            BindAccounts();
+        }
     }
 
     protected override object LoadPageStateFromPersistenceMedium()
@@ -36,8 +39,11 @@ public partial class admin_otp_Default : System.Web.UI.Page
         {
             check_login_cl.check_login_admin("1", "1");
             BindConfig();
-            BindTabs();
-            BindLog();
+            if (IsOtpConfigUnlocked())
+            {
+                BindTabs();
+                BindLog();
+            }
             ShowSavedConfigNotice();
         }
     }
@@ -232,6 +238,7 @@ public partial class admin_otp_Default : System.Web.UI.Page
         bool unlocked = IsOtpConfigUnlocked();
         ph_otp_locked.Visible = !unlocked;
         ph_otp_config.Visible = unlocked;
+        ph_otp_manage.Visible = unlocked;
     }
 
     private bool IsOtpConfigUnlocked()

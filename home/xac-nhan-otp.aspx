@@ -32,6 +32,9 @@
                                 <div class="mb-2 text-secondary">
                                     OTP đã được tạo cho <strong><asp:Literal ID="lit_phone" runat="server"></asp:Literal></strong>
                                 </div>
+                                <div class="alert alert-info" role="alert">
+                                    Email có thể đến sau 1–3 phút, vui lòng kiểm tra Hộp thư rác (Spam).
+                                </div>
 
                                 <asp:Panel ID="pn_dev_otp" runat="server" Visible="false">
                                     <div class="alert alert-info" role="alert">

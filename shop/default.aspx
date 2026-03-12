@@ -100,6 +100,17 @@
             position: relative;
         }
 
+        .mode-pill {
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid #ffd8a8;
+            background: #fff4e6;
+            color: #d9480f;
+            white-space: nowrap;
+        }
+
         .avatar-wrap { position: relative; }
 
         .avatar-btn {
@@ -598,6 +609,7 @@
                 </div>
 
                 <div class="top-actions">
+                    <div class="mode-pill">Chế độ Shop</div>
                     <div class="avatar-wrap" id="avatarWrap">
                         <button type="button" class="avatar-btn" id="avatarToggle">
                             <asp:Image ID="img_avatar" runat="server" CssClass="avatar-image" />

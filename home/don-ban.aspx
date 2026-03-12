@@ -23,6 +23,62 @@
             content:""; width:.5rem; height:.5rem; border-radius:999px; background: currentColor;
             display:inline-block;
         }
+        .status-filter-control{
+            display:inline-flex;
+            align-items:center;
+            gap:10px;
+            padding:6px 14px;
+            border:1px solid var(--tblr-border-color,#e2e8f0);
+            border-radius:999px;
+            background:var(--tblr-bg-surface,#ffffff);
+            color:var(--tblr-body-color,#0f172a);
+            box-shadow:0 10px 22px rgba(15,23,42,.08);
+            transition:box-shadow .2s ease,border-color .2s ease,transform .2s ease;
+        }
+        .status-filter-control:hover{
+            border-color:rgba(99,102,241,.35);
+            box-shadow:0 14px 30px rgba(15,23,42,.12);
+            transform:translateY(-1px);
+        }
+        .status-filter-icon{
+            width:28px;
+            height:28px;
+            border-radius:999px;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            background:var(--tblr-primary-lt,#e0f2fe);
+            color:var(--tblr-primary,#0284c7);
+            font-size:16px;
+        }
+        .status-filter-select{
+            border:0;
+            background:transparent;
+            font-weight:600;
+            color:inherit;
+            padding:4px 32px 4px 6px;
+            appearance:none;
+            -webkit-appearance:none;
+            -moz-appearance:none;
+            min-width:200px;
+            background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%2363748b' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat:no-repeat;
+            background-position:right 8px center;
+            background-size:16px;
+        }
+        .status-filter-select:focus{
+            outline:none;
+            box-shadow:none;
+        }
+        .status-filter-badge{
+            border-radius:999px;
+            padding:6px 10px;
+            font-weight:600;
+        }
+        @media (max-width: 575.98px){
+            .status-filter-control{ width:100%; }
+            .status-filter-select{ flex:1; min-width:0; }
+        }
         .pos-standalone-page{
             padding: 8px 0 18px;
         }
@@ -351,18 +407,25 @@
 
                         <div class="col-12">
                             <div class="d-flex align-items-center gap-2 flex-wrap">
-                                <div class="text-muted small">
-                                    Lọc trạng thái: <asp:Label ID="lb_status_filter" runat="server" Text="Tất cả trạng thái"></asp:Label>
+                                <div class="text-muted small">Lọc trạng thái:</div>
+                                <div class="status-filter-control">
+                                    <span class="status-filter-icon"><i class="ti ti-map-pin"></i></span>
+                                    <asp:DropDownList ID="ddl_status_filter" runat="server"
+                                        CssClass="status-filter-select"
+                                        AutoPostBack="true"
+                                        OnSelectedIndexChanged="ddl_status_filter_SelectedIndexChanged">
+                                        <asp:ListItem Text="Tất cả trạng thái" Value="all"></asp:ListItem>
+                                        <asp:ListItem Text="Đã đặt/Chưa Trao đổi" Value="da-dat"></asp:ListItem>
+                                        <asp:ListItem Text="Chờ Trao đổi" Value="cho-trao-doi"></asp:ListItem>
+                                        <asp:ListItem Text="Đã Trao đổi" Value="da-trao-doi"></asp:ListItem>
+                                        <asp:ListItem Text="Đã giao" Value="da-giao"></asp:ListItem>
+                                        <asp:ListItem Text="Đã nhận" Value="da-nhan"></asp:ListItem>
+                                        <asp:ListItem Text="Đã hủy" Value="da-huy"></asp:ListItem>
+                                    </asp:DropDownList>
                                 </div>
-                                <div class="btn-list ms-auto">
-                                    <asp:LinkButton ID="but_loc_all" runat="server" CssClass="btn btn-outline-secondary btn-sm" CommandArgument="all" OnClick="but_loc_trangthai_Click">Tất cả</asp:LinkButton>
-                                    <asp:LinkButton ID="but_loc_dadat" runat="server" CssClass="btn btn-outline-azure btn-sm" CommandArgument="da-dat" OnClick="but_loc_trangthai_Click">Đã đặt</asp:LinkButton>
-                                    <asp:LinkButton ID="but_loc_cho" runat="server" CssClass="btn btn-outline-danger btn-sm" CommandArgument="cho-trao-doi" OnClick="but_loc_trangthai_Click">Chờ Trao đổi</asp:LinkButton>
-                                    <asp:LinkButton ID="but_loc_datd" runat="server" CssClass="btn btn-outline-blue btn-sm" CommandArgument="da-trao-doi" OnClick="but_loc_trangthai_Click">Đã Trao đổi</asp:LinkButton>
-                                    <asp:LinkButton ID="but_loc_giao" runat="server" CssClass="btn btn-outline-yellow btn-sm" CommandArgument="da-giao" OnClick="but_loc_trangthai_Click">Đã giao</asp:LinkButton>
-                                    <asp:LinkButton ID="but_loc_nhan" runat="server" CssClass="btn btn-outline-success btn-sm" CommandArgument="da-nhan" OnClick="but_loc_trangthai_Click">Đã nhận</asp:LinkButton>
-                                    <asp:LinkButton ID="but_loc_huy" runat="server" CssClass="btn btn-outline-danger btn-sm" CommandArgument="da-huy" OnClick="but_loc_trangthai_Click">Đã hủy</asp:LinkButton>
-                                </div>
+                                <span class="badge bg-azure-lt text-azure status-filter-badge">
+                                    Đang chọn: <asp:Label ID="lb_status_filter" runat="server" Text="Tất cả trạng thái"></asp:Label>
+                                </span>
                             </div>
                         </div>
 

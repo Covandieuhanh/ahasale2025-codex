@@ -7,6 +7,39 @@ using System.Web.UI.WebControls;
 
 public partial class home_edit_info : System.Web.UI.Page
 {
+    private string ResolveProfileAddress()
+    {
+        string tinh = (hf_profile_tinh.Value ?? "").Trim();
+        string quan = (hf_profile_quan.Value ?? "").Trim();
+        string phuong = (hf_profile_phuong.Value ?? "").Trim();
+        string chiTiet = (txt_diachi_chitiet.Text ?? "").Trim();
+        string raw = (hf_profile_raw.Value ?? "").Trim();
+
+        bool hasInput = !string.IsNullOrEmpty(chiTiet) || !string.IsNullOrEmpty(tinh) || !string.IsNullOrEmpty(quan) || !string.IsNullOrEmpty(phuong);
+        if (!hasInput)
+            return raw;
+
+        string full = AddressFormat_cl.BuildFullAddress(chiTiet, phuong, quan, tinh);
+        txt_diachi.Text = full;
+        return full;
+    }
+
+    private string ResolveShopAddress()
+    {
+        string tinh = (hf_shop_tinh.Value ?? "").Trim();
+        string quan = (hf_shop_quan.Value ?? "").Trim();
+        string phuong = (hf_shop_phuong.Value ?? "").Trim();
+        string chiTiet = (txt_diachi_shop_chitiet.Text ?? "").Trim();
+        string raw = (hf_shop_raw.Value ?? "").Trim();
+
+        bool hasInput = !string.IsNullOrEmpty(chiTiet) || !string.IsNullOrEmpty(tinh) || !string.IsNullOrEmpty(quan) || !string.IsNullOrEmpty(phuong);
+        if (!hasInput)
+            return raw;
+
+        string full = AddressFormat_cl.BuildFullAddress(chiTiet, phuong, quan, tinh);
+        TextBox4.Text = full;
+        return full;
+    }
     protected void Page_Load(object sender, EventArgs e)
     {
         if (!IsPostBack)
@@ -115,7 +148,10 @@ public partial class home_edit_info : System.Web.UI.Page
         txt_hoten.Text = q_tk.hoten;
         txt_sdt.Text = q_tk.dienthoai;
         TextBox9.Text = q_tk.email;
-        txt_diachi.Text = q_tk.diachi;
+        string diaChiCaNhan = q_tk.diachi ?? "";
+        txt_diachi.Text = diaChiCaNhan;
+        txt_diachi_chitiet.Text = diaChiCaNhan;
+        hf_profile_raw.Value = diaChiCaNhan;
         txt_gioithieu.Text = q_tk.gioithieu;
 
         bool isShopAccount = ShopSlug_cl.IsShopAccount(db, q_tk);
@@ -165,7 +201,10 @@ public partial class home_edit_info : System.Web.UI.Page
             TextBox3.Text = q_tk.sdt_shop;
             TextBox10.Text = q_tk.email_shop;
             TextBox5.Text = q_tk.motangan_shop;
-            TextBox4.Text = q_tk.diachi_shop;
+            string diaChiShop = q_tk.diachi_shop ?? "";
+            TextBox4.Text = diaChiShop;
+            txt_diachi_shop_chitiet.Text = diaChiShop;
+            hf_shop_raw.Value = diaChiShop;
         }
         else
         {
@@ -450,7 +489,7 @@ public partial class home_edit_info : System.Web.UI.Page
         string _b2 = txt_hoten.Text.Trim();
         string _b3 = txt_sdt.Text.Trim();
         string _b4 = TextBox9.Text.Trim();
-        string _b6 = txt_diachi.Text.Trim();
+        string _b6 = ResolveProfileAddress();
         string _b7 = txt_gioithieu.Text.Trim();
 
         // ===== cửa hàng =====
@@ -460,7 +499,7 @@ public partial class home_edit_info : System.Web.UI.Page
         string _c4 = TextBox3.Text.Trim();
         string _c5 = TextBox10.Text.Trim();
         string _c7 = TextBox5.Text.Trim();
-        string _c8 = TextBox4.Text.Trim();
+        string _c8 = ResolveShopAddress();
 
         bool lockShop = (ViewState["lock_shop"] as bool?) ?? false;
 
