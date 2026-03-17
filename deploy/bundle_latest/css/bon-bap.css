@@ -1,0 +1,179 @@
+﻿html {
+    word-wrap:break-word;
+}
+.app-bar-search {
+    background-color: #3F4447 !important;
+    color: #bbbbbb !important;
+    width: 200px !important;
+    height: 30px !important;
+    border: 0;
+    border-radius: 4px;
+    padding: 0 6px;
+}
+
+.bg-home {
+    background: #1a1b1b url("/uploads/images/bon-bap/2.jpg") center center no-repeat;
+    background-size: cover;
+    min-height: 100vh;
+}
+
+.title-big {
+    font-size: 44px;
+    font-weight: bold;
+}
+
+.title-sub-home-bcorn {
+    font-size: 22px;
+    font-weight: 300;
+}
+
+.title-sub-home-bcorn1 {
+    font-size: 20px;
+    font-weight: 300;
+}
+
+.avt-home-bcorn {
+    overflow: hidden;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    border: 4px solid #fff;
+}
+
+.part-header {
+    border-left: 4px solid darkorange;
+    padding-left: 18px;
+    margin: 10px 0 20px;
+}
+
+.service-item {
+    box-shadow: 0 0 20px rgb(0 0 0 / 10%);
+    margin: 10px;
+    padding: 20px 40px;
+    height: 100%;
+}
+
+.bcorn-info-label {
+    float: left;
+    width: 100px;
+    font-weight: bold;
+}
+
+.bcorn-info {
+    float: left;
+    width: calc(100% - 100px);
+}
+
+.text-gioithieu {
+    line-height: 30px;
+    font-size: 21px;
+    font-weight: 300;
+}
+
+.gioithieu-indam {
+    font-weight: 400;
+}
+
+.ellipsis-1 {display: -webkit-box;line-height: 1.3;height: 16px*1.3*1;-webkit-line-clamp: 1;-webkit-box-orient: vertical;overflow: hidden;text-overflow: ellipsis;}
+.ellipsis-2 {display: -webkit-box;line-height: 1.3;height: 16px*1.3*2;-webkit-line-clamp: 2;-webkit-box-orient: vertical;overflow: hidden;text-overflow: ellipsis;}
+.ellipsis-3 {display: -webkit-box;line-height: 1.3;height: 16px*1.3*3;-webkit-line-clamp: 3;-webkit-box-orient: vertical;overflow: hidden;text-overflow: ellipsis;}
+.ellipsis-4 {display: -webkit-box;line-height: 1.3;height: 16px*1.3*4;-webkit-line-clamp: 4;-webkit-box-orient: vertical;overflow: hidden;text-overflow: ellipsis;}
+.valign-center {display: flex;align-items: center;}
+.img-cover{width:300px;height:300px;object-fit: cover;object-position: 50% 50%;}
+#back-to-top {position: fixed;bottom: 70px;right: 28px;cursor: pointer;z-index: 2000;}
+
+
+/*auto complete ajax*/
+.completionList {
+    border: solid 1px #d9d9d9;
+    margin: 0px;
+    padding: 3px;
+    height: 200px;
+    overflow: auto;
+    background-color: #FFFFFF;
+    z-index: 9999999999;
+    position: absolute;
+    list-style-type: none;
+    font-size: .875rem;
+}
+
+.listItem {
+    color: #191919;
+    list-style-type: none;
+    height: 30px;
+    line-height: 30px;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.itemHighlighted {
+    background-color: #d9d9d9;
+    padding: 0 3px;
+    height: 30px;
+    line-height: 30px;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+/*auto complete ajax*/
+
+@media (max-width: 575px) { /*sm*/
+
+}
+
+@media (max-width: 767px) { /*md*/
+    .text-gioithieu {
+        line-height: unset !important;
+        font-size: unset !important;
+        font-weight: unset !important;
+    }
+
+    .gioithieu-indam {
+        font-weight: 500;
+    }
+
+    .avt-home-bcorn {
+        width: 150px;
+        height: 150px;
+        border: 3px solid #fff;
+    }
+
+    .title-big {
+        font-size: 32px;
+    }
+
+    .title-sub-home-bcorn {
+        font-size: 20px;
+    }
+
+    .title-sub-home-bcorn1 {
+        font-size: 18px;
+    }
+
+    .service-item {
+        padding: 20px 20px;
+    }
+    #back-to-top {        
+        right: 10px;
+    }
+   
+}
+
+@media (max-width: 991px) { /*lg*/
+
+}
+
+@media (max-width: 1199px) { /*xl*/
+    .text-gioithieu {
+        line-height: 25px;
+        font-size: 18px;
+    }
+}
+
+@media (max-width: 1451px) { /*xxl*/
+}

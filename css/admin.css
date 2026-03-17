@@ -1,0 +1,182 @@
+﻿/*BEGIN PRIVATE ADMIN*/
+
+/*END PRIVATE ADMIN*/
+
+/*BEGIN PUBLIC ADMIN*/
+::-webkit-scrollbar {
+    width: 6px !important;
+    height: 6px !important;
+}
+
+::-webkit-scrollbar-track {
+    background: #222d32 !important;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #1ba1e2 !important;
+}
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #1ba1e2 !important;
+    }
+/*END PUBLIC ADMIN*/
+
+
+
+/*begin navview*/
+
+.navview {
+    height: 100%;
+}
+
+    .navview .navview-pane {
+        background-color: #222D32;
+        color: #b8c7ce;
+        font-size: 14px;
+    }
+
+    .navview .navview-content {
+        padding-top: 52px;
+        background-color: #fff;
+    }
+
+    .navview .pull-button {
+        height: 52px;
+        width: 52px;
+    }
+
+    .navview .navview-menu {
+        background-color: #222D32;
+    }
+
+        .navview .navview-menu li a:hover {
+            color: #fff;
+            background: #1e282c;
+        }
+
+        .navview .navview-menu li.active a {
+            color: #fff;
+            background: #1e282c;
+        }
+
+        .navview .navview-menu .dropdown-toggle::after {
+            border-bottom-color: white !important;
+        }
+
+        .navview .navview-menu .item-header {
+            color: #4b646f;
+            background: #1a2226;
+            font-size: 12px;
+        }
+
+    .navview .suggest-box .holder:hover {
+        color: #fff;
+        background: #1e282c;
+    }
+
+    .navview .suggest-box .data-box {
+        display: flex;
+        padding: 8px 8px 0;
+    }
+
+    .navview .suggest-box img.holder {
+        width: 32px !important;
+        height: auto !important;
+    }
+
+    .navview .navview-menu .navview-menu {
+        background-color: #1a2226;
+    }
+
+.avatar-title {
+    line-height: 1.2;
+}
+
+.navview .pull-button + .app-title,
+.navview.compacted .pull-button + .app-title {
+    display: none;
+}
+
+.navview.expand .pull-button + .app-title,
+.navview-pane.open .pull-button + .app-title {
+    display: flex;
+}
+/*END navview*/
+
+/*BEGIN THÔNG BÁO*/
+
+#thongbao-charms::-webkit-scrollbar {
+    width: 6px !important;
+}
+
+#thongbao-charms::-webkit-scrollbar-track {
+    background: #fff !important;
+}
+
+#thongbao-charms::-webkit-scrollbar-thumb {
+    background: #fa6800 !important;
+}
+
+    #thongbao-charms::-webkit-scrollbar-thumb:hover {
+        background: #fa6800 !important;
+    }
+
+.thongbao-div:hover {
+    background-color: #dfdfdf !important
+}
+
+.thongbao-avt {
+    overflow: hidden;
+    width: 56px;
+    height: 56px;
+    float: left;
+    border-radius: 50%;
+}
+
+.thongbao-noidung {
+    width: 228px;
+    float: right;
+}
+
+.thongbao-noidungchinh {
+    max-height: 38px;
+    overflow: hidden;
+    font-size: 14px;
+    line-height: 18px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    color: #000;
+}
+
+.thongbao-thoigian {
+    font-size: 12px;
+    color: #7d7d7d !important;
+    padding-top: 2px;
+}
+/*END THÔNG BÁO*/
+
+@media screen and (min-width: 1200px) {
+    .navview .pull-button + .app-title {
+        display: flex;
+    }
+}
+
+.navview-pane .avatar,
+.app-bar .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.navview-pane ::-webkit-scrollbar-track {
+    background-color: #4b646f !important;
+}
+
+.navview-pane * {
+    scrollbar-color: #1ba1e2 #4b646f !important;
+}
+/*END navview*/
+

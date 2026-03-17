@@ -1,0 +1,736 @@
+/* Admin UI optimization layer
+   - Visual-only overrides
+   - Keep existing markup and business logic untouched
+*/
+
+.admin-shell {
+    --admin-bg: #f3f6fb;
+    --admin-surface: #ffffff;
+    --admin-surface-soft: #f8fafd;
+    --admin-border: #d9e2ec;
+    --admin-text: #0f172a;
+    --admin-muted: #5f6f82;
+    --admin-accent: #0f8a8d;
+    --admin-accent-soft: #e6f6f6;
+    --admin-danger: #c8343f;
+    --admin-success: #127a56;
+    background: var(--admin-bg) !important;
+    color: var(--admin-text);
+}
+
+.admin-shell .navview .navview-content {
+    background: var(--admin-bg) !important;
+}
+
+/* Move global navigation into avatar dropdown */
+.admin-shell #nv .navview-pane {
+    display: none !important;
+}
+
+.admin-shell #nv .navview-content {
+    width: 100% !important;
+    margin-left: 0 !important;
+}
+
+.admin-shell #paneToggle {
+    display: none !important;
+}
+
+.admin-shell .admin-page-surface {
+    border: 1px solid var(--admin-border);
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgba(2, 8, 23, 0.05);
+    min-height: calc(100vh - 76px);
+    background: var(--admin-surface) !important;
+}
+
+.admin-shell #main-content {
+    max-width: 1500px;
+    margin: 0 auto;
+}
+
+.admin-shell .content-inner {
+    background: var(--admin-bg) !important;
+}
+
+/* Reduce heavy motion globally in admin only */
+.admin-shell .navview *,
+.admin-shell .app-bar *,
+.admin-shell .button,
+.admin-shell .charms,
+.admin-shell .dropdown-toggle,
+.admin-shell .dropdown-toggle::after,
+.admin-shell .table tr,
+.admin-shell .table td,
+.admin-shell .table th,
+.admin-shell [data-role="activity"],
+.admin-shell .activity-atom {
+    transition: none !important;
+    animation: none !important;
+}
+
+/* App bar */
+.admin-shell .app-bar {
+    background: #116466 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: none !important;
+}
+
+.admin-shell .app-bar .app-bar-item {
+    min-height: 52px;
+    font-weight: 600;
+    letter-spacing: 0.1px;
+}
+
+.admin-shell .app-bar .app-bar-item.no-brand {
+    font-weight: 600;
+    opacity: 0.95;
+}
+
+.admin-shell .app-bar .badge {
+    min-width: 20px;
+    line-height: 18px;
+    font-size: 11px;
+}
+
+/* Left nav */
+.admin-shell .navview .navview-pane,
+.admin-shell .navview .navview-menu {
+    background: #1a2632 !important;
+    color: #cfd9e4;
+}
+
+.admin-shell .navview .navview-menu .item-header {
+    background: #111a23 !important;
+    color: #8ea0b4 !important;
+    letter-spacing: 0.5px;
+}
+
+.admin-shell .navview .navview-menu li a {
+    min-height: 38px;
+    color: #cfd9e4;
+}
+
+.admin-shell .navview .navview-menu li a:hover,
+.admin-shell .navview .navview-menu li.active a {
+    background: #28384a !important;
+    color: #ffffff !important;
+}
+
+.admin-shell .navview .navview-menu li.active::before {
+    background-color: #22b7be !important;
+}
+
+/* Cards and blocks */
+.admin-shell .bg-white.border {
+    border-color: var(--admin-border) !important;
+    border-radius: 12px;
+}
+
+.admin-shell hr {
+    border-color: var(--admin-border) !important;
+}
+
+/* Inputs and selects */
+.admin-shell input[type="text"],
+.admin-shell input[type="password"],
+.admin-shell input[type="number"],
+.admin-shell input[type="date"],
+.admin-shell input[type="email"],
+.admin-shell textarea,
+.admin-shell select,
+.admin-shell .input,
+.admin-shell .file,
+.admin-shell [data-role="input"] {
+    border-radius: 8px !important;
+    border-color: #cfd8e3 !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+}
+
+.admin-shell input:focus,
+.admin-shell textarea:focus,
+.admin-shell select:focus,
+.admin-shell .input:focus {
+    border-color: #2aa9b0 !important;
+    outline: 2px solid rgba(42, 169, 176, 0.15) !important;
+    outline-offset: 0;
+}
+
+.admin-shell label {
+    color: #223247;
+}
+
+/* Buttons */
+.admin-shell .button,
+.admin-shell button,
+.admin-shell input[type="button"],
+.admin-shell input[type="submit"] {
+    border-radius: 8px !important;
+    box-shadow: none !important;
+    font-weight: 600;
+}
+
+.admin-shell .button.success,
+.admin-shell input.success,
+.admin-shell .button.success:focus {
+    background: #1f9d67 !important;
+    border-color: #1f9d67 !important;
+}
+
+.admin-shell .button.alert,
+.admin-shell input.alert,
+.admin-shell .button.alert:focus {
+    background: #cf3b45 !important;
+    border-color: #cf3b45 !important;
+}
+
+.admin-shell .h-menu li {
+    margin-left: 2px;
+    margin-right: 2px;
+}
+
+.admin-shell .h-menu li .button,
+.admin-shell .h-menu li input[type="image"] {
+    border: 1px solid #d4deea;
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.admin-shell .h-menu li input[type="image"] {
+    width: 32px;
+    height: 32px;
+    padding: 4px;
+    object-fit: contain;
+}
+
+.admin-shell .user-block {
+    display: none !important;
+    width: 380px;
+    max-width: calc(100vw - 16px);
+    max-height: calc(100vh - 60px);
+    overflow: hidden;
+    flex-direction: column;
+    border: 1px solid #d5dfeb;
+    border-radius: 12px;
+    background: #ffffff;
+    z-index: 100040;
+}
+
+.admin-shell .user-block.open {
+    display: flex !important;
+}
+
+.admin-shell .avatar-profile-head,
+.admin-shell .avatar-branch,
+.admin-shell .avatar-actions-row,
+.admin-shell .avatar-session-row {
+    flex: 0 0 auto;
+}
+
+.admin-shell .avatar-profile-head {
+    border-radius: 12px 12px 0 0;
+    background: #edf3f9 !important;
+    border-bottom: 1px solid #d5e0ec;
+}
+
+.admin-shell .avatar-profile-head,
+.admin-shell .avatar-profile-head .h5,
+.admin-shell .avatar-profile-head h5,
+.admin-shell .avatar-profile-head div,
+.admin-shell .avatar-profile-head span {
+    color: #16253a !important;
+}
+
+.admin-shell .avatar-branch,
+.admin-shell .avatar-nav-wrap,
+.admin-shell .avatar-actions-row,
+.admin-shell .avatar-session-row {
+    color: #16253a !important;
+}
+
+.admin-shell .avatar-branch *,
+.admin-shell .avatar-nav-wrap *,
+.admin-shell .avatar-actions-row *,
+.admin-shell .avatar-session-row * {
+    color: #16253a !important;
+}
+
+.admin-shell .avatar-nav-wrap {
+    border-top: 1px solid #e4ebf3;
+    border-bottom: 1px solid #e4ebf3;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 140px;
+}
+
+.admin-shell .avatar-nav-title {
+    color: #1f2f43;
+    font-weight: 700;
+}
+
+.admin-shell .avatar-nav-menu {
+    max-height: none;
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.admin-shell .avatar-nav-empty {
+    font-size: 12px;
+    color: #607085;
+    padding: 6px 2px;
+}
+
+.admin-shell .avatar-nav-group {
+    margin: 8px 0 6px;
+    padding: 0 2px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    color: #4f6278;
+}
+
+.admin-shell .avatar-nav-link {
+    display: block;
+    padding: 7px 8px;
+    border-radius: 7px;
+    color: #1d3046;
+    text-decoration: none;
+    font-size: 13px;
+    line-height: 1.35;
+    font-weight: 600;
+}
+
+.admin-shell .avatar-nav-link:hover {
+    background: #edf4ff;
+    color: #19314f;
+}
+
+.admin-shell .avatar-nav-link.active {
+    background: #dff3ff;
+    color: #0f4b73;
+    font-weight: 700;
+}
+
+.admin-shell .avatar-nav-link.level-1 {
+    padding-left: 24px;
+    color: #2e4764;
+    font-weight: 500;
+}
+
+.admin-shell .avatar-nav-link .icon {
+    margin-right: 6px;
+    color: #37526f;
+}
+
+.admin-shell .avatar-actions-row,
+.admin-shell .avatar-session-row {
+    border-top: 1px solid #e4ebf3;
+}
+
+.admin-shell .avatar-actions-row .button,
+.admin-shell .avatar-session-row .button {
+    flex: 1 1 0;
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.admin-shell .avatar-actions-row .button.light {
+    color: #1b2d43 !important;
+    border-color: #cfd9e5 !important;
+}
+
+.admin-shell .avatar-session-row .button.success,
+.admin-shell .avatar-session-row .button.alert {
+    color: #ffffff !important;
+}
+
+/* Inline feedback instead of popup notify/dialog */
+.admin-shell .admin-inline-feedback {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0 0 12px;
+}
+
+.admin-shell .admin-inline-item {
+    border: 1px solid #d6e0ec;
+    border-radius: 10px;
+    background: #f7fbff;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+
+.admin-shell .admin-inline-item.tone-success {
+    background: #ebf8f2;
+    border-color: #9ed6ba;
+}
+
+.admin-shell .admin-inline-item.tone-warning {
+    background: #fff9ea;
+    border-color: #efd18e;
+}
+
+.admin-shell .admin-inline-item.tone-alert {
+    background: #fff2f3;
+    border-color: #f2bcc3;
+}
+
+.admin-shell .admin-inline-item.tone-info {
+    background: #eaf4ff;
+    border-color: #bfd8f5;
+}
+
+.admin-shell .admin-inline-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px 0;
+}
+
+.admin-shell .admin-inline-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1e3248;
+}
+
+.admin-shell .admin-inline-close {
+    border: 0;
+    background: transparent;
+    color: #54667a;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    padding: 0 2px;
+}
+
+.admin-shell .admin-inline-body {
+    padding: 8px 12px 12px;
+    color: #26384d;
+    line-height: 1.45;
+}
+
+.admin-shell .admin-inline-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 0 12px 12px;
+}
+
+.admin-shell .admin-inline-btn {
+    min-width: 88px;
+    border: 1px solid #c8d5e5;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #1d334a;
+    padding: 6px 10px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.admin-shell .admin-inline-btn.alert {
+    border-color: #cf3b45;
+    background: #cf3b45;
+    color: #ffffff;
+}
+
+.admin-shell .admin-inline-btn.success,
+.admin-shell .admin-inline-btn.warning {
+    border-color: #1f9d67;
+    background: #1f9d67;
+    color: #ffffff;
+}
+
+.admin-shell .admin-inline-busy {
+    position: fixed;
+    top: 58px;
+    right: 14px;
+    z-index: 100060;
+    border: 1px solid #d6e0ec;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #1f2e43;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+    display: none;
+}
+
+.admin-shell .admin-inline-busy.show {
+    display: block;
+}
+
+/* Table usability */
+.admin-shell #table-main {
+    border: 1px solid var(--admin-border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--admin-surface);
+}
+
+.admin-shell #table-main table {
+    margin-bottom: 0 !important;
+}
+
+.admin-shell #table-main table td {
+    border-bottom: 1px solid #e8edf3;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    vertical-align: middle;
+}
+
+.admin-shell #table-main table tr:first-child td {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #edf3fb !important;
+    border-bottom: 1px solid #d4dfeb;
+}
+
+.admin-shell #table-main table tr:nth-child(2n + 2) td {
+    background: #fcfdff;
+}
+
+.admin-shell #table-main table tr:hover td {
+    background: #eef8ff !important;
+}
+
+.admin-shell #table-main input[data-role="input"],
+.admin-shell #table-main input[type="text"] {
+    min-height: 34px;
+}
+
+.admin-shell .text-center.mt-4.mb-20 {
+    border-top: 1px solid #e8edf3;
+    background: #f8fbff;
+    padding: 12px 8px;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+.admin-shell #table-main + .text-center,
+.admin-shell #table-main .text-center {
+    font-weight: 600;
+    color: #3e4f63;
+}
+
+.admin-shell #table-main .text-center input[type="submit"],
+.admin-shell #table-main .text-center button,
+.admin-shell #table-main .text-center .button {
+    min-width: 64px;
+    border-radius: 8px !important;
+    border: 1px solid #d2dbe7 !important;
+    background: #ffffff !important;
+    color: #223247 !important;
+}
+
+/* Notification side panel */
+.admin-shell #thongbao-charms {
+    border-left: 1px solid var(--admin-border);
+    box-shadow: none !important;
+}
+
+.admin-shell .thongbao-div {
+    border-bottom: 1px solid #edf2f8;
+}
+
+.admin-shell .thongbao-div:hover {
+    background: #f3f9ff !important;
+}
+
+/* Notify and dialog feedback: clear but low-motion */
+.admin-shell .notify-container {
+    z-index: 100050 !important;
+}
+
+.admin-shell .notify {
+    border-radius: 10px;
+    border: 1px solid var(--admin-border);
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
+}
+
+.admin-shell .notify-title {
+    font-weight: 700;
+    font-size: 13px;
+}
+
+.admin-shell .notify-message {
+    line-height: 1.45;
+}
+
+.admin-shell .notify.warning,
+.admin-shell .notify.success {
+    background: #ebf8f2 !important;
+    color: #0f5132 !important;
+    border-color: #9ed6ba !important;
+}
+
+.admin-shell .notify.alert {
+    background: #fff2f3 !important;
+    color: #8f2332 !important;
+    border-color: #f2bcc3 !important;
+}
+
+.admin-shell .notify.info,
+.admin-shell .notify.primary {
+    background: #eaf4ff !important;
+    color: #1e3f64 !important;
+    border-color: #bfd8f5 !important;
+}
+
+.admin-shell .overlay {
+    background: rgba(15, 23, 42, 0.36) !important;
+    animation: none !important;
+}
+
+.admin-shell .dialog {
+    border: 1px solid var(--admin-border);
+    border-radius: 12px;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.18);
+    overflow: hidden;
+}
+
+.admin-shell .dialog .dialog-title {
+    background: #edf3fb !important;
+    color: #1f2d40 !important;
+    font-weight: 700;
+}
+
+.admin-shell .dialog .dialog-content {
+    color: #26384d;
+}
+
+.admin-shell .dialog .dialog-actions {
+    border-top: 1px solid #e4ebf3;
+    background: #f8fbff;
+}
+
+.admin-shell .dialog .dialog-actions .button,
+.admin-shell .dialog .dialog-actions button {
+    min-width: 88px;
+    border-radius: 8px !important;
+}
+
+/* Overlay forms used for add/delete/filter shortcuts */
+.admin-shell [id^="form_"][style*="position: fixed"] {
+    background-image: none !important;
+    background-color: rgba(15, 23, 42, 0.3) !important;
+}
+
+/* Popup to dedicated page mode */
+.admin-shell.admin-has-form-view .admin-page-surface {
+    max-width: 1120px;
+    margin: 0 auto;
+}
+
+.admin-shell .admin-form-as-page {
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    top: auto !important;
+    left: auto !important;
+    z-index: 1 !important;
+    overflow: visible !important;
+    display: block !important;
+    background: transparent !important;
+}
+
+.admin-shell .admin-form-as-page > div {
+    max-width: 100% !important;
+    margin: 0 auto !important;
+}
+
+.admin-shell .admin-form-as-page .bg-white.border {
+    border: 1px solid #dbe4ef !important;
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+}
+
+.admin-shell .admin-form-as-page [title="Đóng"] {
+    display: none !important;
+}
+
+.admin-shell .admin-form-backbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 0 0 12px;
+    padding: 10px 12px;
+    border: 1px solid #dbe4ef;
+    border-radius: 10px;
+    background: #f3f8ff;
+}
+
+.admin-shell .admin-form-backbar .admin-back-btn {
+    border: 1px solid #c8d5e5;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #1d334a;
+    padding: 6px 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* Disable full-screen update popups, use inline busy indicator instead */
+.admin-shell .fixed-top.h-100.w-100.bg-dark[style*="99999"],
+.admin-shell .fixed-top.h-100.w-100.bg-dark[style*="1040"] {
+    display: none !important;
+}
+
+/* Better readability for meta labels */
+.admin-shell .fw-600,
+.admin-shell .text-bold,
+.admin-shell .h5,
+.admin-shell h5 {
+    color: #1f2d40;
+}
+
+.admin-shell .user-block .fw-600,
+.admin-shell .user-block .text-bold,
+.admin-shell .user-block .h5,
+.admin-shell .user-block h5 {
+    color: inherit;
+}
+
+.admin-shell .you-are-here,
+.admin-shell .you-are-here a {
+    color: #556579;
+}
+
+/* Mobile */
+@media (max-width: 991px) {
+    .admin-shell .admin-page-surface {
+        border-radius: 0;
+        border-left: 0;
+        border-right: 0;
+    }
+
+    .admin-shell #main-content {
+        max-width: 100%;
+    }
+
+    .admin-shell #table-main {
+        border-radius: 8px;
+    }
+
+    .admin-shell .app-bar .app-bar-item.no-brand {
+        max-width: 50vw;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+@media (max-width: 767px) {
+    .admin-shell .user-block {
+        max-width: calc(100vw - 8px);
+        max-height: calc(100vh - 56px);
+    }
+}

@@ -1,0 +1,11 @@
+# Hotfix: host connection + home render fallback
+# Generated: 2026-03-18 05:02:12
+# Upload đúng theo đường dẫn tương ứng vào root host.
+
+Web.config
+App_Code/ShopStatus_cl.cs
+App_Code/AccountVisibility_cl.cs
+App_Code/BaiVietSearchSchema_cl.cs
+Uc/Home/DanhChoBan_MoiNhat_UC.ascx.cs
+Uc/Home/DanhMuc_icon_Home_UC.ascx.cs
+Uc/Home/Header_uc.ascx.cs

@@ -1,0 +1,5 @@
+# Hotfix ShopStatus HasTrangThaiColumn no LINQ
+# Generated: 2026-03-18 04:54:45
+# Upload đúng theo đường dẫn tương ứng vào root host.
+
+App_Code/ShopStatus_cl.cs

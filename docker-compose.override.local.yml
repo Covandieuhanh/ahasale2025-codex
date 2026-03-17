@@ -1,0 +1,10 @@
+services:
+  db:
+    environment:
+      MSSQL_MEMORY_LIMIT_MB: "2048"
+  web:
+    volumes:
+      - ./Web.local.config:/app/Web.config:ro
+  admin:
+    volumes:
+      - ./Web.local.config:/app/Web.config:ro

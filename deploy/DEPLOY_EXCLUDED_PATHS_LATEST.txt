@@ -1,0 +1,35 @@
+# EXCLUDED FROM DEPLOY (LATEST)
+# Generated: 2026-03-18 04:26:29
+# Total excluded: 31
+
+debug/ensure-ahashine-schema.aspx
+debug/ensure-supply-schema.aspx
+debug/local-db-bootstrap.aspx
+debug/local-db-health.aspx
+debug/test-gianhang-sync.aspx
+docker-compose.yml
+scripts/playwright/gianhang-admin-deep.js
+scripts/sql/test-gianhang-admin-flow.sql
+scripts/sql/test-gianhang-admin-runtime.sql
+scripts/sql/test-gianhang-booking.sql
+scripts/sql/test-gianhang-cart.sql
+scripts/sql/test-gianhang-sync.sql
+scripts/test-gianhang-admin-flow.py
+scripts/test-gianhang-admin-flow.sh
+scripts/test-gianhang-admin-runtime.py
+scripts/test-gianhang-admin-runtime.sh
+scripts/test-gianhang-all.sh
+scripts/test-gianhang-booking-http.py
+scripts/test-gianhang-booking.sh
+scripts/test-gianhang-cart.py
+scripts/test-gianhang-cart.sh
+scripts/test-gianhang-sync.sh
+scripts/test-gianhang-webcon.sh
+scripts/test-gianhang.sh
+scripts/test-level2-request-flow.sh
+test-results/.last-run.json
+tmp/gianhang-admin-smoke.spec.js
+uploads/img-handler/355e35f7fd404f3e9aef8a7f34320bc1.jpg
+uploads/img-handler/a86f27fa17844240b1ec5f4371414bba.jpg
+uploads/img-handler/bdfd935620244951bb72d44411d92250.jpg
+uploads/img-handler/eb7e79dae22b4f33ba635636242d9f57.jpg
