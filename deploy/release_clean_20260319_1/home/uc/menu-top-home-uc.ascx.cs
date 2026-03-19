@@ -1,0 +1,489 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+
+public partial class home_uc_menu_top_home_uc : System.Web.UI.UserControl
+{
+    public string show_menu;
+
+    private void ClearHomeLoginState()
+    {
+        Session["taikhoan_home"] = "";
+        Session["matkhau_home"] = "";
+        if (Request.Cookies["cookie_userinfo_home_bcorn"] != null)
+        {
+            HttpCookie cookie = new HttpCookie("cookie_userinfo_home_bcorn");
+            cookie.Expires = AhaTime_cl.Now.AddDays(-1);
+            cookie.Path = "/";
+            Response.Cookies.Add(cookie);
+        }
+    }
+
+    private void ShowSuccessThenRedirectToLogin(string message)
+    {
+        Helper_Tabler_cl.ShowModal(this.Page, message, "Thông báo", false, "success");
+
+        string js = @"
+(function() {
+    function bindRedirect() {
+        var modal = document.getElementById('dynamicModal');
+        if (!modal) {
+            setTimeout(bindRedirect, 100);
+            return;
+        }
+
+        function redirectToLogin() {
+            window.location.replace('/dang-nhap');
+        }
+
+        var okButton = modal.querySelector('.btn-ok');
+        var closeButton = modal.querySelector('.btn-close');
+
+        if (okButton) okButton.addEventListener('click', redirectToLogin, { once: true });
+        if (closeButton) closeButton.addEventListener('click', redirectToLogin, { once: true });
+    }
+
+    bindRedirect();
+})();";
+
+        ScriptManager.RegisterStartupScript(
+            this.Page,
+            this.GetType(),
+            "home_menu_password_changed_redirect_" + Guid.NewGuid().ToString("N"),
+            js,
+            true);
+    }
+
+    private string GetCurrentHomeAccount()
+    {
+        if (!PortalActiveMode_cl.IsHomeActive())
+            return "";
+
+        string taiKhoanMaHoa = Session["taikhoan_home"] as string;
+        if (string.IsNullOrEmpty(taiKhoanMaHoa))
+            return "";
+
+        return mahoa_cl.giaima_Bcorn(taiKhoanMaHoa);
+    }
+
+
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        if (!IsPostBack)
+        {
+            check_login_cl.check_login_home("none", "none", false);
+
+            #region vô hiệu hóa timer trên một số trang có CKEditor
+            string _url = Request.Url.AbsolutePath.ToLower();
+            switch (_url)
+            {
+                case "/home/quan-ly-tin/default.aspx":
+                    //case "/admin/quan-ly-tin-tuc/default.aspx":
+                    //case "/admin/quan-ly-tai-lieu/default.aspx":
+                    Timer1.Enabled = false;
+                    break;
+                default:
+                    Timer1.Enabled = true; // Bật lại Timer nếu không phải là các trang trên
+                    break;
+            }
+            #endregion
+
+            DanhMuc_cl dm_cl = new DanhMuc_cl();
+            show_menu = dm_cl.Show_MenuTop_Home(1, 2, false, "web", "0");//show menutop
+
+            ViewState["sapxep_thongbao"] = "1";//mặc định sx thông báo theo mới nhất lên đầu
+            but_sapxep_moinhat.CssClass = "info small rounded";
+
+            string _tk = PortalActiveMode_cl.IsHomeActive() ? (Session["taikhoan_home"] as string) : "";
+
+            if (!string.IsNullOrEmpty(_tk))//nếu có khách đăng nhập
+            {
+                PlaceHolder5.Visible = true;
+                UpdatePanel1.Visible = true;
+                UpdatePanel2.Visible = true;
+                PlaceHolder7.Visible = false;
+                PlaceHolder6.Visible = false;
+                using (dbDataContext db = new dbDataContext())
+                {
+                    show_soluong_thongbao(db);
+                    lay_thongtin_nguoidung(db);
+                }
+            }
+            else//k có người đăng nhập
+            {
+                PlaceHolder5.Visible = false;
+                UpdatePanel1.Visible = false;
+                UpdatePanel2.Visible = false;
+                PlaceHolder7.Visible = true;
+                PlaceHolder6.Visible = true;
+                Timer1.Enabled = false;
+            }
+
+        }
+    }
+
+    public void lay_thongtin_nguoidung(dbDataContext db)
+    {
+        string _tk = PortalActiveMode_cl.IsHomeActive() ? (Session["taikhoan_home"] as string) : ""; // Sử dụng 'as' để tránh lỗi nếu là null
+        if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
+        {
+            _tk = mahoa_cl.giaima_Bcorn(_tk);
+
+            var q = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == _tk);
+            ViewState["hoten"] = q.hoten;
+            ViewState["anhdaidien"] = q.anhdaidien;
+            ViewState["qr_code"] = q.qr_code;
+            ViewState["email"] = q.email;
+            ViewState["taikhoan"] = _tk;
+            ViewState["DongA"] = q.DongA.Value.ToString("#,##0");
+            if (q.phanloai == "Gian hàng đối tác")
+                ViewState["phanloai"] = "<div class=\"button flat-button mr-1 rounded yellow\">Gian hàng đối tác</div>";
+            else if (q.phanloai == "Đồng hành hệ sinh thái")
+                ViewState["phanloai"] = "<div class=\"button flat-button mr-1 rounded alert\">Đồng hành hệ sinh thái</div>";
+            else if (q.phanloai == "Khách hàng")
+                ViewState["phanloai"] = "<div class=\"button flat-button mr-1 rounded success\">Khách hàng</div>";
+        }
+    }
+
+    #region thông báo
+    protected void Timer1_Tick(object sender, EventArgs e)
+    {
+        using (dbDataContext db = new dbDataContext())
+        {
+            if (!PortalActiveMode_cl.IsHomeActive())
+                return;
+
+            string _tk = Session["taikhoan_home"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
+            if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
+            {
+                _tk = mahoa_cl.giaima_Bcorn(_tk);
+
+                show_soluong_thongbao(db);
+
+            }
+        }
+    }
+    public void show_soluong_thongbao(dbDataContext db)
+    {
+
+        string _tk = GetCurrentHomeAccount();
+        if (!string.IsNullOrEmpty(_tk))
+        {
+            // Đếm số lượng thông báo chưa đọc
+            int soLuongThongBaoChuaDoc = db.ThongBao_tbs.Count(p => p.nguoinhan == _tk && p.daxem == false && p.bin == false);
+
+            // Cập nhật nhãn hiển thị số lượng thông báo
+            if (soLuongThongBaoChuaDoc < 100)
+                lb_sl_thongbao.Text = soLuongThongBaoChuaDoc.ToString();
+            else
+                lb_sl_thongbao.Text = "99+";
+
+            int soLuongGioHang = db.GioHang_tbs.Count(p => p.taikhoan== _tk);
+            if (soLuongGioHang < 100)
+                lb_sl_giohang.Text = soLuongGioHang.ToString();
+            else
+                lb_sl_giohang.Text = "99+";
+        }
+        else
+        {
+            lb_sl_thongbao.Text = "0";
+            lb_sl_giohang.Text = "0";
+        }
+
+    }
+    public void show_noidung_thongbao(dbDataContext db)
+    {
+
+        string _tk = GetCurrentHomeAccount();
+        if (!string.IsNullOrEmpty(_tk))
+        {
+            var list_all = (from ob1 in db.ThongBao_tbs
+                            join ob2 in db.taikhoan_tbs on ob1.nguoithongbao equals ob2.taikhoan into senderGroup
+                            from ob2 in senderGroup.DefaultIfEmpty()
+                            where ob1.nguoinhan == _tk && ob1.bin == false
+                            select new
+                            {
+                                ob1.id, // id thông báo
+                                avt_nguoithongbao = (ob2 == null || ob2.anhdaidien == null || ob2.anhdaidien == "")
+                                    ? "/uploads/images/macdinh.jpg"
+                                    : ob2.anhdaidien,
+                                daxem = ob1.daxem,
+                                noidung = ob1.noidung ?? "",
+                                thoigian = ob1.thoigian,
+                                link = (ob1.link == null || ob1.link == "")
+                                    ? "/home/default.aspx?"
+                                    : (ob1.link.Contains("?") ? ob1.link + "&" : ob1.link + "?")
+                            }).AsQueryable();
+
+            if (Convert.ToString(ViewState["sapxep_thongbao"]) == "2")//lọc ra chưa đọc, mới nhất lên đầu
+                list_all = list_all.Where(p => p.daxem == false).OrderByDescending(p => p.thoigian);
+            else//sx theo mới nhất lên đầu
+                list_all = list_all.OrderByDescending(p => p.thoigian);
+            var result = list_all.ToList();
+            // Gán dữ liệu cho Repeater
+            Repeater1.DataSource = result;
+            Repeater1.DataBind();
+            ph_empty_thongbao.Visible = result.Count == 0;
+        }
+        else
+        {
+            Repeater1.DataSource = new object[0];
+            Repeater1.DataBind();
+            ph_empty_thongbao.Visible = true;
+        }
+
+    }
+    protected void but_sapxep_moinhat_Click(object sender, EventArgs e)
+    {
+
+        check_login_cl.check_login_home("none", "none", false);
+        ViewState["sapxep_thongbao"] = "1";
+        but_sapxep_moinhat.CssClass = "info small rounded";
+        but_sapxep_chuadoc.CssClass = "light small rounded";
+        using (dbDataContext db = new dbDataContext())
+        {
+            show_noidung_thongbao(db);
+        }
+
+    }
+
+    protected void but_sapxep_chuadoc_Click(object sender, EventArgs e)
+    {
+
+        check_login_cl.check_login_home("none", "none", false);
+        ViewState["sapxep_thongbao"] = "2";
+        but_sapxep_moinhat.CssClass = "light small rounded";
+        but_sapxep_chuadoc.CssClass = "info small rounded";
+        using (dbDataContext db = new dbDataContext())
+        {
+            show_noidung_thongbao(db);
+        }
+
+    }
+
+    protected void but_show_form_thongbao_Click(object sender, EventArgs e)
+    {
+
+        check_login_cl.check_login_home("none", "none", false);
+        string _tk = GetCurrentHomeAccount();
+        if (string.IsNullOrEmpty(_tk))
+            return;
+        using (dbDataContext db = new dbDataContext())
+        {
+            var q = db.ThongBao_tbs.Where(p => p.nguoinhan == _tk && p.daxem == false && p.bin == false);
+            foreach(var t in q)//nhấn vô nút thông báo là đánh dấu đã xem hết
+            {
+                t.daxem = true;
+            }
+            db.SubmitChanges();
+            show_noidung_thongbao(db);
+            show_soluong_thongbao(db);
+        }
+        UpdatePanel2.Update();
+        // ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", mahoa_cl.giaima_Bcorn(Session["taikhoan_home"].ToString()), "1000", "warning"), true);
+
+    }
+    protected void but_chuadoc_Click(object sender, EventArgs e)
+    {
+
+        check_login_cl.check_login_home("none", "none", false);
+        LinkButton button = (LinkButton)sender;
+        string _id = button.CommandArgument;
+        string _tk = GetCurrentHomeAccount();
+        if (string.IsNullOrEmpty(_tk))
+            return;
+        using (dbDataContext db = new dbDataContext())
+        {
+            ThongBao_tb q = db.ThongBao_tbs.FirstOrDefault(p => p.id.ToString() == _id && p.nguoinhan == _tk && p.bin == false);
+            if (q == null)
+                return;
+            q.daxem = false;
+            db.SubmitChanges();
+            show_noidung_thongbao(db);
+            show_soluong_thongbao(db);
+            UpdatePanel1.Update();
+        }
+
+    }
+
+    protected void but_dadoc_Click(object sender, EventArgs e)
+    {
+
+        check_login_cl.check_login_home("none", "none", false);
+        LinkButton button = (LinkButton)sender;
+        string _id = button.CommandArgument;
+        string _tk = GetCurrentHomeAccount();
+        if (string.IsNullOrEmpty(_tk))
+            return;
+        using (dbDataContext db = new dbDataContext())
+        {
+            ThongBao_tb q = db.ThongBao_tbs.FirstOrDefault(p => p.id.ToString() == _id && p.nguoinhan == _tk && p.bin == false);
+            if (q == null)
+                return;
+            q.daxem = true;
+            db.SubmitChanges();
+            show_noidung_thongbao(db);
+            show_soluong_thongbao(db);
+            UpdatePanel1.Update();
+        }
+
+    }
+    protected void but_xoathongbao_Click(object sender, EventArgs e)
+    {
+        check_login_cl.check_login_home("none", "none", false);
+        LinkButton button = (LinkButton)sender;
+        string _id = button.CommandArgument;
+        string _tk = GetCurrentHomeAccount();
+        if (string.IsNullOrEmpty(_tk))
+            return;
+        using (dbDataContext db = new dbDataContext())
+        {
+            ThongBao_tb q = db.ThongBao_tbs.FirstOrDefault(p => p.id.ToString() == _id && p.nguoinhan == _tk && p.bin == false);
+            if (q == null)
+                return;
+            q.bin = true;
+            db.SubmitChanges();
+            show_noidung_thongbao(db);
+            show_soluong_thongbao(db);
+            UpdatePanel1.Update();
+        }
+
+    }
+    #endregion
+
+    protected void but_dangxuat_Click(object sender, EventArgs e)
+    {
+        Session["taikhoan_home"] = "";
+        Session["matkhau_home"] = "";
+        if (Request.Cookies["cookie_userinfo_home_bcorn"] != null)
+            Response.Cookies["cookie_userinfo_home_bcorn"].Expires = AhaTime_cl.Now.AddDays(-1);
+        Session["thongbao_home"] = thongbao_class.metro_notifi_onload("Thông báo", "Đăng xuất thành công.", "1000", "warning");
+        Response.Redirect("/");
+    }
+
+    #region ĐỔI MẬT KHẨU
+    protected void but_doimatkhau_Click(object sender, EventArgs e)
+    {
+        using (dbDataContext db = new dbDataContext())
+        {
+            string _pass_old = TextBox1.Text.Trim();
+            string _pass_1 = TextBox2.Text.Trim();
+            string _pass_2 = TextBox3.Text.Trim();
+            if (_pass_old == "" || _pass_1 == "" || _pass_2 == "")
+            {
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Vui lòng nhập đầy đủ thông tin.", "1000", "warning"), true);
+                return;
+            }
+            var q = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == ViewState["taikhoan"].ToString());
+            if (q != null)
+            {
+                if (_pass_old != q.matkhau)
+                {
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Mật khẩu hiện tại không đúng.", "1000", "warning"), true);
+                    return;
+                }
+                if (_pass_1 != _pass_2)
+                {
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Mật khẩu mới không trùng nhau.", "1000", "warning"), true);
+                    return;
+                }
+                taikhoan_tb _ob = q;
+                _ob.matkhau = _pass_1;
+                string clearError;
+                if (PortalRequest_cl.IsShopPortalRequest())
+                    AccountResetSecurity_cl.ClearForceShopPassword(db, _ob.taikhoan, out clearError);
+                else
+                    AccountResetSecurity_cl.ClearForceHomePassword(db, _ob.taikhoan, out clearError);
+                db.SubmitChanges();
+                ClearHomeLoginState();
+                pn_doimatkhau.Visible = false;
+                up_doimatkhau.Update();
+                ShowSuccessThenRedirectToLogin("Đổi mật khẩu thành công. Vui lòng đăng nhập lại.");
+            }
+            else
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Vui lòng tải lại trang.", "1000", "warning"), true);
+        }
+    }
+    protected void but_show_form_doimatkhau_Click(object sender, EventArgs e)
+    {
+        if (ViewState["taikhoan"].ToString() != "")
+        {
+            pn_doimatkhau.Visible = !pn_doimatkhau.Visible;
+            up_doimatkhau.Update();
+        }
+    }
+    protected void but_close_doimatkhau_Click(object sender, EventArgs e)
+    {
+        TextBox1.Text = ""; TextBox2.Text = ""; TextBox3.Text = "";
+        pn_doimatkhau.Visible = !pn_doimatkhau.Visible;
+    }
+    #endregion
+
+    protected void but_restpin_Click(object sender, EventArgs e)
+    {
+        string url = "/home/khoi-phuc-ma-pin.aspx";
+        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+            "window.location='" + url + "';", true);
+    }
+    #region ĐỔI PIN
+    protected void but_doipin_Click(object sender, EventArgs e)
+    {
+        using (dbDataContext db = new dbDataContext())
+        {
+            string _pass_old = TextBox4.Text.Trim();
+            string _pass_1 = TextBox5.Text.Trim();
+            string _pass_2 = TextBox6.Text.Trim();
+            if (_pass_old == "" || _pass_1 == "" || _pass_2 == "")
+            {
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Vui lòng nhập đầy đủ thông tin.", "1000", "warning"), true);
+                return;
+            }
+            var q = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == ViewState["taikhoan"].ToString());
+            if (q != null)
+            {
+                if (!PinSecurity_cl.VerifyAndUpgrade(q, _pass_old))
+                {
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Mã pin hiện tại không đúng.", "1000", "warning"), true);
+                    return;
+                }
+                if (_pass_1 != _pass_2)
+                {
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Mã pin mới không trùng nhau.", "1000", "warning"), true);
+                    return;
+                }
+                if (!PinSecurity_cl.IsValidPinFormat(_pass_1))
+                {
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Mã pin mới phải gồm đúng 4 chữ số.", "1000", "warning"), true);
+                    return;
+                }
+                taikhoan_tb _ob = q;
+                _ob.mapin_thanhtoan = PinSecurity_cl.HashPin(_pass_1);
+                string clearError;
+                AccountResetSecurity_cl.ClearForceHomePin(db, _ob.taikhoan, out clearError);
+                db.SubmitChanges();
+                TextBox4.Text = ""; TextBox5.Text = ""; TextBox6.Text = "";
+                pn_doipin.Visible = !pn_doipin.Visible;
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Đổi pin thành công.", "1000", "warning"), true);
+            }
+            else
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Vui lòng tải lại trang.", "1000", "warning"), true);
+        }
+    }
+    protected void but_show_form_doipin_Click(object sender, EventArgs e)
+    {
+        if (ViewState["taikhoan"].ToString() != "")
+        {
+            pn_doipin.Visible = !pn_doipin.Visible;
+            up_doipin.Update();
+        }
+    }
+    protected void but_close_doipin_Click(object sender, EventArgs e)
+    {
+        TextBox4.Text = ""; TextBox5.Text = ""; TextBox6.Text = "";
+        pn_doipin.Visible = !pn_doipin.Visible;
+    }
+    #endregion
+}

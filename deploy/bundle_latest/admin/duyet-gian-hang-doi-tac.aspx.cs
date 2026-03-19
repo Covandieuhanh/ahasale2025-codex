@@ -65,6 +65,7 @@ public partial class admin_duyet_gian_hang_doi_tac : System.Web.UI.Page
         using (dbDataContext db = new dbDataContext())
         {
             ShopStatus_cl.EnsureSchemaSafe(db);
+            bool canSetShopStatus = ShopStatus_cl.HasTrangThaiColumn(db);
             var dk = db.DangKy_GianHangDoiTac_tbs
                 .FirstOrDefault(x => x.ID == id && x.TrangThai == 0); // nếu là x.id thì đổi lại
             if (dk == null) return;
@@ -98,7 +99,8 @@ public partial class admin_duyet_gian_hang_doi_tac : System.Web.UI.Page
             var acc = db.taikhoan_tbs.FirstOrDefault(x => x.taikhoan == dk.taikhoan);
             if (acc != null)
             {
-                acc.TrangThai_Shop = ShopStatus_cl.StatusApproved;
+                if (canSetShopStatus)
+                    acc.TrangThai_Shop = ShopStatus_cl.StatusApproved;
                 if (acc.block == true && PortalScope_cl.CanLoginShop(acc.taikhoan, acc.phanloai, acc.permission))
                     acc.block = false;
                 acc.phanloai = "Gian hàng đối tác";
@@ -121,6 +123,7 @@ public partial class admin_duyet_gian_hang_doi_tac : System.Web.UI.Page
         using (dbDataContext db = new dbDataContext())
         {
             ShopStatus_cl.EnsureSchemaSafe(db);
+            bool canSetShopStatus = ShopStatus_cl.HasTrangThaiColumn(db);
             var dk = db.DangKy_GianHangDoiTac_tbs
                 .FirstOrDefault(x => x.ID == id && x.TrangThai == 0); // nếu là x.id thì đổi lại
             if (dk == null) return;
@@ -132,7 +135,8 @@ public partial class admin_duyet_gian_hang_doi_tac : System.Web.UI.Page
             var acc = db.taikhoan_tbs.FirstOrDefault(x => x.taikhoan == dk.taikhoan);
             if (acc != null && PortalScope_cl.ResolveScope(acc.taikhoan, acc.phanloai, acc.permission) == PortalScope_cl.ScopeShop)
             {
-                acc.TrangThai_Shop = ShopStatus_cl.StatusRejected;
+                if (canSetShopStatus)
+                    acc.TrangThai_Shop = ShopStatus_cl.StatusRejected;
                 acc.phanloai = "Gian hàng đối tác";
                 acc.permission = PortalScope_cl.NormalizePermissionWithScope(acc.permission, PortalScope_cl.ScopeShop);
             }
@@ -152,6 +156,7 @@ public partial class admin_duyet_gian_hang_doi_tac : System.Web.UI.Page
         using (dbDataContext db = new dbDataContext())
         {
             ShopStatus_cl.EnsureSchemaSafe(db);
+            bool canSetShopStatus = ShopStatus_cl.HasTrangThaiColumn(db);
             // Chỉ hủy khi record đang ở trạng thái ĐÃ DUYỆT
             var dk = db.DangKy_GianHangDoiTac_tbs
                 .FirstOrDefault(x => x.ID == id && x.TrangThai == 1); // nếu là x.id thì đổi lại
@@ -167,7 +172,8 @@ public partial class admin_duyet_gian_hang_doi_tac : System.Web.UI.Page
             var acc = db.taikhoan_tbs.FirstOrDefault(x => x.taikhoan == dk.taikhoan);
             if (acc != null)
             {
-                acc.TrangThai_Shop = ShopStatus_cl.StatusRevoked;
+                if (canSetShopStatus)
+                    acc.TrangThai_Shop = ShopStatus_cl.StatusRevoked;
                 acc.phanloai = "Gian hàng đối tác";
                 acc.permission = PortalScope_cl.NormalizePermissionWithScope(acc.permission, PortalScope_cl.ScopeShop);
             }

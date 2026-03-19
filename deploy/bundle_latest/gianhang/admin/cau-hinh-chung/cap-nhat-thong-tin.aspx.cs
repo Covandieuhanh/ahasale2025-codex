@@ -10,23 +10,49 @@ public partial class admin_Default : System.Web.UI.Page
 {
     dbDataContext db = new dbDataContext();
     public string notifi;
+    private config_thongtin_table EnsureThongTin()
+    {
+        config_thongtin_table ob = db.config_thongtin_tables.FirstOrDefault();
+        if (ob != null)
+            return ob;
+
+        ob = new config_thongtin_table
+        {
+            icon = "/uploads/images/favicon.png",
+            apple_touch_icon = "/uploads/images/icon-mobile.jpg",
+            logo = "/uploads/images/logo.png",
+            logo1 = "/uploads/images/logo.png",
+            tencongty = "Gian hàng đối tác",
+            slogan = "",
+            diachi = "",
+            link_googlemap = "",
+            hotline = "",
+            email = "",
+            masothue = "",
+            zalo = "",
+            logo_in_hoadon = ""
+        };
+        db.config_thongtin_tables.InsertOnSubmit(ob);
+        db.SubmitChanges();
+        return ob;
+    }
     public void main()
     {
-        config_thongtin_table _ob = db.config_thongtin_tables.First();
+        config_thongtin_table _ob = EnsureThongTin();
 
         if (!IsPostBack)
         {
-            txt_tencongty.Text = _ob.tencongty;
-            txt_slogan.Text = _ob.slogan;
-            txt_diachi.Text = _ob.diachi;
-            txt_link_googlemap.Text = _ob.link_googlemap;
-            txt_hotline.Text = _ob.hotline;
-            txt_zalo.Text = _ob.zalo;
-            txt_email.Text = _ob.email;
-            txt_masothue.Text = _ob.masothue;
+            txt_tencongty.Text = _ob.tencongty ?? "";
+            txt_slogan.Text = _ob.slogan ?? "";
+            txt_diachi.Text = _ob.diachi ?? "";
+            txt_link_googlemap.Text = _ob.link_googlemap ?? "";
+            txt_hotline.Text = _ob.hotline ?? "";
+            txt_zalo.Text = _ob.zalo ?? "";
+            txt_email.Text = _ob.email ?? "";
+            txt_masothue.Text = _ob.masothue ?? "";
         }
 
-        if (_ob.icon != "")
+        if (!string.IsNullOrEmpty(_ob.icon))
         {
             Button2.Visible = true;
             Label2.Text = "<img src='" + _ob.icon + "' style='max-width: 80px' />";
@@ -35,7 +61,7 @@ public partial class admin_Default : System.Web.UI.Page
         {
             Button2.Visible = false; Label2.Text = "";
         }
-        if (_ob.apple_touch_icon != "")
+        if (!string.IsNullOrEmpty(_ob.apple_touch_icon))
         {
             Button3.Visible = true;
             Label3.Text = "<img src='" + _ob.apple_touch_icon + "' style='max-width: 80px' />";
@@ -44,7 +70,7 @@ public partial class admin_Default : System.Web.UI.Page
         {
             Button3.Visible = false; Label3.Text = "";
         }
-        if (_ob.logo != "")
+        if (!string.IsNullOrEmpty(_ob.logo))
         {
             Button4.Visible = true;
             Label4.Text = "<img src='" + _ob.logo + "' style='max-width: 80px' />";
@@ -53,7 +79,7 @@ public partial class admin_Default : System.Web.UI.Page
         {
             Button4.Visible = false; Label4.Text = "";
         }
-        if (_ob.logo1 != "")
+        if (!string.IsNullOrEmpty(_ob.logo1))
         {
             Button5.Visible = true;
             Label5.Text = "<img src='" + _ob.logo1 + "' style='max-width: 80px' />";
@@ -62,7 +88,7 @@ public partial class admin_Default : System.Web.UI.Page
         {
             Button5.Visible = false; Label5.Text = "";
         }
-        if (_ob.logo_in_hoadon != "")
+        if (!string.IsNullOrEmpty(_ob.logo_in_hoadon))
         {
             Button6.Visible = true;
             Label6.Text = "<img src='" + _ob.logo_in_hoadon + "' style='max-width: 80px' />";
@@ -126,7 +152,7 @@ public partial class admin_Default : System.Web.UI.Page
             if (!Directory.Exists(Server.MapPath("~/uploads/images/config/")))
                 Directory.CreateDirectory(Server.MapPath("~/uploads/images/config/"));
 
-            config_thongtin_table _ob = db.config_thongtin_tables.First();
+            config_thongtin_table _ob = EnsureThongTin();
             _favicon = _ob.icon; _icon_mobile = _ob.apple_touch_icon; _logo = _ob.logo; _logo1 = _ob.logo1; _logo_in_hoadon = _ob.logo_in_hoadon;
 
 

@@ -357,6 +357,12 @@ public partial class home_trao_doi : System.Web.UI.Page
         string phuong = (hf_phuong.Value ?? "").Trim();
         string chiTiet = (txt_diachi_chitiet.Text ?? "").Trim();
 
+        if (string.IsNullOrEmpty(tinh) && string.IsNullOrEmpty(quan) && string.IsNullOrEmpty(phuong))
+        {
+            txt_diachi_nguoinhan.Text = chiTiet;
+            return chiTiet;
+        }
+
         string full = AddressFormat_cl.BuildFullAddress(chiTiet, phuong, quan, tinh);
         txt_diachi_nguoinhan.Text = full;
         return full;
@@ -371,6 +377,18 @@ public partial class home_trao_doi : System.Web.UI.Page
         string quan = (hf_quan.Value ?? "").Trim();
         string phuong = (hf_phuong.Value ?? "").Trim();
         string chiTiet = (txt_diachi_chitiet.Text ?? "").Trim();
+
+        bool hasRegion = !(string.IsNullOrEmpty(tinh) && string.IsNullOrEmpty(quan) && string.IsNullOrEmpty(phuong));
+
+        if (!hasRegion)
+        {
+            if (chiTiet.Length < 4)
+            {
+                Helper_Tabler_cl.ShowModal(this.Page, "Vui lòng nhập địa chỉ chi tiết.", "Thông báo", true, "warning");
+                return false;
+            }
+            return true;
+        }
 
         if (string.IsNullOrEmpty(tinh) || string.IsNullOrEmpty(quan) || string.IsNullOrEmpty(phuong))
         {

@@ -37,6 +37,17 @@
         .admin-login-submit:hover {
             background: #b91c1c !important;
         }
+
+        .admin-login-branch-note .admin-login-input {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding-left: 42px;
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.25);
+            cursor: default;
+        }
     </style>
 
     <link rel='icon' href='/uploads/images/favicon.png' sizes='16x16' type='image/x-icon' />
@@ -74,9 +85,13 @@
                         <asp:UpdatePanel ID="UpdatePanel1" runat="server" UpdateMode="Conditional">
                             <ContentTemplate>
                                 <asp:Panel ID="Panel1" runat="server" DefaultButton="but_login">
-                                    <div class="admin-login-input-group mt-0">
+                                    <div class="admin-login-input-group mt-0" id="branch_wrap" runat="server">
                                         <span class="admin-login-input-icon mif-location"></span>
                                         <asp:DropDownList ID="ddl_chinhanh" runat="server" CssClass="admin-login-input"></asp:DropDownList>
+                                    </div>
+                                    <div class="admin-login-input-group mt-0 admin-login-branch-note" id="branch_note" runat="server" visible="false">
+                                        <span class="admin-login-input-icon mif-location"></span>
+                                        <div class="admin-login-input">Chi nhánh mặc định</div>
                                     </div>
                                     <div class="admin-login-input-group mt-4">
                                         <span class="admin-login-input-icon mif-user"></span>

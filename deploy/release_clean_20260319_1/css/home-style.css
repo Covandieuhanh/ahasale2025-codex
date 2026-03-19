@@ -1,0 +1,237 @@
+﻿
+/*scrollbar*/
+::-webkit-scrollbar {
+    width: 6px !important;
+    height: 6px !important;
+}
+
+::-webkit-scrollbar-track {
+    background: #222d32 !important;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #ef0036 !important; /*edit*/
+}
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #ef0036 !important; /*edit*/
+    }
+
+.navview .navview-menu li.active::before { /*edit*/
+    background-color: #ef0036 !important;
+}
+
+/*index*/
+
+
+.font-44-home-bc {
+    font-size: 44px
+}
+
+.font-22-home-bc {
+    font-size: 22px
+}
+
+.text-style-vuottroi {
+    font-size: 23px;
+    font-weight: 500
+}
+
+.color-home-bc {
+    color: #8b0000;
+}
+
+.but-login-style {
+    background-color: #ffd200 !important
+}
+
+    .but-login-style:hover {
+        background-color: #ffe257 !important
+    }
+
+.but-tuvan {
+    background-color: #ffd200;
+    color: black
+}
+
+    .but-tuvan:hover {
+        background-color: #ffe257;
+    }
+
+.phienban-button-left {
+    background-color: #d4d4d4;
+    color: #1c1c1c;
+    padding: 8px 20px;
+    border-radius: 20px;
+}
+
+    .phienban-button-left:hover {
+        background-color: #b9b9b9;
+    }
+
+.phienban-button-right {
+    background-color: #24285b;
+    color: #fff;
+    padding: 8px 20px;
+    border-radius: 20px;
+}
+
+    .phienban-button-right:hover {
+        background-color: #32377e;
+    }
+
+
+
+.title-sub-home-bc {
+    font-size: 24px;
+    font-weight: 300;
+    line-height: 1.2;
+    padding-top: 16px;
+}
+
+.new-hero .button {
+    border-radius: 50px;
+}
+
+    .new-hero .button.get-started-button {
+        color: white;
+        background: #8b0000;
+    }
+
+        .new-hero .button.get-started-button:hover {
+            background: #ce352c;
+        }
+
+    .new-hero .button.download-source-button {
+        color: black;
+        background: #ffd200;
+    }
+
+        .new-hero .button.download-source-button:hover {
+            background: #ffe257;
+        }
+
+.presenta {
+    background: transparent url("/uploads/images/index/a.svg") top right no-repeat;
+    background-size: contain;
+}
+
+    .presenta .button,
+    .top-themes .button {
+        border-radius: 20px;
+        color: white;
+        background: #8b0000;
+    }
+
+
+
+.features {
+    background: transparent url("/uploads/images/index/b.svg") top left no-repeat;
+    background-size: cover;
+}
+
+.in-action-wrapper {
+    background: transparent url("/uploads/images/index/e.svg") top right no-repeat;
+    background-size: contain;
+}
+
+.sponsor-wrapper,
+.in-action-wrapper2 {
+    background: transparent url("/uploads/images/index/d.svg") bottom left no-repeat;
+    background-size: contain;
+}
+
+.shadowed {
+    -webkit-box-shadow: 2px 2px 20px #ffd2d2;
+    box-shadow: 2px 2px 20px #ffd2d2;
+}
+
+.presenta-box {
+    -webkit-box-shadow: 2px 2px 10px #ffd2d2;
+    box-shadow: 2px 2px 10px #ffd2d2;
+}
+
+
+.work-box {
+    max-height: 260px;
+    overflow: hidden;
+    border-radius: 4px;
+    -webkit-box-shadow: 2px 2px 10px #a9a4a4;
+    box-shadow: 2px 2px 10px #a9a4a4;
+    -webkit-transition: -webkit-transform 0.1s linear;
+    transition: -webkit-transform 0.1s linear;
+    -o-transition: transform 0.1s linear;
+    transition: transform 0.1s linear;
+    transition: transform 0.1s linear, -webkit-transform 0.1s linear;
+    z-index: 0;
+}
+
+    .work-box:hover {
+        -webkit-transform: scale(1.2);
+        -ms-transform: scale(1.2);
+        transform: scale(1.2);
+        z-index: 1;
+    }
+
+.buy-me-coffee > div {
+    -webkit-box-shadow: inset 2px 2px 20px #ffd2d2;
+    box-shadow: inset 2px 2px 20px #ffd2d2;
+    background: #faf5f5;
+}
+
+
+/*end index*/
+@media (max-width: 575px) { /*sm*/
+}
+
+@media (max-width: 767px) { /*md*/
+
+}
+
+.fs-bc-34-28 {
+    font-size: 34px;
+    line-height: 1;
+}
+
+.fs-bc-27-23 {
+    font-size: 26px;
+}
+
+@media (max-width: 991px) { /*lg*/
+    .fs-bc-34-28 {
+        font-size: 28px;
+    }
+
+    .fs-bc-27-23 {
+        font-size: 21px;
+    }
+
+    .text-style-vuottroi {
+        font-size: 21px;
+        font-weight: 600
+    }
+
+
+
+    .title-sub-home-bc {
+        font-size: 20px;
+        font-weight: 300;
+        line-height: 1.2;
+        padding-top: 12px;
+    }
+
+    .font-44-home-bc {
+        font-size: 34px
+    }
+
+    .font-22-home-bc {
+        font-size: 17px
+    }
+}
+
+@media (max-width: 1199px) { /*xl*/
+
+}
+
+@media (max-width: 1451px) { /*xxl*/
+}

@@ -893,6 +893,16 @@
                             </a>
                         </asp:PlaceHolder>
 
+                        <asp:PlaceHolder ID="phMenuHomeLichHen" runat="server" Visible="true">
+                            <a class="list-group-item d-flex align-items-center justify-content-between py-3" href="/home/lich-hen.aspx">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="ti ti-calendar-event text-secondary"></i>
+                                    <span class="fw-medium">Lịch hẹn của tôi</span>
+                                </div>
+                                <i class="ti ti-chevron-right text-secondary"></i>
+                            </a>
+                        </asp:PlaceHolder>
+
                         <asp:PlaceHolder ID="phMenuHomeLichSuTraoDoi" runat="server" Visible="true">
                             <a class="list-group-item d-flex align-items-center justify-content-between py-3" href="/home/lich-su-giao-dich.aspx">
                                 <div class="d-flex align-items-center gap-2">
@@ -937,7 +947,7 @@
                             <a class="list-group-item d-flex align-items-center justify-content-between py-3" href="/shop/quan-ly-lich-hen.aspx">
                                 <div class="d-flex align-items-center gap-2">
                                     <i class="ti ti-calendar-event text-secondary"></i>
-                                    <span class="fw-medium">Lịch hẹn cơ bản</span>
+                                    <span class="fw-medium">Lịch hẹn khách đặt</span>
                                 </div>
                                 <i class="ti ti-chevron-right text-secondary"></i>
                             </a>

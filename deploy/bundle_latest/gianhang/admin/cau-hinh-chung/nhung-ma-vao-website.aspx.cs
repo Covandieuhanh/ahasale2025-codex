@@ -11,10 +11,28 @@ public partial class admin_Default : System.Web.UI.Page
     dbDataContext db = new dbDataContext();
     datetime_class dt_cl = new datetime_class();
     public string notifi;
+    private config_nhungma_table EnsureNhungMa()
+    {
+        config_nhungma_table ob = db.config_nhungma_tables.FirstOrDefault();
+        if (ob != null)
+            return ob;
+
+        ob = new config_nhungma_table
+        {
+            nhungma_head = "",
+            nhungma_body1 = "",
+            nhungma_body2 = "",
+            nhungma_fanpage = "",
+            nhungma_googlemaps = ""
+        };
+        db.config_nhungma_tables.InsertOnSubmit(ob);
+        db.SubmitChanges();
+        return ob;
+    }
     public void main()
     {
 
-        config_nhungma_table _ob = db.config_nhungma_tables.First();
+        config_nhungma_table _ob = EnsureNhungMa();
         if (!IsPostBack)
         {
             txt_code_head.Text = _ob.nhungma_head;

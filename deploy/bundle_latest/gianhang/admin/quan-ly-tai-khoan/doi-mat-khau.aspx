@@ -1,4 +1,4 @@
-﻿<%@ Page Title="Đổi mật khẩu" Language="C#" MasterPageFile="~/gianhang/admin/mp-admin.master" AutoEventWireup="true" CodeFile="doi-mat-khau.aspx.cs" Inherits="taikhoan_add" %>
+﻿<%@ Page Title="Đổi mật khẩu" Language="C#" MasterPageFile="~/gianhang/admin/mp-admin.master" AutoEventWireup="true" CodeFile="doi-mat-khau.aspx.cs" Inherits="gianhang_taikhoan_doi_mat_khau" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="Server">
 </asp:Content>

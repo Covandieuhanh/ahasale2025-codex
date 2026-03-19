@@ -23,6 +23,7 @@ public partial class home_don_mua : System.Web.UI.Page
         public DateTime? ngaydat { get; set; }
         public string TenShop { get; set; }
         public string NguoiMua { get; set; }
+        public string NguoiBan { get; set; }
         public string trangthai { get; set; }
         public decimal? tongtien { get; set; }
         public string hoten_nguoinhan { get; set; }
@@ -33,6 +34,48 @@ public partial class home_don_mua : System.Web.UI.Page
         public string status_group { get; set; }
         public bool show_huydon { get; set; }
         public bool show_danhan { get; set; }
+        public bool is_completed { get; set; }
+        public bool show_review { get; set; }
+        public string review_url { get; set; }
+        public int pending_review { get; set; }
+        public string first_item_name { get; set; }
+        public string first_item_image { get; set; }
+        public int first_item_qty { get; set; }
+        public decimal? first_item_price { get; set; }
+        public int total_items { get; set; }
+        public bool show_rebuy { get; set; }
+        public string rebuy_label { get; set; }
+        public string rebuy_url { get; set; }
+        public string more_items_label { get; set; }
+    }
+
+    private class DonMuaQueryRow
+    {
+        public long id { get; set; }
+        public DateTime? ngaydat { get; set; }
+        public string TenShop { get; set; }
+        public string NguoiBan { get; set; }
+        public string NguoiMua { get; set; }
+        public string trangthai { get; set; }
+        public string order_status { get; set; }
+        public string exchange_status { get; set; }
+        public decimal? tongtien { get; set; }
+        public string hoten_nguoinhan { get; set; }
+        public string sdt_nguoinhan { get; set; }
+        public string diahchi_nguoinhan { get; set; }
+        public bool? online_offline { get; set; }
+        public bool? chothanhtoan { get; set; }
+    }
+
+    private class OrderItemRow
+    {
+        public string id_donhang { get; set; }
+        public string idsp { get; set; }
+        public string name { get; set; }
+        public string image { get; set; }
+        public int? soluong { get; set; }
+        public decimal? giaban { get; set; }
+        public string phanloai { get; set; }
     }
 
     // ✅ Quy đổi VNĐ -> A (làm tròn lên 2 số lẻ, luôn làm tròn lên để không thiếu)
@@ -61,6 +104,7 @@ public partial class home_don_mua : System.Web.UI.Page
                 return;
 
             set_dulieu_macdinh();
+            ApplyQueryFilters();
             show_main();
             ShowCancelNotice();
         }
@@ -76,6 +120,101 @@ public partial class home_don_mua : System.Web.UI.Page
                 tk = mahoa_cl.giaima_Bcorn(enc);
         }
         return tk ?? "";
+    }
+
+    private static bool IsCompletedExchange(string orderStatus, string exchangeStatus)
+    {
+        if (string.Equals(exchangeStatus, DonHangStateMachine_cl.Exchange_DaTraoDoi, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (string.Equals(orderStatus, DonHangStateMachine_cl.Order_DaNhan, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
+    private string BuildOrderReviewUrl(long id)
+    {
+        string back = "/home/don-mua.aspx";
+        var query = HttpUtility.ParseQueryString(string.Empty);
+        query["id"] = id.ToString();
+        query["mode"] = "buy";
+        query["review"] = "1";
+        query["return_url"] = back;
+        return "/home/don-chi-tiet.aspx?" + query.ToString();
+    }
+
+    private static bool IsServiceType(string phanloai)
+    {
+        return string.Equals((phanloai ?? "").Trim(), AccountVisibility_cl.PostTypeService, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private string BuildRebuyUrl(string idsp, string sellerAccount, bool isService)
+    {
+        string safeId = (idsp ?? "").Trim();
+        if (string.IsNullOrEmpty(safeId))
+            return "#";
+
+        string seller = (sellerAccount ?? "").Trim();
+        string returnUrl = HttpUtility.UrlEncode("/home/don-mua.aspx");
+
+        if (isService)
+        {
+            string url = "/home/dat-lich.aspx?id=" + HttpUtility.UrlEncode(safeId);
+            if (!string.IsNullOrWhiteSpace(seller))
+                url += "&user=" + HttpUtility.UrlEncode(seller);
+            url += "&return_url=" + returnUrl;
+            return url;
+        }
+
+        string orderUrl = "/home/trao-doi.aspx?idsp=" + HttpUtility.UrlEncode(safeId) + "&qty=1";
+        if (!string.IsNullOrWhiteSpace(seller))
+            orderUrl += "&user_bancheo=" + HttpUtility.UrlEncode(seller);
+        orderUrl += "&return_url=" + returnUrl;
+        return orderUrl;
+    }
+
+    private string ResolveImagePath(string imageRaw)
+    {
+        const string fallback = "/uploads/images/macdinh.jpg";
+        string image = (imageRaw ?? "").Trim();
+        if (string.IsNullOrEmpty(image))
+            return fallback;
+
+        if (image.StartsWith("javascript:", StringComparison.OrdinalIgnoreCase))
+            return fallback;
+
+        Uri absolute;
+        if (Uri.TryCreate(image, UriKind.Absolute, out absolute))
+        {
+            if (string.Equals(absolute.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(absolute.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+                return absolute.AbsoluteUri;
+            return fallback;
+        }
+
+        if (image.StartsWith("~/", StringComparison.Ordinal))
+            image = image.Substring(1);
+        if (!image.StartsWith("/", StringComparison.Ordinal))
+            image = "/" + image;
+
+        if (Helper_cl.IsMissingUploadFile(image))
+            return fallback;
+
+        return image;
+    }
+
+    protected string FormatVnd(object valueRaw)
+    {
+        decimal value = 0m;
+        try
+        {
+            if (valueRaw != null && valueRaw != DBNull.Value)
+                value = Convert.ToDecimal(valueRaw);
+        }
+        catch
+        {
+            value = 0m;
+        }
+        return value.ToString("#,##0");
     }
 
     private bool TryHandleCancelRequest()
@@ -95,6 +234,27 @@ public partial class home_don_mua : System.Web.UI.Page
         Response.Redirect("/home/don-mua.aspx", false);
         Context.ApplicationInstance.CompleteRequest();
         return true;
+    }
+
+    private bool HasColumn(dbDataContext db, string table, string column)
+    {
+        try
+        {
+            string sql = "SELECT COL_LENGTH('" + table + "', '" + column + "')";
+            int? len = db.ExecuteQuery<int?>(sql).FirstOrDefault();
+            return len.HasValue;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private bool HasOrderStateColumns(dbDataContext db)
+    {
+        bool hasOrder = HasColumn(db, "dbo.DonHang_tb", "order_status");
+        bool hasExchange = HasColumn(db, "dbo.DonHang_tb", "exchange_status");
+        return hasOrder && hasExchange;
     }
 
     private void ShowCancelNotice()
@@ -121,7 +281,43 @@ public partial class home_don_mua : System.Web.UI.Page
         ViewState[STATUS_FILTER_KEY] = "all";
     }
 
-    private string GetCurrentStatusFilter()
+    private string NormalizeStatusKey(string raw)
+    {
+        string key = (raw ?? "").Trim().ToLowerInvariant();
+        switch (key)
+        {
+            case "all":
+            case "da-dat":
+            case "cho-trao-doi":
+            case "da-trao-doi":
+            case "da-giao":
+            case "da-nhan":
+            case "da-huy":
+                return key;
+            default:
+                return "";
+        }
+    }
+
+    private void ApplyQueryFilters()
+    {
+        string status = NormalizeStatusKey(Request.QueryString["status"]);
+        if (!string.IsNullOrEmpty(status))
+        {
+            ViewState[STATUS_FILTER_KEY] = status;
+            ViewState["current_page_donmua_home"] = "1";
+        }
+
+        string q = (Request.QueryString["q"] ?? "").Trim();
+        if (!string.IsNullOrEmpty(q))
+        {
+            if (txt_timkiem1 != null) txt_timkiem1.Text = q;
+            if (txt_timkiem != null) txt_timkiem.Text = q;
+            ViewState["current_page_donmua_home"] = "1";
+        }
+    }
+
+    protected string GetCurrentStatusFilter()
     {
         string key = (ViewState[STATUS_FILTER_KEY] ?? "all").ToString();
         switch (key)
@@ -185,32 +381,101 @@ public partial class home_don_mua : System.Web.UI.Page
         return "/home/don-chi-tiet.aspx?" + query.ToString();
     }
 
+    protected string GetCurrentSearchQuery()
+    {
+        string q = (Request.QueryString["q"] ?? "").Trim();
+        if (!string.IsNullOrEmpty(q)) return q;
+        q = (txt_timkiem1 != null ? (txt_timkiem1.Text ?? "") : "").Trim();
+        if (!string.IsNullOrEmpty(q)) return q;
+        q = (txt_timkiem != null ? (txt_timkiem.Text ?? "") : "").Trim();
+        return q;
+    }
+
+    protected string BuildStatusTabUrl(string statusKey)
+    {
+        string key = NormalizeStatusKey(statusKey);
+        if (string.IsNullOrEmpty(key))
+            key = "all";
+
+        var qs = HttpUtility.ParseQueryString(string.Empty);
+        qs["status"] = key;
+
+        string q = GetCurrentSearchQuery();
+        if (!string.IsNullOrWhiteSpace(q))
+            qs["q"] = q;
+
+        return "/home/don-mua.aspx?" + qs.ToString();
+    }
+
+    protected string GetMobileTabClass(string statusKey)
+    {
+        string current = GetCurrentStatusFilter();
+        string key = NormalizeStatusKey(statusKey);
+        if (string.IsNullOrEmpty(key))
+            key = "all";
+        return string.Equals(current, key, StringComparison.OrdinalIgnoreCase)
+            ? "mobile-tab active"
+            : "mobile-tab";
+    }
+
     #region main - phân trang - tìm kiếm
     public void show_main()
     {
         using (dbDataContext db = new dbDataContext())
         {
-            var list_all_query = (from ob1 in db.DonHang_tbs.Where(p => p.nguoimua == ViewState["taikhoan"].ToString())
+            bool hasStateCols = HasOrderStateColumns(db);
+
+            IQueryable<DonMuaQueryRow> list_all_query;
+            if (hasStateCols)
+            {
+                list_all_query = (from ob1 in db.DonHang_tbs.Where(p => p.nguoimua == ViewState["taikhoan"].ToString())
                                   join ob2 in db.taikhoan_tbs on ob1.nguoiban equals ob2.taikhoan into Group1
                                   from ob2 in Group1.DefaultIfEmpty()
                                   join ob3 in db.taikhoan_tbs on ob1.nguoimua equals ob3.taikhoan into Group2
                                   from ob3 in Group2.DefaultIfEmpty()
-                                  select new
+                                  select new DonMuaQueryRow
                                   {
-                                      ob1.id,
-                                      ob1.ngaydat,
+                                      id = ob1.id,
+                                      ngaydat = ob1.ngaydat,
                                       TenShop = ob2.ten_shop,
+                                      NguoiBan = ob1.nguoiban,
                                       NguoiMua = ob3.hoten,
-                                      ob1.trangthai,
-                                      ob1.order_status,
-                                      ob1.exchange_status,
-                                      ob1.tongtien,
-                                      ob1.hoten_nguoinhan,
-                                      ob1.sdt_nguoinhan,
-                                      ob1.diahchi_nguoinhan,
-                                      ob1.online_offline,
-                                      ob1.chothanhtoan,
+                                      trangthai = ob1.trangthai,
+                                      order_status = ob1.order_status,
+                                      exchange_status = ob1.exchange_status,
+                                      tongtien = ob1.tongtien,
+                                      hoten_nguoinhan = ob1.hoten_nguoinhan,
+                                      sdt_nguoinhan = ob1.sdt_nguoinhan,
+                                      diahchi_nguoinhan = ob1.diahchi_nguoinhan,
+                                      online_offline = ob1.online_offline,
+                                      chothanhtoan = ob1.chothanhtoan,
                                   }).AsQueryable();
+            }
+            else
+            {
+                list_all_query = (from ob1 in db.DonHang_tbs.Where(p => p.nguoimua == ViewState["taikhoan"].ToString())
+                                  join ob2 in db.taikhoan_tbs on ob1.nguoiban equals ob2.taikhoan into Group1
+                                  from ob2 in Group1.DefaultIfEmpty()
+                                  join ob3 in db.taikhoan_tbs on ob1.nguoimua equals ob3.taikhoan into Group2
+                                  from ob3 in Group2.DefaultIfEmpty()
+                                  select new DonMuaQueryRow
+                                  {
+                                      id = ob1.id,
+                                      ngaydat = ob1.ngaydat,
+                                      TenShop = ob2.ten_shop,
+                                      NguoiBan = ob1.nguoiban,
+                                      NguoiMua = ob3.hoten,
+                                      trangthai = ob1.trangthai,
+                                      order_status = null,
+                                      exchange_status = null,
+                                      tongtien = ob1.tongtien,
+                                      hoten_nguoinhan = ob1.hoten_nguoinhan,
+                                      sdt_nguoinhan = ob1.sdt_nguoinhan,
+                                      diahchi_nguoinhan = ob1.diahchi_nguoinhan,
+                                      online_offline = ob1.online_offline,
+                                      chothanhtoan = ob1.chothanhtoan,
+                                  }).AsQueryable();
+            }
 
             string _key = txt_timkiem.Text.Trim();
             if (!string.IsNullOrEmpty(_key))
@@ -236,12 +501,14 @@ public partial class home_don_mua : System.Web.UI.Page
                     DonHangStateMachine_cl.EnsureStateFields(dh);
                     string orderStatus = DonHangStateMachine_cl.GetOrderStatus(dh);
                     string exchangeStatus = DonHangStateMachine_cl.GetExchangeStatus(dh);
+                    bool isCompleted = IsCompletedExchange(orderStatus, exchangeStatus);
 
                     return new DonMuaRowVm
                     {
                         id = p.id,
                         ngaydat = p.ngaydat,
                         TenShop = p.TenShop ?? "",
+                        NguoiBan = p.NguoiBan ?? "",
                         NguoiMua = p.NguoiMua ?? "",
                         trangthai = DonHangStateMachine_cl.ToLegacyStatus(orderStatus, exchangeStatus, p.online_offline),
                         tongtien = p.tongtien,
@@ -253,6 +520,7 @@ public partial class home_don_mua : System.Web.UI.Page
                         status_group = ResolveStatusGroup(orderStatus, exchangeStatus),
                         show_huydon = DonHangStateMachine_cl.CanCancelOrder(dh),
                         show_danhan = DonHangStateMachine_cl.CanConfirmReceived(dh),
+                        is_completed = isCompleted,
                     };
                 })
                 .ToList();
@@ -263,6 +531,96 @@ public partial class home_don_mua : System.Web.UI.Page
 
             lb_status_filter.Text = ResolveStatusFilterLabel(statusFilter);
             SyncStatusFilterDropdown(statusFilter);
+
+            string currentTk = GetCurrentHomeAccount();
+            if (list_all.Count > 0 && !string.IsNullOrWhiteSpace(currentTk))
+            {
+                var orderIds = list_all.Select(p => p.id.ToString()).Distinct().ToList();
+                var detailRows = (from ct in db.DonHang_ChiTiet_tbs
+                                  join sp in db.BaiViet_tbs on ct.idsp equals sp.id.ToString() into spGroup
+                                  from sp in spGroup.DefaultIfEmpty()
+                                  where orderIds.Contains(ct.id_donhang)
+                                  select new
+                                  {
+                                      ct.id_donhang,
+                                      ct.idsp,
+                                      name = sp != null ? sp.name : "",
+                                      image = sp != null ? sp.image : "/uploads/images/macdinh.jpg",
+                                      ct.soluong,
+                                      ct.giaban,
+                                      phanloai = sp != null ? sp.phanloai : ""
+                                  }).ToList()
+                                  .Select(p => new OrderItemRow
+                                  {
+                                      id_donhang = p.id_donhang,
+                                      idsp = p.idsp,
+                                      name = p.name,
+                                      image = p.image,
+                                      soluong = p.soluong,
+                                      giaban = p.giaban,
+                                      phanloai = p.phanloai
+                                  }).ToList();
+
+                var orderItemMap = detailRows
+                    .Where(p => !string.IsNullOrWhiteSpace(p.id_donhang) && !string.IsNullOrWhiteSpace(p.idsp))
+                    .GroupBy(p => p.id_donhang)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => g.ToList()
+                    );
+
+                var allItemIds = orderItemMap.SelectMany(kv => kv.Value.Select(x => (x.idsp ?? "").Trim())).Distinct().ToList();
+                var reviewedSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                if (allItemIds.Count > 0)
+                {
+                    reviewedSet = new HashSet<string>(
+                        db.DanhGiaBaiViets
+                          .Where(dg => dg.TaiKhoanDanhGia == currentTk && allItemIds.Contains(dg.idBaiViet))
+                          .Select(dg => dg.idBaiViet)
+                          .ToList(),
+                        StringComparer.OrdinalIgnoreCase
+                    );
+                }
+
+                foreach (var row in list_all)
+                {
+                    List<OrderItemRow> items;
+                    if (!orderItemMap.TryGetValue(row.id.ToString(), out items))
+                        items = new List<OrderItemRow>();
+
+                    int pending = items.Count(item => !reviewedSet.Contains(((item.idsp ?? "").ToString().Trim())));
+                    row.pending_review = pending;
+                    row.show_review = row.is_completed && pending > 0;
+                    row.review_url = row.show_review ? BuildOrderReviewUrl(row.id) : "";
+
+                    row.total_items = items.Count;
+                    if (items.Count > 0)
+                    {
+                        var first = items[0];
+                        row.first_item_name = (first.name ?? "").ToString();
+                        row.first_item_image = ResolveImagePath((first.image ?? "").ToString());
+                        row.first_item_qty = first.soluong == null ? 1 : Convert.ToInt32(first.soluong);
+                        row.first_item_price = first.giaban;
+                        bool isService = items.Any(x => IsServiceType((x.phanloai ?? "").ToString()));
+                        row.show_rebuy = row.is_completed;
+                        row.rebuy_label = isService ? "Đặt lại" : "Mua lại";
+                        string idsp = (first.idsp ?? "").ToString();
+                        row.rebuy_url = row.show_rebuy ? BuildRebuyUrl(idsp, row.NguoiBan, isService) : "";
+                        row.more_items_label = items.Count > 1 ? ("và " + (items.Count - 1).ToString() + " sản phẩm khác") : "";
+                    }
+                    else
+                    {
+                        row.first_item_name = "Không có sản phẩm";
+                        row.first_item_image = "/uploads/images/macdinh.jpg";
+                        row.first_item_qty = 0;
+                        row.first_item_price = 0m;
+                        row.show_rebuy = false;
+                        row.rebuy_label = "";
+                        row.rebuy_url = "";
+                        row.more_items_label = "";
+                    }
+                }
+            }
 
             int _Tong_Record = list_all.Count;
 
@@ -305,6 +663,8 @@ public partial class home_don_mua : System.Web.UI.Page
 
             Repeater1.DataSource = list_split;
             Repeater1.DataBind();
+            rp_orders_mobile.DataSource = list_split;
+            rp_orders_mobile.DataBind();
         }
     }
 

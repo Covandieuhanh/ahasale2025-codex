@@ -1,0 +1,6 @@
+<connectionStrings>
+  <add name="hot79334_aha_saleConnectionString" connectionString="Data Source=112.78.2.206;Initial Catalog=hot79334_aha_sale;Persist Security Info=True;User ID=hot79334_aha_sale;Password=Afb9771t*;Encrypt=False;TrustServerCertificate=True;Connect Timeout=15;Max Pool Size=100;Pooling=True" providerName="System.Data.SqlClient" />
+  <add name="hot79334_aha_saleConnectionString1" connectionString="Data Source=112.78.2.206;Initial Catalog=hot79334_aha_sale;Persist Security Info=True;User ID=hot79334_aha_sale;Password=Afb9771t*;Encrypt=False;TrustServerCertificate=True;Connect Timeout=15;Max Pool Size=100;Pooling=True" providerName="System.Data.SqlClient" />
+  <add name="hot79334_aha_saleConnectionString2" connectionString="Data Source=112.78.2.206;Initial Catalog=hot79334_aha_sale;Persist Security Info=True;User ID=hot79334_aha_sale;Password=Afb9771t*;Encrypt=False;TrustServerCertificate=True;Connect Timeout=15;Max Pool Size=100;Pooling=True" providerName="System.Data.SqlClient" />
+  <add name="hot79334_aha_saleConnectionString3" connectionString="Data Source=112.78.2.206;Initial Catalog=hot79334_aha_sale;Persist Security Info=True;User ID=hot79334_aha_sale;Password=Afb9771t*;Encrypt=False;TrustServerCertificate=True;Connect Timeout=15;Max Pool Size=100;Pooling=True" providerName="System.Data.SqlClient" />
+</connectionStrings>

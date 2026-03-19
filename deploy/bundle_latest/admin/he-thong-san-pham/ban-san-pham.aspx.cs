@@ -21,6 +21,81 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
     private const string ViewStateShopSpace = "shop_space_bansp";
     private const string ShopSpacePublic = "public";
     private const string ShopSpaceInternal = "internal";
+    private bool? _hasLoaiHanhViColumn;
+    private const string SessionSellTokenCurrent = "sell_token_current";
+    private const string SessionSellTokenUsed = "sell_token_used";
+    private const string SessionSellTokenInflight = "sell_token_inflight";
+
+    private sealed class SaleDetailRow
+    {
+        public string TaiKhoan_Nhan { get; set; }
+        public decimal DongANhanDuoc { get; set; }
+        public int? LoaiHanhVi { get; set; }
+        public DateTime ThoiGian { get; set; }
+        public int? PhanTramNhanDuoc { get; set; }
+    }
+
+    private bool HasLoaiHanhViColumn(dbDataContext db)
+    {
+        if (_hasLoaiHanhViColumn.HasValue)
+            return _hasLoaiHanhViColumn.Value;
+        if (db == null)
+            return false;
+        try
+        {
+            int? len = db.ExecuteQuery<int?>(
+                "SELECT COL_LENGTH('dbo.ViLoiNhuan_LichSuBanHang_ChiTiet_tb','LoaiHanhVi')")
+                .FirstOrDefault();
+            _hasLoaiHanhViColumn = len.HasValue;
+        }
+        catch
+        {
+            _hasLoaiHanhViColumn = false;
+        }
+        return _hasLoaiHanhViColumn.Value;
+    }
+
+    private void EnsureSellToken()
+    {
+        if (hf_sell_token == null) return;
+        string token = Guid.NewGuid().ToString("N");
+        hf_sell_token.Value = token;
+        ViewState["sell_token"] = token;
+        Session[SessionSellTokenCurrent] = token;
+    }
+
+    private bool TryBeginSellToken(out string token)
+    {
+        token = "";
+        if (hf_sell_token == null) return true;
+        token = (hf_sell_token.Value ?? "").Trim();
+        if (string.IsNullOrEmpty(token)) return false;
+
+        string current = (Session[SessionSellTokenCurrent] as string) ?? (ViewState["sell_token"] as string);
+        if (string.IsNullOrEmpty(current) || !string.Equals(token, current, StringComparison.Ordinal))
+            return false;
+
+        string used = Session[SessionSellTokenUsed] as string;
+        if (!string.IsNullOrEmpty(used) && string.Equals(token, used, StringComparison.Ordinal))
+            return false;
+
+        string inflight = Session[SessionSellTokenInflight] as string;
+        if (!string.IsNullOrEmpty(inflight) && string.Equals(token, inflight, StringComparison.Ordinal))
+            return false;
+
+        Session[SessionSellTokenInflight] = token;
+        return true;
+    }
+
+    private void CompleteSellToken(string token, bool success)
+    {
+        if (string.IsNullOrEmpty(token)) return;
+        string inflight = Session[SessionSellTokenInflight] as string;
+        if (!string.IsNullOrEmpty(inflight) && string.Equals(inflight, token, StringComparison.Ordinal))
+            Session[SessionSellTokenInflight] = null;
+        if (success)
+            Session[SessionSellTokenUsed] = token;
+    }
 
     private void ApplyShopPortalMasterLayout()
     {
@@ -34,6 +109,35 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
         Control topMenu = Master.FindControl("menutopuc");
         if (topMenu != null)
             topMenu.Visible = false;
+    }
+
+    protected override void LoadViewState(object savedState)
+    {
+        try
+        {
+            base.LoadViewState(savedState);
+        }
+        catch (InvalidCastException ex)
+        {
+            // ViewState có thể bị lệch sau khi thay đổi giao diện.
+            // Bỏ qua ViewState để tránh lỗi 500, trang sẽ tự load lại dữ liệu.
+            try
+            {
+                base.LoadViewState(null);
+            }
+            catch { }
+
+            try
+            {
+                ViewState.Clear();
+            }
+            catch { }
+
+            string actor = GetSellerAccount();
+            if (string.IsNullOrEmpty(actor))
+                actor = IsShopPortalMode() ? "shop" : "admin";
+            Log_cl.Add_Log("LoadViewState InvalidCast: " + ex.Message, actor, ex.StackTrace);
+        }
     }
 
     private bool IsShopPortalMode()
@@ -163,6 +267,19 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
         return ResolveUrl("~/admin/he-thong-san-pham/ban-san-pham.aspx?view=" + ViewSell);
     }
 
+    private string BuildSellPageUrl()
+    {
+        string url = BuildSellUrl();
+        string joiner = url.Contains("?") ? "&" : "?";
+        return url + joiner + "mode=page";
+    }
+
+    private bool IsInlineSellMode()
+    {
+        string mode = (Request.QueryString["mode"] ?? "").Trim().ToLowerInvariant();
+        return mode == "page";
+    }
+
     public string BuildChiTietUrl(object idObj)
     {
         string id = (idObj ?? "").ToString().Trim();
@@ -193,8 +310,21 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
         tinhTienVaDongA();
 
         pn_banthe.Visible = true;
+        if (hl_back_sell != null)
+            hl_back_sell.NavigateUrl = BuildListUrl();
+        if (pn_sell_error != null)
+            pn_sell_error.Visible = false;
+        EnsureSellToken();
         up_banthe.Update();
         up_main.Visible = false;
+    }
+
+    private void ShowSellError(string message)
+    {
+        if (pn_sell_error == null || lt_sell_error == null)
+            return;
+        pn_sell_error.Visible = true;
+        lt_sell_error.Text = Server.HtmlEncode(message ?? "Có lỗi xảy ra.");
     }
 
     protected void Page_Load(object sender, EventArgs e)
@@ -203,7 +333,7 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
             return;
 
         ApplyShopPortalMasterLayout();
-        but_show_form_banthe.NavigateUrl = BuildSellUrl();
+        but_show_form_banthe.NavigateUrl = BuildSellPageUrl();
 
         if (!IsPostBack)
         {
@@ -451,19 +581,28 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
                 lb_ct_vi2.Text = ((decimal)(hd.Vi2_50PhanTram_NhanDuoc_ViLaoDong ?? 0m)).ToString("#,##0.##");
                 lb_ct_vi3.Text = ((decimal)(hd.Vi3_20PhanTram_NhanDuoc_ViGanKet  ?? 0m)).ToString("#,##0.##");
 
-                // Detail rows
-                var listCt = db.ViLoiNhuan_LichSuBanHang_ChiTiet_tbs
-     .Where(x => x.id_LichSuBanHang == idLichSu)
-     .OrderBy(x => x.LoaiHanhVi)
-     .ThenBy(x => x.TaiKhoan_Nhan)
-     .Select(x => new
-     {
-         x.TaiKhoan_Nhan,
-         x.DongANhanDuoc,
-         LoaiHanhVi = x.LoaiHanhVi,
-         x.ThoiGian,
-         x.PhanTramNhanDuoc   // ✅ thêm
-     }).ToList();
+                // Detail rows (skip when host lacks LoaiHanhVi column)
+                bool hasLoaiHanhVi = HasLoaiHanhViColumn(db);
+                List<SaleDetailRow> listCt;
+                if (hasLoaiHanhVi)
+                {
+                    listCt = db.ViLoiNhuan_LichSuBanHang_ChiTiet_tbs
+                        .Where(x => x.id_LichSuBanHang == idLichSu)
+                        .OrderBy(x => x.LoaiHanhVi)
+                        .ThenBy(x => x.TaiKhoan_Nhan)
+                        .Select(x => new SaleDetailRow
+                        {
+                            TaiKhoan_Nhan = x.TaiKhoan_Nhan,
+                            DongANhanDuoc = x.DongANhanDuoc,
+                            LoaiHanhVi = x.LoaiHanhVi,
+                            ThoiGian = x.ThoiGian,
+                            PhanTramNhanDuoc = x.PhanTramNhanDuoc
+                        }).ToList();
+                }
+                else
+                {
+                    listCt = new List<SaleDetailRow>();
+                }
 
 
                 var showCt = listCt.Select(x => new
@@ -483,8 +622,15 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
                 RepeaterChiTiet.DataSource = showCt;
                 RepeaterChiTiet.DataBind();
 
-                decimal sum = showCt.Sum(x => (decimal)x.DongANhanDuoc);
-                lb_ct_note.Text = "Tổng cộng đã chia: " + sum.ToString("#,##0.##") + " A";
+                if (hasLoaiHanhVi)
+                {
+                    decimal sum = showCt.Sum(x => (decimal)x.DongANhanDuoc);
+                    lb_ct_note.Text = "Tổng cộng đã chia: " + sum.ToString("#,##0.##") + " A";
+                }
+                else
+                {
+                    lb_ct_note.Text = "Chi tiết phân bổ tạm ẩn do thiếu cột dữ liệu LoaiHanhVi.";
+                }
 
                 pn_chitiet.Visible = true;
                 if (up_chitiet != null) up_chitiet.Update();
@@ -778,50 +924,57 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
         if (!EnsurePortalContext())
             return;
 
-        // Validate
-        if (string.IsNullOrEmpty(ddl_sanpham.SelectedValue))
+        if (pn_sell_error != null) pn_sell_error.Visible = false;
+        string sellToken;
+        if (!TryBeginSellToken(out sellToken))
         {
-            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                thongbao_class.metro_dialog("Thông báo", "Vui lòng chọn sản phẩm trước khi bán.", "false", "false", "OK", "alert", ""), true);
+            ShowSellError("Giao dịch đang xử lý hoặc không hợp lệ. Vui lòng tải lại trang và thử lại.");
             return;
         }
-
-        if (string.IsNullOrEmpty(ddl_taikhoan_nhadautu.SelectedValue))
-        {
-            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                thongbao_class.metro_dialog("Thông báo", "Vui lòng chọn tài khoản.", "false", "false", "OK", "alert", ""), true);
-            return;
-        }
-
-        int sl = 1;
-        if (!int.TryParse(txt_soluong.Text.Trim(), out sl)) sl = 1;
-        sl = clampSoLuong(sl);
-        txt_soluong.Text = sl.ToString();
-
-        string taiKhoanMua = ddl_taikhoan_nhadautu.SelectedValue.Trim();
-        int idSanPham = getIdSanPham();
-        string taiKhoanBan = GetSellerAccount();
-        if (string.IsNullOrEmpty(taiKhoanBan))
-            taiKhoanBan = IsShopPortalMode() ? ResolveCurrentShopAccount() : ResolveCurrentAdminAccount();
-        if (string.IsNullOrEmpty(taiKhoanBan))
-            taiKhoanBan = IsShopPortalMode() ? "" : "admin";
-
-        if (string.IsNullOrEmpty(taiKhoanBan))
-        {
-            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                thongbao_class.metro_dialog("Thông báo", "Không xác định được tài khoản bán.", "false", "false", "OK", "alert", ""), true);
-            return;
-        }
-
-        DateTime now = AhaTime_cl.Now;
+        bool sellSuccess = false;
 
         try
         {
+            // Validate
+            if (string.IsNullOrEmpty(ddl_sanpham.SelectedValue))
+            {
+                ShowSellError("Vui lòng chọn sản phẩm trước khi bán.");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(ddl_taikhoan_nhadautu.SelectedValue))
+            {
+                ShowSellError("Vui lòng chọn tài khoản.");
+                return;
+            }
+
+            int sl = 1;
+            if (!int.TryParse(txt_soluong.Text.Trim(), out sl)) sl = 1;
+            sl = clampSoLuong(sl);
+            txt_soluong.Text = sl.ToString();
+
+            string taiKhoanMua = ddl_taikhoan_nhadautu.SelectedValue.Trim();
+            int idSanPham = getIdSanPham();
+            string taiKhoanBan = GetSellerAccount();
+            if (string.IsNullOrEmpty(taiKhoanBan))
+                taiKhoanBan = IsShopPortalMode() ? ResolveCurrentShopAccount() : ResolveCurrentAdminAccount();
+            if (string.IsNullOrEmpty(taiKhoanBan))
+                taiKhoanBan = IsShopPortalMode() ? "" : "admin";
+
+            if (string.IsNullOrEmpty(taiKhoanBan))
+            {
+                ShowSellError("Không xác định được tài khoản bán.");
+                return;
+            }
+
+            DateTime now = AhaTime_cl.Now;
+
             using (dbDataContext db = new dbDataContext())
             {
+                db.CommandTimeout = 30;
                 db.Connection.Open();
 
-                using (var tran = db.Connection.BeginTransaction(IsolationLevel.Serializable))
+                using (var tran = db.Connection.BeginTransaction(IsolationLevel.ReadCommitted))
                 {
                     db.Transaction = tran;
 
@@ -877,10 +1030,7 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
                     if (string.IsNullOrEmpty(viTong))
                     {
                         tran.Rollback();
-                        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                            thongbao_class.metro_dialog("Thông báo",
-                            "Không xác định được tài khoản tổng cho tài khoản mua.",
-                            "false", "false", "OK", "alert", ""), true);
+                        ShowSellError("Không xác định được tài khoản tổng cho tài khoản mua.");
                         return;
                     }
 
@@ -889,8 +1039,7 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
                     if (!ok)
                     {
                         tran.Rollback();
-                        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                            thongbao_class.metro_dialog("Thông báo", msg, "false", "false", "OK", "alert", ""), true);
+                        ShowSellError(msg);
                         return;
                     }
 
@@ -1165,10 +1314,19 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
 
                     db.SubmitChanges();
                     tran.Commit();
+                    sellSuccess = true;
+
+                    string buyerDisplay = taiKhoanMua;
+                    if (obMua != null)
+                    {
+                        string hoten = (obMua.hoten ?? "").Trim();
+                        if (!string.IsNullOrEmpty(hoten))
+                            buyerDisplay = hoten + " (" + taiKhoanMua + ")";
+                    }
 
                     Session["thongbao"] = thongbao_class.metro_dialog_onload(
                         "Thông báo",
-                        "Bán sản phẩm thành công! Đã chia hành vi theo các mức %, phần chưa có tuyến hợp lệ/dư làm tròn đã dồn về home_root.",
+                        "Đã bán thành công cho tài khoản " + buyerDisplay + ".",
                         "false",
                         "false",
                         "OK",
@@ -1184,10 +1342,7 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
         {
             if (sqlEx.Number == 2601 || sqlEx.Number == 2627)
             {
-                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                    thongbao_class.metro_dialog("Thông báo",
-                    "Giao dịch có thể đã được ghi trước đó (trùng dữ liệu). Vui lòng kiểm tra lịch sử trước khi thao tác lại.",
-                    "false", "false", "OK", "alert", ""), true);
+                ShowSellError("Giao dịch có thể đã được ghi trước đó (trùng dữ liệu). Vui lòng kiểm tra lịch sử trước khi thao tác lại.");
                 return;
             }
 
@@ -1195,8 +1350,7 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
             if (string.IsNullOrEmpty(actor))
                 actor = IsShopPortalMode() ? "shop" : "admin";
             Log_cl.Add_Log(sqlEx.Message, actor, sqlEx.StackTrace);
-            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                thongbao_class.metro_dialog("Thông báo", "Lỗi SQL: " + sqlEx.Message, "false", "false", "OK", "alert", ""), true);
+            ShowSellError("Lỗi SQL: " + sqlEx.Message);
         }
         catch (Exception ex)
         {
@@ -1204,8 +1358,13 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
             if (string.IsNullOrEmpty(actor))
                 actor = IsShopPortalMode() ? "shop" : "admin";
             Log_cl.Add_Log(ex.Message, actor, ex.StackTrace);
-            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                thongbao_class.metro_dialog("Thông báo", "Có lỗi xảy ra: " + ex.Message, "false", "false", "OK", "alert", ""), true);
+            ShowSellError("Có lỗi xảy ra: " + ex.Message);
+        }
+        finally
+        {
+            CompleteSellToken(sellToken, sellSuccess);
+            if (!sellSuccess)
+                EnsureSellToken();
         }
     }
 
@@ -1293,24 +1452,28 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
                                     + phanTramNhanDuoc + "%");
         }
 
-        // CHỐNG TRÙNG KEY (idLichSu + taiKhoanNhan + loaiHanhVi)
-        bool existed = db.ViLoiNhuan_LichSuBanHang_ChiTiet_tbs.Any(x =>
-            x.id_LichSuBanHang == idLichSu
-            && x.TaiKhoan_Nhan == taiKhoanNhan
-            && x.LoaiHanhVi == loaiHanhVi);
-
-        if (existed) return;
-
-        db.ViLoiNhuan_LichSuBanHang_ChiTiet_tbs.InsertOnSubmit(new ViLoiNhuan_LichSuBanHang_ChiTiet_tb()
+        bool canWriteDetail = HasLoaiHanhViColumn(db);
+        if (canWriteDetail)
         {
-            id_LichSuBanHang = idLichSu,
-            TaiKhoan_Nhan = taiKhoanNhan,
-            DongANhanDuoc = soTien,
-            LoaiHanhVi = loaiHanhVi,
-            PhanTramNhanDuoc = phanTramNhanDuoc,
-            ThoiGian = now,
-            GhiChu = ""
-        });
+            // CHỐNG TRÙNG KEY (idLichSu + taiKhoanNhan + loaiHanhVi)
+            bool existed = db.ViLoiNhuan_LichSuBanHang_ChiTiet_tbs.Any(x =>
+                x.id_LichSuBanHang == idLichSu
+                && x.TaiKhoan_Nhan == taiKhoanNhan
+                && x.LoaiHanhVi == loaiHanhVi);
+
+            if (existed) return;
+
+            db.ViLoiNhuan_LichSuBanHang_ChiTiet_tbs.InsertOnSubmit(new ViLoiNhuan_LichSuBanHang_ChiTiet_tb()
+            {
+                id_LichSuBanHang = idLichSu,
+                TaiKhoan_Nhan = taiKhoanNhan,
+                DongANhanDuoc = soTien,
+                LoaiHanhVi = loaiHanhVi,
+                PhanTramNhanDuoc = phanTramNhanDuoc,
+                ThoiGian = now,
+                GhiChu = ""
+            });
+        }
 
         // Cộng số dư vào đúng hành vi (15/9/6)
         switch (loaiHanhVi)
@@ -1368,12 +1531,16 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
         var u = db.taikhoan_tbs.FirstOrDefault(x => x.taikhoan == tkNhan);
         if (u == null) return;
 
-        // Chống trùng key (id+tk+loaiHanhVi): nếu đã có thì bỏ qua toàn bộ để tránh cộng/trừ lặp.
-        bool existed = db.ViLoiNhuan_LichSuBanHang_ChiTiet_tbs.Any(x =>
-            x.id_LichSuBanHang == idLichSu
-            && x.TaiKhoan_Nhan == tkNhan
-            && x.LoaiHanhVi == loaiHanhVi);
-        if (existed) return;
+        bool canWriteDetail = HasLoaiHanhViColumn(db);
+        if (canWriteDetail)
+        {
+            // Chống trùng key (id+tk+loaiHanhVi): nếu đã có thì bỏ qua toàn bộ để tránh cộng/trừ lặp.
+            bool existed = db.ViLoiNhuan_LichSuBanHang_ChiTiet_tbs.Any(x =>
+                x.id_LichSuBanHang == idLichSu
+                && x.TaiKhoan_Nhan == tkNhan
+                && x.LoaiHanhVi == loaiHanhVi);
+            if (existed) return;
+        }
 
         // Cộng vào đúng hành vi (10/15/25)
         if (loaiHanhVi == 4)
@@ -1397,17 +1564,19 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
             ledgerRef,
             3,
             loaiHanhVi);
-
-        db.ViLoiNhuan_LichSuBanHang_ChiTiet_tbs.InsertOnSubmit(new ViLoiNhuan_LichSuBanHang_ChiTiet_tb()
+        if (canWriteDetail)
         {
-            id_LichSuBanHang = idLichSu,
-            TaiKhoan_Nhan = tkNhan,
-            DongANhanDuoc = soTien,
-            LoaiHanhVi = loaiHanhVi,                // 4/5/6
-            PhanTramNhanDuoc = phanTram,    // 10/15/25
-            ThoiGian = now,
-            GhiChu = ""
-        });
+            db.ViLoiNhuan_LichSuBanHang_ChiTiet_tbs.InsertOnSubmit(new ViLoiNhuan_LichSuBanHang_ChiTiet_tb()
+            {
+                id_LichSuBanHang = idLichSu,
+                TaiKhoan_Nhan = tkNhan,
+                DongANhanDuoc = soTien,
+                LoaiHanhVi = loaiHanhVi,                // 4/5/6
+                PhanTramNhanDuoc = phanTram,    // 10/15/25
+                ThoiGian = now,
+                GhiChu = ""
+            });
+        }
 
         // chưa SubmitChanges() ở đây, để batch submit cuối transaction
     }
@@ -1458,12 +1627,16 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
                 throw new Exception("Hành vi nhóm 3 chỉ hỗ trợ %: 4 / 6 / 10.");
         }
 
-        // Chống trùng key (id+tk+loaiHanhVi): nếu đã có thì bỏ qua toàn bộ để tránh cộng/trừ lặp.
-        bool existed = db.ViLoiNhuan_LichSuBanHang_ChiTiet_tbs.Any(x =>
-            x.id_LichSuBanHang == idLichSu
-            && x.TaiKhoan_Nhan == tkNhan
-            && x.LoaiHanhVi == loaiHanhVi);
-        if (existed) return;
+        bool canWriteDetail = HasLoaiHanhViColumn(db);
+        if (canWriteDetail)
+        {
+            // Chống trùng key (id+tk+loaiHanhVi): nếu đã có thì bỏ qua toàn bộ để tránh cộng/trừ lặp.
+            bool existed = db.ViLoiNhuan_LichSuBanHang_ChiTiet_tbs.Any(x =>
+                x.id_LichSuBanHang == idLichSu
+                && x.TaiKhoan_Nhan == tkNhan
+                && x.LoaiHanhVi == loaiHanhVi);
+            if (existed) return;
+        }
 
         // ✅ NEW: Cộng dồn tổng nhóm Ví3 (Gắn kết 20%)
         u.DuVi3_GanKet_20PhanTram = (decimal)(u.DuVi3_GanKet_20PhanTram ?? 0m) + soTien;
@@ -1478,18 +1651,20 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
             4,
             loaiHanhVi);
 
-
-        db.ViLoiNhuan_LichSuBanHang_ChiTiet_tbs.InsertOnSubmit(
-            new ViLoiNhuan_LichSuBanHang_ChiTiet_tb
-            {
-                id_LichSuBanHang = idLichSu,
-                TaiKhoan_Nhan = tkNhan,
-                DongANhanDuoc = soTien,
-                LoaiHanhVi = loaiHanhVi,
-                PhanTramNhanDuoc = percent,
-                ThoiGian = now,
-                GhiChu = ""
-            });
+        if (canWriteDetail)
+        {
+            db.ViLoiNhuan_LichSuBanHang_ChiTiet_tbs.InsertOnSubmit(
+                new ViLoiNhuan_LichSuBanHang_ChiTiet_tb
+                {
+                    id_LichSuBanHang = idLichSu,
+                    TaiKhoan_Nhan = tkNhan,
+                    DongANhanDuoc = soTien,
+                    LoaiHanhVi = loaiHanhVi,
+                    PhanTramNhanDuoc = percent,
+                    ThoiGian = now,
+                    GhiChu = ""
+                });
+        }
 
         // chưa SubmitChanges() ở đây, để batch submit cuối transaction
     }

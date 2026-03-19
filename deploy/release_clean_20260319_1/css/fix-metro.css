@@ -1,0 +1,82 @@
+﻿
+.clr-float {
+    clear: both !important;
+}
+
+a, .button.link { /*liên kết k gạch chân*/
+    text-decoration: none !important;
+}
+
+.checkbox .check { /*ô checkbox trong list table đều hơn*/
+    width: 18px !important;
+    height: 18px !important;
+}
+
+.checkbox .caption, .checkbox .check { /*ô checkbox trong list table đều hơn*/
+    margin: 0 0 !important;
+}
+
+.navview .navview-menu li.active::before { /*style active menu left admin*/
+    background-color: #1ba1e2 !important;
+}
+
+.navview .navview-menu .icon {
+    height: 36px !important; /*canh icon bên trái đều hơn (menu left)*/
+}
+
+.file .button > * {
+    height: 12px !important; /*icon ở input upload đc canh giữa   */
+}
+
+.carousel {
+    z-index: 0 !important; /*để dropdown menu đè lên đc*/
+}
+
+.app-bar-expand .app-bar-menu .d-menu a, .app-bar-expand .app-bar-menu .d-menu li {
+    min-width: 220px; /*để menu 3 cấp trở lên có nền*/
+}
+
+.app-bar-expand .app-bar-menu .d-menu .d-menu, .app-bar-expand .app-bar-menu .d-menu .v-menu, .app-bar-expand .app-bar-menu .v-menu .d-menu, .app-bar-expand .app-bar-menu .v-menu .v-menu {
+    top: 0px; /*để menu 3 cấp trở lên hiển thị ngang hàng với menu cấp 2 trên máy tính*/
+}
+
+select { /*để select dropdown hiển thị đẹp trên điện thoại*/
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    position: relative !important;
+    border: 1px #d9d9d9 solid !important;
+    color: #1d1d1d !important;
+    width: 100% !important;
+    /*display: block !important;*/
+    padding: 0 0.75rem !important;
+    font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", "Roboto", "Ubuntu", "Helvetica Neue", sans-serif !important;
+    font-size: 1rem !important;
+    height: 36px !important;
+    line-height: 36px !important;
+    background: #ffffff none !important;
+    background-clip: padding-box !important;
+    min-width: 0 !important;
+}
+.progress {
+    z-index: 0;
+}
+
+@media (max-width: 575px) { /*sm*/
+
+}
+
+@media (max-width: 767px) { /*md*/
+
+}
+
+@media (max-width: 991px) { /*lg*/
+
+}
+
+@media (max-width: 1199px) { /*xl*/
+
+}
+
+@media (max-width: 1451px) { /*xxl*/
+}

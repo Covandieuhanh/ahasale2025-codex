@@ -461,6 +461,12 @@ public partial class shop_default : System.Web.UI.Page
         return "Tạo đơn";
     }
 
+    protected bool IsServicePost(object productTypeRaw)
+    {
+        string phanloai = (productTypeRaw ?? "").ToString();
+        return string.Equals(phanloai.Trim(), AccountVisibility_cl.PostTypeService, StringComparison.OrdinalIgnoreCase);
+    }
+
     protected string ResolveProductImage(object imageRaw)
     {
         const string fallback = "/uploads/images/macdinh.jpg";

@@ -1,4 +1,4 @@
-<%@ Page Title="Lịch hẹn cơ bản" Language="C#" MasterPageFile="~/MasterPage/Tabler/TablerHome.master" AutoEventWireup="true" CodeFile="quan-ly-lich-hen.aspx.cs" Inherits="shop_quan_ly_lich_hen" %>
+<%@ Page Title="Lịch hẹn khách đặt" Language="C#" MasterPageFile="~/MasterPage/Tabler/TablerHome.master" AutoEventWireup="true" CodeFile="quan-ly-lich-hen.aspx.cs" Inherits="shop_quan_ly_lich_hen" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head_truoc" runat="server">
     <style>
@@ -234,9 +234,9 @@
 
             <section class="booking-admin-hero">
                 <div class="booking-admin-eyebrow">Shop Level 1</div>
-                <h1 class="booking-admin-title">Lịch hẹn cơ bản</h1>
+                <h1 class="booking-admin-title">Lịch hẹn khách đặt</h1>
                 <div class="booking-admin-sub">
-                    Theo dõi các lịch hẹn đến từ <b>/shop</b>. Khi nâng cấp lên Level 2, toàn bộ lịch hẹn này tiếp tục được dùng lại trong <b>/gianhang/admin</b>.
+                    Theo dõi các lịch hẹn khách hàng đặt từ <b>/home</b>. Tại đây bạn có thể duyệt, xác nhận, đổi trạng thái và ghi nhận lịch sử. Khi nâng cấp lên Level 2, toàn bộ lịch hẹn này tiếp tục được dùng lại trong <b>/gianhang/admin</b>.
                 </div>
 
                 <div class="booking-kpi-grid">
@@ -263,7 +263,7 @@
                 <div class="booking-admin-toolbar">
                     <div>
                         <strong><asp:Label ID="lb_shop_name" runat="server" Text="Shop"></asp:Label></strong>
-                        <div class="text-muted">Quản lý lịch hẹn cơ bản trong /shop</div>
+                        <div class="text-muted">Quản lý lịch hẹn khách đặt từ /home trong /shop</div>
                     </div>
                     <div class="booking-admin-actions">
                         <span class="booking-link-btn booking-link-btn-primary">Đặt lịch tại /home</span>

@@ -1,4 +1,4 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="in-bill.aspx.cs" Inherits="quan_ly_ban_hang_thuong_quy_cap_duoi" %>
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="in-bill.aspx.cs" Inherits="gianhang_hoa_don_in_bill_Default" %>
 
 <!DOCTYPE html>
 

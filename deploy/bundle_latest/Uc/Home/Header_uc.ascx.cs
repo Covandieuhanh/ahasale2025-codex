@@ -163,7 +163,7 @@ public partial class Uc_Home_Header_uc : System.Web.UI.UserControl
                 int tierHome = Number_cl.Check_Int((ViewState["tier_home"] ?? "0").ToString());
 
                 // Home và Shop tách cổng đăng nhập: chỉ scope shop mới thấy menu shop-only.
-                bool laGianHangDoiTac = string.Equals(
+                bool laGianHangDoiTac = isShopPortalRequest || string.Equals(
                     (ViewState["portal_scope"] ?? "").ToString(),
                     PortalScope_cl.ScopeShop,
                     StringComparison.OrdinalIgnoreCase);
@@ -210,6 +210,7 @@ public partial class Uc_Home_Header_uc : System.Web.UI.UserControl
                 if (phMenuHomeDoiPin != null) phMenuHomeDoiPin.Visible = !laGianHangDoiTac;
                 if (phMenuHomeKhachHang != null) phMenuHomeKhachHang.Visible = !laGianHangDoiTac;
                 if (phMenuHomeDonMua != null) phMenuHomeDonMua.Visible = !laGianHangDoiTac;
+                if (phMenuHomeLichHen != null) phMenuHomeLichHen.Visible = !laGianHangDoiTac;
                 if (phMenuHomeLichSuTraoDoi != null) phMenuHomeLichSuTraoDoi.Visible = !laGianHangDoiTac;
                 if (phUtilityHome != null) phUtilityHome.Visible = !laGianHangDoiTac;
                 if (phMenuHomeExtra != null) phMenuHomeExtra.Visible = !laGianHangDoiTac;

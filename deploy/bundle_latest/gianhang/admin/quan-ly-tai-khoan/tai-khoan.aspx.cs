@@ -6,7 +6,7 @@ using System.Web.UI;
 using System.Web.UI.WebControls;
 using System.IO;
 
-public partial class taikhoan_add : System.Web.UI.Page
+public partial class gianhang_taikhoan_detail : System.Web.UI.Page
 {
     public string notifi, user_parent, user, url_back, trangthai, ngaysinh, ngaytao, nguoitao, email, sdt, zalo, facebook, hsd, songaycong,luongcb;
     taikhoan_class tk_cl = new taikhoan_class();
@@ -51,13 +51,14 @@ public partial class taikhoan_add : System.Web.UI.Page
         #endregion
 
         #region Check quyen theo nganh
-        user = Request.QueryString["user"].ToString();
+        string qsUser = (Request.QueryString["user"] ?? "").Trim();
+        user = qsUser;
         user_parent = "admin";
         if (bcorn_class.check_quyen(Session["user"].ToString(), "q2_2") == "" || bcorn_class.check_quyen(Session["user"].ToString(), "n2_2") == "" || user == Session["user"].ToString())
         {
-            if (!string.IsNullOrWhiteSpace(Request.QueryString["user"]))
+            if (!string.IsNullOrWhiteSpace(qsUser))
             {
-                user = Request.QueryString["user"].ToString().Trim();
+                user = qsUser;
                 if (tk_cl.exist_user(user))
                 {
                         main();
@@ -92,7 +93,15 @@ public partial class taikhoan_add : System.Web.UI.Page
     //}
     public void main()
     {
-        taikhoan_table_2023 _ob = db.taikhoan_table_2023s.Where(p => p.taikhoan == user && p.id_chinhanh == Session["chinhanh"].ToString()).First();
+        string chinhanhId = (Session["chinhanh"] ?? "").ToString();
+        taikhoan_table_2023 _ob = db.taikhoan_table_2023s
+            .FirstOrDefault(p => p.taikhoan == user && (string.IsNullOrWhiteSpace(chinhanhId) || p.id_chinhanh == chinhanhId));
+        if (_ob == null)
+        {
+            Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Không tìm thấy tài khoản cần xem.", "false", "false", "OK", "alert", "");
+            Response.Redirect("/gianhang/admin");
+            return;
+        }
         if (!IsPostBack)
         {
             hoten = _ob.hoten;
@@ -100,8 +109,8 @@ public partial class taikhoan_add : System.Web.UI.Page
             ngaysinh = _ob.ngaysinh != null ? _ob.ngaysinh.Value.ToString("dd/MM/yyyy") : "";
             ngaytao = _ob.ngaytao.Value.ToString("dd/MM/yyyy");
             nguoitao = _ob.nguoitao;
-            songaycong = _ob.songaycong.ToString();
-            luongcb = _ob.luongcoban.Value.ToString("#,##0");
+            songaycong = (_ob.songaycong ?? 0).ToString();
+            luongcb = (_ob.luongcoban ?? 0).ToString("#,##0");
 
             email = _ob.email; sdt = _ob.dienthoai; zalo = _ob.zalo; facebook = _ob.facebook;
             hsd = _ob.hansudung != null ? _ob.hansudung.Value.ToString("dd/MM/yyyy") : "Không có hạn";
@@ -117,7 +126,7 @@ public partial class taikhoan_add : System.Web.UI.Page
                 but_mokhoa.Visible = true;
             }
         }
-        if (_ob.anhdaidien != "")
+        if (!string.IsNullOrEmpty(_ob.anhdaidien))
             Label2.Text = "<img src='" + _ob.anhdaidien + "' class='img-cover-vuongtron' width='100' height='100' />";
         else
             Label2.Text = "<img src='/uploads/images/macdinh.jpg' class='img-cover-vuongtron' width='100' height='100' />";
@@ -136,7 +145,8 @@ public partial class taikhoan_add : System.Web.UI.Page
             }
             else
             {
-                var q = db.taikhoan_table_2023s.Where(p => p.taikhoan == user && p.id_chinhanh == Session["chinhanh"].ToString());
+                string chinhanhId = (Session["chinhanh"] ?? "").ToString();
+                var q = db.taikhoan_table_2023s.Where(p => p.taikhoan == user && (string.IsNullOrWhiteSpace(chinhanhId) || p.id_chinhanh == chinhanhId));
                 if (q.Count() != 0)
                 {
                     taikhoan_table_2023 _ob = q.First();
@@ -164,7 +174,8 @@ public partial class taikhoan_add : System.Web.UI.Page
             }
             else
             {
-                var q = db.taikhoan_table_2023s.Where(p => p.taikhoan == user&& p.id_chinhanh == Session["chinhanh"].ToString());
+                string chinhanhId = (Session["chinhanh"] ?? "").ToString();
+                var q = db.taikhoan_table_2023s.Where(p => p.taikhoan == user && (string.IsNullOrWhiteSpace(chinhanhId) || p.id_chinhanh == chinhanhId));
                 if (q.Count() != 0)
                 {
                     taikhoan_table_2023 _ob = q.First();

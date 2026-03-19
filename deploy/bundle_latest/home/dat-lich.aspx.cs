@@ -10,6 +10,7 @@ using System.Web.UI.WebControls;
 public partial class home_dat_lich : System.Web.UI.Page
 {
     private const string BookingSource = "Home Public";
+    private const string EditParam = "edit_id";
 
     protected void Page_Load(object sender, EventArgs e)
     {
@@ -44,6 +45,8 @@ public partial class home_dat_lich : System.Web.UI.Page
         try
         {
             string shopAccount = ResolveCurrentShopAccount();
+            if (string.IsNullOrWhiteSpace(shopAccount) && hf_shop_account != null)
+                shopAccount = (hf_shop_account.Value ?? "").Trim().ToLowerInvariant();
             if (string.IsNullOrWhiteSpace(shopAccount))
             {
                 ShowWarning("Không xác định được gian hàng để đặt lịch.");
@@ -59,6 +62,9 @@ public partial class home_dat_lich : System.Web.UI.Page
                     BindBookingPage();
                     return;
                 }
+
+                long editId;
+                bool isEdit = long.TryParse((hf_booking_id.Value ?? "").Trim(), out editId);
 
                 BaiViet_tb service = ResolveService(db, shopAccount, selectedServiceId);
                 if (service == null)
@@ -105,15 +111,52 @@ public partial class home_dat_lich : System.Web.UI.Page
                     return;
                 }
 
-                bspa_datlich_table booking = new bspa_datlich_table();
-                datlich_class.gan_du_lieu_vao_lich(db, booking, result.dulieu, BookingSource, chiNhanhId, false);
-                db.bspa_datlich_tables.InsertOnSubmit(booking);
+                if (!isEdit)
+                {
+                    bspa_datlich_table booking = new bspa_datlich_table();
+                    datlich_class.gan_du_lieu_vao_lich(db, booking, result.dulieu, BookingSource, chiNhanhId, false);
+                    db.bspa_datlich_tables.InsertOnSubmit(booking);
+                    db.SubmitChanges();
+
+                    TryNotifyAdvancedPortal(db, shopAccount, result.dulieu.tenkhachhang, booking.id);
+
+                    string successUrl = BuildSuccessUrl(shopAccount, service.id.ToString(), booking.id.ToString());
+                    Response.Redirect(successUrl, false);
+                    Context.ApplicationInstance.CompleteRequest();
+                    return;
+                }
+
+                string phone = ResolveHomePhone();
+                if (string.IsNullOrWhiteSpace(phone))
+                {
+                    ShowWarning("Vui lòng đăng nhập để cập nhật lịch hẹn.");
+                    BindBookingPage();
+                    return;
+                }
+
+                bspa_datlich_table existing = db.bspa_datlich_tables.FirstOrDefault(p => p.id == editId && p.sdt == phone);
+                if (existing == null)
+                {
+                    ShowWarning("Không tìm thấy lịch hẹn cần cập nhật.");
+                    BindBookingPage();
+                    return;
+                }
+
+                if (!CanEditBooking(existing))
+                {
+                    ShowWarning("Lịch hẹn này không thể cập nhật.");
+                    BindBookingPage();
+                    return;
+                }
+
+                datlich_class.gan_du_lieu_vao_lich(db, existing, result.dulieu, existing.nguoitao ?? BookingSource, chiNhanhId, true);
+                existing.trangthai = datlich_class.trangthai_chua_xacnhan;
                 db.SubmitChanges();
 
-                TryNotifyAdvancedPortal(db, shopAccount, result.dulieu.tenkhachhang, booking.id);
+                TryNotifyAdvancedPortalReschedule(db, shopAccount, result.dulieu.tenkhachhang, existing.id);
 
-                string successUrl = BuildSuccessUrl(shopAccount, service.id.ToString(), booking.id.ToString());
-                Response.Redirect(successUrl, false);
+                Session["home_booking_notice"] = "Bạn đã cập nhật lịch hẹn #" + existing.id.ToString() + ".";
+                Response.Redirect("/home/lich-hen.aspx", false);
                 Context.ApplicationInstance.CompleteRequest();
             }
         }
@@ -131,6 +174,13 @@ public partial class home_dat_lich : System.Web.UI.Page
         string shopAccount = ResolveCurrentShopAccount();
         string serviceId = (Request.QueryString["id"] ?? "").Trim();
         string returnUrl = ResolveReturnUrl();
+        long editId;
+        bool isEdit = long.TryParse((Request.QueryString[EditParam] ?? "").Trim(), out editId);
+
+        if (hf_booking_id != null)
+            hf_booking_id.Value = "";
+        if (but_datlich != null)
+            but_datlich.Text = "Đặt lịch ngay";
 
         lnk_back.NavigateUrl = returnUrl;
         lnk_back.Text = "Quay lại";
@@ -148,6 +198,20 @@ public partial class home_dat_lich : System.Web.UI.Page
 
         using (dbDataContext db = new dbDataContext())
         {
+            if (isEdit)
+            {
+                string editServiceId = "";
+                if (!TryLoadEditBooking(db, editId, ref shopAccount, out editServiceId))
+                {
+                    pn_form.Visible = false;
+                    return;
+                }
+
+                serviceId = editServiceId;
+                hf_booking_id.Value = editId.ToString();
+                but_datlich.Text = "Cập nhật lịch";
+            }
+
             taikhoan_tb shop = ResolveShop(db, shopAccount, serviceId);
             if (shop == null)
             {
@@ -298,6 +362,125 @@ public partial class home_dat_lich : System.Web.UI.Page
             txt_hoten.Text = kh.tenkhachhang;
     }
 
+    private bool TryLoadEditBooking(dbDataContext db, long bookingId, ref string shopAccount, out string serviceId)
+    {
+        serviceId = "";
+        if (db == null || bookingId <= 0)
+        {
+            ShowWarning("Không tìm thấy lịch hẹn cần cập nhật.");
+            return false;
+        }
+
+        string phone = ResolveHomePhone();
+        if (string.IsNullOrWhiteSpace(phone))
+        {
+            ShowWarning("Vui lòng đăng nhập để cập nhật lịch hẹn.");
+            return false;
+        }
+
+        bspa_datlich_table booking = db.bspa_datlich_tables.FirstOrDefault(p => p.id == bookingId && p.sdt == phone);
+        if (booking == null)
+        {
+            ShowWarning("Không tìm thấy lịch hẹn cần cập nhật.");
+            return false;
+        }
+
+        if (!CanEditBooking(booking))
+        {
+            ShowWarning("Lịch hẹn này không thể cập nhật.");
+            return false;
+        }
+
+        string branchId = (booking.id_chinhanh ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(branchId))
+        {
+            ShowWarning("Không xác định được chi nhánh của lịch hẹn.");
+            return false;
+        }
+
+        chinhanh_table branch = db.chinhanh_tables.FirstOrDefault(p => p.id.ToString() == branchId);
+        if (branch == null || string.IsNullOrWhiteSpace(branch.taikhoan_quantri))
+        {
+            ShowWarning("Không xác định được gian hàng để cập nhật lịch.");
+            return false;
+        }
+
+        shopAccount = (branch.taikhoan_quantri ?? "").Trim().ToLowerInvariant();
+        serviceId = ResolveEditServiceId(db, shopAccount, booking.dichvu);
+        if (string.IsNullOrWhiteSpace(serviceId))
+        {
+            ShowWarning("Dịch vụ của lịch hẹn không còn hiển thị.");
+            return false;
+        }
+
+        txt_hoten.Text = booking.tenkhachhang ?? "";
+        txt_sdt.Text = booking.sdt ?? "";
+        txt_ghichu.Text = booking.ghichu ?? "";
+
+        if (booking.ngaydat.HasValue)
+        {
+            txt_ngay.Text = booking.ngaydat.Value.ToString("yyyy-MM-dd");
+            string hour = booking.ngaydat.Value.ToString("HH");
+            string minute = booking.ngaydat.Value.ToString("mm");
+            if (ddl_gio.Items.FindByValue(hour) != null)
+                ddl_gio.SelectedValue = hour;
+            if (ddl_phut.Items.FindByValue(minute) != null)
+                ddl_phut.SelectedValue = minute;
+        }
+
+        return true;
+    }
+
+    private string ResolveEditServiceId(dbDataContext db, string shopAccount, string bookingServiceId)
+    {
+        if (db == null || string.IsNullOrWhiteSpace(bookingServiceId))
+            return "";
+
+        int id;
+        if (!int.TryParse(bookingServiceId.Trim(), out id))
+            return "";
+
+        string serviceType = AccountVisibility_cl.PostTypeService;
+        string tk = (shopAccount ?? "").Trim().ToLowerInvariant();
+
+        BaiViet_tb direct = db.BaiViet_tbs.FirstOrDefault(p =>
+            p.id == id
+            && (p.bin == false || p.bin == null)
+            && (p.phanloai ?? "").Trim() == serviceType
+            && (string.IsNullOrWhiteSpace(tk) || p.nguoitao == tk));
+
+        if (direct != null)
+            return direct.id.ToString();
+
+        web_post_table mirror = db.web_post_tables.FirstOrDefault(p => p.id == id && p.id_baiviet.HasValue);
+        if (mirror == null)
+            return "";
+
+        int baiVietId = (int)mirror.id_baiviet.Value;
+        BaiViet_tb origin = db.BaiViet_tbs.FirstOrDefault(p =>
+            p.id == baiVietId
+            && (p.bin == false || p.bin == null)
+            && (p.phanloai ?? "").Trim() == serviceType
+            && (string.IsNullOrWhiteSpace(tk) || p.nguoitao == tk));
+
+        return origin == null ? "" : origin.id.ToString();
+    }
+
+    private bool CanEditBooking(bspa_datlich_table booking)
+    {
+        if (booking == null)
+            return false;
+
+        string status = datlich_class.chuanhoa_trangthai(booking.trangthai);
+        if (status == datlich_class.trangthai_da_huy || status == datlich_class.trangthai_da_den || status == datlich_class.trangthai_khong_den)
+            return false;
+
+        if (booking.ngaydat.HasValue && booking.ngaydat.Value < DateTime.Now)
+            return false;
+
+        return true;
+    }
+
     private string NormalizeDateInput(string raw)
     {
         DateTime parsed;
@@ -366,6 +549,100 @@ public partial class home_dat_lich : System.Web.UI.Page
         catch
         {
         }
+    }
+
+    private void TryNotifyAdvancedPortalReschedule(dbDataContext db, string shopAccount, string customerName, long bookingId)
+    {
+        try
+        {
+            thongbao_table notice = new thongbao_table();
+            notice.id = Guid.NewGuid();
+            notice.daxem = false;
+            notice.nguoithongbao = BookingSource;
+            notice.nguoinhan = shopAccount;
+            notice.link = "/gianhang/admin/quan-ly-khach-hang/danh-sach-lich-hen.aspx";
+            notice.noidung = (customerName ?? "Khách") + " vừa đổi lịch #" + bookingId.ToString();
+            notice.thoigian = DateTime.Now;
+            db.thongbao_tables.InsertOnSubmit(notice);
+            db.SubmitChanges();
+        }
+        catch
+        {
+        }
+    }
+
+    private string ResolveHomePhone()
+    {
+        string phone = "";
+        if (Session["user_home"] != null)
+            phone = (Session["user_home"] ?? "").ToString().Trim();
+
+        if (string.IsNullOrWhiteSpace(phone) && Request.Cookies["save_sdt_home_aka"] != null)
+        {
+            try
+            {
+                phone = encode_class.decrypt(Request.Cookies["save_sdt_home_aka"].Value);
+            }
+            catch
+            {
+                phone = "";
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(phone))
+        {
+            string tk = "";
+            if (string.IsNullOrWhiteSpace(tk))
+                tk = (PortalRequest_cl.GetCurrentAccount() ?? "").Trim().ToLowerInvariant();
+            if (Session["taikhoan_home"] != null)
+            {
+                try
+                {
+                    tk = mahoa_cl.giaima_Bcorn(Session["taikhoan_home"].ToString());
+                }
+                catch
+                {
+                    tk = "";
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(tk))
+            {
+                HttpCookie ck = Request.Cookies["cookie_userinfo_home_bcorn"];
+                if (ck != null && !string.IsNullOrEmpty(ck["taikhoan"]))
+                {
+                    try
+                    {
+                        tk = mahoa_cl.giaima_Bcorn(ck["taikhoan"]);
+                    }
+                    catch
+                    {
+                        tk = "";
+                    }
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(tk))
+            {
+                try
+                {
+                    using (dbDataContext db = new dbDataContext())
+                    {
+                        taikhoan_tb acc = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == tk);
+                        if (acc != null)
+                            phone = (acc.dienthoai ?? "").Trim();
+                    }
+                }
+                catch
+                {
+                }
+
+                if (string.IsNullOrWhiteSpace(phone))
+                    phone = tk;
+            }
+        }
+
+        return datlich_class.chuanhoa_sdt(phone);
     }
 
     private void ShowWarning(string message)

@@ -858,6 +858,7 @@
             var hoten = hotenInput.value.trim();
             var sdt = sdtInput.value.trim();
             var detail = detailInput.value.trim();
+            var hasRegionOptions = (tinhSelect.options.length > 1 || quanSelect.options.length > 1 || phuongSelect.options.length > 1);
 
             var ok = true;
             if (hoten.length < 2) {
@@ -874,24 +875,30 @@
                 ahaSetFieldState(sdtInput, document.getElementById("err_exchange_sdt"), "");
             }
 
-            if (!tinhSelect.value) {
-                ahaSetFieldState(tinhSelect, document.getElementById("err_exchange_tinh"), "Chọn Tỉnh/Thành.");
-                ok = false;
+            if (hasRegionOptions) {
+                if (!tinhSelect.value) {
+                    ahaSetFieldState(tinhSelect, document.getElementById("err_exchange_tinh"), "Chọn Tỉnh/Thành.");
+                    ok = false;
+                } else {
+                    ahaSetFieldState(tinhSelect, document.getElementById("err_exchange_tinh"), "");
+                }
+
+                if (!quanSelect.value) {
+                    ahaSetFieldState(quanSelect, document.getElementById("err_exchange_quan"), "Chọn Quận/Huyện.");
+                    ok = false;
+                } else {
+                    ahaSetFieldState(quanSelect, document.getElementById("err_exchange_quan"), "");
+                }
+
+                if (!phuongSelect.value) {
+                    ahaSetFieldState(phuongSelect, document.getElementById("err_exchange_phuong"), "Chọn Phường/Xã.");
+                    ok = false;
+                } else {
+                    ahaSetFieldState(phuongSelect, document.getElementById("err_exchange_phuong"), "");
+                }
             } else {
                 ahaSetFieldState(tinhSelect, document.getElementById("err_exchange_tinh"), "");
-            }
-
-            if (!quanSelect.value) {
-                ahaSetFieldState(quanSelect, document.getElementById("err_exchange_quan"), "Chọn Quận/Huyện.");
-                ok = false;
-            } else {
                 ahaSetFieldState(quanSelect, document.getElementById("err_exchange_quan"), "");
-            }
-
-            if (!phuongSelect.value) {
-                ahaSetFieldState(phuongSelect, document.getElementById("err_exchange_phuong"), "Chọn Phường/Xã.");
-                ok = false;
-            } else {
                 ahaSetFieldState(phuongSelect, document.getElementById("err_exchange_phuong"), "");
             }
 

@@ -338,7 +338,7 @@
                     <ul class="level2-list">
                         <li>Level 1: đăng tin, hiển thị công khai, đơn bán, khách hàng và lịch hẹn cơ bản trong <b>/shop</b>.</li>
                         <li>Level 2: mở thêm <b>/gianhang/admin</b> để điều hành lịch nâng cao, CRM, hóa đơn, thẻ dịch vụ, thu chi, kho và phân quyền.</li>
-                        <li>Lịch hẹn cơ bản đã tạo trong <b>/shop</b> vẫn được dùng lại nguyên vẹn khi chuyển sang Level 2.</li>
+                        <li>Lịch hẹn khách đặt đã tạo trong <b>/shop</b> vẫn được dùng lại nguyên vẹn khi chuyển sang Level 2.</li>
                     </ul>
 
                     <dl class="level2-definition">

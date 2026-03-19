@@ -5,7 +5,7 @@ using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
-public partial class quan_ly_ban_hang_thuong_quy_cap_duoi : System.Web.UI.Page
+public partial class gianhang_hoa_don_in_bill_Default : System.Web.UI.Page
 {
     public string id, p;
     dbDataContext db = new dbDataContext();
@@ -50,8 +50,9 @@ public partial class quan_ly_ban_hang_thuong_quy_cap_duoi : System.Web.UI.Page
         #endregion 
         user = Session["user"].ToString();
         user_parent = "admin";
+        string chinhanhId = (Session["chinhanh"] ?? "1").ToString();
 
-        var q_cn = db.chinhanh_tables.Where(p => p.id.ToString() == Session["chinhanh"].ToString());
+        var q_cn = db.chinhanh_tables.Where(p => p.id.ToString() == chinhanhId);
         if (q_cn.Count() != 0)
         {
             chinhanh_table _ob1 = q_cn.First();
@@ -66,11 +67,11 @@ public partial class quan_ly_ban_hang_thuong_quy_cap_duoi : System.Web.UI.Page
             id = Request.QueryString["id"].ToString().Trim();
             if (hd_cl.exist_id(id, user_parent))
             {
-                var q_taikhoan = db.taikhoan_table_2023s.Where(p=>p.taikhoan== user && p.id_chinhanh == Session["chinhanh"].ToString());
+                var q_taikhoan = db.taikhoan_table_2023s.Where(p => p.taikhoan == user && (string.IsNullOrWhiteSpace(chinhanhId) || p.id_chinhanh == chinhanhId));
                 if (q_taikhoan.Count() != 0)
                     nguoixuat = q_taikhoan.First().hoten;
 
-                config_thongtin_table _ob999 = db.config_thongtin_tables.First();
+                config_thongtin_table _ob999 = db.config_thongtin_tables.FirstOrDefault();
                 //tencty = _ob999.tencongty;
 
                 var q = db.config_thongtin_tables;
@@ -84,6 +85,12 @@ public partial class quan_ly_ban_hang_thuong_quy_cap_duoi : System.Web.UI.Page
                 //}
 
                 bspa_hoadon_table _ob = hd_cl.return_object(id);
+                if (_ob == null)
+                {
+                    Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Không tìm thấy hóa đơn cần in.", "false", "false", "OK", "alert", "");
+                    Response.Redirect("/gianhang/admin/Default.aspx");
+                    return;
+                }
                 ngaytao = _ob.ngaytao.Value.ToString("dd/MM/yyyy HH:mm") + "'";
                 ten_kh = _ob.tenkhachhang;
                 sdt_kh = _ob.sdt;
@@ -96,7 +103,7 @@ public partial class quan_ly_ban_hang_thuong_quy_cap_duoi : System.Web.UI.Page
                 bangchu = _ob.tongsauchietkhau.Value == 0 ? "0" : number_class.number_to_text_unlimit(_ob.tongsauchietkhau.Value.ToString());
                 km1_ghichu = _ob.km1_ghichu;
 
-                var list_all = (from ob1 in db.bspa_hoadon_chitiet_tables.Where(p => p.user_parent == user_parent && p.id_hoadon == id && p.id_chinhanh == Session["chinhanh"].ToString()).ToList()
+                var list_all = (from ob1 in db.bspa_hoadon_chitiet_tables.Where(p => p.user_parent == user_parent && p.id_hoadon == id && (string.IsNullOrWhiteSpace(chinhanhId) || p.id_chinhanh == chinhanhId)).ToList()
                                 //join ob2 in db.bspa_hoadon_tables.ToList() on ob1.id_hoadon equals ob2.id.ToString()
                                 select new
                                 {

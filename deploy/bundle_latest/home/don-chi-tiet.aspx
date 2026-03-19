@@ -128,6 +128,14 @@
                                             <a href="<%# BuildProductUrl(Eval("name_en"), Eval("idsp")) %>" class="text-decoration-none">
                                                 <div class="fw-semibold"><%# Eval("name") %></div>
                                             </a>
+                                            <asp:PlaceHolder ID="ph_review_row" runat="server" Visible='<%# Convert.ToBoolean(Eval("show_review")) %>'>
+                                                <div class="mt-2">
+                                                    <a class="btn btn-outline-primary btn-sm" href="<%# Eval("review_url") %>">Viết đánh giá</a>
+                                                </div>
+                                            </asp:PlaceHolder>
+                                            <asp:PlaceHolder ID="ph_reviewed_row" runat="server" Visible='<%# Convert.ToBoolean(Eval("show_reviewed")) %>'>
+                                                <div class="mt-2 text-muted small">Đã đánh giá</div>
+                                            </asp:PlaceHolder>
                                         </td>
                                         <td class="text-end order-money"><%# Eval("giaban", "{0:#,##0}") %> ₫</td>
                                         <td class="text-center"><span class="badge bg-muted-lt text-muted"><%# Eval("soluong") %></span></td>

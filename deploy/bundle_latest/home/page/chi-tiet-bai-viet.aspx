@@ -309,6 +309,13 @@
                                 <div class="text-muted mb-3">
                                     <asp:Label ID="Label6" runat="server" Text=""></asp:Label>
                                 </div>
+                                <asp:PlaceHolder ID="ph_map_link" runat="server" Visible="false">
+                                    <div class="mb-3 d-grid">
+                                        <asp:HyperLink ID="lnk_map" runat="server" CssClass="btn btn-outline-primary w-100" Target="_blank">
+                                            <i class="ti ti-map-pin"></i> Xem bản đồ
+                                        </asp:HyperLink>
+                                    </div>
+                                </asp:PlaceHolder>
 
                                 <asp:PlaceHolder ID="PlaceHolder1" runat="server" Visible="false">
                                     <asp:PlaceHolder ID="ph_qty_block" runat="server" Visible="true">
@@ -335,6 +342,11 @@
                                                     Text="Trao đổi" CssClass="btn btn-outline-info w-100"
                                                     OnClientClick="return goToTraoDoiPageSafe();" />
                                             </div>
+                                            <asp:PlaceHolder ID="ph_booking" runat="server" Visible="false">
+                                                <div class="col-12">
+                                                    <asp:HyperLink ID="lnk_datlich" runat="server" CssClass="btn btn-success w-100">Đặt lịch</asp:HyperLink>
+                                                </div>
+                                            </asp:PlaceHolder>
                                             <asp:PlaceHolder ID="ph_add_to_cart" runat="server" Visible="true">
                                                 <div class="col-12">
                                                     <asp:Button ID="but_themvaogio" OnClick="but_themvaogio_Click" runat="server"
@@ -411,6 +423,7 @@
     </asp:PlaceHolder>
 
     <!-- ====== REVIEWS ====== -->
+    <div id="review-section"></div>
     <asp:UpdatePanel ID="Review" runat="server" UpdateMode="Conditional">
         <ContentTemplate>
 
@@ -461,6 +474,14 @@
                                 <asp:Button ID="btnGuiDanhGia" runat="server" Text="Gửi đánh giá" CssClass="btn btn-primary" OnClick="btnGuiDanhGia_Click" />
                             </div>
                         </div>
+                    </div>
+                </div>
+            </asp:PlaceHolder>
+
+            <asp:PlaceHolder ID="phReviewGate" runat="server" Visible="false">
+                <div class="container-xl product-wrap pb-3">
+                    <div class="alert alert-warning text-center mb-0">
+                        Bạn cần hoàn tất trao đổi sản phẩm hoặc dịch vụ này trước khi có thể đánh giá.
                     </div>
                 </div>
             </asp:PlaceHolder>
@@ -518,6 +539,9 @@
         <div class="mobile-cta" id="mobileCta">
             <div class="cta-wrap">
                 <button type="button" class="btn btn-outline-info" onclick="triggerTraoDoi()"><asp:Literal ID="lit_mobile_traodoi" runat="server" Text="Trao đổi" /></button>
+                <asp:PlaceHolder ID="ph_mobile_booking" runat="server" Visible="false">
+                    <a id="lnk_mobile_datlich" runat="server" class="btn btn-success">Đặt lịch</a>
+                </asp:PlaceHolder>
                 <asp:PlaceHolder ID="ph_mobile_addcart" runat="server" Visible="true">
                     <button type="button" class="btn btn-outline-success" onclick="triggerAddToCart()">Thêm vào giỏ</button>
                 </asp:PlaceHolder>

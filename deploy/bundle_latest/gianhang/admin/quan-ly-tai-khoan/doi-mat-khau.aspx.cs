@@ -6,7 +6,7 @@ using System.Web.UI;
 using System.Web.UI.WebControls;
 using System.IO;
 
-public partial class taikhoan_add : System.Web.UI.Page
+public partial class gianhang_taikhoan_doi_mat_khau : System.Web.UI.Page
 {
     public string notifi, user, url_back;
     taikhoan_class tk_cl = new taikhoan_class();
@@ -48,12 +48,13 @@ public partial class taikhoan_add : System.Web.UI.Page
         }
         #endregion
         #region Check quyen theo nganh
-        user = Request.QueryString["user"].ToString().Trim();
+        string qsUser = (Request.QueryString["user"] ?? "").Trim();
+        user = qsUser;
         if (bcorn_class.check_quyen(Session["user"].ToString(), "q2_3") == "" || bcorn_class.check_quyen(Session["user"].ToString(), "n2_3") == "" || user == Session["user"].ToString())
         {
-            if (!string.IsNullOrWhiteSpace(Request.QueryString["user"]))
+            if (!string.IsNullOrWhiteSpace(qsUser))
             {
-                user = Request.QueryString["user"].ToString().Trim();
+                user = qsUser;
                 if (tk_cl.exist_user(user))
                 {
                     if (user == "admin" && Session["user"].ToString() != "admin")
@@ -119,7 +120,14 @@ public partial class taikhoan_add : System.Web.UI.Page
             }
             else
             {
-                taikhoan_table_2023 _ob = db.taikhoan_table_2023s.Where(p => p.taikhoan == user && p.id_chinhanh == Session["chinhanh"].ToString()).First();
+                string chinhanhId = (Session["chinhanh"] ?? "").ToString();
+                taikhoan_table_2023 _ob = db.taikhoan_table_2023s
+                    .FirstOrDefault(p => p.taikhoan == user && (string.IsNullOrWhiteSpace(chinhanhId) || p.id_chinhanh == chinhanhId));
+                if (_ob == null)
+                {
+                    notifi = thongbao_class.metro_dialog_onload("Thông báo", "Không tìm thấy tài khoản cần đổi mật khẩu.", "false", "false", "OK", "alert", "");
+                    return;
+                }
                 _ob.matkhau = encode_class.encode_md5(encode_class.encode_sha1(_pass1));
                 db.SubmitChanges();
                 Session["notifi"] = thongbao_class.metro_notifi_onload("Thông báo", "Đổi mật khẩu thành công.", "4000", "warning");

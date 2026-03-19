@@ -1,0 +1,1152 @@
+@import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap");
+
+body.admin-shell {
+    --aha-sync-font-ui: "Be Vietnam Pro", "Segoe UI", Arial, sans-serif;
+    --aha-sync-font-heading: "Sora", "Be Vietnam Pro", "Segoe UI", sans-serif;
+    --aha-sync-brand-600: #148647;
+    --aha-sync-brand-700: #11673a;
+    --aha-sync-brand-soft: #e9f8ef;
+    --aha-sync-ink-900: #0f2940;
+    --aha-sync-ink-700: #2f4f67;
+    --aha-sync-muted: #5f7488;
+    --aha-sync-surface: #ffffff;
+    --aha-sync-bg: #eff4f9;
+    --aha-sync-border: #d8e3ec;
+    --aha-sync-shadow: 0 10px 28px rgba(16, 42, 67, 0.08);
+    --aha-sync-radius-sm: 10px;
+    --aha-sync-radius-md: 14px;
+    --aha-sync-radius-lg: 18px;
+    font-family: var(--aha-sync-font-ui);
+    color: var(--aha-sync-ink-900);
+    background: linear-gradient(180deg, #f6fbf8 0%, var(--aha-sync-bg) 42%, #ffffff 100%);
+}
+
+body.admin-shell h1,
+body.admin-shell h2,
+body.admin-shell h3,
+body.admin-shell h4,
+body.admin-shell h5,
+body.admin-shell h6,
+body.admin-shell .h1,
+body.admin-shell .h2,
+body.admin-shell .h3,
+body.admin-shell .h4 {
+    font-family: var(--aha-sync-font-heading);
+    letter-spacing: -0.012em;
+    color: var(--aha-sync-ink-900);
+}
+
+body.admin-shell .admin-topbar {
+    background: linear-gradient(110deg, #0f5a4a 0%, var(--aha-sync-brand-600) 56%, #2cbc6b 100%) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 8px 24px rgba(8, 34, 26, 0.22);
+    z-index: 120 !important;
+}
+
+body.admin-shell .admin-topbar .app-bar-item,
+body.admin-shell .admin-topbar .app-bar-item .mif,
+body.admin-shell .admin-topbar .app-bar-name,
+body.admin-shell .admin-topbar a {
+    color: #ffffff !important;
+}
+
+body.admin-shell .admin-topbar .app-bar-item {
+    border-radius: 999px !important;
+}
+
+body.admin-shell .admin-topbar .app-bar-item:hover {
+    background: rgba(255, 255, 255, 0.16) !important;
+}
+
+body.admin-shell .admin-topbar,
+body.admin-shell .admin-topbar .app-bar-container {
+    overflow: visible !important;
+}
+
+body.admin-shell .admin-topbar .admin-topbar-home {
+    margin-left: 0 !important;
+}
+
+body.admin-shell .admin-topbar .admin-topbar-title {
+    justify-content: flex-start !important;
+    margin-right: auto !important;
+    min-width: 0 !important;
+    padding-left: 4px !important;
+    padding-right: 10px !important;
+}
+
+body.admin-shell #admin-avatar-shell.admin-shop-dd {
+    position: relative;
+    z-index: 10050;
+    margin-left: 8px;
+}
+
+body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-avatar-btn {
+    border: 1px solid #dce7f2 !important;
+    background: #fff !important;
+    border-radius: 999px !important;
+    min-height: 46px;
+    padding: 4px 12px 4px 4px !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: .2s ease;
+}
+
+body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-avatar-btn:hover,
+body.admin-shell #admin-avatar-shell.admin-shop-dd.open .admin-shop-avatar-btn {
+    background: #ffffff !important;
+    border-color: #9dc6ad !important;
+    box-shadow: 0 8px 22px rgba(13, 143, 91, .16);
+}
+
+body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-avatar-image {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid #dce7f2;
+    background: #f3f6fa;
+}
+
+body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-avatar-name {
+    max-width: 140px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 800;
+    font-size: 14px;
+    color: #163049 !important;
+}
+
+body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-avatar-caret {
+    color: #5f7488;
+    font-size: 12px;
+}
+
+body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    width: min(390px, 92vw);
+    background: #fff;
+    border: 1px solid #dce7f2;
+    border-radius: var(--aha-sync-radius-md);
+    box-shadow: 0 24px 40px rgba(16, 42, 67, .18);
+    overflow: hidden;
+    z-index: 10051;
+    max-height: calc(100vh - 72px);
+    max-height: calc(100dvh - 72px);
+    display: none;
+    flex-direction: column;
+}
+
+body.admin-shell #admin-avatar-shell.admin-shop-dd.open .admin-shop-menu {
+    display: flex;
+}
+
+body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-menu-head {
+    padding: 14px 16px;
+    background: linear-gradient(135deg, rgba(13, 143, 91, .12), rgba(18, 163, 106, .08));
+    border-bottom: 1px solid #dce7f2;
+}
+
+body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-menu-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 800;
+    color: #0f2940;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-menu-sub {
+    margin-top: 4px;
+    font-size: 13px;
+    color: #2f4f67;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-menu-body {
+    overflow: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 6px 0;
+}
+
+body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-menu-group-title {
+    margin: 10px 16px 6px;
+    color: #5f7488;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+
+body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-menu-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    min-height: 40px;
+    padding: 0 16px;
+    color: #1f3f58 !important;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none !important;
+}
+
+body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-menu-item:hover {
+    background: #f6fbff;
+    color: #113954 !important;
+}
+
+body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-menu-item.active {
+    background: #eaf7ef;
+    color: #145035 !important;
+}
+
+body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-menu-badge {
+    font-size: 11px;
+    color: #5f7488;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-menu-footer {
+    padding: 10px 16px 14px;
+    border-top: 1px solid #e6eef7;
+    background: #fcfdff;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    flex: 0 0 auto;
+    align-items: stretch;
+    position: relative;
+    z-index: 2;
+}
+
+body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-btn {
+    width: 100% !important;
+    min-height: 42px;
+    height: 42px;
+    margin: 0 !important;
+    padding: 0 14px !important;
+    box-sizing: border-box;
+    line-height: 1;
+    border-radius: 10px !important;
+    border: 1px solid transparent;
+    font-size: 15px;
+    font-weight: 800;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none !important;
+    white-space: nowrap;
+    user-select: none;
+    -webkit-appearance: none;
+    appearance: none;
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-btn-light {
+    background: #eceff3 !important;
+    border-color: #dce4ee !important;
+    color: #486177 !important;
+}
+
+body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-btn-danger {
+    background: #db2f2f !important;
+    border-color: #cb3e3e !important;
+    color: #ffffff !important;
+}
+
+body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-btn:hover {
+    filter: brightness(0.98);
+}
+
+body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-btn:active {
+    transform: translateY(0);
+}
+
+body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-btn:focus-visible {
+    outline: 0;
+    box-shadow: 0 0 0 3px rgba(20, 103, 68, 0.22);
+}
+
+body.admin-shell #nv .navview-pane {
+    background: #f9fbfd !important;
+    border-right: 1px solid var(--aha-sync-border) !important;
+}
+
+body.admin-shell.admin-avatar-nav-only #nv .navview-pane {
+    display: none !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+    border-right: 0 !important;
+}
+
+body.admin-shell.admin-avatar-nav-only #nv .navview-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+}
+
+body.admin-shell.admin-avatar-nav-only #paneToggle,
+body.admin-shell.admin-avatar-nav-only #admin-ui-density-toggle {
+    display: none !important;
+}
+
+body.admin-shell #nv .navview-pane > .d-flex.flex-align-center {
+    background: #ffffff !important;
+    border-bottom: 1px solid var(--aha-sync-border) !important;
+    box-shadow: 0 8px 16px rgba(12, 38, 58, 0.04) !important;
+    min-height: 60px;
+    height: 60px;
+}
+
+body.admin-shell #nv .navview-pane .pull-button,
+body.admin-shell #nv .navview-pane .pull-button .mif-menu {
+    color: #567189 !important;
+}
+
+body.admin-shell #nv .navview-pane .app-title {
+    color: #123148 !important;
+    font-family: var(--aha-sync-font-heading);
+    font-weight: 800 !important;
+    font-size: 1.28rem !important;
+}
+
+body.admin-shell #nv .navview-pane .admin-left-subtitle {
+    font-family: var(--aha-sync-font-ui);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #6b8092;
+    font-weight: 700;
+    margin-top: 2px;
+}
+
+body.admin-shell #nv .navview-menu {
+    padding: 12px 10px 88px;
+}
+
+body.admin-shell #nv .navview-menu .item-header {
+    margin: 12px 8px 7px;
+    padding: 7px 10px;
+    border-radius: 11px;
+    border: 1px dashed #d6e1ea;
+    color: #708398 !important;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    background: #fdfefe !important;
+}
+
+body.admin-shell #nv .navview-menu li a {
+    margin: 4px 6px;
+    border-radius: 13px;
+    min-height: 46px;
+    color: #26455c !important;
+    background: transparent !important;
+    border: 1px solid transparent;
+    font-weight: 700;
+}
+
+body.admin-shell #nv .navview-menu li a .icon {
+    color: #5f788d !important;
+}
+
+body.admin-shell #nv .navview-menu li a:hover {
+    background: #eef5fb !important;
+    color: #17374d !important;
+}
+
+body.admin-shell #nv .navview-menu li.active > a {
+    background: var(--aha-sync-brand-soft) !important;
+    color: #145035 !important;
+    border-color: #c9e7d4;
+}
+
+body.admin-shell #nv .navview-menu li.active > a .icon {
+    color: #0f6d3f !important;
+}
+
+body.admin-shell .admin-content-inner {
+    background: transparent !important;
+    padding: 18px 22px 32px !important;
+}
+
+body.admin-shell .admin-page {
+    max-width: 1540px;
+}
+
+body.admin-shell .admin-page > .p-3 > h4,
+body.admin-shell .admin-page .aha-admin-page-title {
+    font-family: var(--aha-sync-font-heading);
+    font-size: clamp(1.1rem, 1.55vw, 1.42rem);
+    line-height: 1.2;
+    font-weight: 800;
+    color: #15314a;
+    margin-bottom: 12px;
+}
+
+body.admin-shell .admin-page .bridge-page-title {
+    font-family: var(--aha-sync-font-heading);
+    font-size: clamp(1.15rem, 1.7vw, 1.5rem);
+    color: #133048;
+    font-weight: 800;
+    margin-bottom: 12px;
+}
+
+body.admin-shell .admin-page .aha-admin-head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+body.admin-shell .admin-page .aha-admin-head h4 {
+    margin: 0 0 6px;
+}
+
+body.admin-shell .admin-page .aha-admin-meta {
+    color: #6c8093;
+    font-weight: 500;
+}
+
+body.admin-shell .admin-page .aha-admin-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+body.admin-shell .admin-page .aha-admin-kpi {
+    border-radius: 999px;
+    border: 1px solid #d6e3ee;
+    background: #f8fbff;
+    color: #2b4961;
+    min-height: 38px;
+    padding: 8px 14px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+body.admin-shell .admin-page .aha-admin-kpi .value {
+    color: #1b3f5a;
+}
+
+body.admin-shell .admin-page .aha-admin-control-card {
+    border: 1px solid var(--aha-sync-border);
+    border-radius: var(--aha-sync-radius-lg);
+    background: #ffffff;
+    box-shadow: var(--aha-sync-shadow);
+    padding: 10px;
+    margin-bottom: 12px;
+}
+
+body.admin-shell .admin-page .aha-admin-control-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+body.admin-shell .admin-page .aha-admin-search-wrap {
+    position: relative;
+    flex: 1 1 260px;
+    min-width: 220px;
+}
+
+body.admin-shell .admin-page .aha-admin-search-wrap .mif-search {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b8092;
+    z-index: 2;
+    pointer-events: none;
+}
+
+body.admin-shell .admin-page .aha-admin-control-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+
+body.admin-shell .admin-page .aha-admin-native-input,
+body.admin-shell .admin-page .aha-admin-native-select {
+    width: 100%;
+    min-height: 42px;
+    border: 1px solid var(--aha-sync-border);
+    border-radius: 12px;
+    background: #ffffff;
+    color: #28485f;
+    font-weight: 600;
+    padding: 0 12px;
+    outline: none;
+}
+
+body.admin-shell .admin-page .aha-admin-search-wrap .aha-admin-native-input {
+    padding-left: 38px;
+}
+
+body.admin-shell .admin-page .aha-admin-native-input:focus,
+body.admin-shell .admin-page .aha-admin-native-select:focus {
+    border-color: #8ac9a5;
+    box-shadow: 0 0 0 0.18rem rgba(22, 163, 74, 0.16);
+}
+
+body.admin-shell .admin-page .aha-admin-toolbar {
+    position: sticky !important;
+    top: 2px !important;
+    width: 100% !important;
+    z-index: 24 !important;
+    margin-bottom: 12px;
+}
+
+body.admin-shell .admin-page .aha-admin-toolbar .h-menu {
+    min-height: 56px;
+    padding: 8px 10px;
+    border: 1px solid var(--aha-sync-border);
+    border-radius: var(--aha-sync-radius-lg);
+    box-shadow: var(--aha-sync-shadow);
+    background: #ffffff !important;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+body.admin-shell .admin-page .aha-admin-toolbar .h-menu > li > a,
+body.admin-shell .admin-page .aha-admin-toolbar .h-menu > li > .button {
+    min-height: 38px;
+    height: 38px;
+    line-height: 36px;
+    border-radius: 11px;
+    font-weight: 700;
+    color: #24445b !important;
+    background: #f8fbff !important;
+    border: 1px solid #d9e5ef !important;
+    padding: 0 12px;
+}
+
+body.admin-shell .admin-page .aha-admin-toolbar .h-menu > li > a:hover,
+body.admin-shell .admin-page .aha-admin-toolbar .h-menu > li > .button:hover {
+    background: #eef7ff !important;
+    color: #173952 !important;
+    border-color: #c8daea !important;
+}
+
+body.admin-shell .admin-page .aha-admin-toolbar-search {
+    position: sticky !important;
+    top: 6px !important;
+    width: min(280px, 100%) !important;
+    margin-left: auto;
+    z-index: 25 !important;
+}
+
+body.admin-shell .admin-page .aha-admin-toolbar-search .input input {
+    min-height: 40px;
+    border-radius: 11px !important;
+}
+
+body.admin-shell .admin-page .aha-admin-select {
+    border-radius: 11px !important;
+    border: 1px solid var(--aha-sync-border) !important;
+    min-height: 42px !important;
+}
+
+body.admin-shell .admin-page .aha-admin-section {
+    padding: 2px !important;
+}
+
+body.admin-shell .admin-page .aha-admin-grid {
+    border: 1px solid var(--aha-sync-border) !important;
+    border-radius: var(--aha-sync-radius-lg) !important;
+    box-shadow: var(--aha-sync-shadow) !important;
+    background: #ffffff !important;
+    overflow: auto !important;
+}
+
+body.admin-shell .admin-page .aha-admin-grid .bcorn-fix-title-table,
+body.admin-shell .admin-page .aha-admin-grid .table {
+    margin-bottom: 0;
+}
+
+body.admin-shell .admin-page .profile-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 12px 0 16px;
+}
+
+body.admin-shell .admin-page .profile-tab {
+    border: 1px solid #d3e1ec;
+    border-radius: 999px;
+    padding: 8px 14px;
+    color: #2a4b64;
+    background: #ffffff;
+    text-decoration: none !important;
+    display: inline-flex;
+    align-items: center;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+body.admin-shell .admin-page .profile-tab:hover {
+    background: #f2f8ff;
+    border-color: #c7dbeb;
+    color: #173e59;
+}
+
+body.admin-shell .admin-page .profile-tab.active {
+    background: linear-gradient(135deg, var(--aha-sync-brand-700), var(--aha-sync-brand-600));
+    border-color: #167645;
+    color: #ffffff !important;
+}
+
+body.admin-shell .admin-page .aha-row-actions-trigger {
+    width: 36px;
+    min-width: 36px;
+    height: 36px;
+    min-height: 36px;
+    border-radius: 10px !important;
+    border: 1px solid #d3e0eb !important;
+    color: #36556d !important;
+    background: #f7fbff !important;
+    padding: 0 !important;
+}
+
+body.admin-shell .admin-page .aha-row-actions-trigger:hover {
+    background: #ebf5ff !important;
+    border-color: #c3d7e8 !important;
+}
+
+body.admin-shell #admin-quick-shell.admin-quick-dd {
+    position: relative;
+    z-index: 10050;
+    margin-right: 6px;
+}
+
+body.admin-shell #admin-quick-shell.admin-quick-dd .admin-quick-btn {
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: transparent;
+    color: #ffffff;
+    border-radius: 999px;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: .2s ease;
+}
+
+body.admin-shell #admin-quick-shell.admin-quick-dd .admin-quick-btn:hover,
+body.admin-shell #admin-quick-shell.admin-quick-dd.open .admin-quick-btn {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+body.admin-shell #admin-quick-shell.admin-quick-dd .admin-quick-menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    width: min(320px, 90vw);
+    background: #ffffff;
+    border: 1px solid #dce7f2;
+    border-radius: var(--aha-sync-radius-md);
+    box-shadow: 0 24px 40px rgba(16, 42, 67, .18);
+    overflow: hidden;
+    display: none;
+    z-index: 10051;
+    max-height: calc(100vh - 110px);
+    max-height: calc(100dvh - 110px);
+    overflow-y: auto;
+}
+
+body.admin-shell #admin-quick-shell.admin-quick-dd.open .admin-quick-menu {
+    display: block;
+}
+
+body.admin-shell #admin-quick-shell.admin-quick-dd .admin-quick-list {
+    list-style: none;
+    padding: 8px 0;
+    margin: 0;
+}
+
+body.admin-shell #admin-quick-shell.admin-quick-dd .admin-quick-list li a {
+    display: block;
+    padding: 10px 16px;
+    color: #111111 !important;
+    font-weight: 600;
+}
+
+body.admin-shell #admin-quick-shell.admin-quick-dd .admin-quick-list li a:hover {
+    background: #f4f9ff;
+}
+
+body.admin-shell #admin-quick-shell.admin-quick-dd .admin-quick-divider {
+    height: 1px;
+    background: #e4edf5;
+    margin: 6px 0;
+}
+
+body.admin-shell .admin-page .d-menu {
+    border-radius: 12px !important;
+    border: 1px solid #d7e4ee !important;
+    box-shadow: 0 16px 30px rgba(15, 36, 54, 0.16);
+    overflow: hidden;
+}
+
+body.admin-shell .admin-page .d-menu > li > a,
+body.admin-shell .admin-page .d-menu > li > .link {
+    min-height: 36px;
+    font-weight: 600;
+    color: #27445b !important;
+}
+
+body.admin-shell .admin-page .app-bar-menu .d-menu a,
+body.admin-shell .admin-page .app-bar-menu .d-menu .link,
+body.admin-shell .admin-page .app-bar-menu .d-menu li {
+    color: #111111 !important;
+}
+
+body.admin-shell .admin-page .admin-topbar .d-menu,
+body.admin-shell .admin-page .admin-topbar .d-menu a,
+body.admin-shell .admin-page .admin-topbar .d-menu .link,
+body.admin-shell .admin-page .admin-topbar .d-menu li {
+    color: #111111 !important;
+}
+
+body.admin-shell .admin-page .d-menu > li > a:hover,
+body.admin-shell .admin-page .d-menu > li > .link:hover {
+    background: #f4f9ff !important;
+}
+
+body.admin-shell .admin-page .bridge-summary-card {
+    border: 1px solid var(--aha-sync-border);
+    border-radius: var(--aha-sync-radius-lg);
+    background: #ffffff;
+    box-shadow: var(--aha-sync-shadow);
+    padding: 14px;
+    margin-bottom: 14px;
+}
+
+body.admin-shell .admin-page .bridge-summary-title {
+    font-size: 1rem;
+    color: #16334c;
+    font-weight: 800;
+    margin-bottom: 6px;
+}
+
+body.admin-shell .admin-page .bridge-kv {
+    color: #2b465d;
+    margin-bottom: 4px;
+    word-break: break-all;
+}
+
+body.admin-shell .admin-page .bridge-config-success {
+    color: #16a34a;
+    font-weight: 600;
+}
+
+body.admin-shell .admin-page .bridge-config-error {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+body.admin-shell .admin-page .bridge-points {
+    font-size: 26px;
+    color: #15364f;
+    font-weight: 800;
+}
+
+body.admin-shell .admin-page .bridge-note {
+    color: #6f8194;
+    font-style: italic;
+    margin-top: 8px;
+}
+
+body.admin-shell .admin-page .yc-kpi-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 8px 0 10px;
+}
+
+body.admin-shell .aha-admin-modal-head-wrap {
+    position: fixed !important;
+    inset: 0 0 auto 0 !important;
+    width: 100% !important;
+    height: 58px !important;
+    z-index: 1041 !important;
+    padding: 10px 12px 0 !important;
+}
+
+body.admin-shell .aha-admin-modal-head-card {
+    margin: 0 auto !important;
+    border-radius: 16px 16px 0 0;
+    border: 1px solid #d7e4ee;
+    box-shadow: 0 20px 40px rgba(16, 42, 67, 0.16);
+    overflow: hidden;
+}
+
+body.admin-shell .aha-admin-modal-head-card > .bg-white {
+    height: 58px !important;
+    padding: 10px 20px 0 !important;
+    background: #ffffff !important;
+}
+
+body.admin-shell .aha-admin-modal-head-card .text-upper.text-bold {
+    font-family: var(--aha-sync-font-heading);
+    font-size: 1.05rem;
+    letter-spacing: 0.02em;
+    color: #132e46;
+}
+
+body.admin-shell .aha-admin-modal-head-card hr {
+    margin: 10px 0 0;
+    border-top: 1px solid #e3ebf2;
+}
+
+body.admin-shell .aha-admin-modal-close {
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #fff3f3;
+    border: 1px solid #f4c6c6;
+}
+
+body.admin-shell .aha-admin-modal-close .mif {
+    font-size: 1rem !important;
+}
+
+body.admin-shell .aha-admin-modal-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 1040 !important;
+    overflow: auto !important;
+    background: rgba(9, 26, 41, 0.45) !important;
+    backdrop-filter: blur(2px);
+    padding: 10px 12px 20px !important;
+}
+
+body.admin-shell .aha-admin-modal-dialog {
+    margin: 0 auto !important;
+}
+
+body.admin-shell .aha-admin-modal-body {
+    border-radius: 0 0 16px 16px !important;
+    border: 1px solid #d7e4ee !important;
+    border-top: 0 !important;
+    box-shadow: 0 28px 46px rgba(16, 42, 67, 0.2) !important;
+    padding: 58px 20px 24px !important;
+    background: #ffffff !important;
+}
+
+body.admin-shell .aha-admin-modal-body label,
+body.admin-shell .aha-admin-modal-body .fw-600 {
+    color: #29475f !important;
+    font-weight: 700 !important;
+}
+
+body.admin-shell .aha-admin-modal-body .button {
+    min-height: 38px;
+}
+
+body.admin-shell .aha-admin-progress-mask {
+    background: rgba(10, 25, 39, 0.55) !important;
+    backdrop-filter: blur(1.5px);
+}
+
+body.admin-shell .aha-admin-progress-atom {
+    transform: scale(0.94);
+}
+
+body.admin-shell .admin-page .bg-white.p-4,
+body.admin-shell .admin-page .bg-white.p-3,
+body.admin-shell .admin-page .p-4.bg-white,
+body.admin-shell .admin-page .p-3.bg-white,
+body.admin-shell .admin-page .aha-admin-control-card,
+body.admin-shell .admin-page .aha-admin-table-shell,
+body.admin-shell .admin-page .bcorn-fix-title-table-container,
+body.admin-shell .admin-page .table-responsive,
+body.admin-shell .admin-page .bg-white.border.bd-transparent {
+    border: 1px solid var(--aha-sync-border) !important;
+    border-radius: var(--aha-sync-radius-lg) !important;
+    box-shadow: var(--aha-sync-shadow) !important;
+    background: var(--aha-sync-surface) !important;
+}
+
+body.admin-shell .admin-page .table {
+    margin-bottom: 0;
+}
+
+body.admin-shell .admin-page .table th {
+    background: #edf4f9 !important;
+    color: #2c4b63 !important;
+    font-weight: 700 !important;
+    border-color: #d9e4ee !important;
+}
+
+body.admin-shell .admin-page .table td {
+    border-color: #e3ebf3 !important;
+    color: #223a4d;
+    vertical-align: middle;
+}
+
+body.admin-shell .admin-page .table tbody tr:hover td {
+    background: #f8fcff !important;
+}
+
+body.admin-shell .admin-page .status-pill,
+body.admin-shell .admin-page .aha-admin-status,
+body.admin-shell .admin-page .bridge-inline-badge,
+body.admin-shell .admin-page .yc-kpi {
+    border-radius: 999px;
+    font-weight: 700;
+}
+
+body.admin-shell .admin-page .aha-status-pill {
+    border: 1px solid #d7e3ed !important;
+    background: #f8fbff !important;
+    color: #2f4d65 !important;
+    border-radius: 999px !important;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 10px;
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    line-height: 1.15;
+}
+
+body.admin-shell .admin-page .aha-status-pill.aha-status-pending {
+    border-color: #f2d8a0 !important;
+    background: #fff8e8 !important;
+    color: #8a5b05 !important;
+}
+
+body.admin-shell .admin-page .aha-status-pill.aha-status-approved {
+    border-color: #bfe4cd !important;
+    background: #ebf9f1 !important;
+    color: #11683d !important;
+}
+
+body.admin-shell .admin-page .aha-status-pill.aha-status-rejected {
+    border-color: #f0c4c4 !important;
+    background: #fff1f1 !important;
+    color: #a03232 !important;
+}
+
+body.admin-shell .admin-page .aha-status-pill.aha-status-neutral {
+    border-color: #d7e3ed !important;
+    background: #f8fbff !important;
+    color: #2f4d65 !important;
+}
+
+body.admin-shell .admin-page .aha-status-pill.aha-tag-khachhang {
+    border-color: #b9e2c8 !important;
+    background: #e9f8ef !important;
+    color: #14693d !important;
+}
+
+body.admin-shell .admin-page .aha-status-pill.aha-tag-congtac {
+    border-color: #bfd7e7 !important;
+    background: #edf5fc !important;
+    color: #1e4f74 !important;
+}
+
+body.admin-shell .admin-page .aha-status-pill.aha-tag-donghanh {
+    border-color: #f0d8f8 !important;
+    background: #faf1ff !important;
+    color: #7440a6 !important;
+}
+
+body.admin-shell .admin-page .aha-status-pill.aha-tag-shop {
+    border-color: #f7ddb0 !important;
+    background: #fff5e7 !important;
+    color: #8b5f12 !important;
+}
+
+body.admin-shell .admin-page .aha-status-pill.aha-tag-admin {
+    border-color: #c7d8eb !important;
+    background: #eef4fb !important;
+    color: #2f4f6f !important;
+}
+
+body.admin-shell .admin-page .aha-status-pill.aha-tag-tong {
+    border-color: #d8cdf3 !important;
+    background: #f4efff !important;
+    color: #60439a !important;
+}
+
+body.admin-shell .admin-page .button.mini {
+    min-height: 24px;
+    height: 24px;
+    line-height: 22px;
+    border-radius: 999px !important;
+    font-weight: 700;
+    font-size: 12px;
+    padding: 0 10px;
+}
+
+body.admin-shell .admin-page .bcorn-fix-title-table th {
+    background: #edf4f9 !important;
+    color: #29475f !important;
+}
+
+body.admin-shell .admin-page .input input,
+body.admin-shell .admin-page input[type="text"],
+body.admin-shell .admin-page input[type="password"],
+body.admin-shell .admin-page input[type="number"],
+body.admin-shell .admin-page input[type="email"],
+body.admin-shell .admin-page input[type="tel"],
+body.admin-shell .admin-page select,
+body.admin-shell .admin-page textarea,
+body.admin-shell .admin-page .form-control,
+body.admin-shell .admin-page .form-select {
+    border: 1px solid var(--aha-sync-border) !important;
+    border-radius: var(--aha-sync-radius-sm) !important;
+    min-height: 42px;
+    color: #213a4d;
+    background: #ffffff !important;
+    box-shadow: none !important;
+}
+
+body.admin-shell .admin-page .input input:focus,
+body.admin-shell .admin-page input:focus,
+body.admin-shell .admin-page select:focus,
+body.admin-shell .admin-page textarea:focus {
+    border-color: #8ac9a5 !important;
+    box-shadow: 0 0 0 0.18rem rgba(22, 163, 74, 0.16) !important;
+}
+
+body.admin-shell .admin-page .input .button,
+body.admin-shell .admin-page .input button {
+    border-radius: 0 var(--aha-sync-radius-sm) var(--aha-sync-radius-sm) 0 !important;
+}
+
+body.admin-shell .admin-page .button,
+body.admin-shell .admin-page .btn,
+body.admin-shell .admin-page button,
+body.admin-shell .admin-page input[type="submit"],
+body.admin-shell .admin-page input[type="button"] {
+    border-radius: 11px !important;
+    font-weight: 700 !important;
+}
+
+body.admin-shell .admin-page .button.success,
+body.admin-shell .admin-page .btn-success {
+    background: linear-gradient(135deg, var(--aha-sync-brand-700), var(--aha-sync-brand-600)) !important;
+    border-color: var(--aha-sync-brand-700) !important;
+    color: #fff !important;
+}
+
+body.admin-shell .admin-page .button.warning,
+body.admin-shell .admin-page .btn-warning {
+    background: #f3c54a !important;
+    border-color: #e7b52d !important;
+    color: #293748 !important;
+}
+
+body.admin-shell .admin-page .button.alert,
+body.admin-shell .admin-page .btn-danger {
+    background: #dc4f4f !important;
+    border-color: #cb3e3e !important;
+    color: #fff !important;
+}
+
+body.admin-shell #thongbao-charms {
+    border-left: 1px solid var(--aha-sync-border);
+    box-shadow: -10px 0 28px rgba(16, 42, 67, 0.16);
+    width: min(420px, 96vw) !important;
+}
+
+body.admin-shell #thongbao-charms > div:first-child {
+    background: linear-gradient(110deg, #0f5a4a 0%, var(--aha-sync-brand-600) 68%) !important;
+}
+
+body.admin-shell #thongbao-charms .thongbao-div {
+    border-bottom: 1px solid #edf2f7;
+}
+
+body.admin-shell #thongbao-charms .thongbao-div:hover {
+    background: #f6fbff !important;
+}
+
+body.admin-shell #thongbao-charms .thongbao-noidungchinh {
+    color: #1e3b52;
+}
+
+body.admin-shell #thongbao-charms .thongbao-thoigian {
+    color: #6e8193;
+}
+
+@media (max-width: 991.98px) {
+    body.admin-shell .admin-content-inner {
+        padding: 12px 12px 22px !important;
+    }
+
+    body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-avatar-btn {
+        margin-left: 4px;
+        padding-right: 10px !important;
+    }
+
+    body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-avatar-name {
+        max-width: 96px;
+    }
+
+    body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-menu {
+        width: min(360px, 96vw);
+        max-height: calc(100vh - 66px);
+        max-height: calc(100dvh - 66px);
+    }
+
+    body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-menu-body {
+        max-height: none;
+    }
+
+    body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-menu-item {
+        min-height: 36px;
+        padding: 0 12px;
+    }
+
+    body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-menu-footer {
+        grid-template-columns: 1fr;
+    }
+
+    body.admin-shell .admin-page .aha-admin-control-actions {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    body.admin-shell .admin-page .aha-admin-control-actions .button {
+        flex: 1;
+        justify-content: center;
+    }
+
+    body.admin-shell #nv .navview-pane {
+        width: min(85vw, 320px);
+    }
+}

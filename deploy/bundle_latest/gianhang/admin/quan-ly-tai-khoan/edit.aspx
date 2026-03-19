@@ -1,4 +1,4 @@
-﻿<%@ Page Title="Chỉnh sửa tài khoản" Language="C#" MasterPageFile="~/gianhang/admin/mp-admin.master" AutoEventWireup="true" CodeFile="edit.aspx.cs" Inherits="taikhoan_add" %>
+﻿<%@ Page Title="Chỉnh sửa tài khoản" Language="C#" MasterPageFile="~/gianhang/admin/mp-admin.master" AutoEventWireup="true" CodeFile="edit.aspx.cs" Inherits="gianhang_taikhoan_edit" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="Server">
 </asp:Content>

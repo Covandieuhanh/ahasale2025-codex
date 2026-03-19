@@ -12,6 +12,24 @@ public partial class badmin_Default : System.Web.UI.Page
     dbDataContext db = new dbDataContext();
     public string user = "", user_parent = "", notifi, logo_spa;
     public int stt_cp = 1;
+
+    private bspa_caidatchung_table EnsureCaiDatChung()
+    {
+        var q = db.bspa_caidatchung_tables.Where(p => p.user_parent == user_parent);
+        bspa_caidatchung_table ob = q.FirstOrDefault();
+        if (ob != null)
+            return ob;
+
+        ob = new bspa_caidatchung_table
+        {
+            user_parent = user_parent,
+            chitieu_doanhso_dichvu = 0,
+            chitieu_doanhso_mypham = 0
+        };
+        db.bspa_caidatchung_tables.InsertOnSubmit(ob);
+        db.SubmitChanges();
+        return ob;
+    }
     
     protected void Page_Load(object sender, EventArgs e)
     {
@@ -51,8 +69,7 @@ public partial class badmin_Default : System.Web.UI.Page
         user = Session["user"].ToString();
         user_parent = "admin";
 
-        var q = db.bspa_caidatchung_tables.Where(p => p.user_parent == user_parent);
-        bspa_caidatchung_table _ob = q.First();
+        EnsureCaiDatChung();
 
         if (!IsPostBack)
         {
@@ -64,13 +81,11 @@ public partial class badmin_Default : System.Web.UI.Page
 
     public void reload()
     {
-        var q = db.bspa_caidatchung_tables.Where(p => p.user_parent == user_parent);
-        if (q.Count() != 0)
+        bspa_caidatchung_table _ob = EnsureCaiDatChung();
+        if (_ob != null)
         {
-            bspa_caidatchung_table _ob = q.First();
-            txt_chitieu_doanhso_dichvu.Text = _ob.chitieu_doanhso_dichvu.Value.ToString("#,##0");
-            txt_chitieu_doanhso_mypham.Text = _ob.chitieu_doanhso_mypham.Value.ToString("#,##0");
-
+            txt_chitieu_doanhso_dichvu.Text = (_ob.chitieu_doanhso_dichvu ?? 0).ToString("#,##0");
+            txt_chitieu_doanhso_mypham.Text = (_ob.chitieu_doanhso_mypham ?? 0).ToString("#,##0");
         }
 
  
@@ -90,8 +105,7 @@ public partial class badmin_Default : System.Web.UI.Page
         if (_r2 < 0)
             _r2 = 0;
 
-        var q = db.bspa_caidatchung_tables.Where(p => p.user_parent == user_parent);
-        bspa_caidatchung_table _ob = q.First();
+        bspa_caidatchung_table _ob = EnsureCaiDatChung();
         _ob.chitieu_doanhso_dichvu = _r1;
         _ob.chitieu_doanhso_mypham = _r2;
         db.SubmitChanges();

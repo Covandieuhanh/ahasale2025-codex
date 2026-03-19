@@ -10,9 +10,25 @@ public partial class admin_Default : System.Web.UI.Page
 {
     dbDataContext db = new dbDataContext();
     public string notifi;
+    private config_lienket_chiase_table EnsureLienKet()
+    {
+        config_lienket_chiase_table ob = db.config_lienket_chiase_tables.FirstOrDefault();
+        if (ob != null)
+            return ob;
+
+        ob = new config_lienket_chiase_table
+        {
+            title = "",
+            description = "",
+            image = ""
+        };
+        db.config_lienket_chiase_tables.InsertOnSubmit(ob);
+        db.SubmitChanges();
+        return ob;
+    }
     public void main()
     {
-        config_lienket_chiase_table _ob = db.config_lienket_chiase_tables.First();
+        config_lienket_chiase_table _ob = EnsureLienKet();
 
         if (!IsPostBack)
         {
@@ -86,7 +102,7 @@ public partial class admin_Default : System.Web.UI.Page
             if (!Directory.Exists(Server.MapPath("~/uploads/images/config/")))
                 Directory.CreateDirectory(Server.MapPath("~/uploads/images/config/"));
 
-            config_lienket_chiase_table _ob = db.config_lienket_chiase_tables.First();
+            config_lienket_chiase_table _ob = EnsureLienKet();
             _img = _ob.image;
 
             if (FileUpload2.HasFile)//nếu có ảnh thu nhỏ đc chọn
@@ -132,7 +148,7 @@ public partial class admin_Default : System.Web.UI.Page
         }
         else
         {
-            config_lienket_chiase_table _ob = db.config_lienket_chiase_tables.First();
+            config_lienket_chiase_table _ob = EnsureLienKet();
             file_folder_class.del_file(_ob.image);//xóa ảnh cũ
             _ob.image = "";
             db.SubmitChanges();

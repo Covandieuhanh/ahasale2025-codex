@@ -11,9 +11,26 @@ public partial class admin_Default : System.Web.UI.Page
     dbDataContext db = new dbDataContext();
     datetime_class dt_cl = new datetime_class();
     public string notifi;
+    private config_baotri_table EnsureBaoTri()
+    {
+        config_baotri_table ob = db.config_baotri_tables.FirstOrDefault();
+        if (ob != null)
+            return ob;
+
+        ob = new config_baotri_table
+        {
+            baotri_trangthai = false,
+            baotri_thoigian_batdau = null,
+            baotri_thoigian_ketthuc = null,
+            ghichu = ""
+        };
+        db.config_baotri_tables.InsertOnSubmit(ob);
+        db.SubmitChanges();
+        return ob;
+    }
     public void main()
     {
-        config_baotri_table _ob = db.config_baotri_tables.First();
+        config_baotri_table _ob = EnsureBaoTri();
         if (!IsPostBack)
         {
             if (_ob.baotri_trangthai == true)
@@ -48,7 +65,7 @@ public partial class admin_Default : System.Web.UI.Page
                     ddl_phutketthuc.Items.Insert(0, new ListItem(i + " phút", i.ToString()));
                 }
             }
-            if (_ob.baotri_trangthai == true)
+            if (_ob.baotri_trangthai == true && _ob.baotri_thoigian_batdau.HasValue && _ob.baotri_thoigian_ketthuc.HasValue)
             {
                 txt_ngay_batdau.Text = _ob.baotri_thoigian_batdau.Value.ToShortDateString();
                 txt_ngay_ketthuc.Text = _ob.baotri_thoigian_ketthuc.Value.ToShortDateString();

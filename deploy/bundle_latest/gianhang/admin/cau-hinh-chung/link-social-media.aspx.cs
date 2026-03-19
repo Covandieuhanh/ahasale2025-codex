@@ -11,9 +11,31 @@ public partial class admin_Default : System.Web.UI.Page
     dbDataContext db = new dbDataContext();
     datetime_class dt_cl = new datetime_class();
     public string notifi;
+    private config_social_media_table EnsureSocial()
+    {
+        config_social_media_table ob = db.config_social_media_tables.FirstOrDefault();
+        if (ob != null)
+            return ob;
+
+        ob = new config_social_media_table
+        {
+            facebook = "",
+            zalo = "",
+            youtube = "",
+            instagram = "",
+            twitter = "",
+            tiktok = "",
+            wechat = "",
+            linkedin = "",
+            whatsapp = ""
+        };
+        db.config_social_media_tables.InsertOnSubmit(ob);
+        db.SubmitChanges();
+        return ob;
+    }
     public void main()
     {
-        config_social_media_table _ob = db.config_social_media_tables.First();
+        config_social_media_table _ob = EnsureSocial();
         if (!IsPostBack)
         {
             TextBox1.Text = _ob.facebook;
@@ -76,7 +98,7 @@ public partial class admin_Default : System.Web.UI.Page
         }
         else
         {
-            config_social_media_table _ob = db.config_social_media_tables.First();
+            config_social_media_table _ob = EnsureSocial();
             _ob.facebook = TextBox1.Text.Trim();
             _ob.zalo = TextBox2.Text.Trim();
             _ob.youtube = TextBox3.Text.Trim();

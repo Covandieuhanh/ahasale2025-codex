@@ -301,9 +301,14 @@
     <div class="booking-shell">
         <div class="booking-wrap">
             <asp:HiddenField ID="hf_shop_account" runat="server" />
+            <asp:HiddenField ID="hf_booking_id" runat="server" />
             <asp:PlaceHolder ID="ph_success" runat="server" Visible="false">
                 <div class="booking-alert booking-alert-success">
                     <asp:Label ID="lb_success" runat="server"></asp:Label>
+                    <div class="mt-3 d-flex flex-wrap gap-2">
+                        <a class="btn btn-sm btn-primary" href="/home/lich-hen.aspx">Xem lịch hẹn của tôi</a>
+                        <a class="btn btn-sm btn-outline-secondary" href="/home/Default.aspx">Về trang chủ</a>
+                    </div>
                 </div>
             </asp:PlaceHolder>
 

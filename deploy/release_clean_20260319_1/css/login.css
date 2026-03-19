@@ -1,0 +1,54 @@
+﻿.body-login-home {margin-top: 50px;background-color: #c90230;overflow: hidden}
+.bg-login-home {background: linear-gradient(#870007,#c90230);}
+
+.body-login {margin-top: 50px;background-color: rgb(27, 161, 226);overflow: hidden}
+.bg-login {background: linear-gradient(rgb(19, 112, 158), rgb(27, 161, 226));}
+
+.body-quen-mat-khau {margin-top: 50px;background-color: #CE352C;overflow: hidden}
+.bg-quen-mat-khau {background: linear-gradient(#8f251f, #CE352C);}
+
+.body-ma-xac-nhan {margin-top: 50px;background-color: #a20025;overflow: hidden}
+.bg-ma-xac-nhan {background: linear-gradient(#560014,#a20025);}
+
+.body-bao-tri {margin-top: 50px;background-color: #607d8b;overflow: hidden}
+.bg-bao-tri {background: linear-gradient(#41545e,#607d8b);}
+
+.body-login-style1 {margin-top: 50px;background-color: #008a00 ;overflow: hidden}
+.bg-login-style1 {background: linear-gradient(#003d00, #008a00 );}
+
+.login-title-big {
+    font-size: 25px;
+    font-weight: 700;
+}
+.login-bg {
+    background: #1a1b1b url('/uploads/images/login/bg-2.jpg') center center no-repeat;
+    background-size: cover;
+    min-height: 100vh;
+}
+
+.login-logo {
+    overflow: hidden;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+}
+
+@media (max-width: 575px) { /*sm*/
+  
+}
+
+@media (max-width: 767px) { /*md*/
+
+}
+
+@media (max-width: 991px) { /*lg*/
+
+}
+
+@media (max-width: 1199px) { /*xl*/
+
+}
+
+@media (max-width: 1451px) { /*xxl*/
+}

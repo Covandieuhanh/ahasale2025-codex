@@ -280,13 +280,26 @@ public partial class home_page_chi_tiet_bai_viet : System.Web.UI.Page
                 ph_qty_block.Visible = !isService;
                 ph_add_to_cart.Visible = !isService;
                 ph_mobile_addcart.Visible = !isService;
-                but_traodoi.Text = isService ? "Xem dịch vụ" : "Trao đổi";
-                lit_mobile_traodoi.Text = isService ? "Xem dịch vụ" : "Trao đổi";
+                but_traodoi.Text = isService ? "Tạo đơn" : "Trao đổi";
+                lit_mobile_traodoi.Text = isService ? "Tạo đơn" : "Trao đổi";
+                ph_booking.Visible = isService;
+                ph_mobile_booking.Visible = isService;
+
+                if (isService)
+                {
+                    string shopAccount = (q.nguoitao ?? "").Trim().ToLowerInvariant();
+                    string returnUrl = Request.Url.PathAndQuery;
+                    string bookingUrl = "/home/dat-lich.aspx?user=" + HttpUtility.UrlEncode(shopAccount)
+                        + "&id=" + HttpUtility.UrlEncode(q.id.ToString())
+                        + "&return_url=" + HttpUtility.UrlEncode(returnUrl);
+                    lnk_datlich.NavigateUrl = bookingUrl;
+                    lnk_mobile_datlich.HRef = bookingUrl;
+                }
 
                 if (isService && string.Equals((Request.QueryString["service_notice"] ?? "").Trim(), "1", StringComparison.Ordinal))
                 {
                     Helper_Tabler_cl.ShowModal(this.Page,
-                        "Dịch vụ sẽ được đặt lịch tại Aha Shine. Hiện Aha Sale chỉ hỗ trợ trao đổi sản phẩm.",
+                        "Dịch vụ có thể đặt lịch trực tiếp tại Aha Sale. Vui lòng chọn Đặt lịch.",
                         "Thông báo",
                         true,
                         "warning");
@@ -294,8 +307,26 @@ public partial class home_page_chi_tiet_bai_viet : System.Web.UI.Page
 
                 string thanhPhoRaw = string.IsNullOrWhiteSpace(q.ThanhPho) ? "Không có" : q.ThanhPho;
                 string thanhPho = TinhThanhDisplay_cl.Format(thanhPhoRaw);
-                Label2.Text = string.Format("<a href='{0}' target='_blank' class='text-muted'>", q.LinkMap) +
-                              string.Format("<i class='ti ti-map-pin'></i> {0}</a>", thanhPho);
+                string mapLink = NormalizeMapLink(q.LinkMap);
+                if (!string.IsNullOrWhiteSpace(mapLink))
+                {
+                    Label2.Text = string.Format("<a href='{0}' target='_blank' class='text-muted'>", mapLink) +
+                                  string.Format("<i class='ti ti-map-pin'></i> {0}</a>", thanhPho);
+                }
+                else
+                {
+                    Label2.Text = string.Format("<span class='text-muted'><i class='ti ti-map-pin'></i> {0}</span>", thanhPho);
+                }
+
+                if (isService && !string.IsNullOrWhiteSpace(mapLink))
+                {
+                    ph_map_link.Visible = true;
+                    lnk_map.NavigateUrl = mapLink;
+                }
+                else
+                {
+                    ph_map_link.Visible = false;
+                }
 
                 TimeSpan timeAgo = AhaTime_cl.Now - q.ngaytao.Value;
                 if (timeAgo.TotalDays >= 1)
@@ -484,27 +515,54 @@ public partial class home_page_chi_tiet_bai_viet : System.Web.UI.Page
         LoadDanhGia(pageIndex);
     }
 
-    private bool HasAnyOrderForBuyer(dbDataContext db, string taiKhoanMua)
+    private bool HasCompletedOrderForBuyerProduct(dbDataContext db, string taiKhoanMua, string idBaiViet)
     {
         if (db == null) return false;
         string tk = (taiKhoanMua ?? "").Trim();
         if (tk == "") return false;
+        string idsp = (idBaiViet ?? "").Trim();
+        if (idsp == "") return false;
 
         try
         {
-            // Dùng SQL tối giản để tương thích DB cũ chưa có cột order_status/exchange_status.
-            var found = db.ExecuteQuery<OneFlagRow>(
-                @"SELECT TOP 1 CAST(1 AS INT) AS Flag
-                  FROM dbo.DonHang_tb dh
-                  INNER JOIN dbo.DonHang_ChiTiet_tb ct ON CAST(dh.id AS NVARCHAR(50)) = ct.id_donhang
-                  WHERE ISNULL(dh.nguoimua,'') = {0}",
-                tk).FirstOrDefault();
-            return found != null && found.Flag == 1;
+            var orders = (from dh in db.DonHang_tbs
+                          join ct in db.DonHang_ChiTiet_tbs on dh.id.ToString() equals ct.id_donhang
+                          where dh.nguoimua == tk && ct.idsp == idsp
+                          select new
+                          {
+                              dh.trangthai,
+                              dh.order_status,
+                              dh.exchange_status,
+                              dh.online_offline
+                          }).ToList();
+
+            foreach (var o in orders)
+            {
+                var dh = new DonHang_tb
+                {
+                    trangthai = o.trangthai,
+                    order_status = o.order_status,
+                    exchange_status = o.exchange_status,
+                    online_offline = o.online_offline
+                };
+                DonHangStateMachine_cl.EnsureStateFields(dh);
+                string orderStatus = DonHangStateMachine_cl.GetOrderStatus(dh);
+                string exchangeStatus = DonHangStateMachine_cl.GetExchangeStatus(dh);
+                if (string.Equals(exchangeStatus, DonHangStateMachine_cl.Exchange_DaTraoDoi, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(orderStatus, DonHangStateMachine_cl.Order_DaNhan, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+            return false;
         }
         catch
         {
             return false;
         }
+    }
+
+    private bool CanReviewPost(dbDataContext db, string taiKhoanMua, string idBaiViet, bool isService)
+    {
+        return HasCompletedOrderForBuyerProduct(db, taiKhoanMua, idBaiViet);
     }
 
     private void LoadDanhGia(int page)
@@ -565,20 +623,39 @@ public partial class home_page_chi_tiet_bai_viet : System.Web.UI.Page
             if (ViewState["taikhoan"] != null)
             {
                 string taikhoan = ViewState["taikhoan"].ToString();
-                bool duocanhGia = HasAnyOrderForBuyer(db, taikhoan);
+                bool isService = string.Equals(Convert.ToString(ViewState["is_service"]), "1", StringComparison.Ordinal);
+                bool duocanhGia = CanReviewPost(db, taikhoan, idBaiViet, isService);
+                string taiKhoanDanhGia = Convert.ToString(ViewState["taikhoan"]) ?? "";
+                string nguoiBan = Convert.ToString(ViewState["nguoiban"]) ?? "";
 
                 bool daDanhGia = false;
                 if (duocanhGia)
                 {
-                    string taiKhoanDanhGia = Convert.ToString(ViewState["taikhoan"]) ?? "";
-                    string nguoiBan = Convert.ToString(ViewState["nguoiban"]) ?? "";
-
                     daDanhGia = danhSachDanhGiaVaAnh.Any(x =>
                         x.TaiKhoanDanhGia == taiKhoanDanhGia ||
                         x.ThuocTaiKhoan == nguoiBan
                     );
                 }
-                InputReview.Visible = !daDanhGia;
+                bool laChuTin = string.Equals(
+                    Convert.ToString(ViewState["nguoiban"]) ?? "",
+                    taiKhoanDanhGia,
+                    StringComparison.OrdinalIgnoreCase);
+
+                if (laChuTin)
+                {
+                    InputReview.Visible = false;
+                    if (phReviewGate != null) phReviewGate.Visible = false;
+                }
+                else if (!duocanhGia)
+                {
+                    InputReview.Visible = false;
+                    if (phReviewGate != null) phReviewGate.Visible = true;
+                }
+                else
+                {
+                    InputReview.Visible = !daDanhGia;
+                    if (phReviewGate != null) phReviewGate.Visible = false;
+                }
             }
 
             DisplayPaging(totalPages);
@@ -612,6 +689,19 @@ public partial class home_page_chi_tiet_bai_viet : System.Web.UI.Page
 
     protected void btnGuiDanhGia_Click(object sender, EventArgs e)
     {
+        using (dbDataContext db = new dbDataContext())
+        {
+            string taiKhoan = Convert.ToString(ViewState["taikhoan"]) ?? "";
+            string idBaiViet = Convert.ToString(ViewState["idsp"]) ?? "";
+            bool isService = string.Equals(Convert.ToString(ViewState["is_service"]), "1", StringComparison.Ordinal);
+
+            if (string.IsNullOrWhiteSpace(taiKhoan) || !CanReviewPost(db, taiKhoan, idBaiViet, isService))
+            {
+                Helper_Tabler_cl.ShowModal(this.Page, "Bạn cần hoàn tất trao đổi sản phẩm hoặc dịch vụ này trước khi đánh giá.", "Thông báo", true, "warning");
+                return;
+            }
+        }
+
         int result;
         int diem = int.TryParse(hdDiem.Value, out result) ? result : 0;
         var danhGia = new DanhGiaBaiViet
@@ -691,17 +781,6 @@ public partial class home_page_chi_tiet_bai_viet : System.Web.UI.Page
     {
         int sl = Number_cl.Check_Int((txt_soluong1.Text ?? "").Trim());
         if (sl <= 0) sl = 1;
-        bool isService = string.Equals((ViewState["is_service"] ?? "").ToString(), "1", StringComparison.Ordinal);
-        if (isService)
-        {
-            Helper_Tabler_cl.ShowModal(this.Page,
-                "Dịch vụ sẽ được đặt lịch tại Aha Shine. Hiện Aha Sale chỉ hỗ trợ trao đổi sản phẩm.",
-                "Thông báo",
-                true,
-                "warning");
-            return;
-        }
-
         string idsp = (ViewState["idsp"] ?? "").ToString();
         if (string.IsNullOrEmpty(idsp))
         {
@@ -713,6 +792,21 @@ public partial class home_page_chi_tiet_bai_viet : System.Web.UI.Page
         Response.Redirect(BuildExchangePageUrl(idsp, sl, userBanCheo), true);
     }
     #endregion
+
+    private string NormalizeMapLink(string raw)
+    {
+        string value = (raw ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(value))
+            return "";
+
+        if (value.StartsWith("//"))
+            return "https:" + value;
+        if (value.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+            || value.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            return value;
+
+        return "https://" + value;
+    }
 
 
     protected void but_themvaogio_Click(object sender, EventArgs e)

@@ -1,0 +1,121 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeFile="mp-home.master.cs" Inherits="mp_home" %>
+
+<%@ Register Src="~/gianhang/uc/menutop_home.ascx" TagPrefix="uc1" TagName="menutop_home" %>
+<%@ Register Src="~/gianhang/uc/bottom_uc.ascx" TagPrefix="uc1" TagName="bottom_uc" %>
+
+<%@ Register Src="~/gianhang/uc/dangky_tuvan_uc.ascx" TagPrefix="uc1" TagName="dangky_tuvan_uc" %>
+<%@ Register Src="~/gianhang/uc/footer_uc.ascx" TagPrefix="uc1" TagName="footer_uc" %>
+<%@ Register Src="~/gianhang/uc/dangnhap_uc.ascx" TagPrefix="uc1" TagName="dangnhap_uc" %>
+<%@ Register Src="~/gianhang/uc/dangky_tk_home_uc.ascx" TagPrefix="uc1" TagName="dangky_tk_home_uc" %>
+
+
+
+<!DOCTYPE html>
+
+<html>
+<head runat="server">
+
+    <meta http-equiv="content-language" content="vi" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes" />
+    <meta name="robots" content="noodp,index,follow" />
+    <meta name="revisit-after" content="1 days" />
+    <meta name="google" content="nositelinkssearchbox" />
+    <link href="/Metro-UI-CSS-master/tests/metro/css/metro-all.min.css" rel="stylesheet" />
+    <link href="/css/fix-metro.css" rel="stylesheet" />
+    <link href="/css/bcorn-with-metro.css" rel="stylesheet" />
+    <link href="/css/home.css?v=storefront20260316" rel="stylesheet" />
+    <link href="/css/gianhang-storefront.css?v=storefront20260316" rel="stylesheet" />
+    <asp:PlaceHolder runat="server">
+        <%=meta %>
+    </asp:PlaceHolder>
+    <%=nhungma_head %>
+    <asp:ContentPlaceHolder ID="head" runat="server"></asp:ContentPlaceHolder>
+</head>
+<body class="home-body storefront-mode-hybrid">
+    <%=nhungma_body1 %>
+    <form id="form1" runat="server" class="home-shell">
+        
+        <asp:ScriptManager ID="ScriptManager1" runat="server" EnableScriptGlobalization="True"></asp:ScriptManager>
+        <uc1:dangky_tuvan_uc runat="server" ID="dangky_tuvan_uc" />
+
+        <% if (Session["user_home"].ToString() == "")
+            { %>
+        <uc1:dangnhap_uc runat="server" ID="dangnhap_uc" />
+        <uc1:dangky_tk_home_uc runat="server" id="dangky_tk_home_uc" />
+        <%} %>
+       
+        <div class="fix_but_4 floating-cta floating-cta--consult text-center" data-role="hint" data-hint-position="left" data-hint-text="Đăng ký tư vấn">
+            <a class="floating-cta__link" onclick="show_hide_id_form_dangkytuvan()">
+                <span class="floating-cta__icon">
+                    <img src="/uploads/images/icon/tuvan-den.png" alt="Tư vấn" />
+                </span>
+                <span class="floating-cta__label">Tư vấn</span>
+            </a>
+        </div>
+        <div class="fix_but_3 floating-cta floating-cta--booking text-center" data-role="hint" data-hint-position="left" data-hint-text="Đặt lịch">
+            <a class="floating-cta__link" href="<%=AhaShineHomeRoutes_cl.BookingUrl %>">
+                <span class="floating-cta__icon">
+                    <img src="/uploads/images/icon/lich.png" alt="Đặt lịch" />
+                </span>
+                <span class="floating-cta__label">Đặt lịch</span>
+            </a>
+        </div>
+        <%if (zalo != "")
+            { %>
+        <div class="fix_but_2 floating-cta floating-cta--zalo text-center" data-role="hint" data-hint-position="left" data-hint-text="Chát Zalo">
+            <a class="floating-cta__link" href="https://zalo.me/<%=zalo %>">
+                <span class="floating-cta__icon">
+                    <img src="/uploads/images/icon/zalo.png" alt="Zalo" />
+                </span>
+                <span class="floating-cta__label">Zalo</span>
+            </a>
+        </div>
+        <%} %>
+        <%if (hotline != "")
+            { %>
+        <div class="fix_but_1 floating-cta floating-cta--hotline text-center" data-role="hint" data-hint-position="left" data-hint-text="Gọi ngay">
+            <a href="tel:<%=hotline %>" class="floating-cta__link ani-ring">
+                <span class="floating-cta__icon">
+                    <img src="/uploads/images/icon/hotline.png" alt="Hotline" />
+                </span>
+                <span class="floating-cta__label">Hotline</span>
+            </a>
+        </div>
+        <%} %>
+
+        
+        <asp:UpdatePanel ID="UpdatePanel1" runat="server" UpdateMode="Conditional">
+            <ContentTemplate>
+            </ContentTemplate>
+            <Triggers>
+                <asp:AsyncPostBackTrigger ControlID="Timer1" EventName="Tick" />
+            </Triggers>
+        </asp:UpdatePanel>
+        <asp:Timer ID="Timer1" runat="server" OnTick="Timer1_Tick" Interval="4000"></asp:Timer>
+        <asp:UpdateProgress ID="UpdateProgress1" runat="server" AssociatedUpdatePanelID="UpdatePanel1">
+            <ProgressTemplate>
+                <div class="bg-dark fixed-top h-100 w-100" style="opacity: 0.9; z-index: 99999!important">
+                    <div style="padding-top: 45vh;">
+                        <div class="mx-auto color-style activity-atom" data-role="activity" data-type="atom" data-style="color" data-role-activity="true"><span class="electron"></span><span class="electron"></span><span class="electron"></span></div>
+                    </div>
+                </div>
+            </ProgressTemplate>
+        </asp:UpdateProgress>
+
+        <uc1:menutop_home runat="server" ID="menutop_home" />
+
+        <div class="home-main-shell">
+            <asp:ContentPlaceHolder ID="main" runat="server"></asp:ContentPlaceHolder>
+        </div>
+        <uc1:footer_uc runat="server" ID="footer_uc" />
+        <uc1:bottom_uc runat="server" ID="bottom_uc" />
+    </form>
+    <script src="/Metro-UI-CSS-master/tests/metro/js/metro.min.js"></script>
+    <script src="/js/bcorn.js"></script>
+    <script src="/js/gianhang-storefront.js?v=storefront20260316"></script>
+    <asp:ContentPlaceHolder ID="foot" runat="server"></asp:ContentPlaceHolder>
+    <%=nhungma_body2 %>
+    <%=notifi %>
+</body>
+</html>

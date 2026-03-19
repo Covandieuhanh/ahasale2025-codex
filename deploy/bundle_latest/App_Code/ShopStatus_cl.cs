@@ -24,13 +24,12 @@ public static class ShopStatus_cl
 
             try
             {
-                db.ExecuteCommand(@"
-IF COL_LENGTH('dbo.taikhoan_tb', 'TrangThai_Shop') IS NULL
-BEGIN
-    ALTER TABLE dbo.taikhoan_tb
-        ADD TrangThai_Shop TINYINT NOT NULL
-        CONSTRAINT DF_taikhoan_tb_TrangThai_Shop DEFAULT(0) WITH VALUES;
-END");
+                // Host không chạy được DDL, nên chỉ cập nhật dữ liệu khi cột đã tồn tại.
+                if (!HasTrangThaiColumn(db))
+                {
+                    _schemaReady = true;
+                    return;
+                }
 
                 // Ưu tiên trạng thái mới nhất theo hồ sơ đăng ký gian hàng đối tác.
                 db.ExecuteCommand(@"
@@ -62,8 +61,33 @@ WHERE NOT EXISTS (SELECT 1 FROM dbo.DangKy_GianHangDoiTac_tb dk WHERE dk.taikhoa
             }
             catch
             {
-                // Nếu lỗi schema thì để lần sau thử lại.
+                // Nếu lỗi schema thì không retry liên tục để tránh làm chậm trang.
+                _schemaReady = true;
             }
+        }
+    }
+
+    public static bool HasTrangThaiColumn(dbDataContext db)
+    {
+        if (db == null)
+            return false;
+        try
+        {
+            int flag = 0;
+            foreach (int row in db.ExecuteQuery<int>(@"
+SELECT CASE
+    WHEN COL_LENGTH('dbo.taikhoan_tb', 'TrangThai_Shop') IS NULL THEN 0
+    ELSE 1
+END AS ok"))
+            {
+                flag = row;
+                break;
+            }
+            return flag == 1;
+        }
+        catch
+        {
+            return false;
         }
     }
 

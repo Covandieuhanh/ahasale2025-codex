@@ -1,0 +1,4 @@
+Deploy delta since last git commit (HEAD)
+Source root: /Users/duccuongtran/Documents/Aha Sale 2025/localhost/ahasale.vn.localhost
+Included items: 53
+Excluded: deploy/, .git/, scripts/test-home-smoke.sh, local-only config/docs

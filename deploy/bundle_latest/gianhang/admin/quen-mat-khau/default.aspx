@@ -29,11 +29,117 @@
     </asp:PlaceHolder>
     <style>
         .body-quen-mat-khau {
+            margin-top: 0;
             background-color: #7f1d1d;
         }
 
         .bg-quen-mat-khau {
             background: linear-gradient(140deg, #7f1d1d 0%, #c81e1e 55%, #ef4444 100%);
+            min-height: 100vh;
+        }
+
+        .gh-quen-topbar {
+            height: 56px;
+            line-height: 56px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(8px);
+        }
+
+        .gh-quen-shell {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 96px 16px 80px;
+        }
+
+        .gh-quen-card {
+            width: min(460px, 100%);
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 18px;
+            padding: 28px 26px 30px;
+            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.25);
+        }
+
+        .gh-quen-step {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            background: rgba(255, 255, 255, 0.18);
+            color: #fee2e2;
+            margin-bottom: 12px;
+        }
+
+        .gh-quen-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #ffffff;
+            margin: 0 0 8px;
+        }
+
+        .gh-quen-desc {
+            color: rgba(255, 255, 255, 0.82);
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 18px;
+        }
+
+        .gh-quen-input {
+            margin-top: 12px;
+        }
+
+        .gh-quen-input .input input {
+            border-radius: 12px !important;
+            border-color: rgba(255, 255, 255, 0.35) !important;
+            background: rgba(255, 255, 255, 0.12) !important;
+            color: #ffffff !important;
+        }
+
+        .gh-quen-input .input input::placeholder {
+            color: rgba(255, 255, 255, 0.7) !important;
+        }
+
+        .gh-quen-action {
+            margin-top: 18px;
+        }
+
+        .gh-quen-action .button {
+            height: 48px;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            border-radius: 12px;
+        }
+
+        .gh-quen-support {
+            margin-top: 16px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.75);
+            text-align: center;
+        }
+
+        .gh-quen-support a {
+            color: #ffffff;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 576px) {
+            .gh-quen-shell {
+                padding: 84px 12px 60px;
+            }
+
+            .gh-quen-card {
+                padding: 22px 20px 24px;
+            }
+
+            .gh-quen-title {
+                font-size: 20px;
+            }
         }
 
         .bg-darkRed,
@@ -89,42 +195,31 @@
     <form id="form1" runat="server">
         <asp:ScriptManager ID="ScriptManager1" runat="server" EnableScriptGlobalization="True"></asp:ScriptManager>
         <div class="bg-quen-mat-khau">
-        <div class="container-fluid pos-fixed fixed-top bg-darkRed z-1 fg-white" style="height: 50px; line-height: 50px;">
-            <div class="fg-white container bg-transparent pl-0 pr-0" data-role="app-bar" data-expand-point="lg">
-                <a class="app-bar-item" href="/gianhang/admin/login.aspx" title="Quay lại"><span class="mif-arrow-left mr-3"></span>Đăng nhập ngay</a>
-               <%-- <a class="app-bar-item" href="#">Quên mật khẩu</a>
-                <div class="app-bar-container ml-auto">
-                    <a class="app-bar-item" href="/gianhang/admin/login.aspx">Đăng nhập</a>
-                </div>--%>
+            <div class="container-fluid pos-fixed fixed-top bg-darkRed z-1 fg-white gh-quen-topbar">
+                <div class="fg-white container bg-transparent pl-0 pr-0" data-role="app-bar" data-expand-point="lg">
+                    <a class="app-bar-item" href="/gianhang/admin/login.aspx" title="Quay lại"><span class="mif-arrow-left mr-3"></span>Quay lại đăng nhập</a>
+                </div>
             </div>
-        </div>
-        <%--<div class="container-fluid pos-fixed fixed-bottom bg-red text-center z-1 fg-white" style="height: 40px; line-height: 40px;">
-            <small>Email trợ giúp: <a href="" class="fg-white fg-gray-hover">support@bcorn.net</a></small>
-        </div>--%>
-        <div style="margin: 0 auto; max-width: 390px; z-index: 0;" class="pl-4 pr-4 pl-0-md pr-0-md">
-            <asp:Panel ID="Panel1" runat="server" DefaultButton="Button1">
-                <div>
-                    <div class="text-center" style="padding-top: 120px;">
-                        <div class='pb-2 fg-white'>
-                            <%--<img src="/uploads/images/avt-bcorn.jpg" class="login-logo" />--%>
-                            <%--<img src="/uploads/images/logo-bcorn-text-white.png" width="90" />--%>
-                            <div class="login-title-big mt-2 mb-2"><span class="fg-white">KHÔI PHỤC MẬT KHẨU</span></div>
-                            <span class="mif mif-mail mif-8x fg-white"></span>
-                            <div class="login-title-big mt-2"><span class="fg-white">Bước 1</span></div>
-                            <div>
-                                Nhập <b>tên tài khoản</b> hoặc <b>email</b> đã đăng ký.<br />
-                                Sau đó, nhấn nút "Nhận mã khôi phục".
-                            </div>
+
+            <div class="gh-quen-shell">
+                <asp:Panel ID="Panel1" runat="server" DefaultButton="Button1">
+                    <div class="gh-quen-card">
+                        <div class="gh-quen-step">
+                            <span class="mif mif-lock"></span>
+                            Bước 1
                         </div>
-                    </div>
-                    <div style="padding-bottom: 120px">
-                        <div class="mt-5">
-                            <asp:TextBox ID="txt_taikhoan_email" runat="server" data-role="input" placeholder="Nhập tài khoản hoặc Email"></asp:TextBox><%--autocomplete="off" --%>
+                        <div class="gh-quen-title">Khôi phục mật khẩu</div>
+                        <div class="gh-quen-desc">
+                            Nhập <b>tên tài khoản</b> hoặc <b>email</b> đã đăng ký.
+                            Hệ thống sẽ gửi mã khôi phục để bạn tiếp tục đặt lại mật khẩu.
                         </div>
-                        <div class="mt-5">
+                        <div class="gh-quen-input">
+                            <asp:TextBox ID="txt_taikhoan_email" runat="server" data-role="input" placeholder="Nhập tài khoản hoặc Email"></asp:TextBox>
+                        </div>
+                        <div class="gh-quen-action">
                             <asp:UpdatePanel ID="UpdatePanel1" runat="server" UpdateMode="Conditional">
                                 <ContentTemplate>
-                                    <asp:Button ID="Button1" runat="server" Text="NHẬN MÃ KHÔI PHỤC" CssClass="button bg-yellow bg-darkYellow-hover" Width="100%" OnClick="Button1_Click" />
+                                    <asp:Button ID="Button1" runat="server" Text="NHẬN MÃ KHÔI PHỤC" CssClass="button warning" Width="100%" OnClick="Button1_Click" />
                                 </ContentTemplate>
                             </asp:UpdatePanel>
                             <asp:UpdateProgress ID="UpdateProgress1" runat="server" AssociatedUpdatePanelID="UpdatePanel1">
@@ -137,11 +232,13 @@
                                 </ProgressTemplate>
                             </asp:UpdateProgress>
                         </div>
+                        <div class="gh-quen-support">
+                            Cần hỗ trợ nhanh? <a href="mailto:support@ahasale.vn">support@ahasale.vn</a>
+                        </div>
                     </div>
-                </div>
-            </asp:Panel>
-        </div>
+                </asp:Panel>
             </div>
+        </div>
     </form>
     <script src="/Metro-UI-CSS-master/tests/metro/js/metro.min.js"></script>
     <%=notifi %>

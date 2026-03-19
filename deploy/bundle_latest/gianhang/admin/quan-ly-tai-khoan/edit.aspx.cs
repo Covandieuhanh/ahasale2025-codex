@@ -6,7 +6,7 @@ using System.Web.UI;
 using System.Web.UI.WebControls;
 using System.IO;
 
-public partial class taikhoan_add : System.Web.UI.Page
+public partial class gianhang_taikhoan_edit : System.Web.UI.Page
 {
     public string notifi, user, user_parent, url_back;
     taikhoan_class tk_cl = new taikhoan_class();
@@ -52,13 +52,14 @@ public partial class taikhoan_add : System.Web.UI.Page
         }
         #endregion
         #region Check quyen theo nganh
-        user = Request.QueryString["user"].ToString().Trim();
+        string qsUser = (Request.QueryString["user"] ?? "").Trim();
+        user = qsUser;
         user_parent = "admin";
         if (bcorn_class.check_quyen(Session["user"].ToString(), "q2_3") == "" || bcorn_class.check_quyen(Session["user"].ToString(), "n2_3") == "" || user == Session["user"].ToString())
         {
-            if (!string.IsNullOrWhiteSpace(Request.QueryString["user"]))
+            if (!string.IsNullOrWhiteSpace(qsUser))
             {
-                user = Request.QueryString["user"].ToString().Trim();
+                user = qsUser;
                 if (tk_cl.exist_user(user))
                 {
                     if (user == "admin" && Session["user"].ToString() != "admin")
@@ -104,10 +105,18 @@ public partial class taikhoan_add : System.Web.UI.Page
     //}
     public void main()
     {
-        taikhoan_table_2023 _ob = db.taikhoan_table_2023s.Where(p => p.taikhoan == user && p.id_chinhanh == Session["chinhanh"].ToString()).First();
+        string chinhanhId = (Session["chinhanh"] ?? "").ToString();
+        taikhoan_table_2023 _ob = db.taikhoan_table_2023s
+            .FirstOrDefault(p => p.taikhoan == user && (string.IsNullOrWhiteSpace(chinhanhId) || p.id_chinhanh == chinhanhId));
+        if (_ob == null)
+        {
+            Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Không tìm thấy tài khoản cần chỉnh sửa.", "false", "false", "OK", "alert", "");
+            Response.Redirect("/gianhang/admin");
+            return;
+        }
         if (!IsPostBack)
         {
-            var list_nganh = (from ob1 in db.nganh_tables.Where(p => p.id_chinhanh == Session["chinhanh"].ToString()).ToList()
+            var list_nganh = (from ob1 in db.nganh_tables.Where(p => string.IsNullOrWhiteSpace(chinhanhId) || p.id_chinhanh == chinhanhId).ToList()
                               select new { id = ob1.id, ten = ob1.ten, }
                                   );
             DropDownList5.DataSource = list_nganh;
@@ -131,8 +140,8 @@ public partial class taikhoan_add : System.Web.UI.Page
             DropDownList1.SelectedIndex = _ob.trangthai == "Đang hoạt động" ? 0 : 1;
             txt_email.Text = _ob.email; txt_dienthoai.Text = _ob.dienthoai; txt_zalo.Text = _ob.zalo; txt_facebook.Text = _ob.facebook;
             txt_hansudung_taikhoan.Text = _ob.hansudung != null ? _ob.hansudung.Value.ToString("dd/MM/yyyy") : "";
-            txt_luong.Text = _ob.luongcoban.Value.ToString("#,##0");
-            txt_songaycong.Text = _ob.songaycong.Value.ToString();
+            txt_luong.Text = (_ob.luongcoban ?? 0).ToString("#,##0");
+            txt_songaycong.Text = (_ob.songaycong ?? 0).ToString();
         }
         if (_ob.anhdaidien != "")
         {
@@ -148,6 +157,11 @@ public partial class taikhoan_add : System.Web.UI.Page
     protected void button1_Click1(object sender, EventArgs e)
     {
         taikhoan_table_2023 _ob = tk_cl.return_object(user);
+        if (_ob == null)
+        {
+            notifi = thongbao_class.metro_dialog_onload("Thông báo", "Không tìm thấy tài khoản cần cập nhật.", "false", "false", "OK", "alert", "");
+            return;
+        }
         string _fullname = str_cl.VietHoa_ChuCai_DauTien(str_cl.remove_blank(txt_hoten.Text.Trim().ToLower()));
         string _ngaysinh = txt_ngaysinh.Text;
         string _email = txt_email.Text.ToLower().Trim();
@@ -196,7 +210,14 @@ public partial class taikhoan_add : System.Web.UI.Page
                                     notifi = thongbao_class.metro_notifi_onload("Thông báo", "Số ngày công không hợp lệ.", "4000", "warning");
                                 else
                                 {
-                                    taikhoan_table_2023 _ob1 = db.taikhoan_table_2023s.Where(p => p.taikhoan == user && p.id_chinhanh == Session["chinhanh"].ToString()).First();
+                                    string chinhanhId = (Session["chinhanh"] ?? "").ToString();
+                                    taikhoan_table_2023 _ob1 = db.taikhoan_table_2023s
+                                        .FirstOrDefault(p => p.taikhoan == user && (string.IsNullOrWhiteSpace(chinhanhId) || p.id_chinhanh == chinhanhId));
+                                    if (_ob1 == null)
+                                    {
+                                        notifi = thongbao_class.metro_dialog_onload("Thông báo", "Không tìm thấy tài khoản cần cập nhật.", "false", "false", "OK", "alert", "");
+                                        return;
+                                    }
 
                                     bool _checkloi = false;
                                     string _avt = "";

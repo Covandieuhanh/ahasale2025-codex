@@ -72,6 +72,10 @@ public partial class admin_category_Default : System.Web.UI.Page
    
     protected void but_del_Click(object sender, EventArgs e)
     {
+        if (list_id_split == null || list_id_split.Count == 0)
+        {
+            main();
+        }
         int _count = 0;
         for (int i = 0; i < list_id_split.Count; i++)
         {
@@ -118,6 +122,9 @@ public partial class admin_category_Default : System.Web.UI.Page
 
     public void main()
     {
+        if (Session["current_page_yeucautuvan"] == null)
+            Session["current_page_yeucautuvan"] = "1";
+
         //lấy dữ liệu
         var list_all = db.data_yeucau_tuvan_tables.ToList().Select(p => new
         {
@@ -129,7 +136,7 @@ public partial class admin_category_Default : System.Web.UI.Page
         });
 
         //xử lý từ khóa
-        string _key = txt_search.Text.ToLower();
+        string _key = (txt_search.Text ?? "").ToLower();
         if (_key != "")
         {
             var list_search = list_all.Where(p => p.id.ToString() == _key || p.sdt.ToString() == _key || p.ten.ToLower().Contains(_key)).ToList();
@@ -141,7 +148,7 @@ public partial class admin_category_Default : System.Web.UI.Page
         list_all = list_all.OrderByDescending(p=>p.ngay);
 
         //xử lý số lượng hiển thị
-        string _s = txt_show.Text.Trim();
+        string _s = (txt_show.Text ?? "").Trim();
         int.TryParse(_s, out show);//nếu số mục hiển thị _s là số hợp lệ thì show = _s
         if (show <= 0)
             show = 30;
@@ -150,7 +157,8 @@ public partial class admin_category_Default : System.Web.UI.Page
         total_page = number_of_page_class.return_total_page(list_all.Count(), show);
 
         //xử lý số trang        
-        current_page = int.Parse(Session["current_page_yeucautuvan"].ToString());
+        int.TryParse(Session["current_page_yeucautuvan"].ToString(), out current_page);
+        if (current_page <= 0) current_page = 1;
         if (current_page > total_page)
             current_page = total_page;
         if (current_page >= total_page)

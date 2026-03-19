@@ -661,7 +661,7 @@
 
                                 <div class="menu-group-title">Vận hành gian hàng đối tác</div>
                                 <a class="menu-item" href="/shop/quan-ly-tin"><span>Quản lý tin gian hàng đối tác</span><span class="menu-badge">Đăng/Sửa</span></a>
-                                <a class="menu-item" href="/shop/quan-ly-lich-hen.aspx"><span>Lịch hẹn cơ bản</span><span class="menu-badge">Basic</span></a>
+                                <a class="menu-item" href="/shop/quan-ly-lich-hen.aspx"><span>Lịch hẹn khách đặt</span><span class="menu-badge">Basic</span></a>
                                 <asp:PlaceHolder ID="ph_menu_ban_san_pham" runat="server" Visible="false">
                                     <a class="menu-item" href="/shop/noi-bo/ban-san-pham"><span>Bán sản phẩm nội bộ</span><span class="menu-badge">Không gian 2</span></a>
                                 </asp:PlaceHolder>
@@ -797,7 +797,13 @@
                                             </div>
                                             <div class="product-actions">
                                                 <a class="btn-strong" href="/shop/san-pham/<%# Eval("id") %>">Xem chi tiết</a>
-                                                <a class="btn-soft" href="<%# BuildSellActionUrl(Eval("id"), Eval("name_en"), Eval("name"), Eval("KenhRaw")) %>"><%# BuildSellActionText(Eval("KenhRaw")) %></a>
+                                                <asp:PlaceHolder ID="phServiceActions" runat="server" Visible='<%# IsServicePost(Eval("KenhRaw")) %>'>
+                                                    <a class="btn-soft" href="<%# BuildBookingUrl(Eval("id")) %>">Đặt lịch</a>
+                                                    <a class="btn-soft" href="<%# BuildCreateOrderUrl(Eval("id")) %>">Tạo đơn</a>
+                                                </asp:PlaceHolder>
+                                                <asp:PlaceHolder ID="phNonServiceAction" runat="server" Visible='<%# !IsServicePost(Eval("KenhRaw")) %>'>
+                                                    <a class="btn-soft" href="<%# BuildSellActionUrl(Eval("id"), Eval("name_en"), Eval("name"), Eval("KenhRaw")) %>"><%# BuildSellActionText(Eval("KenhRaw")) %></a>
+                                                </asp:PlaceHolder>
                                             </div>
                                         </div>
                                     </article>

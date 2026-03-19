@@ -1,0 +1,5 @@
+# Hotfix Level1 booking bypass staff check
+# Generated: 2026-03-18 05:51:55
+# Upload đúng theo đường dẫn tương ứng vào root host.
+
+App_Code/datlich_class.cs

@@ -444,6 +444,25 @@ public class datlich_class
         return q.Select(p => p.taikhoan).Where(p => p != null && p != "").Distinct().ToList();
     }
 
+    private static bool is_level2_chinhanh(dbDataContext db, string _id_chinhanh)
+    {
+        if (db == null || string.IsNullOrWhiteSpace(_id_chinhanh))
+            return false;
+
+        try
+        {
+            chinhanh_table cn = db.chinhanh_tables.FirstOrDefault(p => p.id.ToString() == _id_chinhanh);
+            string owner = (cn == null ? "" : (cn.taikhoan_quantri ?? "")).Trim().ToLower();
+            if (owner == "")
+                return false;
+            return ShopLevel_cl.IsAdvancedEnabled(db, owner);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     private static string kiemtra_nhanvien_phuhop_dichvu(dbDataContext db, datlich_input _input, string _id_chinhanh)
     {
         if (db == null || _input == null || string.IsNullOrWhiteSpace(_input.nhanvien_thuchien))
@@ -464,6 +483,10 @@ public class datlich_class
     private static string kiemtra_cong_suat_chinhanh(dbDataContext db, datlich_input _input, string _id_chinhanh, List<bspa_datlich_table> _list_trung_slot)
     {
         if (db == null || _input == null || la_trangthai_giu_slot(_input.trangthai) == false)
+            return "";
+
+        // Level 1: bỏ qua kiểm tra nhân viên để vẫn nhận lịch cơ bản.
+        if (is_level2_chinhanh(db, _id_chinhanh) == false)
             return "";
 
         List<string> _list_nhanvien_du_dieu_kien = lay_ds_nhanvien_du_dieu_kien(db, _id_chinhanh, _input.id_nganh_dichvu);
