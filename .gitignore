@@ -12,3 +12,18 @@ Bin/Release/Publish/
 
 # Sensitive/local export files
 account-login-data-*.csv
+
+# Local deploy/test/dev helpers that should not be pushed
+deploy/
+debug/
+docker/
+docs/
+releases/
+scripts/
+test-results/
+tmp/
+README.localhost.md
+note.txt
+ahasale.vn.2025.new.sln
+website.publishproj
+docker-compose.yml

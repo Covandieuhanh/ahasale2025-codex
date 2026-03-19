@@ -1,5 +1,0 @@
-# Hotfix CS1061 FirstOrDefault missing using System.Linq
-# Generated: 2026-03-18 04:48:27
-# Upload đúng theo đường dẫn tương ứng vào root host.
-
-App_Code/ShopStatus_cl.cs

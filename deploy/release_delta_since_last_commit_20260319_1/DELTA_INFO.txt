@@ -1,4 +1,0 @@
-BASE_COMMIT=HEAD
-SCOPE=Changed source/runtime files since last commit (working tree diff)
-EXCLUDED=deploy/, scripts/test-home-smoke.sh, .DS_Store
-FILE_COUNT=51

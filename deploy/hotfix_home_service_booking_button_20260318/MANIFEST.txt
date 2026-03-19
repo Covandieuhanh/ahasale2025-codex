@@ -1,6 +1,0 @@
-# Hotfix: booking button on service detail (home)
-# Generated: 2026-03-18 06:47:25
-# Upload đúng theo đường dẫn tương ứng vào root host.
-
-home/page/chi-tiet-bai-viet.aspx
-home/page/chi-tiet-bai-viet.aspx.cs

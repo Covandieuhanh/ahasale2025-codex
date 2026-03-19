@@ -1,3 +1,0 @@
-SOURCE=/Users/duccuongtran/Documents/Aha Sale 2025/localhost/ahasale.vn.localhost
-GENERATED_AT=2026-03-19 11:11:16 +0700
-EXCLUDES=.git/,deploy/,docker/,docs/,debug/,scripts/,test-results/,tmp/,releases/,.DS_Store,README.localhost.md,note.txt,account-login-data-*.csv,docker-compose*.yml,*.sln,*.publishproj,Web.local.config
