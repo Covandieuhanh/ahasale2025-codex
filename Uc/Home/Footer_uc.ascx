@@ -170,8 +170,7 @@
             }
 
             const saved = localStorage.getItem(STORAGE_KEY);
-            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const theme = saved || (prefersDark ? 'dark' : 'light');
+            const theme = (saved === 'dark' || saved === 'light') ? saved : 'light';
             applyTheme(theme);
 
             buttons.forEach(function (btn) {

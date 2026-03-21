@@ -10,10 +10,10 @@
     <asp:UpdatePanel ID="up_main" runat="server" UpdateMode="Conditional">
         <ContentTemplate>
 
-            <div class="p-3">
+            <div class="p-3 aha-admin-section">
                 <h4 class="mb-3">DUYỆT ĐĂNG KÝ GIAN HÀNG ĐỐI TÁC</h4>
 
-                <div class="bcorn-fix-title-table-container">
+                <div class="bcorn-fix-title-table-container aha-admin-grid">
                     <table class="bcorn-fix-title-table">
                         <thead>
                             <tr>

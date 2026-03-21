@@ -1,4 +1,4 @@
-<%@ Master Language="C#" AutoEventWireup="true" CodeFile="mp-admin.master.cs" Inherits="admin_MasterPageAdmin" %>
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeFile="mp-admin.master.cs" Inherits="admin_MasterPageAdmin" %>
 
 <%@ Register Src="~/gianhang/admin/uc/menu_top.ascx" TagPrefix="uc1" TagName="menutopuc" %>
 
@@ -43,7 +43,7 @@
     <link href="/assetscss/fix-metro.css" rel="stylesheet" />
     <link href="/assetscss/admin-unified.css?v=2026-03-02.3" rel="stylesheet" />
     <link href="/assetscss/admin-clean.css?v=2026-03-03.12" rel="stylesheet" />
-    <link href="/assetscss/admin-home-sync.css?v=2026-03-17.26" rel="stylesheet" />
+    <link href="/assetscss/admin-home-sync.css?v=2026-03-21.1" rel="stylesheet" />
     <!-- jquery nên để trước các js khác -->
     <%--<script src="/js/jquery-3.7.1.min.js"></script>--%>
     <asp:ContentPlaceHolder ID="head" runat="server"></asp:ContentPlaceHolder>

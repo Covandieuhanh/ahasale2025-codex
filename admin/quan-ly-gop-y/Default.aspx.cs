@@ -31,11 +31,13 @@ public partial class admin_Default : System.Web.UI.Page
     }
     protected void Page_Load(object sender, EventArgs e)
     {
+        AdminRolePolicy_cl.RequireSuperAdmin();
         if (!IsPostBack)
             LoadGopY();
     }
     protected void but_quaylai_Click(object sender, EventArgs e)
     {
+        AdminRolePolicy_cl.RequireSuperAdmin();
         if (CurrentPage > 1)
             CurrentPage--;
 
@@ -43,6 +45,7 @@ public partial class admin_Default : System.Web.UI.Page
     }
     protected void but_xemtiep_Click(object sender, EventArgs e)
     {
+        AdminRolePolicy_cl.RequireSuperAdmin();
         using (dbDataContext db = new dbDataContext())
         {
             int total = db.DongGopYKien_tbs.Count();

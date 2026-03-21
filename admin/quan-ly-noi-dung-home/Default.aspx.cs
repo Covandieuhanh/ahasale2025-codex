@@ -26,7 +26,7 @@ public partial class admin_quan_ly_noi_dung_home_Default : System.Web.UI.Page
     protected void Page_Load(object sender, EventArgs e)
     {
         Session["url_back"] = HttpContext.Current.Request.Url.AbsoluteUri.ToLower();
-        check_login_cl.check_login_admin(HomeTextContent_cl.PermissionCode, HomeTextContent_cl.PermissionCode);
+        AdminRolePolicy_cl.RequireContentManager();
 
         if (!IsPostBack)
         {
@@ -38,7 +38,7 @@ public partial class admin_quan_ly_noi_dung_home_Default : System.Web.UI.Page
 
     protected void but_select_footer_Click(object sender, EventArgs e)
     {
-        check_login_cl.check_login_admin(HomeTextContent_cl.PermissionCode, HomeTextContent_cl.PermissionCode);
+        AdminRolePolicy_cl.RequireContentManager();
         LinkButton button = sender as LinkButton;
         string key = button == null ? "" : (button.CommandArgument ?? "").Trim().ToLowerInvariant();
         BindAll(key, (hf_text_content_key.Value ?? "").Trim().ToLowerInvariant());
@@ -46,13 +46,13 @@ public partial class admin_quan_ly_noi_dung_home_Default : System.Web.UI.Page
 
     protected void but_footer_new_Click(object sender, EventArgs e)
     {
-        check_login_cl.check_login_admin(HomeTextContent_cl.PermissionCode, HomeTextContent_cl.PermissionCode);
+        AdminRolePolicy_cl.RequireContentManager();
         BindAll("", (hf_text_content_key.Value ?? "").Trim().ToLowerInvariant());
     }
 
     protected void but_footer_save_Click(object sender, EventArgs e)
     {
-        check_login_cl.check_login_admin(HomeTextContent_cl.PermissionCode, HomeTextContent_cl.PermissionCode);
+        AdminRolePolicy_cl.RequireContentManager();
 
         string currentKey = (hf_footer_content_key.Value ?? "").Trim().ToLowerInvariant();
         string groupKey = (ddl_footer_group.SelectedValue ?? "").Trim();
@@ -100,7 +100,7 @@ public partial class admin_quan_ly_noi_dung_home_Default : System.Web.UI.Page
 
     protected void but_select_text_block_Click(object sender, EventArgs e)
     {
-        check_login_cl.check_login_admin(HomeTextContent_cl.PermissionCode, HomeTextContent_cl.PermissionCode);
+        AdminRolePolicy_cl.RequireContentManager();
         LinkButton button = sender as LinkButton;
         string key = button == null ? "" : (button.CommandArgument ?? "").Trim().ToLowerInvariant();
         BindAll((hf_footer_content_key.Value ?? "").Trim().ToLowerInvariant(), key);
@@ -108,7 +108,7 @@ public partial class admin_quan_ly_noi_dung_home_Default : System.Web.UI.Page
 
     protected void but_text_save_Click(object sender, EventArgs e)
     {
-        check_login_cl.check_login_admin(HomeTextContent_cl.PermissionCode, HomeTextContent_cl.PermissionCode);
+        AdminRolePolicy_cl.RequireContentManager();
 
         string key = (hf_text_content_key.Value ?? "").Trim().ToLowerInvariant();
         if (!HomeTextContent_cl.IsValidKey(key))
@@ -281,7 +281,7 @@ public partial class admin_quan_ly_noi_dung_home_Default : System.Web.UI.Page
             this.Page,
             this.GetType(),
             Guid.NewGuid().ToString(),
-            thongbao_class.metro_dialog("Thông báo", content, "false", "false", "OK", "alert", ""),
+            thongbao_class.metro_notifi("Thông báo", content, "2600", "danger"),
             true);
     }
 

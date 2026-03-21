@@ -7,7 +7,7 @@ using System.Web.UI.WebControls;
 
 public partial class admin_quan_ly_banner_Default : System.Web.UI.Page
 {
-    // ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Tài khoản đã bị khóa.", "false", "false", "OK", "alert", ""), true);
+    // ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Tài khoản đã bị khóa.", "2600", "danger"), true);
 
     String_cl str_cl = new String_cl();
     DateTime_cl dt_cl = new DateTime_cl();
@@ -20,7 +20,7 @@ public partial class admin_quan_ly_banner_Default : System.Web.UI.Page
 
     private string BuildAddUrl()
     {
-        return BuildListUrl() + "?view=" + ViewAdd;
+        return ResolveUrl("~/admin/quan-ly-banner/them-moi.aspx");
     }
 
     private void RedirectTo(string url)
@@ -35,9 +35,15 @@ public partial class admin_quan_ly_banner_Default : System.Web.UI.Page
         RedirectTo(BuildListUrl());
     }
 
+    private void ApplyRouteLinks()
+    {
+        but_show_form_add.NavigateUrl = BuildAddUrl();
+        close_add.NavigateUrl = BuildListUrl();
+    }
+
     private void ShowAddViewFromQuery()
     {
-        check_login_cl.check_login_admin("none", "none");
+        AdminRolePolicy_cl.RequireContentManager();
         reset_control_add_edit();
         pn_add.Visible = true;
         up_add.Update();
@@ -48,7 +54,15 @@ public partial class admin_quan_ly_banner_Default : System.Web.UI.Page
     {
         string view = (Request.QueryString["view"] ?? "").Trim().ToLowerInvariant();
         if (view == ViewAdd)
+        {
+            if (!AdminFullPageRoute_cl.IsTransferredRequest(Context))
+            {
+                RedirectTo(BuildAddUrl());
+                return;
+            }
+
             ShowAddViewFromQuery();
+        }
     }
 
 
@@ -58,7 +72,7 @@ public partial class admin_quan_ly_banner_Default : System.Web.UI.Page
         {
 
             Session["url_back"] = HttpContext.Current.Request.Url.AbsoluteUri;
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireContentManager();
 
             string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
             if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
@@ -70,6 +84,7 @@ public partial class admin_quan_ly_banner_Default : System.Web.UI.Page
 
             ViewState["taikhoan"] = _tk;
 
+                ApplyRouteLinks();
             set_dulieu_macdinh();
             show_main();
             ApplyOpenViewFromQuery();
@@ -172,7 +187,7 @@ public partial class admin_quan_ly_banner_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireContentManager();
             ViewState["current_page_qlbanner"] = int.Parse(ViewState["current_page_qlbanner"].ToString()) - 1;
             #region LƯU TRANG HIỆN TẠI
             // Lấy cookie "cookie_qlbanner" từ Request.Cookies
@@ -204,7 +219,7 @@ public partial class admin_quan_ly_banner_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireContentManager();
             ViewState["current_page_qlbanner"] = int.Parse(ViewState["current_page_qlbanner"].ToString()) + 1;
             #region LƯU TRANG HIỆN TẠI
             // Lấy cookie "cookie_qlbanner" từ Request.Cookies
@@ -236,7 +251,7 @@ public partial class admin_quan_ly_banner_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireContentManager();
             ViewState["current_page_qlbanner"] = 1;
             show_main();
         }
@@ -265,14 +280,14 @@ public partial class admin_quan_ly_banner_Default : System.Web.UI.Page
     protected void but_show_form_add_Click(object sender, EventArgs e)
     {
 
-        check_login_cl.check_login_admin("none", "none");
+        AdminRolePolicy_cl.RequireContentManager();
         RedirectTo(BuildAddUrl());
 
     }
     protected void but_close_form_add_Click(object sender, EventArgs e)
     {
 
-        check_login_cl.check_login_admin("none", "none");
+        AdminRolePolicy_cl.RequireContentManager();
         //reset control
         reset_control_add_edit();
         RedirectTo(BuildListUrl());
@@ -294,7 +309,7 @@ public partial class admin_quan_ly_banner_Default : System.Web.UI.Page
 
             if (_img == "")
             {
-                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng chọn ảnh.", "false", "false", "OK", "alert", ""), true);
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Vui lòng chọn ảnh.", "2600", "danger"), true);
                 return;
             }
             #endregion
@@ -337,7 +352,7 @@ public partial class admin_quan_ly_banner_Default : System.Web.UI.Page
 
     protected void but_save_Click(object sender, EventArgs e)
     {
-        check_login_cl.check_login_admin("none", "none");
+        AdminRolePolicy_cl.RequireContentManager();
         using (dbDataContext db = new dbDataContext())
         {
             foreach (RepeaterItem item in Repeater1.Items)
@@ -370,7 +385,7 @@ public partial class admin_quan_ly_banner_Default : System.Web.UI.Page
 
     protected void but_remove_bin_Click(object sender, EventArgs e)
     {
-        check_login_cl.check_login_admin("none", "none");
+        AdminRolePolicy_cl.RequireContentManager();
         using (dbDataContext db = new dbDataContext())
         {
             foreach (RepeaterItem item in Repeater1.Items)

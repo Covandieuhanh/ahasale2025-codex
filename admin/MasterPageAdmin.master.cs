@@ -7,8 +7,129 @@ using System.Web.UI.WebControls;
 
 public partial class admin_MasterPageAdmin : System.Web.UI.MasterPage
 {
+    private void AppendBodyClass(string className)
+    {
+        if (bodyAdmin == null || string.IsNullOrWhiteSpace(className))
+            return;
+
+        string current = (bodyAdmin.Attributes["class"] ?? "").Trim();
+        string[] parts = current.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Contains(className, StringComparer.OrdinalIgnoreCase))
+            return;
+
+        bodyAdmin.Attributes["class"] = string.IsNullOrWhiteSpace(current)
+            ? className
+            : current + " " + className;
+    }
+
+    private static string ToCssSlug(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return "";
+
+        var buffer = new List<char>(value.Length);
+        foreach (char ch in value.Trim().ToLowerInvariant())
+        {
+            if ((ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9'))
+                buffer.Add(ch);
+            else if (ch == '-' || ch == '_' || ch == ' ')
+                buffer.Add('-');
+        }
+
+        string slug = new string(buffer.ToArray());
+        while (slug.Contains("--"))
+            slug = slug.Replace("--", "-");
+        return slug.Trim('-');
+    }
+
+    private void ApplyRouteDisplayMode()
+    {
+        string routeView = (Request.QueryString["view"] ?? "").Trim();
+        string currentPath = (Request.Url.AbsolutePath ?? "").Trim().ToLowerInvariant();
+
+        if (routeView != "")
+        {
+            AppendBodyClass("admin-route-fullview");
+            AppendBodyClass("admin-fullpage-view");
+        }
+
+        string viewSlug = ToCssSlug(routeView);
+        if (!string.IsNullOrWhiteSpace(viewSlug))
+            AppendBodyClass("admin-route-view-" + viewSlug);
+
+        if (currentPath == "")
+            return;
+
+        if (IsDirectFullPageRoute(currentPath))
+        {
+            AppendBodyClass("admin-route-fullview");
+            AppendBodyClass("admin-fullpage-view");
+            AppendBodyClass("admin-route-path-" + ToCssSlug(currentPath.Replace("/", "-")));
+        }
+    }
+
+    private static bool IsDirectFullPageRoute(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            return false;
+
+        return path == "/admin/doi-mat-khau/default.aspx"
+            || path == "/admin/quen-mat-khau/default.aspx"
+            || path == "/admin/vi-token-diem/default.aspx"
+            || path == "/admin/he-thong-san-pham/ban-the.aspx"
+            || path == "/admin/he-thong-san-pham/chi-tiet-giao-dich.aspx"
+            || path == "/admin/lich-su-chuyen-diem/chuyen-diem.aspx"
+            || path == "/admin/phat-hanh-the/them-moi.aspx"
+            || path == "/admin/quan-ly-banner/them-moi.aspx"
+            || path == "/admin/quan-ly-bai-viet/them-moi.aspx"
+            || path == "/admin/quan-ly-bai-viet/bo-loc.aspx"
+            || path == "/admin/quan-ly-bai-viet/chinh-sua.aspx"
+            || path == "/admin/quan-ly-bai-viet/xuat-du-lieu.aspx"
+            || path == "/admin/quan-ly-bai-viet/ban-in.aspx"
+            || path == "/admin/quan-ly-menu/them-moi.aspx"
+            || path == "/admin/quan-ly-menu/bo-loc.aspx"
+            || path == "/admin/quan-ly-menu/chinh-sua.aspx"
+            || path == "/admin/quan-ly-menu/xuat-du-lieu.aspx"
+            || path == "/admin/quan-ly-menu/ban-in.aspx"
+            || path == "/admin/quan-ly-tai-khoan/them-moi.aspx"
+            || path == "/admin/quan-ly-tai-khoan/bo-loc.aspx"
+            || path == "/admin/quan-ly-tai-khoan/chinh-sua.aspx"
+            || path == "/admin/quan-ly-tai-khoan/phan-quyen.aspx"
+            || path == "/admin/quan-ly-thong-bao/bo-loc.aspx"
+            || path == "/admin/quan-ly-thong-bao/xuat-du-lieu.aspx"
+            || path == "/admin/quan-ly-thong-bao/ban-in.aspx"
+            || path == "/admin/yeu-cau-tu-van/bo-loc.aspx"
+            || path == "/admin/yeu-cau-tu-van/xuat-du-lieu.aspx"
+            || path == "/admin/yeu-cau-tu-van/ban-in.aspx";
+    }
+
+    private bool TryRedirectLegacyTopView()
+    {
+        string topView = (Request.QueryString["topview"] ?? "").Trim().ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(topView))
+            return false;
+
+        string safeBackUrl = AdminFullPageRoute_cl.SanitizeAdminReturnUrl(Request.RawUrl, "/admin/default.aspx");
+        string redirectUrl = safeBackUrl;
+
+        if (topView == "change-password")
+            redirectUrl = "/admin/doi-mat-khau/default.aspx?return_url=" + HttpUtility.UrlEncode(safeBackUrl);
+
+        Response.Redirect(redirectUrl, false);
+        Context.ApplicationInstance.CompleteRequest();
+        return true;
+    }
+
     protected void Page_Load(object sender, EventArgs e)
     {
+        if (TryRedirectLegacyTopView())
+            return;
+
+        ApplyRouteDisplayMode();
+
+        if (!AdminRolePolicy_cl.EnsureMasterRouteAccess(this.Page))
+            return;
+
         if (!IsPostBack)
         {
             try

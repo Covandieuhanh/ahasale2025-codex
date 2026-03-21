@@ -23,9 +23,14 @@ public partial class admin_Default2 : System.Web.UI.Page
         return ResolveUrl("~/admin/login.aspx");
     }
 
-    private string BuildRecoverUrl()
+    private string BuildForgotPasswordUrl()
     {
-        return BuildLoginUrl() + "?view=" + ViewRecover;
+        return ResolveUrl("~/admin/quen-mat-khau/default.aspx");
+    }
+
+    private string ResolveSafeAdminReturnUrl(string rawUrl, string fallbackUrl)
+    {
+        return AdminFullPageRoute_cl.SanitizeAdminReturnUrl(rawUrl, fallbackUrl);
     }
 
     private void RedirectTo(string url)
@@ -127,25 +132,22 @@ public partial class admin_Default2 : System.Web.UI.Page
             db.SubmitChanges();
     }
 
-    private void ApplyRecoverViewFromQuery()
-    {
-        string view = (Request.QueryString["view"] ?? "").Trim().ToLowerInvariant();
-        if (view == ViewRecover)
-        {
-            pn_khoiphuc.Visible = true;
-            up_khoiphuc.Update();
-            txt_email_khoiphuc.Focus();
-        }
-    }
-
     protected void Page_Load(object sender, EventArgs e)
     {
         DisablePageCaching();
+
+        string legacyView = (Request.QueryString["view"] ?? "").Trim().ToLowerInvariant();
+        if (legacyView == ViewRecover)
+        {
+            RedirectTo(BuildForgotPasswordUrl());
+            return;
+        }
 
         if (!IsPostBack)
         {
             try
             {
+                but_show_form_quenmk.NavigateUrl = BuildForgotPasswordUrl();
                 #region THÔNG TIN TRANG
                 using (dbDataContext db = new dbDataContext())
                 {
@@ -235,11 +237,27 @@ public partial class admin_Default2 : System.Web.UI.Page
                         string _url_back = Session["url_back"] as string; // Sử dụng 'as' để tránh lỗi nếu 'url_back' là null
                         if (!string.IsNullOrEmpty(_url_back)) // Kiểm tra xem '_url_back' có hợp lệ hay không
                         {
-                            Response.Redirect(_url_back, false);
+                            string landingUrl = "/admin/default.aspx";
+                            if (acc != null)
+                            {
+                                using (dbDataContext dbLanding = new dbDataContext())
+                                {
+                                    landingUrl = AdminRolePolicy_cl.ResolveLandingUrl(dbLanding, acc.taikhoan);
+                                }
+                            }
+                            Response.Redirect(ResolveSafeAdminReturnUrl(_url_back, landingUrl), false);
                         }
                         else
                         {
-                            Response.Redirect("/admin/default.aspx", false);
+                            string landingUrl = "/admin/default.aspx";
+                            if (acc != null)
+                            {
+                                using (dbDataContext dbLanding = new dbDataContext())
+                                {
+                                    landingUrl = AdminRolePolicy_cl.ResolveLandingUrl(dbLanding, acc.taikhoan);
+                                }
+                            }
+                            Response.Redirect(landingUrl, false);
                         }
                         Context.ApplicationInstance.CompleteRequest(); // Hoàn tất yêu cầu mà không ném 'ThreadAbortException'
                     }
@@ -261,7 +279,6 @@ public partial class admin_Default2 : System.Web.UI.Page
                     Session["thongbao"] = null;
                 }
                 #endregion
-                ApplyRecoverViewFromQuery();
             }
             catch (Exception _ex)
             {
@@ -378,11 +395,12 @@ public partial class admin_Default2 : System.Web.UI.Page
 
                             if (!string.IsNullOrEmpty(_url_back))
                             {
-                                Response.Redirect(_url_back, false);
+                                Response.Redirect(ResolveSafeAdminReturnUrl(_url_back, "/admin/default.aspx"), false);
                             }
                             else
                             {
-                                Response.Redirect("/admin/default.aspx", false);
+                                string landingUrl = AdminRolePolicy_cl.ResolveLandingUrl(db, fullAccount.taikhoan);
+                                Response.Redirect(landingUrl, false);
                             }
 
                             Context.ApplicationInstance.CompleteRequest();
@@ -401,94 +419,4 @@ public partial class admin_Default2 : System.Web.UI.Page
         }
     }
 
-    #region khôi phục mật khẩu
-    protected void but_show_form_quenmk_Click(object sender, EventArgs e)
-    {
-        string view = (Request.QueryString["view"] ?? "").Trim().ToLowerInvariant();
-        if (view == ViewRecover)
-            RedirectTo(BuildLoginUrl());
-        else
-            RedirectTo(BuildRecoverUrl());
-    }
-    protected void but_close_form_quenmk_Click(object sender, EventArgs e)
-    {
-        txt_email_khoiphuc.Text = "";
-        RedirectTo(BuildLoginUrl());
-    }
-    protected void but_nhanma_Click(object sender, EventArgs e)
-    {
-        using (dbDataContext db = new dbDataContext())
-        {
-            String_cl str_cl = new String_cl();
-            string _email = txt_email_khoiphuc.Text.Trim().ToLower();
-            if (str_cl.KiemTra_Email(_email) == false)
-            {
-                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Email không hợp lệ.", "false", "false", "OK", "alert", ""), true);
-                return;
-            }
-            var scopedAccounts = db.taikhoan_tbs
-                .Where(p => (p.email ?? "").Trim().ToLower() == _email)
-                .ToList()
-                .Where(p => PortalScope_cl.CanLoginAdmin(p.taikhoan, p.phanloai, p.permission))
-                .ToList();
-
-            if (scopedAccounts.Count > 1)
-            {
-                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Email này đang trùng nhiều tài khoản trong hệ admin. Vui lòng liên hệ quản trị để xử lý.", "false", "false", "OK", "alert", ""), true);
-                return;
-            }
-
-            taikhoan_tb q = scopedAccounts.FirstOrDefault();
-            if (q != null)
-            {
-                #region THÔNG BÁO QUA EMAIL
-                // Lấy danh sách email từ bảng taikhoan_tb
-                //var emailAddresses = db.taikhoan_tbs
-                //    .Where(tk => tk.taikhoan == "admin" /*|| tk.username == "bonbap"*/)
-                //    .Select(tk => tk.email)
-                //    .ToList();
-                //gán mail trực tiếp
-
-                List<string> emailAddresses = new List<string>
-                {
-                    _email//,email_khác
-                };
-
-                string _tenmien = HttpContext.Current.Request.Url.Host.ToUpper();
-                string _tieude = "Khôi phục mật khẩu";
-
-                string _ma = Guid.NewGuid().ToString().ToLower();
-                string _link_khoiphuc = string.Format("{0}://{1}{2}", Request.Url.Scheme, Request.Url.Authority, "/admin/khoi-phuc-mat-khau.aspx?code=" + _ma);
-                DateTime _hsd = AhaTime_cl.Now.AddMinutes(5);
-
-                string _noidung = "<div style='color:red'>Ai đó đã yêu cầu đặt lại mật khẩu của bạn tại " + _tenmien + "</div>";
-                _noidung = _noidung + "<div style='color:red'>Nếu không phải là bạn, vui lòng bỏ qua email này và không phải làm gì cả. Tài khoản của bạn vẫn được an toàn.<hr/></div>";
-                _noidung = _noidung + "<div>Tài khoản của bạn: <b>" + q.taikhoan + "</b></div>";
-                _noidung = _noidung + "<div><a href='" + _link_khoiphuc + "'><b>Nhấp vào đây</b></a> để đặt lại mật khẩu của bạn.</div>";
-                _noidung = _noidung + "<div>Thời gian hết hạn: " + _hsd.ToString("dd/MM/yyyy HH:mm") + "'</div>";
-                string _ten_nguoigui = _tenmien;
-                string _link_dinhkem = "";
-
-
-                if (q.hsd_makhoiphuc == null || q.hsd_makhoiphuc.Value < AhaTime_cl.Now)
-                {  //đã quá 5 phút thì mới cho gửi lại
-                    
-                    q.makhoiphuc = _ma;
-                    q.hansudung = null;
-                    q.hsd_makhoiphuc = _hsd;
-                    db.SubmitChanges();
-                    foreach (var _email_nhan in emailAddresses)
-                    {
-                        guiEmail_cl.SendEmail(_email_nhan, _tieude, _noidung, _ten_nguoigui, _link_dinhkem);
-                    }
-                }
-
-                txt_email_khoiphuc.Text = "";
-                Session["thongbao"] = thongbao_class.metro_notifi_onload("Thông báo", "Đã gửi yêu cầu khôi phục vào email của bạn. Vui lòng kiểm tra hộp thư đến hoặc thư rác.", "2500", "warning");
-                RedirectTo(BuildLoginUrl());
-                #endregion
-            }
-        }
-    }
-    #endregion
 }

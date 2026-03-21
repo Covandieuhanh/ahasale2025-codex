@@ -241,7 +241,7 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
             return true;
         }
 
-        check_login_cl.check_login_admin(PermissionProfile_cl.HoSoTieuDung, PermissionProfile_cl.HoSoTieuDung);
+        AdminRolePolicy_cl.RequireSuperAdmin();
         ViewState[ViewStatePortalMode] = PortalModeAdmin;
         ViewState[ViewStateShopSpace] = ShopSpacePublic;
 
@@ -264,14 +264,25 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
     {
         if (IsShopPortalMode())
             return ResolveUrl(BuildShopPortalSalesBaseUrl() + "?view=" + ViewSell);
-        return ResolveUrl("~/admin/he-thong-san-pham/ban-san-pham.aspx?view=" + ViewSell);
+        return ResolveUrl("~/admin/he-thong-san-pham/ban-the.aspx");
     }
 
     private string BuildSellPageUrl()
     {
-        string url = BuildSellUrl();
-        string joiner = url.Contains("?") ? "&" : "?";
-        return url + joiner + "mode=page";
+        if (IsShopPortalMode())
+        {
+            string url = BuildSellUrl();
+            string joiner = url.Contains("?") ? "&" : "?";
+            return url + joiner + "mode=page";
+        }
+
+        return BuildSellUrl();
+    }
+
+    private void RedirectToPage(string url)
+    {
+        Response.Redirect(url, false);
+        Context.ApplicationInstance.CompleteRequest();
     }
 
     private bool IsInlineSellMode()
@@ -286,7 +297,7 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
         if (string.IsNullOrEmpty(id)) return "#";
         if (IsShopPortalMode())
             return ResolveUrl(BuildShopPortalSalesBaseUrl() + "?view=" + ViewDetail + "&id=" + id);
-        return ResolveUrl("~/admin/he-thong-san-pham/ban-san-pham.aspx?view=" + ViewDetail + "&id=" + id);
+        return ResolveUrl("~/admin/he-thong-san-pham/chi-tiet-giao-dich.aspx?id=" + id);
     }
 
     private void ShowSellForm()
@@ -348,6 +359,11 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
             string view = (Request.QueryString["view"] ?? "").Trim().ToLowerInvariant();
             if (view == ViewSell)
             {
+                if (!IsShopPortalMode() && !AdminFullPageRoute_cl.IsTransferredRequest(Context))
+                {
+                    RedirectToPage(BuildSellPageUrl());
+                    return;
+                }
                 ShowSellForm();
             }
             else if (view == ViewDetail)
@@ -355,6 +371,11 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
                 long idDetail;
                 if (long.TryParse((Request.QueryString["id"] ?? "").Trim(), out idDetail) && idDetail > 0)
                 {
+                    if (!IsShopPortalMode() && !AdminFullPageRoute_cl.IsTransferredRequest(Context))
+                    {
+                        RedirectToPage(BuildChiTietUrl(idDetail));
+                        return;
+                    }
                     load_chitiet(idDetail);
                 }
             }
@@ -516,7 +537,7 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
         show_main();
     }
 
-    // ======================= OPEN DETAIL POPUP =======================
+    // ======================= OPEN DETAIL FULL-PAGE =======================
     protected void Repeater1_ItemCommand(object source, RepeaterCommandEventArgs e)
     {
         if (e.CommandName == "chitiet")
@@ -540,7 +561,7 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
                 if (hd == null)
                 {
                     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                        thongbao_class.metro_dialog("Thông báo", "Không tìm thấy giao dịch.", "false", "false", "OK", "alert", ""), true);
+                        thongbao_class.metro_notifi("Thông báo", "Không tìm thấy giao dịch.", "2600", "warning"), true);
                     return;
                 }
 
@@ -552,7 +573,7 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
                     if (!string.Equals(tkBan, sellerAccount, StringComparison.OrdinalIgnoreCase))
                     {
                         ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                            thongbao_class.metro_dialog("Thông báo", "Bạn không có quyền xem giao dịch này.", "false", "false", "OK", "alert", ""), true);
+                            thongbao_class.metro_notifi("Thông báo", "Bạn không có quyền xem giao dịch này.", "2600", "warning"), true);
                         return;
                     }
                 }
@@ -633,6 +654,7 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
                 }
 
                 pn_chitiet.Visible = true;
+                close_chitiet.NavigateUrl = BuildListUrl();
                 if (up_chitiet != null) up_chitiet.Update();
                 up_main.Visible = false;
             }
@@ -885,14 +907,14 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
         lb_dongA.Text = formatDongAInternational(dongA);
     }
 
-    // ======================= EVENTS (POPUP BÁN) =======================
+    // ======================= EVENTS (FULL-PAGE BÁN) =======================
     protected void but_show_form_banthe_Click(object sender, EventArgs e)
     {
         try
         {
             if (!EnsurePortalContext())
                 return;
-            Response.Redirect(BuildSellUrl(), false);
+            Response.Redirect(BuildSellPageUrl(), false);
             Context.ApplicationInstance.CompleteRequest();
         }
         catch { }
@@ -1324,14 +1346,11 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
                             buyerDisplay = hoten + " (" + taiKhoanMua + ")";
                     }
 
-                    Session["thongbao"] = thongbao_class.metro_dialog_onload(
+                    Session["thongbao"] = thongbao_class.metro_notifi_onload(
                         "Thông báo",
                         "Đã bán thành công cho tài khoản " + buyerDisplay + ".",
-                        "false",
-                        "false",
-                        "OK",
-                        "alert",
-                        "");
+                        "2600",
+                        "success");
                     Response.Redirect(BuildListUrl(), false);
                     Context.ApplicationInstance.CompleteRequest();
                     return;

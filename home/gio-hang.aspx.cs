@@ -9,6 +9,14 @@ public partial class home_gio_hang : System.Web.UI.Page
 {
     private const decimal TY_GIA_DONGA_VND = 1000m; // 1 Quyền tiêu dùng = 1000 VNĐ
 
+    protected string ResolveCardImage(object value)
+    {
+        string url = Convert.ToString(value ?? "").Trim();
+        if (string.IsNullOrEmpty(url))
+            return "/uploads/images/macdinh.jpg";
+        return url;
+    }
+
     // ✅ Quy đổi VNĐ -> A (làm tròn lên 2 chữ số thập phân vì ví A là decimal(18,2))
     private decimal QuyDoi_VND_To_A(decimal vnd)
     {
@@ -370,7 +378,7 @@ public partial class home_gio_hang : System.Web.UI.Page
                             {
                                 ob1.id,
                                 ob1.ngaythem,
-                                ob2.image,
+                                image = (ob2.image == null || ob2.image == "") ? "/uploads/images/macdinh.jpg" : ob2.image,
                                 ob2.name,
                                 ob2.name_en,
                                 ob2.giaban, // ✅ VNĐ

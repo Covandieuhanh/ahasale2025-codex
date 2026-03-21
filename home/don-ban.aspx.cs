@@ -29,6 +29,9 @@ public partial class home_don_ban : System.Web.UI.Page
 
     private const string OFFLINE_CART_SESSION_KEY = "offline_pos_cart_home_don_ban";
     private const string STATUS_FILTER_KEY = "status_filter_donban_home";
+    private const string POS_FILTER_TYPE_KEY = "pos_filter_type_donban_home";
+    private const string POS_RESULT_LIMIT_KEY = "pos_result_limit_donban_home";
+    private const int POS_RESULT_LIMIT_STEP = 20;
 
     private string GetRequestQueryValue(string key)
     {
@@ -133,16 +136,45 @@ public partial class home_don_ban : System.Web.UI.Page
         if (!string.IsNullOrEmpty(tk))
             return tk;
 
-        string tkEncrypted = PortalRequest_cl.GetCurrentAccountEncrypted();
-        if (string.IsNullOrEmpty(tkEncrypted))
+        tk = ResolveCurrentPortalAccount();
+        tk = (tk ?? "").Trim().ToLowerInvariant();
+        if (string.IsNullOrEmpty(tk))
             return "";
 
-        tk = mahoa_cl.giaima_Bcorn(tkEncrypted);
-        tk = (tk ?? "").Trim().ToLowerInvariant();
         if (!string.IsNullOrEmpty(tk))
             ViewState["taikhoan"] = tk;
 
         return tk;
+    }
+
+    private string ResolveCurrentPortalAccount()
+    {
+        string tk = (PortalRequest_cl.GetCurrentAccount() ?? "").Trim();
+        if (!string.IsNullOrEmpty(tk))
+            return tk;
+
+        if (PortalRequest_cl.IsShopPortalRequest())
+        {
+            string encodedSession = Session["taikhoan_shop"] as string;
+            if (!string.IsNullOrEmpty(encodedSession))
+                return (mahoa_cl.giaima_Bcorn(encodedSession) ?? "").Trim();
+
+            HttpCookie ck = Request.Cookies["cookie_userinfo_shop_bcorn"];
+            if (ck != null && !string.IsNullOrEmpty(ck["taikhoan"]))
+                return (mahoa_cl.giaima_Bcorn(ck["taikhoan"]) ?? "").Trim();
+        }
+        else
+        {
+            string encodedSession = Session["taikhoan_home"] as string;
+            if (!string.IsNullOrEmpty(encodedSession))
+                return (mahoa_cl.giaima_Bcorn(encodedSession) ?? "").Trim();
+
+            HttpCookie ck = Request.Cookies["cookie_userinfo_home_bcorn"];
+            if (ck != null && !string.IsNullOrEmpty(ck["taikhoan"]))
+                return (mahoa_cl.giaima_Bcorn(ck["taikhoan"]) ?? "").Trim();
+        }
+
+        return "";
     }
 
     private string NormalizeReturnUrl(string raw)
@@ -262,6 +294,105 @@ public partial class home_don_ban : System.Web.UI.Page
         Session[OFFLINE_CART_SESSION_KEY] = new List<OfflineCartItem>();
     }
 
+    private string GetTradeTypeFilter()
+    {
+        string value = (ViewState[POS_FILTER_TYPE_KEY] ?? "all").ToString().Trim().ToLowerInvariant();
+        if (value == "product" || value == "service")
+            return value;
+        return "all";
+    }
+
+    private void SetTradeTypeFilter(string raw)
+    {
+        string value = (raw ?? "").Trim().ToLowerInvariant();
+        if (value != "product" && value != "service")
+            value = "all";
+        ViewState[POS_FILTER_TYPE_KEY] = value;
+    }
+
+    private int GetSearchResultLimit()
+    {
+        int limit;
+        if (!int.TryParse((ViewState[POS_RESULT_LIMIT_KEY] ?? "").ToString(), out limit))
+            limit = POS_RESULT_LIMIT_STEP;
+        return ClampInt(limit, POS_RESULT_LIMIT_STEP, 500);
+    }
+
+    private void ResetSearchResultLimit()
+    {
+        ViewState[POS_RESULT_LIMIT_KEY] = POS_RESULT_LIMIT_STEP.ToString();
+    }
+
+    private void IncreaseSearchResultLimit()
+    {
+        ViewState[POS_RESULT_LIMIT_KEY] = (GetSearchResultLimit() + POS_RESULT_LIMIT_STEP).ToString();
+    }
+
+    private void SyncTradeTypeDropdown()
+    {
+        if (ddl_trade_type == null)
+            return;
+
+        string selected = GetTradeTypeFilter();
+        ListItem item = ddl_trade_type.Items.FindByValue(selected);
+        if (item == null)
+            return;
+
+        ddl_trade_type.ClearSelection();
+        item.Selected = true;
+    }
+
+    private void HandleCreateModePassivePostbacks()
+    {
+        if (!IsCreateStandaloneMode() || !IsPostBack)
+            return;
+
+        bool needRebind = false;
+
+        if (ddl_trade_type != null)
+        {
+            string postedTradeType = (ddl_trade_type.SelectedValue ?? "").Trim().ToLowerInvariant();
+            string currentTradeType = GetTradeTypeFilter();
+
+            if (postedTradeType != currentTradeType)
+            {
+                SetTradeTypeFilter(postedTradeType);
+                ResetSearchResultLimit();
+                needRebind = true;
+            }
+        }
+
+        string eventTarget = (Request["__EVENTTARGET"] ?? "").Trim();
+        if (but_search_more != null && string.Equals(eventTarget, but_search_more.UniqueID, StringComparison.Ordinal))
+        {
+            IncreaseSearchResultLimit();
+            needRebind = true;
+        }
+
+        if (!needRebind)
+            return;
+
+        SyncTradeTypeDropdown();
+        BindSearchResults(txt_sp_search.Text.Trim());
+        BindCartUI();
+
+        if (up_taodon != null)
+            up_taodon.Update();
+    }
+
+    private string GetTradeTypeFilterLabel()
+    {
+        switch (GetTradeTypeFilter())
+        {
+            case "product":
+                return "Sản phẩm";
+            case "service":
+                return "Dịch vụ";
+            default:
+                return "Tất cả";
+        }
+    }
+
     private int ClampInt(int value, int min, int max)
     {
         if (value < min) return min;
@@ -284,6 +415,9 @@ public partial class home_don_ban : System.Web.UI.Page
 
         lb_cart_total_vnd.Text = totalVnd.ToString("#,##0");
         lb_cart_total_a.Text = (totalVnd / TY_GIA_A_VND).ToString("0.00");
+        lb_cart_count_mobile.Text = cart.Sum(p => p.SoLuong).ToString("#,##0");
+        lb_cart_count_mobile_tab.Text = cart.Sum(p => p.SoLuong).ToString("#,##0");
+        lb_cart_total_mobile.Text = totalVnd.ToString("#,##0");
 
 
         lb_cart_err.Text = "";
@@ -304,32 +438,53 @@ public partial class home_don_ban : System.Web.UI.Page
     {
         keyword = (keyword ?? "").Trim();
         string taikhoan = EnsureCurrentAccountInViewState();
+        string tradeTypeFilter = GetTradeTypeFilter();
+        int limit = GetSearchResultLimit();
+
+        AccountVisibility_cl.EnsureTradeTypeNormalized(db);
 
         var q = db.BaiViet_tbs.Where(p =>
-            p.bin == false &&
-            p.phanloai == "sanpham" &&
+            (p.bin == false || p.bin == null) &&
+            (p.phanloai == AccountVisibility_cl.PostTypeProduct
+                || p.phanloai == AccountVisibility_cl.PostTypeService) &&
             p.nguoitao == taikhoan);
+
+        if (tradeTypeFilter == "product")
+            q = q.Where(p => p.phanloai == AccountVisibility_cl.PostTypeProduct);
+        else if (tradeTypeFilter == "service")
+            q = q.Where(p => p.phanloai == AccountVisibility_cl.PostTypeService);
 
         if (!string.IsNullOrEmpty(keyword))
         {
             q = q.Where(p => p.name.Contains(keyword));
         }
 
-        var list = q.OrderByDescending(p => p.ngaytao)
+        var listRaw = q.OrderByDescending(p => p.ngaytao)
             .Select(p => new
             {
                 p.id,
                 p.image,
                 p.name,
-                p.giaban
+                p.giaban,
+                p.phanloai
             })
-            .Take(30)
+            .Take(limit + 1)
             .ToList();
+
+        bool hasMore = listRaw.Count > limit;
+        var list = hasMore ? listRaw.Take(limit).ToList() : listRaw;
 
         RepeaterSearch.DataSource = list;
         RepeaterSearch.DataBind();
 
         ph_no_search.Visible = (list.Count == 0);
+        but_search_more.Visible = hasMore;
+        lb_sp_search_note.Text = string.Format(
+            "Đang lọc: {0}. Gõ tên để tìm nhanh, bấm Thêm để đưa vào giỏ.",
+            GetTradeTypeFilterLabel());
+        lb_search_result_summary.Text = list.Count == 0
+            ? "Không có kết quả phù hợp."
+            : string.Format("Hiển thị {0} tin đầu tiên theo bộ lọc {1}.", list.Count, GetTradeTypeFilterLabel().ToLowerInvariant());
     }
 
     private bool AddProductToCartById(string idsp, bool showWarningWhenMissing)
@@ -350,10 +505,12 @@ public partial class home_don_ban : System.Web.UI.Page
             return false;
 
         string taikhoan = EnsureCurrentAccountInViewState();
+        AccountVisibility_cl.EnsureTradeTypeNormalized(db);
         var sp = db.BaiViet_tbs.FirstOrDefault(x =>
             x.id.ToString() == productId &&
-            x.bin == false &&
-            x.phanloai == "sanpham" &&
+            (x.bin == false || x.bin == null) &&
+            (x.phanloai == AccountVisibility_cl.PostTypeProduct
+                || x.phanloai == AccountVisibility_cl.PostTypeService) &&
             x.nguoitao == taikhoan);
 
         if (sp == null)
@@ -447,6 +604,9 @@ public partial class home_don_ban : System.Web.UI.Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
+        if (PortalRequest_cl.IsShopPortalRequest())
+            PortalActiveMode_cl.SetMode(PortalActiveMode_cl.ModeShop);
+
         bool createMode = IsCreateStandaloneMode();
         up_main.Visible = !createMode;
 
@@ -502,6 +662,9 @@ public partial class home_don_ban : System.Web.UI.Page
                         using (dbDataContext db = new dbDataContext())
                         {
                             pn_taodon.Visible = true;
+                            SetTradeTypeFilter("all");
+                            ResetSearchResultLimit();
+                            SyncTradeTypeDropdown();
                             txt_sp_search.Text = "";
                             BindSearchResults(db, "");
                             BindCartUI();
@@ -529,6 +692,8 @@ public partial class home_don_ban : System.Web.UI.Page
             set_dulieu_macdinh();
             show_main();
         }
+
+        HandleCreateModePassivePostbacks();
     }
 
     public void set_dulieu_macdinh()
@@ -1017,6 +1182,20 @@ public partial class home_don_ban : System.Web.UI.Page
     {
         EnsurePortalLogin();
 
+        ResetSearchResultLimit();
+        BindSearchResults(txt_sp_search.Text.Trim());
+        BindCartUI();
+
+        up_taodon.Update();
+    }
+
+    protected void ddl_trade_type_SelectedIndexChanged(object sender, EventArgs e)
+    {
+        EnsurePortalLogin();
+
+        SetTradeTypeFilter(ddl_trade_type.SelectedValue);
+        ResetSearchResultLimit();
+        SyncTradeTypeDropdown();
         BindSearchResults(txt_sp_search.Text.Trim());
         BindCartUI();
 
@@ -1034,6 +1213,16 @@ public partial class home_don_ban : System.Web.UI.Page
 
         AddProductToCartById(idsp, true);
 
+        BindSearchResults(txt_sp_search.Text.Trim());
+        BindCartUI();
+        up_taodon.Update();
+    }
+
+    protected void but_search_more_Click(object sender, EventArgs e)
+    {
+        EnsurePortalLogin();
+
+        IncreaseSearchResultLimit();
         BindSearchResults(txt_sp_search.Text.Trim());
         BindCartUI();
         up_taodon.Update();
@@ -1136,8 +1325,9 @@ public partial class home_don_ban : System.Web.UI.Page
             {
                 var sp = db.BaiViet_tbs.FirstOrDefault(x =>
                     x.id.ToString() == it.ProductId &&
-                    x.bin == false &&
-                    x.phanloai == "sanpham" &&
+                    (x.bin == false || x.bin == null) &&
+                    (x.phanloai == AccountVisibility_cl.PostTypeProduct
+                        || x.phanloai == AccountVisibility_cl.PostTypeService) &&
                     x.nguoitao == ViewState["taikhoan"].ToString());
 
                 if (sp == null)

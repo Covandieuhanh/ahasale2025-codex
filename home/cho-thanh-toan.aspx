@@ -13,8 +13,7 @@
             try {
                 const key = 'theme-preference';
                 const saved = localStorage.getItem(key);
-                const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-                const theme = saved || (prefersDark ? 'dark' : 'light');
+                const theme = (saved === 'dark' || saved === 'light') ? saved : 'light';
                 document.documentElement.setAttribute('data-bs-theme', theme);
             } catch (e) { }
         })();
@@ -52,6 +51,29 @@
             --wait-muted: #94a3b8;
         }
 
+        <% if (PortalRequest_cl.IsShopPortalRequest()) { %>
+        :root {
+            --wait-bg-1: #fff4ee;
+            --wait-bg-2: #ffe2d3;
+            --wait-card: #ffffff;
+            --wait-card-soft: #fff8f4;
+            --wait-border: rgba(238, 77, 45, 0.18);
+            --wait-primary: #ee4d2d;
+            --wait-success: #ee4d2d;
+            --wait-warn: #ff8a3d;
+        }
+
+        html[data-bs-theme="dark"] {
+            --wait-bg-1: #2a150f;
+            --wait-bg-2: #1b120e;
+            --wait-card: #181110;
+            --wait-card-soft: #241714;
+            --wait-border: rgba(255, 145, 105, 0.22);
+            --wait-text: #fff1eb;
+            --wait-muted: #f2c0ad;
+        }
+        <% } %>
+
         html,
         body {
             min-height: 100%;
@@ -65,6 +87,12 @@
             -webkit-font-smoothing: antialiased;
             -webkit-overflow-scrolling: touch;
         }
+
+        <% if (PortalRequest_cl.IsShopPortalRequest()) { %>
+        .body-login-bcorn1 {
+            background: linear-gradient(180deg, #fff4ee, #ffe2d3) !important;
+        }
+        <% } %>
 
         .wait-shell,
         .wait-shell * {
@@ -122,6 +150,107 @@
             background: #fff3db;
             border: 1px solid #ffd38a;
         }
+
+        <% if (PortalRequest_cl.IsShopPortalRequest()) { %>
+        .wait-hero-card {
+            background: linear-gradient(140deg, #ffffff, #fff4ee);
+            border-color: rgba(238, 77, 45, 0.16);
+        }
+
+        .wait-card {
+            background: linear-gradient(160deg, #ffffff, #fff9f5);
+            border-color: rgba(238, 77, 45, 0.16);
+        }
+
+        .wait-stage,
+        .wait-tag,
+        .wait-kicker,
+        .wait-amount {
+            border-color: #fdba74;
+            background: #fff7ed;
+            color: #c2410c;
+        }
+
+        .wait-alert {
+            border-color: #fdba74;
+            background: #fff7ed;
+            color: #c2410c;
+        }
+
+        .wait-btn.primary,
+        .wait-btn.success {
+            background: linear-gradient(140deg, #ee4d2d, #ff7a45);
+            border-color: rgba(238, 77, 45, 0.45);
+        }
+
+        .wait-order-list {
+            border-color: rgba(238, 77, 45, 0.16);
+            background: #fffaf7;
+        }
+
+        .wait-order-table thead th {
+            background: #fff7ed;
+        }
+
+        .wait-order-price,
+        .wait-order-total {
+            color: #ea580c;
+        }
+
+        .wait-progress::before {
+            background: linear-gradient(90deg, #ee4d2d, #ff8a3d);
+        }
+
+        html[data-bs-theme="dark"] .body-login-bcorn1 {
+            background: linear-gradient(180deg, #2a150f, #1b120e) !important;
+        }
+
+        html[data-bs-theme="dark"] .wait-hero-card {
+            background: linear-gradient(140deg, #201412, #2a1814);
+            border-color: rgba(255, 145, 105, 0.22);
+        }
+
+        html[data-bs-theme="dark"] .wait-card {
+            background: linear-gradient(160deg, #181110, #241714);
+            border-color: rgba(255, 145, 105, 0.22);
+        }
+
+        html[data-bs-theme="dark"] .wait-stage,
+        html[data-bs-theme="dark"] .wait-tag,
+        html[data-bs-theme="dark"] .wait-kicker,
+        html[data-bs-theme="dark"] .wait-amount {
+            background: rgba(238, 77, 45, 0.16);
+            border-color: rgba(255, 165, 132, 0.38);
+            color: #ffd2c1;
+        }
+
+        html[data-bs-theme="dark"] .wait-alert {
+            background: rgba(238, 77, 45, 0.14);
+            border-color: rgba(255, 165, 132, 0.34);
+            color: #ffd2c1;
+        }
+
+        html[data-bs-theme="dark"] .wait-order-list {
+            background: #221613;
+            border-color: rgba(255, 145, 105, 0.2);
+        }
+
+        html[data-bs-theme="dark"] .wait-order-table thead th {
+            background: #2a1814;
+            border-bottom-color: rgba(255, 145, 105, 0.16);
+        }
+
+        html[data-bs-theme="dark"] .wait-order-price,
+        html[data-bs-theme="dark"] .wait-order-total {
+            color: #ffb395;
+        }
+
+        html[data-bs-theme="dark"] .wait-btn.primary,
+        html[data-bs-theme="dark"] .wait-btn.success {
+            background: linear-gradient(140deg, #ee4d2d, #ff7a45);
+            border-color: rgba(255, 145, 105, 0.45);
+        }
+        <% } %>
 
         .wait-title {
             margin: 0;
@@ -377,92 +506,134 @@
             line-height: 1.45;
         }
 
-        .wait-table-wrap {
+        .wait-order-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .wait-order-summary {
+            min-width: 0;
+        }
+
+        .wait-order-summary .wait-note {
+            margin-top: 6px;
+        }
+
+        .wait-order-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 91, 46, 0.18);
+            background: rgba(255, 91, 46, 0.08);
+            color: var(--wait-primary);
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .wait-order-list {
+            margin-top: 14px;
             border: 1px solid var(--wait-border);
-            border-radius: 14px;
+            border-radius: 16px;
             background: #fff;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+        }
+
+        .wait-order-table-wrap {
             overflow-x: auto;
             overflow-y: hidden;
             -webkit-overflow-scrolling: touch;
         }
 
-        .wait-table {
+        .wait-order-table {
             width: 100%;
-            min-width: 640px;
+            min-width: 680px;
             border-collapse: separate;
             border-spacing: 0;
         }
 
-        .wait-table thead {
-            display: table-header-group;
-        }
-
-        .wait-table thead th {
-            padding: 10px 8px;
+        .wait-order-table thead th {
+            padding: 12px 10px;
             border-bottom: 1px solid var(--wait-border);
+            background: #f8fafc;
             color: #48566e;
             font-size: 12px;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: .16px;
-            background: #f8fafc;
+            white-space: nowrap;
         }
 
-        .wait-table tbody {
-            display: table-row-group;
-            padding: 0;
-        }
-
-        .wait-table tbody tr {
-            display: table-row;
-            border: 0;
-            border-radius: 0;
-            padding: 0;
-            background: transparent;
-        }
-
-        .wait-table tbody td {
-            padding: 9px 8px !important;
-            border-bottom: 1px solid rgba(98, 105, 118, 0.14) !important;
-            display: table-cell;
+        .wait-order-line td {
+            padding: 12px 10px;
+            border-bottom: 1px solid rgba(98, 105, 118, 0.14);
             vertical-align: middle;
             color: #1e293b;
-            font-size: 13px;
-        }
-
-        .wait-table .cell-id {
-            display: table-cell;
-        }
-
-        .wait-product-img {
-            width: 56px;
-            height: 56px;
-            border-radius: 12px;
-            object-fit: cover;
-            border: 1px solid rgba(98, 105, 118, 0.24);
+            font-size: 14px;
             background: #fff;
         }
 
-        .wait-table .cell-product {
+        .wait-order-line:last-child td {
+            border-bottom: 0;
+        }
+
+        .wait-order-thumb {
+            width: 64px;
+            height: 64px;
+            border-radius: 14px;
+            object-fit: cover;
+            border: 1px solid rgba(98, 105, 118, 0.2);
+            background: #f8fafc;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .wait-order-product-name {
             font-weight: 700;
             line-height: 1.35;
+            color: var(--wait-text);
         }
 
-        .wait-table .cell-product .price-line {
-            margin-top: 2px;
-            color: #0f766e;
-            font-weight: 600;
-            font-size: 13px;
+        .wait-order-product-meta {
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
-        .wait-table .cell-qty::before,
-        .wait-table .cell-uudai::before,
-        .wait-table .cell-total::before {
-            display: none;
-        }
-
-        .wait-table .cell-total {
+        .wait-order-price {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: rgba(255, 91, 46, 0.08);
+            color: var(--wait-primary);
+            font-size: 12px;
             font-weight: 700;
+        }
+
+        .wait-order-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 8px;
+            border-radius: 999px;
+            border: 1px solid rgba(245, 180, 1, .38);
+            background: rgba(245, 180, 1, .12);
+            color: #b45309;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .wait-order-total {
+            font-weight: 800;
             color: #166534;
+            white-space: nowrap;
         }
 
         .wait-progress {
@@ -546,32 +717,50 @@
             color: #94a3b8;
         }
 
-        html[data-bs-theme="dark"] .wait-table-wrap {
+        html[data-bs-theme="dark"] .wait-order-badge {
+            background: rgba(255, 122, 71, 0.12);
+            border-color: rgba(255, 145, 105, 0.25);
+            color: #ffb395;
+        }
+
+        html[data-bs-theme="dark"] .wait-order-list {
             background: #0f172a;
             border-color: #223246;
         }
 
-        html[data-bs-theme="dark"] .wait-table thead th {
+        html[data-bs-theme="dark"] .wait-order-table thead th {
             background: #111d34;
             color: #cbd5e1;
             border-bottom-color: #223246;
         }
 
-        html[data-bs-theme="dark"] .wait-table tbody td {
+        html[data-bs-theme="dark"] .wait-order-line td {
             color: #e5e7eb;
-            border-bottom-color: rgba(148, 163, 184, 0.2) !important;
+            background: #0f172a;
+            border-bottom-color: rgba(148, 163, 184, 0.2);
         }
 
-        html[data-bs-theme="dark"] .wait-product-img {
+        html[data-bs-theme="dark"] .wait-order-thumb {
             background: #0b1220;
             border-color: rgba(148, 163, 184, 0.3);
         }
 
-        html[data-bs-theme="dark"] .wait-table .cell-product .price-line {
-            color: #5eead4;
+        html[data-bs-theme="dark"] .wait-order-product-name {
+            color: #f8fafc;
         }
 
-        html[data-bs-theme="dark"] .wait-table .cell-total {
+        html[data-bs-theme="dark"] .wait-order-price {
+            background: rgba(255, 122, 71, 0.12);
+            color: #ffb395;
+        }
+
+        html[data-bs-theme="dark"] .wait-order-pill {
+            background: rgba(245, 180, 1, .14);
+            border-color: rgba(245, 180, 1, .28);
+            color: #fde68a;
+        }
+
+        html[data-bs-theme="dark"] .wait-order-total {
             color: #6ee7b7;
         }
 
@@ -586,6 +775,87 @@
 
         @keyframes waitSpin {
             to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 739px) {
+            .wait-order-table-wrap {
+                overflow: visible;
+            }
+
+            .wait-order-table {
+                min-width: 0;
+            }
+
+            .wait-order-table thead {
+                display: none;
+            }
+
+            .wait-order-line {
+                display: grid;
+                grid-template-columns: 84px minmax(0, 1fr);
+                gap: 10px;
+                padding: 12px;
+                border-bottom: 1px solid rgba(98, 105, 118, 0.14);
+            }
+
+            .wait-order-line td {
+                padding: 0;
+                border: 0;
+                background: transparent;
+            }
+
+            .wait-order-line .cell-id {
+                grid-column: 2;
+                font-size: 12px;
+                color: var(--wait-muted);
+                text-align: left !important;
+            }
+
+            .wait-order-line .cell-image {
+                grid-column: 1;
+                grid-row: 1 / span 4;
+                align-self: start;
+            }
+
+            .wait-order-line .cell-product {
+                grid-column: 2;
+            }
+
+            .wait-order-line .cell-qty,
+            .wait-order-line .cell-uudai,
+            .wait-order-line .cell-total {
+                grid-column: 2;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                font-size: 13px;
+            }
+
+            .wait-order-line .cell-qty::before,
+            .wait-order-line .cell-uudai::before,
+            .wait-order-line .cell-total::before {
+                content: attr(data-label);
+                color: var(--wait-muted);
+                font-weight: 600;
+            }
+
+            .wait-order-thumb {
+                width: 74px;
+                height: 74px;
+            }
+
+            .wait-order-product-meta {
+                margin-top: 8px;
+            }
+
+            .wait-order-total {
+                text-align: right;
+            }
+
+            html[data-bs-theme="dark"] .wait-order-line {
+                border-bottom-color: rgba(148, 163, 184, 0.2);
+            }
         }
 
         @media (min-width: 740px) {
@@ -705,59 +975,67 @@
                     </asp:PlaceHolder>
 
                     <section class="wait-card">
-                        <h2 class="wait-card-title">Chi tiết đơn hàng</h2>
-                        <div class="wait-note">Danh sách sản phẩm trong đơn đang chờ Trao đổi.</div>
+                        <div class="wait-order-head">
+                            <div class="wait-order-summary">
+                                <h2 class="wait-card-title">Chi tiết đơn hàng</h2>
+                                <div class="wait-note">Danh sách sản phẩm trong đơn đang chờ Trao đổi, hiển thị theo kiểu giỏ hàng để dễ xem hơn trên cả máy tính và điện thoại.</div>
+                            </div>
+                            <div class="wait-order-badge">
+                                <asp:Label ID="lb_order_items" runat="server" Text="0"></asp:Label>&nbsp;sản phẩm
+                            </div>
+                        </div>
 
-                        <div class="wait-table-wrap">
-                            <table class="wait-table">
-                                <thead>
-                                    <tr>
-                                        <th style="width:56px;">ID</th>
-                                        <th style="width:72px;">Ảnh</th>
-                                        <th class="text-left" style="min-width:180px;">Sản phẩm</th>
-                                        <th style="width:56px;">SL</th>
-                                        <th style="width:92px;">% Ưu đãi</th>
-                                        <th style="min-width:120px;">Tổng</th>
-                                    </tr>
-                                </thead>
+                        <div class="wait-order-list">
+                            <div class="wait-order-table-wrap">
+                                <table class="wait-order-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:64px;">ID</th>
+                                            <th style="width:88px;">Ảnh</th>
+                                            <th class="text-left" style="min-width:220px;">Sản phẩm</th>
+                                            <th style="width:80px;">SL</th>
+                                            <th style="width:104px;">Ưu đãi</th>
+                                            <th class="text-end" style="min-width:132px;">Tổng</th>
+                                        </tr>
+                                    </thead>
 
-                                <tbody>
-                                    <asp:Repeater ID="Repeater2" runat="server">
-                                        <ItemTemplate>
-                                            <tr>
-                                                <td class="text-center cell-id"><%# Eval("id") %></td>
+                                    <tbody>
+                                        <asp:Repeater ID="Repeater2" runat="server">
+                                            <ItemTemplate>
+                                                <tr class="wait-order-line">
+                                                    <td class="text-center cell-id"><%# Eval("id") %></td>
 
-                                                <td class="text-center cell-image">
-                                                    <div data-role="lightbox" class="c-pointer">
-                                                        <img src="<%# Eval("image") %>" class="wait-product-img" />
-                                                    </div>
-                                                </td>
+                                                    <td class="text-center cell-image">
+                                                        <div data-role="lightbox" class="c-pointer">
+                                                            <img src="<%# Eval("image") %>" class="wait-order-thumb" alt="" />
+                                                        </div>
+                                                    </td>
 
-                                                <td class="text-left cell-product">
-                                                    <%# Eval("name") %>
-                                                    <div class="price-line">
-                                                        <%# FormatQuyen(Eval("giaban")) %> Quyền
-                                                        <%# (Convert.ToInt32(Eval("PhanTramUuDai")) > 0
-                                                            ? "<span style='display:inline-flex; margin-left:6px; padding:1px 6px; border-radius:999px; border:1px solid rgba(245,180,1,.46); background:rgba(245,180,1,.16); color:#fde68a;'>-"
-                                                              + Eval("PhanTramUuDai") + "%</span>"
-                                                            : "") %>
-                                                    </div>
-                                                </td>
+                                                    <td class="text-left cell-product">
+                                                        <div class="wait-order-product-name"><%# Eval("name") %></div>
+                                                        <div class="wait-order-product-meta">
+                                                            <span class="wait-order-price"><%# FormatQuyen(Eval("giaban")) %> Quyền</span>
+                                                            <%# (Convert.ToInt32(Eval("PhanTramUuDai")) > 0
+                                                                ? "<span class='wait-order-pill'>-" + Eval("PhanTramUuDai") + "% ưu đãi</span>"
+                                                                : "") %>
+                                                        </div>
+                                                    </td>
 
-                                                <td class="text-center cell-qty" data-label="SL"><%# Eval("soluong") %></td>
+                                                    <td class="text-center cell-qty" data-label="Số lượng"><%# Eval("soluong") %></td>
 
-                                                <td class="text-center cell-uudai" data-label="Ưu đãi">
-                                                    <%# (Convert.ToInt32(Eval("PhanTramUuDai")) > 0 ? (Eval("PhanTramUuDai") + "%") : "-") %>
-                                                </td>
+                                                    <td class="text-center cell-uudai" data-label="Ưu đãi">
+                                                        <%# (Convert.ToInt32(Eval("PhanTramUuDai")) > 0 ? (Eval("PhanTramUuDai") + "%") : "-") %>
+                                                    </td>
 
-                                                <td class="text-right cell-total" data-label="Tổng">
-                                                    <%# FormatQuyen(Eval("thanhtien")) %> Quyền
-                                                </td>
-                                            </tr>
-                                        </ItemTemplate>
-                                    </asp:Repeater>
-                                </tbody>
-                            </table>
+                                                    <td class="text-end cell-total" data-label="Tổng">
+                                                        <div class="wait-order-total"><%# FormatQuyen(Eval("thanhtien")) %> Quyền</div>
+                                                    </td>
+                                                </tr>
+                                            </ItemTemplate>
+                                        </asp:Repeater>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </section>
                 </div>

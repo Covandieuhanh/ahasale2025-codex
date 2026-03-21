@@ -1,148 +1,21 @@
 ﻿<%@ Control Language="C#" AutoEventWireup="true" CodeFile="menu-top-uc.ascx.cs" Inherits="admin_uc_menu_top_uc" %>
 
-<div data-role="charms" data-position="right" id="thongbao-charms" style="width: 320px; background-color: #fff; overflow: auto;" class="p-0 m-0 shadow-1 charms right-side">
-    <div style="height: 52px; line-height: 55px" class="bg-orange fg-white">
-        <div style="float: left"><span class="  ml-4 fg-white">THÔNG BÁO</span></div>
-        <div style="float: right"><a href="#" class="fg-white" title="Đóng" onclick="window.ahaAdminCharms('close'); return false;"><span class="mif mif-cross mr-4"></span></a></div>
-        <div style="clear: both"></div>
-    </div>
-    <%--<div style="position: absolute; top: 68px; right: 14px"><a href="#" class="fg-red fg-darkRed-hover"><small>Quản lý thông báo</small></a></div>--%>
+<asp:Panel ID="pn_thongbao_legacy_cache" runat="server" Style="display:none;">
     <asp:UpdatePanel ID="UpdatePanel2" runat="server" UpdateMode="Conditional">
         <ContentTemplate>
-            <div class="text-left p-3">
-                <asp:Button ID="but_sapxep_moinhat" OnClick="but_sapxep_moinhat_Click" runat="server" Text="Mới nhất" CssClass="light small rounded" />
-                <asp:Button ID="but_sapxep_chuadoc" OnClick="but_sapxep_chuadoc_Click" runat="server" Text="Chưa đọc" CssClass="light small rounded" />
-                <a href="/admin/quan-ly-thong-bao/default.aspx" class="button warning small rounded">Quản lý</a>
-            </div>
+            <asp:Button ID="but_sapxep_moinhat" runat="server" Text="Mới nhất" CssClass="light small rounded" OnClick="but_sapxep_moinhat_Click" Style="display:none;" />
+            <asp:Button ID="but_sapxep_chuadoc" runat="server" Text="Chưa đọc" CssClass="light small rounded" OnClick="but_sapxep_chuadoc_Click" Style="display:none;" />
             <asp:Repeater ID="Repeater1" runat="server">
                 <ItemTemplate>
-
-                    <div class="thongbao-div pt-2 pb-2 pl-3 pr-3">
-                        <a href="<%#Eval("link").ToString()%>idtb=<%#Eval("id").ToString() %>">
-                            <div class="thongbao-avt">
-                                <img src="<%#Eval("avt_nguoithongbao") %>" width="50" height="50" class="img-cover-vuongtron" />
-                            </div>
-                            <div class="thongbao-noidung">
-                                <div class="thongbao-noidungchinh">
-                                    <asp:PlaceHolder ID="PlaceHolder1" runat="server" Visible='<%#Eval("daxem").ToString()=="True" %>'>
-                                        <%#Eval("noidung").ToString() %>
-                                    </asp:PlaceHolder>
-                                    <asp:PlaceHolder ID="PlaceHolder2" runat="server" Visible='<%#Eval("daxem").ToString()=="False" %>'>
-                                        <span class="fg-orange"><%#Eval("noidung").ToString() %></span>
-                                    </asp:PlaceHolder>
-                                </div>
-                                <div class="thongbao-thoigian"><%#Eval("thoigian","{0:dd/MM/yyyy HH:mm}") %></div>
-                            </div>
-                        </a>
-                        <div class="thongbao-hanhdong">
-                            <div class="dropdown-button bg-transparent">
-                                <span class="button <%--dropdown-toggle--%> bg-transparent"><span class="text-bold" style="font-size: 18px">...</span></span>
-                            </div>
-                            <ul class="d-menu place-right" data-role="dropdown">
-                                <asp:PlaceHolder ID="PlaceHolder4" runat="server" Visible='<%#Eval("daxem").ToString()=="False" %>'>
-                                    <li>
-                                        <asp:LinkButton CommandArgument='<%# Eval("id") %>' ID="but_dadoc" OnClick="but_dadoc_Click" runat="server" Text="Đánh dấu đã đọc"></asp:LinkButton>
-                                    </li>
-                                </asp:PlaceHolder>
-                                <asp:PlaceHolder ID="PlaceHolder3" runat="server" Visible='<%#Eval("daxem").ToString()=="True" %>'>
-                                    <li>
-                                        <asp:LinkButton CommandArgument='<%# Eval("id") %>' ID="but_chuadoc" OnClick="but_chuadoc_Click" runat="server" Text="Đánh dấu chưa đọc"></asp:LinkButton>
-                                    </li>
-                                </asp:PlaceHolder>
-                                <li>
-                                    <asp:LinkButton CommandArgument='<%# Eval("id") %>' ID="but_xoathongbao" OnClick="but_xoathongbao_Click" runat="server" Text="Xóa thông báo này"></asp:LinkButton>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div class="clr-bc"></div>
-                    </div>
+                    <asp:LinkButton ID="but_dadoc" runat="server" CommandArgument='<%# Eval("id") %>' OnClick="but_dadoc_Click" Style="display:none;">Đánh dấu đã đọc</asp:LinkButton>
+                    <asp:LinkButton ID="but_chuadoc" runat="server" CommandArgument='<%# Eval("id") %>' OnClick="but_chuadoc_Click" Style="display:none;">Đánh dấu chưa đọc</asp:LinkButton>
+                    <asp:LinkButton ID="but_xoathongbao" runat="server" CommandArgument='<%# Eval("id") %>' OnClick="but_xoathongbao_Click" Style="display:none;">Xóa</asp:LinkButton>
                 </ItemTemplate>
             </asp:Repeater>
-            <asp:PlaceHolder ID="ph_empty_thongbao" runat="server" Visible="false">
-                <div class="px-3 pb-3 fg-gray">Không có thông báo nào.</div>
-            </asp:PlaceHolder>
+            <asp:PlaceHolder ID="ph_empty_thongbao" runat="server" Visible="false"></asp:PlaceHolder>
         </ContentTemplate>
     </asp:UpdatePanel>
-
-
-    <div class="text-center pt-3 pb-10">
-        <a href="/admin/quan-ly-thong-bao/default.aspx" class="button warning small rounded">Xem tất cả</a>
-    </div>
-</div>
-
-
-<asp:UpdatePanel ID="up_doimatkhau" runat="server" UpdateMode="Conditional">
-    <ContentTemplate>
-        <asp:Panel ID="pn_doimatkhau" runat="server" Visible="false" DefaultButton="but_doimatkhau">
-            <div style="position: fixed; width: 100%; height: 52px; background-color: none; top: 0; left: 0; z-index: 1041!important;">
-                <div style='top: 0; left: 0px; margin: 0 auto; max-width: 440px; opacity: 1;'>
-                            <div style='position: absolute; right: 18px; top: 14px; z-index: 1040!important'>
-                                <asp:LinkButton ID="but_close_doimatkhau" runat="server" CssClass="fg-white d-inline" CausesValidation="false" OnClick="but_close_doimatkhau_Click" ToolTip="Đóng">
-                                    <span class='mif mif-cross mif-2x fg-red fg-lightRed-hover'></span>
-                                </asp:LinkButton>
-                            </div>
-                    <div class="bg-white pl-4 pl-8-md pr-8-md pr-4" style="height: 52px;">
-                        <div class="pt-4 text-upper text-bold">
-                            Đổi mật khẩu
-                        </div>
-                        <hr />
-                    </div>
-                </div>
-            </div>
-            <div style="position: fixed; width: 100%; height: 100%; top: 0; left: 0; overflow: auto; z-index: 1040!important; background-image: url('/uploads/images/bg1.png');">
-                <div style='top: 0; left: 0; margin: 0 auto; max-width: 446px; opacity: 1;'>
-                    <div class="bg-white border bd-transparent pl-4 pl-8-md pr-8-md pr-4" style="padding-top: 52px">
-                        <div class="mt-3 ">
-                            <div class="fw-600">Mật khẩu hiện tại</div>
-                            <div class="aha-password-field">
-                                <asp:TextBox ID="TextBox1" runat="server" data-role="input" TextMode="Password"></asp:TextBox>
-                                <button type="button" class="aha-password-toggle js-toggle-password" aria-label="Hiện mật khẩu hiện tại">
-                                    <span class="aha-password-toggle-label">Hiện</span>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="mt-3 ">
-                            <div class="fw-600">Mật khẩu mới</div>
-                            <div class="aha-password-field">
-                                <asp:TextBox ID="TextBox2" runat="server" data-role="input" TextMode="Password"></asp:TextBox>
-                                <button type="button" class="aha-password-toggle js-toggle-password" aria-label="Hiện mật khẩu mới">
-                                    <span class="aha-password-toggle-label">Hiện</span>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="mt-3 ">
-                            <div class="fw-600">Nhập lại mật khẩu mới</div>
-                            <div class="aha-password-field">
-                                <asp:TextBox ID="TextBox3" runat="server" data-role="input" TextMode="Password"></asp:TextBox>
-                                <button type="button" class="aha-password-toggle js-toggle-password" aria-label="Hiện xác nhận mật khẩu mới">
-                                    <span class="aha-password-toggle-label">Hiện</span>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="mt-3 ">
-                            <div class="fw-600 fg-red"><i>Bạn sẽ phải đăng nhập lại sau khi đổi mật khẩu.</i></div>
-                        </div>
-                        <div class="mt-6 mb-20 text-right">
-                            <asp:Button ID="but_doimatkhau" runat="server" Text="ĐỔI MẬT KHẨU" CssClass="button success" OnClick="but_doimatkhau_Click" />
-                        </div>
-                        <div class="mb-20"></div>
-                    </div>
-                </div>
-            </div>
-        </asp:Panel>
-    </ContentTemplate>
-</asp:UpdatePanel>
-<asp:UpdateProgress ID="UpdateProgress12" runat="server" AssociatedUpdatePanelID="up_doimatkhau">
-    <ProgressTemplate>
-        <div class="bg-dark fixed-top h-100 w-100" style="opacity: 0.9; z-index: 99999!important">
-            <div style="padding-top: 45vh;">
-                <div class="mx-auto color-style activity-atom" data-role="activity" data-type="atom" data-style="color" data-role-activity="true"><span class="electron"></span><span class="electron"></span><span class="electron"></span></div>
-            </div>
-        </div>
-    </ProgressTemplate>
-</asp:UpdateProgress>
-
+</asp:Panel>
 
 <div data-role="appbar" class="fg-white bg-nmenutop-bc admin-topbar" data-expand-point="lg" style="position: fixed; top: 0; z-index: 3">
 
@@ -157,12 +30,12 @@
 
         <asp:UpdatePanel ID="UpdatePanel1" runat="server" UpdateMode="Conditional">
             <ContentTemplate>
-                <asp:LinkButton ID="but_show_form_thongbao" OnClick="but_show_form_thongbao_Click" OnClientClick="window.ahaAdminCharms('toggle');" CssClass="app-bar-item" runat="server">
+                <asp:HyperLink ID="but_show_form_thongbao" CssClass="app-bar-item" runat="server">
                     <span class="mif-notifications mif-lg"></span>
                     <span class="badge bg-orange fg-white mt-2 mr-1">
                         <asp:Label ID="lb_sl_thongbao" runat="server" Text="0"></asp:Label>
                     </span>
-                </asp:LinkButton>
+                </asp:HyperLink>
             </ContentTemplate>
         </asp:UpdatePanel>
 
@@ -175,7 +48,12 @@
             <div class="admin-shop-menu" id="admin-avatar-dropdown">
                 <div class="admin-shop-menu-head">
                     <p class="admin-shop-menu-title"><%=ViewState["hoten"] %></p>
-                    <div class="admin-shop-menu-sub"><%=ViewState["phanloai"] %> • <%=ViewState["taikhoan"] %></div>
+                    <div class="admin-shop-menu-sub"><%=Server.HtmlEncode(ViewState["phanloai"] as string ?? "Nhân viên admin") %> • <%=Server.HtmlEncode(ViewState["taikhoan"] as string ?? "") %></div>
+                    <div class="admin-shop-menu-role-row">
+                        <span class="admin-shop-role-pill admin-shop-role-pill-primary"><%=Server.HtmlEncode(ViewState["admin_role_label"] as string ?? "Tài khoản quản trị") %></span>
+                        <span class="admin-shop-role-pill admin-shop-role-pill-scope"><%=Server.HtmlEncode(ViewState["admin_scope_label"] as string ?? "Cổng Admin") %></span>
+                    </div>
+                    <div class="admin-shop-menu-help"><%=Server.HtmlEncode(ViewState["admin_role_description"] as string ?? "") %></div>
                 </div>
                 <div class="admin-shop-menu-body">
                     <% if (ShowMenuDashboard()) { %>
@@ -189,7 +67,7 @@
                     <% if (ShowMenuGroupAdmin()) { %>
                     <div class="admin-shop-menu-group-title">Quản lý admin</div>
                     <% if (ShowMenuAdminAccount()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActiveTaiKhoanScope("admin") %>' href="/admin/quan-ly-tai-khoan/Default.aspx?scope=admin">
+                    <a class='admin-shop-menu-item <%= MenuActiveTaiKhoanScope("admin") %>' href="<%= GetAdminAccountManagementUrl() %>">
                         <span>Quản lý tài khoản admin</span>
                     </a>
                     <% } %>
@@ -199,9 +77,15 @@
                     </a>
                     <% } %>
                     <% if (ShowMenuTransferHistory()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/lich-su-chuyen-diem/default.aspx") %>' href="/admin/lich-su-chuyen-diem/default.aspx">
+                    <a class='admin-shop-menu-item <%= MenuActiveTransferHistory() %>' href="/admin/lich-su-chuyen-diem/default.aspx">
                         <span>Lịch sử chuyển điểm</span>
                         <span class="admin-shop-menu-badge"><%=ViewState["DongA"] %></span>
+                    </a>
+                    <% } %>
+                    <% if (ShowMenuTokenWallet()) { %>
+                    <a class='admin-shop-menu-item <%= MenuActiveTokenWallet() %>' href="/admin/vi-token-diem/default.aspx">
+                        <span>Ví token điểm</span>
+                        <span class="admin-shop-menu-badge">Super</span>
                     </a>
                     <% } %>
                     <% } %>
@@ -209,17 +93,17 @@
                     <% if (ShowMenuGroupHome()) { %>
                     <div class="admin-shop-menu-group-title">Quản lý home</div>
                     <% if (ShowMenuHomeAccount()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActiveTaiKhoanScope("home") %>' href="/admin/quan-ly-tai-khoan/Default.aspx?scope=home">
+                    <a class='admin-shop-menu-item <%= MenuActiveTaiKhoanScope("home") %>' href="<%= GetHomeAccountManagementUrl() %>">
                         <span>Quản lý tài khoản home</span>
                     </a>
                     <% } %>
                     <% if (ShowMenuApproveHanhVi()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/duyet-yeu-cau-len-cap.aspx") %>' href="/admin/duyet-yeu-cau-len-cap.aspx">
-                        <span>Duyệt yêu cầu xác nhận hành vi</span>
+                    <a class='admin-shop-menu-item <%= MenuActivePointApproval() %>' href="<%= GetApproveHomePointUrl() %>">
+                        <span>Duyệt yêu cầu điểm / hành vi</span>
                     </a>
                     <% } %>
                     <% if (ShowMenuIssueCard()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/phat-hanh-the.aspx") %>' href="/admin/phat-hanh-the.aspx">
+                    <a class='admin-shop-menu-item <%= MenuActive("/admin/phat-hanh-the.aspx", "/admin/phat-hanh-the/them-moi.aspx") %>' href="/admin/phat-hanh-the/them-moi.aspx">
                         <span>Phát hành thẻ</span>
                     </a>
                     <% } %>
@@ -229,7 +113,7 @@
                     </a>
                     <% } %>
                     <% if (ShowMenuSellProduct()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/he-thong-san-pham/ban-san-pham.aspx") %>' href="/admin/he-thong-san-pham/ban-san-pham.aspx">
+                    <a class='admin-shop-menu-item <%= MenuActive("/admin/he-thong-san-pham/ban-san-pham.aspx", "/admin/he-thong-san-pham/ban-the.aspx", "/admin/he-thong-san-pham/chi-tiet-giao-dich.aspx") %>' href="/admin/he-thong-san-pham/ban-the.aspx">
                         <span>Bán sản phẩm</span>
                     </a>
                     <% } %>
@@ -238,8 +122,13 @@
                     <% if (ShowMenuGroupShop()) { %>
                     <div class="admin-shop-menu-group-title">Quản lý gian hàng đối tác</div>
                     <% if (ShowMenuShopAccount()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActiveTaiKhoanScope("shop") %>' href="/admin/quan-ly-tai-khoan/Default.aspx?scope=shop">
+                    <a class='admin-shop-menu-item <%= MenuActiveTaiKhoanScope("shop") %>' href="<%= GetShopAccountManagementUrl() %>">
                         <span>Quản lý tài khoản gian hàng đối tác</span>
+                    </a>
+                    <% } %>
+                    <% if (ShowMenuShopPointApproval()) { %>
+                    <a class='admin-shop-menu-item <%= MenuActiveShopPointApproval() %>' href="/admin/lich-su-chuyen-diem/default.aspx?tab=shop-only">
+                        <span>Duyệt điểm / nghiệp vụ shop</span>
                     </a>
                     <% } %>
                     <% if (ShowMenuShopEmailTemplate()) { %>
@@ -270,17 +159,17 @@
                     </a>
                     <% } %>
                     <% if (ShowMenuContentMenu()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-menu/default.aspx") %>' href="/admin/quan-ly-menu/default.aspx">
+                    <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-menu/default.aspx", "/admin/quan-ly-menu/them-moi.aspx", "/admin/quan-ly-menu/bo-loc.aspx", "/admin/quan-ly-menu/chinh-sua.aspx", "/admin/quan-ly-menu/xuat-du-lieu.aspx", "/admin/quan-ly-menu/ban-in.aspx") %>' href="/admin/quan-ly-menu/default.aspx">
                         <span>Quản lý menu</span>
                     </a>
                     <% } %>
                     <% if (ShowMenuContentBaiViet()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-bai-viet/default.aspx", "/admin/quan-ly-bai-viet/in.aspx") %>' href="/admin/quan-ly-bai-viet/default.aspx">
+                    <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-bai-viet/default.aspx", "/admin/quan-ly-bai-viet/in.aspx", "/admin/quan-ly-bai-viet/them-moi.aspx", "/admin/quan-ly-bai-viet/bo-loc.aspx", "/admin/quan-ly-bai-viet/chinh-sua.aspx", "/admin/quan-ly-bai-viet/xuat-du-lieu.aspx", "/admin/quan-ly-bai-viet/ban-in.aspx") %>' href="/admin/quan-ly-bai-viet/default.aspx">
                         <span>Quản lý bài viết</span>
                     </a>
                     <% } %>
                     <% if (ShowMenuContentBanner()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-banner/default.aspx") %>' href="/admin/quan-ly-banner/default.aspx">
+                    <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-banner/default.aspx", "/admin/quan-ly-banner/them-moi.aspx") %>' href="/admin/quan-ly-banner/default.aspx">
                         <span>Quản lý banner</span>
                     </a>
                     <% } %>
@@ -290,24 +179,22 @@
                     </a>
                     <% } %>
                     <% if (ShowMenuContentThongBao()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-thong-bao/default.aspx", "/admin/quan-ly-thong-bao/in.aspx") %>' href="/admin/quan-ly-thong-bao/default.aspx">
+                    <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-thong-bao/default.aspx", "/admin/quan-ly-thong-bao/in.aspx", "/admin/quan-ly-thong-bao/bo-loc.aspx", "/admin/quan-ly-thong-bao/xuat-du-lieu.aspx", "/admin/quan-ly-thong-bao/ban-in.aspx") %>' href="/admin/quan-ly-thong-bao/default.aspx">
                         <span>Quản lý thông báo</span>
                     </a>
                     <% } %>
                     <% if (ShowMenuContentTuVan()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/yeu-cau-tu-van/default.aspx") %>' href="/admin/yeu-cau-tu-van/default.aspx">
+                    <a class='admin-shop-menu-item <%= MenuActive("/admin/yeu-cau-tu-van/default.aspx", "/admin/yeu-cau-tu-van/bo-loc.aspx", "/admin/yeu-cau-tu-van/xuat-du-lieu.aspx", "/admin/yeu-cau-tu-van/ban-in.aspx") %>' href="/admin/yeu-cau-tu-van/default.aspx">
                         <span>Yêu cầu tư vấn</span>
                     </a>
                     <% } %>
                     <% } %>
                 </div>
                 <div class="admin-shop-menu-footer">
-                    <asp:LinkButton ID="but_show_form_doimatkhau" runat="server" CssClass="admin-shop-btn admin-shop-btn-light" CausesValidation="false" OnClick="but_show_form_doimatkhau_Click">Đổi mật khẩu</asp:LinkButton>
+                    <asp:HyperLink ID="but_show_form_doimatkhau" runat="server" CssClass="admin-shop-btn admin-shop-btn-light">Đổi mật khẩu</asp:HyperLink>
                     <asp:LinkButton ID="but_dangxuat" runat="server" CssClass="admin-shop-btn admin-shop-btn-danger" OnClick="but_dangxuat_Click">Đăng xuất</asp:LinkButton>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-

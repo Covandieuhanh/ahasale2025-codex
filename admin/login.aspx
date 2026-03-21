@@ -59,6 +59,7 @@
         .admin-login-submit:hover {
             background: #b91c1c !important;
         }
+
     </style>
 
      <link rel='icon' href='/uploads/images/favicon.png' sizes='16x16' type='image/x-icon' />
@@ -79,61 +80,10 @@
 
 
 </head>
-<body class="body-login-bcorn1 admin-login-page">
+<body id="bodyLogin" runat="server" class="body-login-bcorn1 admin-login-page">
 
     <form id="form1" runat="server">
         <asp:ScriptManager ID="ScriptManager1" runat="server" EnableScriptGlobalization="True"></asp:ScriptManager>
-
-
-        <asp:UpdatePanel ID="up_khoiphuc" runat="server" UpdateMode="Conditional">
-            <ContentTemplate>
-                <asp:Panel ID="pn_khoiphuc" runat="server" Visible="false" DefaultButton="but_nhanma">
-                    <div style="position: fixed; width: 100%; height: 52px; background-color: none; top: 0; left: 0; z-index: 1041!important;">
-                        <div style='top: 0; left: 0px; margin: 0 auto; max-width: 500px; opacity: 1;'>
-                            <div style='position: absolute; right: 18px; top: 14px; z-index: 1040!important'>
-                                <a href='#' class='fg-white d-inline' id="close_add" runat="server" onserverclick="but_close_form_quenmk_Click" title='Đóng'>
-                                    <span class='mif mif-cross mif-2x fg-red fg-lightRed-hover'></span>
-                                </a>
-                            </div>
-                            <div class="bg-white pl-4 pl-8-md pr-8-md pr-4" style="height: 52px;">
-                                <div class="pt-4 text-upper text-bold">
-                                    KHÔI PHỤC MẬT KHẨU
-                                </div>
-                                <hr />
-                            </div>
-                        </div>
-                    </div>
-                    <div style="position: fixed; width: 100%; height: 100%; top: 0; left: 0; overflow: auto; z-index: 1040!important; background-image: url('/uploads/images/bg1.png');">
-                        <div style='top: 0; left: 0; margin: 0 auto; max-width: 506px; opacity: 1;'>
-                            <div class="bg-white border bd-transparent pl-4 pl-8-md pr-8-md pr-4" style="padding-top: 52px">
-                                <%--pl-4 pl-8-md pr-8-md pr-4--%>
-                                <div class="row">
-                                    <div class="cell-lg-12">
-                                        <div class="mt-3">
-                                            <label class="fg-red fw-600">Nhập email khôi phục của bạn</label>
-                                            <asp:TextBox ID="txt_email_khoiphuc" runat="server" CssClass="input" MaxLength="100"></asp:TextBox>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="mt-6 mb-20 text-right">
-                                    <asp:Button ID="but_nhanma" runat="server" Text="Nhận mã khôi phục" CssClass="button success" OnClick="but_nhanma_Click" />
-                                </div>
-                                <div class="mb-20"></div>
-                            </div>
-                        </div>
-                    </div>
-                </asp:Panel>
-            </ContentTemplate>
-        </asp:UpdatePanel>
-        <asp:UpdateProgress ID="UpdateProgress5" runat="server" AssociatedUpdatePanelID="up_khoiphuc">
-            <ProgressTemplate>
-                <div class="bg-dark fixed-top h-100 w-100" style="opacity: 0.9; z-index: 99999!important">
-                    <div style="padding-top: 45vh;">
-                        <div class="mx-auto color-style activity-atom" data-role="activity" data-type="atom" data-style="color" data-role-activity="true"><span class="electron"></span><span class="electron"></span><span class="electron"></span></div>
-                    </div>
-                </div>
-            </ProgressTemplate>
-        </asp:UpdateProgress>
 
 
         <div class="bg-login-bcorn1">
@@ -172,7 +122,7 @@
                                     <div class="admin-login-actions mt-5">
                                         <div class="admin-login-forgot">
                                             <small>
-                                                <asp:LinkButton ID="but_show_form_quenmk" OnClick="but_show_form_quenmk_Click" CssClass="fg-white fg-light-hover" runat="server">Quên mật khẩu?</asp:LinkButton>
+                                                <asp:HyperLink ID="but_show_form_quenmk" CssClass="fg-white fg-light-hover" runat="server">Quên mật khẩu?</asp:HyperLink>
                                             </small>
                                         </div>
                                         <div class="admin-login-submit-wrap">
@@ -186,10 +136,9 @@
                         </asp:UpdatePanel>
                         <asp:UpdateProgress ID="UpdateProgress1" runat="server" AssociatedUpdatePanelID="UpdatePanel1">
                             <ProgressTemplate>
-                                <div class="bg-dark fixed-top h-100 w-100" style="opacity: 0.9; z-index: 99999!important">
-                                    <div style="padding-top: 50vh;">
-                                        <div class="mx-auto color-style activity-atom" data-role="activity" data-type="atom" data-style="color" data-role-activity="true"><span class="electron"></span><span class="electron"></span><span class="electron"></span></div>
-                                    </div>
+                                <div class="admin-inline-progress" role="status" aria-live="polite">
+                                    <span class="admin-inline-progress-spinner"></span>
+                                    <span class="admin-inline-progress-text">Đang xử lý...</span>
                                 </div>
                             </ProgressTemplate>
                         </asp:UpdateProgress>

@@ -67,7 +67,7 @@ public class check_login_cl
         return string.Equals((taikhoan ?? "").Trim(), "admin", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static IEnumerable<string> SplitPermissionTokens(string raw)
+    public static IEnumerable<string> NormalizePermissionTokensForDisplay(string raw)
     {
         if (string.IsNullOrWhiteSpace(raw))
             return Enumerable.Empty<string>();
@@ -81,13 +81,13 @@ public class check_login_cl
 
     private static bool HasAnyPermission(string userPermissionRaw, params string[] requiredPermissionRaw)
     {
-        var userSet = new HashSet<string>(SplitPermissionTokens(userPermissionRaw), StringComparer.OrdinalIgnoreCase);
+        var userSet = new HashSet<string>(NormalizePermissionTokensForDisplay(userPermissionRaw), StringComparer.OrdinalIgnoreCase);
         if (userSet.Count == 0)
             return false;
 
         foreach (string raw in requiredPermissionRaw)
         {
-            foreach (string token in SplitPermissionTokens(raw))
+            foreach (string token in NormalizePermissionTokensForDisplay(raw))
             {
                 if (userSet.Contains(token))
                     return true;
@@ -118,7 +118,7 @@ public class check_login_cl
         "/home/lich-su-giao-dich.aspx"
     };
 
-    private static readonly string[] ShopHomeBridgePrefixes = new[] { "/home/page/" };
+    private static readonly string[] ShopHomeBridgePrefixes = new[] { "/home/page/", "/daugia/" };
 
     private static bool IsShopHomeBridgePath()
     {
@@ -330,7 +330,7 @@ public class check_login_cl
                         if (_mk != (_ob.matkhau ?? "")) // so sánh với mật khẩu được giải mã từ Cookie, nếu khác nhau
                         {
                             del_all_cookie_session_admin(); // xóa toàn bộ Cookie và Session
-                            HttpContext.Current.Session["thongbao"] = thongbao_class.metro_dialog_onload("Thông báo", "Mật khẩu đã được thay đổi. <br/>Vui lòng đăng nhập lại.", "false", "false", "OK", "alert", "");
+                            HttpContext.Current.Session["thongbao"] = thongbao_class.metro_notifi_onload("Thông báo", "Mật khẩu đã được thay đổi. Vui lòng đăng nhập lại.", "1800", "warning");
                             HttpContext.Current.Response.Redirect("/admin/login.aspx"); // chuyển trang và nhận thông báo
 
                         }
@@ -341,7 +341,7 @@ public class check_login_cl
                             if (_ob.block == true) // nếu tài khoản này bị khóa
                             {
                                 del_all_cookie_session_admin(); // xóa toàn bộ Cookie và Session
-                                HttpContext.Current.Session["thongbao"] = thongbao_class.metro_dialog_onload("Thông báo", "Tài khoản đã bị khóa.", "false", "false", "OK", "alert", "");
+                                HttpContext.Current.Session["thongbao"] = thongbao_class.metro_notifi_onload("Thông báo", "Tài khoản đã bị khóa.", "1800", "warning");
                                 HttpContext.Current.Response.Redirect("/admin/login.aspx"); // chuyển trang và nhận thông báo
 
                             }
@@ -350,7 +350,7 @@ public class check_login_cl
                                 if (_ob.hansudung != null && AhaTime_cl.Now > _ob.hansudung.Value) // nếu có hạn sử dụng và hết hạn
                                 {
                                     del_all_cookie_session_admin(); // xóa toàn bộ Cookie và Session
-                                    HttpContext.Current.Session["thongbao"] = thongbao_class.metro_dialog_onload("Thông báo", "Tài khoản của bạn đã hết hạn sử dụng.", "false", "false", "OK", "alert", "");
+                                    HttpContext.Current.Session["thongbao"] = thongbao_class.metro_notifi_onload("Thông báo", "Tài khoản của bạn đã hết hạn sử dụng.", "1800", "warning");
                                     HttpContext.Current.Response.Redirect("/admin/login.aspx"); // chuyển trang và nhận thông báo
 
                                 }
@@ -362,7 +362,7 @@ public class check_login_cl
                                         del_all_cookie_session_admin(); // xóa toàn bộ Cookie và Session
                                         string scope = PortalScope_cl.ResolveScope(_tk, _ob.phanloai, _ob.permission);
                                         string targetPortal = scope == PortalScope_cl.ScopeShop ? "trang gian hàng đối tác" : "AhaSale";
-                                        HttpContext.Current.Session["thongbao"] = thongbao_class.metro_dialog_onload("Thông báo", "Tài khoản này chỉ được phép đăng nhập ở " + targetPortal + ".", "false", "false", "OK", "alert", "");
+                                        HttpContext.Current.Session["thongbao"] = thongbao_class.metro_notifi_onload("Thông báo", "Tài khoản này chỉ được phép đăng nhập ở " + targetPortal + ".", "1800", "warning");
                                         HttpContext.Current.Response.Redirect("/admin/login.aspx"); // chuyển trang và nhận thông báo
 
                                     }
@@ -389,7 +389,7 @@ public class check_login_cl
                                         }
                                         else // nếu k có quyền
                                         {
-                                            HttpContext.Current.Session["thongbao"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
+                                            HttpContext.Current.Session["thongbao"] = thongbao_class.metro_notifi_onload("Thông báo", "Bạn không đủ quyền thực hiện thao tác vừa rồi.", "1800", "warning");
                                             HttpContext.Current.Response.Redirect("/admin/default.aspx"); // chuyển trang và nhận thông báo
 
                                         }
@@ -408,7 +408,7 @@ public class check_login_cl
                 throw;
 
             del_all_cookie_session_admin();
-            HttpContext.Current.Session["thongbao"] = thongbao_class.metro_dialog_onload("Thông báo", "Kết nối dữ liệu đang tạm thời gián đoạn. Vui lòng đăng nhập lại hoặc tải lại trang sau vài giây.", "false", "false", "OK", "alert", "");
+            HttpContext.Current.Session["thongbao"] = thongbao_class.metro_notifi_onload("Thông báo", "Kết nối dữ liệu đang tạm thời gián đoạn. Vui lòng đăng nhập lại hoặc tải lại trang sau vài giây.", "2200", "warning");
             HttpContext.Current.Response.Redirect("/admin/login.aspx");
         }
     }

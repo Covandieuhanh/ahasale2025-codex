@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Linq;
+using System.Web;
 using System.Web.UI;
 
 public partial class home_cho_thanh_toan : System.Web.UI.Page
@@ -11,6 +12,93 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
     {
         decimal vnd = quyen * VND_PER_QUYEN;
         return string.Format("{0:#,##0.##} Quyền (~{1:#,##0}đ)", quyen, vnd);
+    }
+
+    private static string FormatQuyenValue(decimal quyen)
+    {
+        return quyen.ToString("#,##0.##");
+    }
+
+    private static string BuildExchangeSuccessMessage(decimal quyenUuDai, decimal quyenTieuDung)
+    {
+        if (quyenUuDai > 0m && quyenTieuDung > 0m)
+        {
+            return string.Format(
+                "Đã trao đổi thành công {0} Quyền ưu đãi và {1} Quyền tiêu dùng.",
+                FormatQuyenValue(quyenUuDai),
+                FormatQuyenValue(quyenTieuDung));
+        }
+
+        if (quyenUuDai > 0m)
+        {
+            return string.Format(
+                "Đã trao đổi thành công {0} Quyền ưu đãi.",
+                FormatQuyenValue(quyenUuDai));
+        }
+
+        return string.Format(
+            "Đã trao đổi thành công {0} Quyền tiêu dùng.",
+            FormatQuyenValue(quyenTieuDung));
+    }
+
+    private static string BuildExchangeSuccessNotice(decimal quyenUuDai, decimal quyenTieuDung, string orderId)
+    {
+        return BuildExchangeSuccessMessage(quyenUuDai, quyenTieuDung) + " ID đơn hàng: " + orderId;
+    }
+
+    private string ResolvePortalInlineDialogClass(string defaultCssClass)
+    {
+        return IsShopPortal() ? "warning" : defaultCssClass;
+    }
+
+    private void SetPortalDialogOnload(string title, string message, string defaultCssClass)
+    {
+        if (IsShopPortal())
+        {
+            Session["ThongBao_Shop"] = string.Format(
+                "modal|{0}|{1}|primary|0",
+                (title ?? "Thông báo").Replace("|", " "),
+                (message ?? string.Empty).Replace("|", " "));
+            return;
+        }
+
+        Session["thongbao_home"] = thongbao_class.metro_dialog_onload(
+            title ?? "Thông báo",
+            message ?? string.Empty,
+            "false", "false", "OK", defaultCssClass, ""
+        );
+    }
+
+    private void ShowPortalDialog(string title, string message, string defaultCssClass)
+    {
+        ScriptManager.RegisterStartupScript(
+            this.Page,
+            this.GetType(),
+            Guid.NewGuid().ToString(),
+            thongbao_class.metro_dialog(
+                title ?? "Thông báo",
+                message ?? string.Empty,
+                "false", "false", "OK",
+                ResolvePortalInlineDialogClass(defaultCssClass),
+                ""),
+            true);
+    }
+
+    private void SetPortalExchangeSuccessNotice(string message)
+    {
+        if (IsShopPortal())
+        {
+            Session["ThongBao_Shop"] = string.Format(
+                "modal|Thông báo|{0}|primary|0",
+                HttpUtility.HtmlEncode(message ?? string.Empty));
+            return;
+        }
+
+        Session["thongbao_home"] = thongbao_class.metro_dialog_onload(
+            "Thông báo",
+            message ?? string.Empty,
+            "false", "false", "OK", "alert", ""
+        );
     }
     private const int LINK_CONTEXT_TTL_MINUTES = 30;
 
@@ -138,11 +226,7 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
         int orderIdInt;
         if (!int.TryParse(requestedOrderId, out orderIdInt))
         {
-            Session["thongbao_home"] = thongbao_class.metro_dialog_onload(
-                "Thông báo",
-                "Thiếu mã đơn hợp lệ để hủy chờ Trao đổi.",
-                "false", "false", "OK", "alert", ""
-            );
+            SetPortalDialogOnload("Thông báo", "Thiếu mã đơn hợp lệ để hủy chờ Trao đổi.", "alert");
             Response.Redirect(ChoThanhToanUrl());
             return true;
         }
@@ -150,22 +234,14 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
         DonHang_tb donCho = ResolveOrderForCancel(db, sellerAccount, orderIdInt, true);
         if (donCho == null)
         {
-            Session["thongbao_home"] = thongbao_class.metro_dialog_onload(
-                "Thông báo",
-                "Không tìm thấy đơn hàng cần hủy hoặc bạn không có quyền thao tác đơn này.",
-                "false", "false", "OK", "alert", ""
-            );
+            SetPortalDialogOnload("Thông báo", "Không tìm thấy đơn hàng cần hủy hoặc bạn không có quyền thao tác đơn này.", "alert");
             Response.Redirect(ChoThanhToanUrl());
             return true;
         }
 
         if (!CancelOrderIfAllowed(db, donCho))
         {
-            Session["thongbao_home"] = thongbao_class.metro_dialog_onload(
-                "Thông báo",
-                "Đơn hàng không còn ở trạng thái chờ Trao đổi.",
-                "false", "false", "OK", "alert", ""
-            );
+            SetPortalDialogOnload("Thông báo", "Đơn hàng không còn ở trạng thái chờ Trao đổi.", "alert");
             Response.Redirect(ChoThanhToanUrl());
             return true;
         }
@@ -376,7 +452,7 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
         ConfigureWaitActions(q1.id.ToString());
 
         // Bind chi tiết
-        var q_ct =
+        var q_ct = (
             from ob1 in db.DonHang_ChiTiet_tbs.Where(p => p.id_donhang == q1.id.ToString())
             join ob2 in db.BaiViet_tbs on ob1.idsp equals ob2.id.ToString() into SanPhamGroup
             from ob2 in SanPhamGroup.DefaultIfEmpty()
@@ -390,8 +466,9 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
                 ob1.soluong,
                 ob1.thanhtien,
                 PhanTramUuDai = (ob1.PhanTram_GiamGia_ThanhToan_BangEvoucher ?? 0)
-            };
+            }).ToList();
 
+        lb_order_items.Text = q_ct.Count.ToString("#,##0");
         Repeater2.DataSource = q_ct;
         Repeater2.DataBind();
 
@@ -621,17 +698,13 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
             DonHang_tb donCho = ResolveOrderForCancel(db, sellerAccount, requestOrderId, false);
             if (donCho == null)
             {
-                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                    thongbao_class.metro_dialog("Thông báo", "Không tìm thấy đơn hàng chờ Trao đổi để hủy.", "false", "false", "OK", "alert", ""),
-                    true);
+                ShowPortalDialog("Thông báo", "Không tìm thấy đơn hàng chờ Trao đổi để hủy.", "alert");
                 return;
             }
 
             if (!CancelOrderIfAllowed(db, donCho))
             {
-                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                    thongbao_class.metro_dialog("Thông báo", "Đơn hàng không còn ở trạng thái chờ Trao đổi.", "false", "false", "OK", "alert", ""),
-                    true);
+                ShowPortalDialog("Thông báo", "Đơn hàng không còn ở trạng thái chờ Trao đổi.", "alert");
                 return;
             }
         }
@@ -658,9 +731,7 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
         }
         else
         {
-            Session["thongbao_home"] = thongbao_class.metro_dialog_onload("Thông báo",
-                "Phiên của bạn đã hết hạn. Vui lòng đăng nhập lại.",
-                "false", "false", "OK", "alert", "");
+            SetPortalDialogOnload("Thông báo", "Phiên của bạn đã hết hạn. Vui lòng đăng nhập lại.", "alert");
 
             ScriptManager.RegisterStartupScript(this.Page, this.GetType(), "redirectScript",
                 "window.location.href='" + LoginUrl() + "';", true);
@@ -678,11 +749,7 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
             if (!TryLoadPaymentContext(db, _tk, out donCho, out q_tk_mua, out card, out loaiThe, out contextError, true))
             {
                 ClearPaymentSession();
-                Session["thongbao_home"] = thongbao_class.metro_dialog_onload(
-                    "Thông báo",
-                    BuildContextErrorMessage(contextError),
-                    "false", "false", "OK", "alert", ""
-                );
+                SetPortalDialogOnload("Thông báo", BuildContextErrorMessage(contextError), "alert");
                 ScriptManager.RegisterStartupScript(this.Page, this.GetType(), "redirectScript",
                     "window.location.href='" + ChoThanhToanUrl() + "';", true);
                 return;
@@ -690,25 +757,19 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
 
             if (!card.TrangThai)
             {
-                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                    thongbao_class.metro_dialog("Thông báo", "Thẻ đã bị khóa. Vui lòng liên hệ quản trị hoặc quét thẻ khác.", "false", "false", "OK", "alert", ""),
-                    true);
+                ShowPortalDialog("Thông báo", "Thẻ đã bị khóa. Vui lòng liên hệ quản trị hoặc quét thẻ khác.", "alert");
                 return;
             }
 
             if (loaiThe != 1 && loaiThe != 2)
             {
-                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                    thongbao_class.metro_dialog("Thông báo", "Thẻ này không hợp lệ để Trao đổi.", "false", "false", "OK", "alert", ""),
-                    true);
+                ShowPortalDialog("Thông báo", "Thẻ này không hợp lệ để Trao đổi.", "alert");
                 return;
             }
 
             if (ViewState["id_donhang"] == null || !string.Equals(ViewState["id_donhang"].ToString(), donCho.id.ToString(), StringComparison.Ordinal))
             {
-                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                    thongbao_class.metro_dialog("Thông báo", "Đơn chờ trao đổi đã thay đổi. Vui lòng quét lại link trao đổi.", "false", "false", "OK", "alert", ""),
-                    true);
+                ShowPortalDialog("Thông báo", "Đơn chờ trao đổi đã thay đổi. Vui lòng quét lại link trao đổi.", "alert");
                 return;
             }
 
@@ -717,18 +778,14 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
             string _pinDaCai = (q_tk_mua.mapin_thanhtoan ?? "").Trim();
             if (string.IsNullOrEmpty(_pinDaCai))
             {
-                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                    thongbao_class.metro_dialog("Thông báo", "Vui lòng cài đặt mã pin Trao đổi trước khi Trao đổi", "false", "false", "OK", "alert", ""),
-                    true);
+                ShowPortalDialog("Thông báo", "Vui lòng cài đặt mã pin Trao đổi trước khi Trao đổi", "alert");
                 return;
             }
 
             string _mapin = txt_mapin.Text.Trim();
             if (!PinSecurity_cl.IsValidPinFormat(_mapin))
             {
-                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                    thongbao_class.metro_dialog("Mã pin không đúng", "Mã PIN phải gồm đúng 4 chữ số.", "false", "false", "OK", "alert", ""),
-                    true);
+                ShowPortalDialog("Mã pin không đúng", "Mã PIN phải gồm đúng 4 chữ số.", "alert");
                 return;
             }
 
@@ -736,11 +793,7 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
             DateTime lockUntil;
             if (PinAttemptGuard_cl.IsLocked(payer, clientIp, out lockUntil))
             {
-                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                    thongbao_class.metro_dialog("Thông báo",
-                        "Chức năng đang bị tạm khóa, vui lòng thử lại vào lúc " + lockUntil.ToString("dd/MM/yyyy HH:mm"),
-                        "false", "false", "OK", "alert", ""),
-                    true);
+                ShowPortalDialog("Thông báo", "Chức năng đang bị tạm khóa, vui lòng thử lại vào lúc " + lockUntil.ToString("dd/MM/yyyy HH:mm"), "alert");
                 return;
             }
 
@@ -757,11 +810,7 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
                     db.SubmitChanges();
                     PinAttemptGuard_cl.Reset(payer, clientIp);
 
-                    Session["thongbao_home"] = thongbao_class.metro_dialog_onload(
-                        "Mã pin không đúng",
-                        "Bạn đã nhập sai " + failCount + " lần. Tài khoản trao đổi đã bị khóa. Vui lòng liên hệ với chúng tôi để xác thực.",
-                        "false", "false", "OK", "alert", ""
-                    );
+                    SetPortalDialogOnload("Mã pin không đúng", "Bạn đã nhập sai " + failCount + " lần. Tài khoản trao đổi đã bị khóa. Vui lòng liên hệ với chúng tôi để xác thực.", "alert");
 
                     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), "redirectScript",
                         "window.location.href='" + LoginUrl() + "';", true);
@@ -770,17 +819,11 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
 
                 if (lockUntilOnFail != null)
                 {
-                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                        thongbao_class.metro_dialog("Mã pin không đúng",
-                            "Bạn đã nhập sai " + failCount + " lần. Chức năng sẽ bị khóa đến " + lockUntilOnFail.Value.ToString("dd/MM/yyyy HH:mm"),
-                            "false", "false", "OK", "alert", ""),
-                        true);
+                    ShowPortalDialog("Mã pin không đúng", "Bạn đã nhập sai " + failCount + " lần. Chức năng sẽ bị khóa đến " + lockUntilOnFail.Value.ToString("dd/MM/yyyy HH:mm"), "alert");
                 }
                 else
                 {
-                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                        thongbao_class.metro_dialog("Mã pin không đúng", "Bạn đã nhập sai " + failCount + " lần.", "false", "false", "OK", "alert", ""),
-                        true);
+                    ShowPortalDialog("Mã pin không đúng", "Bạn đã nhập sai " + failCount + " lần.", "alert");
                 }
                 return;
             }
@@ -798,26 +841,20 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
                 Guid keyGuid;
                 if (!WalletPaymentSession_cl.TryGetCardKey(Session, out keyGuid))
                 {
-                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                        thongbao_class.metro_dialog("Thông báo", "Phiên trao đổi không hợp lệ. Vui lòng quét lại link trao đổi.", "false", "false", "OK", "alert", ""),
-                        true);
+                    ShowPortalDialog("Thông báo", "Phiên trao đổi không hợp lệ. Vui lòng quét lại link trao đổi.", "alert");
                     return;
                 }
 
                 var cardTx = db.The_PhatHanh_tbs.FirstOrDefault(p => p.idGuide == keyGuid);
                 if (cardTx == null || !cardTx.TrangThai)
                 {
-                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                        thongbao_class.metro_dialog("Thông báo", "Thẻ không còn hợp lệ để Trao đổi.", "false", "false", "OK", "alert", ""),
-                        true);
+                    ShowPortalDialog("Thông báo", "Thẻ không còn hợp lệ để Trao đổi.", "alert");
                     return;
                 }
 
                 if (!string.Equals((cardTx.taikhoan ?? "").Trim(), payer, StringComparison.OrdinalIgnoreCase))
                 {
-                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                        thongbao_class.metro_dialog("Thông báo", "Thông tin tài khoản trao đổi đã thay đổi. Vui lòng quét lại link trao đổi.", "false", "false", "OK", "alert", ""),
-                        true);
+                    ShowPortalDialog("Thông báo", "Thông tin tài khoản trao đổi đã thay đổi. Vui lòng quét lại link trao đổi.", "alert");
                     return;
                 }
 
@@ -826,25 +863,21 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
                 q_tk_mua = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == payer);
                 if (q_tk_mua == null || q_tk_mua.block == true)
                 {
-                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                        thongbao_class.metro_dialog("Thông báo", "Tài khoản trao đổi không hợp lệ hoặc đã bị khóa.", "false", "false", "OK", "alert", ""),
-                        true);
+                    ShowPortalDialog("Thông báo", "Tài khoản trao đổi không hợp lệ hoặc đã bị khóa.", "alert");
                     return;
                 }
 
                 // Re-check PIN trong cùng transaction để tránh TOCTOU.
                 if (!PinSecurity_cl.VerifyAndUpgrade(q_tk_mua, _mapin))
                 {
-                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                        thongbao_class.metro_dialog("Mã pin không đúng", "Mã PIN không đúng hoặc đã thay đổi. Vui lòng thử lại.", "false", "false", "OK", "alert", ""),
-                        true);
+                    ShowPortalDialog("Mã pin không đúng", "Mã PIN không đúng hoặc đã thay đổi. Vui lòng thử lại.", "alert");
                     return;
                 }
 
                 var q = db.DonHang_tbs.FirstOrDefault(p => p.id.ToString() == ViewState["id_donhang"].ToString());
                 if (q == null)
                 {
-                    Session["thongbao_home"] = thongbao_class.metro_dialog_onload("Thông báo", "Có lỗi xãy ra.", "false", "false", "OK", "alert", "");
+                    SetPortalDialogOnload("Thông báo", "Có lỗi xãy ra.", "alert");
                     ScriptManager.RegisterStartupScript(this.Page, this.GetType(), "redirectScript",
                         "window.location.href='" + SellerDonBanUrl() + "';", true);
                     return;
@@ -855,9 +888,7 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
                 DonHangStateMachine_cl.EnsureStateFields(q);
                 if (!DonHangStateMachine_cl.CanExecuteExchange(q))
                 {
-                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                        thongbao_class.metro_dialog("Thông báo", "Đơn hàng không còn ở trạng thái chờ Trao đổi.", "false", "false", "OK", "alert", ""),
-                        true);
+                    ShowPortalDialog("Thông báo", "Đơn hàng không còn ở trạng thái chờ Trao đổi.", "alert");
                     return;
                 }
 
@@ -902,13 +933,7 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
             {
                 if (!donCoUuDai)
                 {
-                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                        thongbao_class.metro_dialog(
-                            "Thông báo",
-                            "Thẻ ưu đãi chỉ áp dụng cho đơn có ưu đãi. Đơn này không có ưu đãi nên không thể Trao đổi bằng thẻ ưu đãi.",
-                            "false", "false", "OK", "alert", ""
-                        ),
-                        true);
+                    ShowPortalDialog("Thông báo", "Thẻ ưu đãi chỉ áp dụng cho đơn có ưu đãi. Đơn này không có ưu đãi nên không thể Trao đổi bằng thẻ ưu đãi.", "alert");
                     return;
                 }
 
@@ -917,13 +942,7 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
 
                 if (soDuUuDaiQuyen < quyenUuDai)
                 {
-                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                        thongbao_class.metro_dialog(
-                            "Thông báo",
-                            "Ví ưu đãi không đủ để Trao đổi.\nCần: " + quyenUuDai.ToString("#,##0.##") + " Quyền.",
-                            "false", "false", "OK", "alert", ""
-                        ),
-                        true);
+                    ShowPortalDialog("Thông báo", "Ví ưu đãi không đủ để Trao đổi.\nCần: " + quyenUuDai.ToString("#,##0.##") + " Quyền.", "alert");
                     return;
                 }
 
@@ -970,6 +989,7 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
                 }
 
                 // 5) Thông báo 2 chiều
+                string successNotice = BuildExchangeSuccessNotice(quyenUuDai, 0m, id_dh);
                 db.ThongBao_tbs.InsertOnSubmit(new ThongBao_tb
                 {
                     id = Guid.NewGuid(),
@@ -977,8 +997,7 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
                     nguoithongbao = payer,
                     nguoinhan = q.nguoiban,
                     link = SellerDonBanUrl(),
-                    noidung = db.taikhoan_tbs.First(p => p.taikhoan == payer).hoten
-                            + " đã Trao đổi thành công (Thẻ ưu đãi). ID đơn hàng: " + id_dh,
+                    noidung = db.taikhoan_tbs.First(p => p.taikhoan == payer).hoten + " " + successNotice,
                     thoigian = _now,
                     bin = false
                 });
@@ -990,7 +1009,7 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
                     nguoithongbao = q.nguoiban,
                     nguoinhan = payer,
                     link = "/home/don-mua.aspx",
-                    noidung = "Trao đổi thành công (Thẻ ưu đãi). ID đơn hàng: " + id_dh,
+                    noidung = successNotice,
                     thoigian = _now,
                     bin = false
                 });
@@ -1000,11 +1019,7 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
                 committed = true;
                 ClearPaymentSession();
 
-                Session["thongbao_home"] = thongbao_class.metro_dialog_onload(
-                    "Thông báo",
-                    "Trao đổi thành công (Thẻ ưu đãi). Phần còn lại trao đổi tiền mặt theo quy đổi.",
-                    "false", "false", "OK", "alert", ""
-                );
+                SetPortalExchangeSuccessNotice(BuildExchangeSuccessMessage(quyenUuDai, 0m));
 
                 ScriptManager.RegisterStartupScript(this.Page, this.GetType(), "redirectScript",
                     "window.location.href='" + SellerDonBanUrl() + "';", true);
@@ -1054,9 +1069,7 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
 
                         if (soDuQuyen < quyenConLai)
                         {
-                            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                                thongbao_class.metro_dialog("Thông báo", "Ví Quyền tiêu dùng không đủ cho phần còn lại.", "false", "false", "OK", "alert", ""),
-                                true);
+                            ShowPortalDialog("Thông báo", "Ví Quyền tiêu dùng không đủ cho phần còn lại.", "alert");
                             return;
                         }
                     }
@@ -1064,9 +1077,7 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
                     {
                         if (soDuQuyen < tongQuyen)
                         {
-                            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                                thongbao_class.metro_dialog("Thông báo", "Quyền tiêu dùng của bạn không đủ để Trao đổi.", "false", "false", "OK", "alert", ""),
-                                true);
+                            ShowPortalDialog("Thông báo", "Quyền tiêu dùng của bạn không đủ để Trao đổi.", "alert");
                             return;
                         }
                     }
@@ -1075,9 +1086,7 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
                 {
                     if (soDuQuyen < tongQuyen)
                     {
-                        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                            thongbao_class.metro_dialog("Thông báo", "Quyền tiêu dùng của bạn không đủ để Trao đổi.", "false", "false", "OK", "alert", ""),
-                            true);
+                        ShowPortalDialog("Thông báo", "Quyền tiêu dùng của bạn không đủ để Trao đổi.", "alert");
                         return;
                     }
                 }
@@ -1177,6 +1186,9 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
                 }
 
                 // ===== THÔNG BÁO 2 CHIỀU =====
+                decimal successQuyenUuDai = apDungUuDai ? quyenUuDai_2 : 0m;
+                decimal successQuyenTieuDung = apDungUuDai ? quyenConLai : tongQuyen;
+                string successNotice = BuildExchangeSuccessNotice(successQuyenUuDai, successQuyenTieuDung, id_dh);
                 db.ThongBao_tbs.InsertOnSubmit(new ThongBao_tb
                 {
                     id = Guid.NewGuid(),
@@ -1184,8 +1196,7 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
                     nguoithongbao = payer,
                     nguoinhan = q.nguoiban,
                     link = SellerDonBanUrl(),
-                    noidung = db.taikhoan_tbs.First(p => p.taikhoan == payer).hoten
-                            + " đã Trao đổi thành công. ID đơn hàng: " + id_dh,
+                    noidung = db.taikhoan_tbs.First(p => p.taikhoan == payer).hoten + " " + successNotice,
                     thoigian = _now,
                     bin = false
                 });
@@ -1197,7 +1208,7 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
                     nguoithongbao = q.nguoiban,
                     nguoinhan = payer,
                     link = "/home/don-mua.aspx",
-                    noidung = "Trao đổi thành công. ID đơn hàng: " + id_dh,
+                    noidung = successNotice,
                     thoigian = _now,
                     bin = false
                 });
@@ -1207,11 +1218,7 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
                 committed = true;
                 ClearPaymentSession();
 
-                Session["thongbao_home"] = thongbao_class.metro_dialog_onload(
-                    "Thông báo",
-                    "Trao đổi thành công.",
-                    "false", "false", "OK", "alert", ""
-                );
+                SetPortalExchangeSuccessNotice(BuildExchangeSuccessMessage(successQuyenUuDai, successQuyenTieuDung));
 
                 ScriptManager.RegisterStartupScript(this.Page, this.GetType(), "redirectScript",
                     "window.location.href='" + SellerDonBanUrl() + "';", true);
@@ -1219,16 +1226,12 @@ public partial class home_cho_thanh_toan : System.Web.UI.Page
                 return;
             }
 
-            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                thongbao_class.metro_dialog("Thông báo", "Loại thẻ không hợp lệ.", "false", "false", "OK", "alert", ""),
-                true);
+            ShowPortalDialog("Thông báo", "Loại thẻ không hợp lệ.", "alert");
             }
             catch (Exception ex)
             {
                 Log_cl.Add_Log(ex.Message, _tk, ex.StackTrace);
-                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-                    thongbao_class.metro_dialog("Thông báo", "Có lỗi xảy ra trong quá trình xử lý trao đổi. Vui lòng thử lại.", "false", "false", "OK", "alert", ""),
-                    true);
+                ShowPortalDialog("Thông báo", "Có lỗi xảy ra trong quá trình xử lý trao đổi. Vui lòng thử lại.", "alert");
             }
             finally
             {

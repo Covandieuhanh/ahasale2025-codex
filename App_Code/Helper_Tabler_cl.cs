@@ -5,6 +5,16 @@ using System.Web.UI;
 
 public static class Helper_Tabler_cl
 {
+    private static bool IsAdminPortalRequest(Page page)
+    {
+        HttpContext context = HttpContext.Current;
+        if (context == null || context.Request == null)
+            return false;
+
+        string path = (context.Request.Url != null ? context.Request.Url.AbsolutePath : context.Request.CurrentExecutionFilePath) ?? "";
+        return path.Trim().StartsWith("/admin/", StringComparison.OrdinalIgnoreCase);
+    }
+
     public static void ShowToast(Page page, string message, string type = "primary",
                                  bool autohide = true, int delay = 3000, string title = "")
     {
@@ -41,6 +51,12 @@ public static class Helper_Tabler_cl
     public static void ShowModal(Page page, string message, string title = "Thông báo",
                                  bool allowBackdropClose = true, string type = "primary")
     {
+        if (IsAdminPortalRequest(page))
+        {
+            ShowToast(page, message, type, true, 2600, title);
+            return;
+        }
+
         string msg = HttpUtility.JavaScriptStringEncode(message ?? "");
         string ttl = HttpUtility.JavaScriptStringEncode(title ?? "");
         string allow = allowBackdropClose ? "true" : "false";

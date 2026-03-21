@@ -60,9 +60,9 @@
 </asp:Content>
 
 <asp:Content ID="Content2" ContentPlaceHolderID="main" runat="Server">
-    <div class="p-3">
+    <div class="p-3 aha-admin-section">
                 <asp:PlaceHolder ID="ph_otp_locked" runat="server" Visible="false" EnableViewState="false">
-                    <div class="otp-card p-4 mb-4">
+                    <div class="otp-card aha-admin-card p-4 mb-4">
                         <div class="otp-section-title mb-2">Bảo mật cấu hình OTP</div>
                         <h3>Nhập mật khẩu admin để mở khóa</h3>
                         <div class="otp-grid">
@@ -79,7 +79,7 @@
                 </asp:PlaceHolder>
 
                 <asp:PlaceHolder ID="ph_otp_config" runat="server" Visible="false" EnableViewState="false">
-                <div class="otp-card p-4 mb-4">
+                <div class="otp-card aha-admin-card p-4 mb-4">
                     <div class="otp-section-title mb-2">Cấu hình OTP (SMS)</div>
                     <h3>Thiết lập đơn vị gửi OTP</h3>
                     <div class="otp-grid">
@@ -158,7 +158,7 @@
                     <div class="otp-note mt-2">Nếu chưa có đơn vị gửi, hãy bật DEV để hệ thống vẫn tạo OTP và ghi log.</div>
                 </div>
 
-                <div class="otp-card p-4 mb-4">
+                <div class="otp-card aha-admin-card p-4 mb-4">
                     <div class="otp-section-title mb-2">Cấu hình OTP (Email)</div>
                     <h3>Thiết lập email gửi OTP cho gian hàng đối tác</h3>
                     <div class="otp-grid">
@@ -268,7 +268,7 @@
                         </div>
                     </div>
 
-                    <div class="bcorn-fix-title-table-container">
+                    <div class="bcorn-fix-title-table-container aha-admin-grid">
                         <table class="bcorn-fix-title-table">
                             <thead>
                                 <tr>

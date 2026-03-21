@@ -45,7 +45,7 @@ public partial class admin_khoi_phuc_mat_khau : System.Web.UI.Page
         string _pass = txt_pass.Text.Trim();
         if (_pass == "")
         {
-            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng nhập mật khẩu mới.", "false", "false", "OK", "alert", ""), true);
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Vui lòng nhập mật khẩu mới.", "2600", "danger"), true);
             return;
         }
         using (dbDataContext db = new dbDataContext())

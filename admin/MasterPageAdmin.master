@@ -44,7 +44,7 @@
     <link href="/assetscss/fix-metro.css" rel="stylesheet" />
     <link href="/assetscss/admin-unified.css?v=2026-03-02.3" rel="stylesheet" />
     <link href="/assetscss/admin-clean.css?v=2026-03-03.12" rel="stylesheet" />
-    <link href="/assetscss/admin-home-sync.css?v=2026-03-17.26" rel="stylesheet" />
+    <link href="/assetscss/admin-home-sync.css?v=2026-03-21.1" rel="stylesheet" />
     <!-- jquery nên để trước các js khác -->
     <%--<script src="/js/jquery-3.7.1.min.js"></script>--%>
     <asp:ContentPlaceHolder ID="head" runat="server"></asp:ContentPlaceHolder>
@@ -66,7 +66,7 @@
 
    
 </head>
-<body class="admin-shell admin-static admin-loading admin-avatar-nav-only">
+<body id="bodyAdmin" runat="server" class="admin-shell admin-static admin-loading admin-avatar-nav-only">
     <script>
         (function () {
             function markAdminReady() {
@@ -174,27 +174,6 @@
         <script src="/Metro-UI-CSS-master/js/metro.min.js"></script>
         <script src="/js/bcorn.js"></script>
         <script src="/js/aha-ui-refresh.js?v=2026-03-07.3"></script>
-        <script>
-            window.ahaAdminCharms = function (action) {
-                try {
-                    if (!window.Metro || typeof Metro.getPlugin !== "function") {
-                        return true;
-                    }
-                    var charms = Metro.getPlugin("#thongbao-charms", "charms");
-                    if (!charms) {
-                        return true;
-                    }
-                    if (action === "toggle" && typeof charms.toggle === "function") {
-                        charms.toggle();
-                    } else if (action === "open" && typeof charms.open === "function") {
-                        charms.open();
-                    } else if (typeof charms.close === "function") {
-                        charms.close();
-                    }
-                } catch (err) { }
-                return true;
-            };
-        </script>
         <script>
             (function () {
                 function revealAdminAvatar() {

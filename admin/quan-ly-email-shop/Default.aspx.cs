@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -18,7 +18,7 @@ public partial class admin_quan_ly_email_shop_Default : System.Web.UI.Page
     protected void Page_Load(object sender, EventArgs e)
     {
         Session["url_back"] = HttpContext.Current.Request.Url.AbsoluteUri.ToLower();
-        check_login_cl.check_login_admin("none", "none");
+        AdminRolePolicy_cl.RequireShopOperationsManager();
 
         if (!IsPostBack)
         {
@@ -29,7 +29,7 @@ public partial class admin_quan_ly_email_shop_Default : System.Web.UI.Page
 
     protected void but_select_template_Click(object sender, EventArgs e)
     {
-        check_login_cl.check_login_admin("none", "none");
+        AdminRolePolicy_cl.RequireShopOperationsManager();
         LinkButton button = sender as LinkButton;
         string code = button == null ? "" : (button.CommandArgument ?? "").Trim().ToLowerInvariant();
         BindAll(code);
@@ -37,7 +37,7 @@ public partial class admin_quan_ly_email_shop_Default : System.Web.UI.Page
 
     protected void but_template_save_Click(object sender, EventArgs e)
     {
-        check_login_cl.check_login_admin("none", "none");
+        AdminRolePolicy_cl.RequireShopOperationsManager();
 
         string code = (hf_template_code.Value ?? "").Trim().ToLowerInvariant();
         if (!ShopEmailTemplate_cl.IsValidCode(code))
@@ -73,7 +73,7 @@ public partial class admin_quan_ly_email_shop_Default : System.Web.UI.Page
 
     protected void but_template_reset_Click(object sender, EventArgs e)
     {
-        check_login_cl.check_login_admin("none", "none");
+        AdminRolePolicy_cl.RequireShopOperationsManager();
 
         string code = (hf_template_code.Value ?? "").Trim().ToLowerInvariant();
         if (!ShopEmailTemplate_cl.IsValidCode(code))
@@ -169,7 +169,7 @@ public partial class admin_quan_ly_email_shop_Default : System.Web.UI.Page
             this.Page,
             this.GetType(),
             Guid.NewGuid().ToString(),
-            thongbao_class.metro_dialog("Thông báo", content, "false", "false", "OK", "alert", ""),
+            thongbao_class.metro_notifi("Thông báo", content, "2600", "danger"),
             true);
     }
 

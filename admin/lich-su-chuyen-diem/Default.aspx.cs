@@ -95,20 +95,11 @@ public partial class admin_lich_su_chuyen_diem_Default : System.Web.UI.Page
     // ======================================================
     protected void Page_Load(object sender, EventArgs e)
     {
+        check_login_cl.check_login_admin("none", "none");
+
         if (!IsPostBack)
         {
             Session["url_back"] = HttpContext.Current.Request.Url.AbsoluteUri.ToLower();
-            string allPermissionCodes = string.Join("|", new[]
-            {
-                PermissionProfile_cl.HoSoTieuDung,
-                PermissionProfile_cl.HoSoUuDai,
-                PermissionProfile_cl.HoSoLaoDong,
-                PermissionProfile_cl.HoSoGanKet,
-                PermissionProfile_cl.HoSoShopOnly,
-                "q1_6",
-                "q1_7"
-            });
-            check_login_cl.check_login_admin(allPermissionCodes, allPermissionCodes);
 
             string tk = Session["taikhoan"] as string;
             tk = !string.IsNullOrEmpty(tk) ? mahoa_cl.giaima_Bcorn(tk) : "";
@@ -124,6 +115,12 @@ public partial class admin_lich_su_chuyen_diem_Default : System.Web.UI.Page
             string requestedView = (Request.QueryString["view"] ?? "").Trim().ToLowerInvariant();
             if (requestedView == ViewTransfer)
             {
+                if (!AdminFullPageRoute_cl.IsTransferredRequest(Context))
+                {
+                    Response.Redirect(BuildTransferPageUrl(GetActiveTab()), false);
+                    Context.ApplicationInstance.CompleteRequest();
+                    return;
+                }
                 ShowTransferForm();
             }
         }
@@ -162,6 +159,14 @@ public partial class admin_lich_su_chuyen_diem_Default : System.Web.UI.Page
         return url;
     }
 
+    private string BuildTransferPageUrl(string tab)
+    {
+        string safeTab = NormalizeTab(tab);
+        if (string.IsNullOrEmpty(safeTab))
+            safeTab = TabTieuDung;
+        return ResolveUrl("~/admin/lich-su-chuyen-diem/chuyen-diem.aspx?tab=" + HttpUtility.UrlEncode(safeTab));
+    }
+
     private string GetTabCaption(string tab)
     {
         switch (tab)
@@ -188,13 +193,7 @@ public partial class admin_lich_su_chuyen_diem_Default : System.Web.UI.Page
 
     private bool CanAccessTieuDungTab(dbDataContext db, string user)
     {
-        if (PermissionProfile_cl.IsRootAdmin(user))
-            return true;
-
-        if (PermissionProfile_cl.HasPermission(db, user, PermissionProfile_cl.HoSoTieuDung))
-            return true;
-
-        return check_login_cl.CheckQuyen(db, user, "q1_6") || check_login_cl.CheckQuyen(db, user, "q1_7");
+        return AdminRolePolicy_cl.CanAccessTransferHistory(db, user);
     }
 
     private bool CanAccessTab(dbDataContext db, string user, string tab)
@@ -207,13 +206,14 @@ public partial class admin_lich_su_chuyen_diem_Default : System.Web.UI.Page
             case TabTieuDung:
                 return CanAccessTieuDungTab(db, user);
             case TabUuDai:
-                return PermissionProfile_cl.HasPermission(db, user, PermissionProfile_cl.HoSoUuDai);
+                return AdminRolePolicy_cl.CanReviewCustomerPointRequests(db, user);
             case TabLaoDong:
-                return PermissionProfile_cl.HasPermission(db, user, PermissionProfile_cl.HoSoLaoDong);
+                return AdminRolePolicy_cl.CanReviewDevelopmentPointRequests(db, user);
             case TabGanKet:
-                return PermissionProfile_cl.HasPermission(db, user, PermissionProfile_cl.HoSoGanKet);
+                return AdminRolePolicy_cl.CanReviewEcosystemPointRequests(db, user);
             case TabShopOnly:
-                return PermissionProfile_cl.HasPermission(db, user, PermissionProfile_cl.HoSoShopOnly);
+                return AdminRolePolicy_cl.CanReviewShopPointRequests(db, user)
+                    || AdminRolePolicy_cl.CanManageShopAccounts(db, user);
             default:
                 return false;
         }
@@ -242,17 +242,30 @@ public partial class admin_lich_su_chuyen_diem_Default : System.Web.UI.Page
         string currentUser = GetCurrentUser();
         using (dbDataContext db = new dbDataContext())
         {
+            bool canAccessWorkspace = PermissionProfile_cl.IsRootAdmin(currentUser)
+                || AdminRolePolicy_cl.CanReviewHomePointRequests(db, currentUser)
+                || AdminRolePolicy_cl.CanReviewShopPointRequests(db, currentUser)
+                || AdminRolePolicy_cl.CanManageShopAccounts(db, currentUser);
+
+            if (!canAccessWorkspace)
+            {
+                HttpContext.Current.Session["thongbao"] = thongbao_class.metro_notifi_onload(
+                    "Thông báo",
+                    "Bạn không đủ quyền truy cập khu duyệt điểm / hành vi.",
+                    "2600",
+                    "warning");
+                Response.Redirect("/admin/default.aspx");
+                return;
+            }
+
             List<string> allowedTabs = GetAllowedTabs(db, currentUser);
             if (allowedTabs.Count == 0)
             {
-                HttpContext.Current.Session["thongbao"] = thongbao_class.metro_dialog_onload(
+                HttpContext.Current.Session["thongbao"] = thongbao_class.metro_notifi_onload(
                     "Thông báo",
                     "Bạn không đủ quyền truy cập màn hình này.",
-                    "false",
-                    "false",
-                    "OK",
-                    "alert",
-                    "");
+                    "2600",
+                    "warning");
                 Response.Redirect("/admin/default.aspx");
                 return;
             }
@@ -281,9 +294,10 @@ public partial class admin_lich_su_chuyen_diem_Default : System.Web.UI.Page
             SetTabLinkState(hl_tab_ganket, TabGanKet, allowedTabs.Contains(TabGanKet), activeTab == TabGanKet);
             SetTabLinkState(hl_tab_shoponly, TabShopOnly, allowedTabs.Contains(TabShopOnly), activeTab == TabShopOnly);
 
-            bool canUseTransferButton = activeTab == TabTieuDung && IsAdminOrTreasury(db, currentUser);
+            bool canUseTransferButton = activeTab == TabTieuDung && AdminRolePolicy_cl.CanAccessTransferHistory(db, currentUser);
             ph_transfer_action.Visible = canUseTransferButton;
-            but_show_form_add.NavigateUrl = GetTabUrl(activeTab, ViewTransfer);
+            close_add.NavigateUrl = GetTabUrl(activeTab);
+            but_show_form_add.NavigateUrl = BuildTransferPageUrl(activeTab);
             lb_tab_caption.Text = GetTabCaption(activeTab);
         }
     }
@@ -327,24 +341,16 @@ public partial class admin_lich_su_chuyen_diem_Default : System.Web.UI.Page
     }
 
     // ======================================================
-    // ✅ CHECK QUYỀN: ADMIN hoặc TÀI KHOẢN TỔNG
+    // ✅ CHECK QUYỀN TÀI SẢN LÕI: CHỈ SUPER ADMIN
     // ======================================================
     private bool IsAdminOrTreasury(dbDataContext db, string user)
     {
-        if (string.IsNullOrEmpty(user)) return false;
-
-        if (user.Equals(Helper_DongA_cl.GENESIS_WALLET, StringComparison.OrdinalIgnoreCase))
-            return true;
-
-        var acc = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == user);
-        return acc != null && AccountType_cl.IsTreasury(acc.phanloai);
+        return AdminRolePolicy_cl.CanAccessTransferHistory(db, user);
     }
 
     private bool HasOnlyOwnScopeForTieuDung(dbDataContext db, string user)
     {
-        return check_login_cl.CheckQuyen(db, user, "q1_7")
-            && !check_login_cl.CheckQuyen(db, user, "q1_6")
-            && !check_login_cl.CheckQuyen(db, user, PermissionProfile_cl.HoSoTieuDung);
+        return !AdminRolePolicy_cl.CanAccessTransferHistory(db, user);
     }
 
     private string GetHoSoName(int? loaiHoSoVi, string ghichu, string activeTab)
@@ -780,6 +786,7 @@ public partial class admin_lich_su_chuyen_diem_Default : System.Web.UI.Page
             GhiChu = p.GhiChu
         }).ToList();
 
+        bool isRootAdmin = PermissionProfile_cl.IsRootAdmin(GetCurrentUser());
         foreach (var row in rows)
         {
             row.SoConLaiChiTra = row.TongQuyen - row.SoDaChiTra;
@@ -787,7 +794,7 @@ public partial class admin_lich_su_chuyen_diem_Default : System.Web.UI.Page
 
             bool daDuyet = row.TrangThaiCode == HanhViGhiNhanHoSo_cl.TrangThaiDaDuyet;
             row.DaChiTra = hoSoCanChiTra && daDuyet && row.SoConLaiChiTra <= 0m;
-            row.CanChiTra = hoSoCanChiTra && daDuyet && row.SoConLaiChiTra > 0m;
+            row.CanChiTra = isRootAdmin && hoSoCanChiTra && daDuyet && row.SoConLaiChiTra > 0m;
             row.TrangThaiUiCode = row.DaChiTra ? "3" : row.TrangThaiCode;
         }
 
@@ -1013,6 +1020,12 @@ public partial class admin_lich_su_chuyen_diem_Default : System.Web.UI.Page
         string currentUser = GetCurrentUser();
         using (dbDataContext db = new dbDataContext())
         {
+            if (!PermissionProfile_cl.IsRootAdmin(currentUser))
+            {
+                Alert("Chỉ Super Admin mới được phép chi trả trực tiếp.");
+                return;
+            }
+
             if (!CanAccessTab(db, currentUser, activeTab))
             {
                 Alert("Bạn không có quyền chi trả cho " + HanhViGhiNhanHoSo_cl.GetTenHoSoByProfile(profileCode) + ".");
@@ -1069,7 +1082,7 @@ public partial class admin_lich_su_chuyen_diem_Default : System.Web.UI.Page
     }
 
     // ======================================================
-    // ✅ HIỆN FORM CHUYỂN (ADMIN hoặc TÀI KHOẢN TỔNG)
+    // ✅ HIỆN FORM CHUYỂN (CHỈ SUPER ADMIN)
     // ======================================================
     private void ShowTransferForm()
     {
@@ -1084,6 +1097,12 @@ public partial class admin_lich_su_chuyen_diem_Default : System.Web.UI.Page
 
         using (dbDataContext db = new dbDataContext())
         {
+            if (!AdminRolePolicy_cl.CanAccessTransferHistory(db, currentUser))
+            {
+                Alert("Chỉ Super Admin mới được phép chuyển điểm.");
+                return;
+            }
+
             var acc = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == currentUser);
             if (acc == null)
             {
@@ -1138,7 +1157,7 @@ public partial class admin_lich_su_chuyen_diem_Default : System.Web.UI.Page
 
     protected void but_show_form_add_Click(object sender, EventArgs e)
     {
-        Response.Redirect(GetTabUrl(GetActiveTab(), ViewTransfer), false);
+        Response.Redirect(BuildTransferPageUrl(GetActiveTab()), false);
         Context.ApplicationInstance.CompleteRequest();
     }
 
@@ -1149,7 +1168,7 @@ public partial class admin_lich_su_chuyen_diem_Default : System.Web.UI.Page
     }
 
     // ======================================================
-    // ✅ XÁC NHẬN CHUYỂN (ADMIN hoặc TÀI KHOẢN TỔNG)
+    // ✅ XÁC NHẬN CHUYỂN (CHỈ SUPER ADMIN)
     // ======================================================
     protected void but_add_edit_Click(object sender, EventArgs e)
     {
@@ -1177,6 +1196,12 @@ public partial class admin_lich_su_chuyen_diem_Default : System.Web.UI.Page
 
         using (dbDataContext db = new dbDataContext())
         {
+            if (!AdminRolePolicy_cl.CanAccessTransferHistory(db, fromWallet))
+            {
+                Alert("Chỉ Super Admin mới được phép chuyển điểm.");
+                return;
+            }
+
             db.Connection.Open();
             var tran = db.Connection.BeginTransaction();
             db.Transaction = tran;
@@ -1241,7 +1266,7 @@ public partial class admin_lich_su_chuyen_diem_Default : System.Web.UI.Page
     }
 
     // ======================================================
-    // ✅ XÁC NHẬN RÚT (ADMIN hoặc TÀI KHOẢN TỔNG)
+    // ✅ XÁC NHẬN RÚT (CHỈ SUPER ADMIN)
     // ======================================================
     protected void but_xacnhan_rutdiem_Click(object sender, EventArgs e)
     {
@@ -1256,7 +1281,7 @@ public partial class admin_lich_su_chuyen_diem_Default : System.Web.UI.Page
         {
             if (!IsAdminOrTreasury(db, currentUser))
             {
-                Alert("Chỉ ADMIN hoặc tài khoản tổng mới được phép xác nhận rút điểm.");
+                Alert("Chỉ Super Admin mới được phép xác nhận rút điểm.");
                 return;
             }
 
@@ -1295,7 +1320,7 @@ public partial class admin_lich_su_chuyen_diem_Default : System.Web.UI.Page
     }
 
     // ======================================================
-    // ✅ HỦY RÚT (ADMIN hoặc TÀI KHOẢN TỔNG)
+    // ✅ HỦY RÚT (CHỈ SUPER ADMIN)
     // ======================================================
     protected void but_huy_rutdiem_Click(object sender, EventArgs e)
     {
@@ -1310,7 +1335,7 @@ public partial class admin_lich_su_chuyen_diem_Default : System.Web.UI.Page
         {
             if (!IsAdminOrTreasury(db, currentUser))
             {
-                Alert("Chỉ ADMIN hoặc tài khoản tổng mới được phép hủy lệnh rút.");
+                Alert("Chỉ Super Admin mới được phép hủy lệnh rút.");
                 return;
             }
 
@@ -1355,7 +1380,7 @@ public partial class admin_lich_su_chuyen_diem_Default : System.Web.UI.Page
     {
         msg = HttpUtility.JavaScriptStringEncode(msg ?? "");
         ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
-            thongbao_class.metro_dialog("Thông báo", msg, "false", "false", "OK", "alert", ""), true);
+            thongbao_class.metro_notifi("Thông báo", msg, "2600", "warning"), true);
     }
 
     private void Notifi(string msg)

@@ -13,9 +13,10 @@ public partial class admin_duyet_gian_hang_doi_tac : System.Web.UI.Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
+        AdminRolePolicy_cl.RequireSuperAdmin();
+
         if (!IsPostBack)
         {
-            check_login_cl.check_login_admin("none", "none");
             LoadDanhSach();
         }
     }
@@ -60,6 +61,7 @@ public partial class admin_duyet_gian_hang_doi_tac : System.Web.UI.Page
     // DUYỆT (từ CHỜ -> ĐÃ DUYỆT)
     protected void btn_duyet_Click(object sender, EventArgs e)
     {
+        AdminRolePolicy_cl.RequireSuperAdmin();
         int id = int.Parse(((System.Web.UI.WebControls.LinkButton)sender).CommandArgument);
 
         using (dbDataContext db = new dbDataContext())
@@ -118,6 +120,7 @@ public partial class admin_duyet_gian_hang_doi_tac : System.Web.UI.Page
     // TỪ CHỐI (từ CHỜ -> TỪ CHỐI). Sau đó muốn đăng ký lại thì phải tạo YÊU CẦU MỚI.
     protected void btn_tuchoi_Click(object sender, EventArgs e)
     {
+        AdminRolePolicy_cl.RequireSuperAdmin();
         int id = int.Parse(((System.Web.UI.WebControls.LinkButton)sender).CommandArgument);
 
         using (dbDataContext db = new dbDataContext())
@@ -151,6 +154,7 @@ public partial class admin_duyet_gian_hang_doi_tac : System.Web.UI.Page
     // HỦY DUYỆT (từ ĐÃ DUYỆT -> HỦY DUYỆT). Không reset về CHỜ.
     protected void btn_huyduyet_Click(object sender, EventArgs e)
     {
+        AdminRolePolicy_cl.RequireSuperAdmin();
         int id = int.Parse(((System.Web.UI.WebControls.LinkButton)sender).CommandArgument);
 
         using (dbDataContext db = new dbDataContext())

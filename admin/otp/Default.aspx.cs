@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -37,7 +37,7 @@ public partial class admin_otp_Default : System.Web.UI.Page
         DisablePageCache();
         if (!IsPostBack)
         {
-            check_login_cl.check_login_admin("1", "1");
+            AdminRolePolicy_cl.RequireSuperAdmin();
             BindConfig();
             if (IsOtpConfigUnlocked())
             {

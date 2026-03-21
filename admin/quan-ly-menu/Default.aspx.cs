@@ -14,7 +14,7 @@ using System.Web.UI.WebControls;
 public partial class admin_Default : System.Web.UI.Page
 {
 
-    // ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Tài khoản đã bị khóa.", "false", "false", "OK", "alert", ""), true);
+    // ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Tài khoản đã bị khóa.", "2600", "danger"), true);
     DanhMuc_cl dm_cl = new DanhMuc_cl();
     String_cl str_cl = new String_cl();
     DateTime_cl dt_cl = new DateTime_cl();
@@ -23,20 +23,78 @@ public partial class admin_Default : System.Web.UI.Page
     private const string ViewFilter = "filter";
     private const string ViewExport = "export";
     private const string ViewPrint = "print";
+    private const string TrashQueryKey = "bin";
+    private const string TrashQueryValue = "trash";
 
-    private string BuildListUrl()
+
+    private string BuildListUrl(bool showTrash = false)
     {
-        return ResolveUrl("~/admin/quan-ly-menu/default.aspx");
+        string url = ResolveUrl("~/admin/quan-ly-menu/default.aspx");
+        if (!showTrash)
+            return url;
+
+        string separator = url.Contains("?") ? "&" : "?";
+        return url + separator + TrashQueryKey + "=" + HttpUtility.UrlEncode(TrashQueryValue);
     }
 
-    private string BuildViewUrl(string view)
+    private bool IsTrashModeRequested()
     {
-        return BuildListUrl() + "?view=" + view;
+        return string.Equals((Request.QueryString[TrashQueryKey] ?? "").Trim(), TrashQueryValue, StringComparison.OrdinalIgnoreCase);
     }
 
-    private string BuildEditUrl(string id)
+    private string AppendTrashModeIfNeeded(string url)
     {
-        return BuildListUrl() + "?view=" + ViewEdit + "&id=" + HttpUtility.UrlEncode(id ?? "");
+        if (string.IsNullOrWhiteSpace(url) || !IsTrashModeRequested())
+            return url;
+
+        string separator = url.Contains("?") ? "&" : "?";
+        return url + separator + TrashQueryKey + "=" + HttpUtility.UrlEncode(TrashQueryValue);
+    }
+
+    private void ApplyTrashModeFromQuery()
+    {
+        bool showTrash = IsTrashModeRequested();
+        ViewState["showbin"] = showTrash ? "1" : "0";
+        UpdateTrashModeControls(showTrash);
+    }
+
+    private void UpdateTrashModeControls(bool? showTrashOverride = null)
+    {
+        bool showTrash = showTrashOverride.HasValue
+            ? showTrashOverride.Value
+            : string.Equals((ViewState["showbin"] ?? "0").ToString(), "1", StringComparison.OrdinalIgnoreCase);
+
+        but_remove_bin.Visible = !showTrash;
+        but_khoiphuc.Visible = showTrash;
+        but_show_thungrac.Visible = !showTrash;
+        but_show_main.Visible = showTrash;
+        but_quayve_trangchu.Visible = showTrash;
+    }
+
+    private string BuildAddUrl()
+    {
+        return ResolveUrl("~/admin/quan-ly-menu/them-moi.aspx");
+    }
+
+    private string BuildFilterUrl()
+    {
+        return ResolveUrl("~/admin/quan-ly-menu/bo-loc.aspx");
+    }
+
+    private string BuildExportUrl()
+    {
+        return ResolveUrl("~/admin/quan-ly-menu/xuat-du-lieu.aspx");
+    }
+
+    private string BuildPrintUrl()
+    {
+        return ResolveUrl("~/admin/quan-ly-menu/ban-in.aspx");
+    }
+
+    protected string BuildEditUrl(object id)
+    {
+        string safeId = (id ?? "").ToString().Trim();
+        return ResolveUrl("~/admin/quan-ly-menu/chinh-sua.aspx?id=" + HttpUtility.UrlEncode(safeId));
     }
 
     private void RedirectTo(string url)
@@ -51,6 +109,21 @@ public partial class admin_Default : System.Web.UI.Page
         RedirectTo(BuildListUrl());
     }
 
+    private void ApplyRouteLinks()
+    {
+        but_show_form_add.NavigateUrl = BuildAddUrl();
+        but_show_form_loc.NavigateUrl = AppendTrashModeIfNeeded(BuildFilterUrl());
+        but_show_form_xuat.NavigateUrl = AppendTrashModeIfNeeded(BuildExportUrl());
+        but_show_form_in.NavigateUrl = AppendTrashModeIfNeeded(BuildPrintUrl());
+        but_show_thungrac.NavigateUrl = BuildListUrl(true);
+        but_show_main.NavigateUrl = BuildListUrl();
+        but_quayve_trangchu.NavigateUrl = BuildListUrl();
+        close_add.NavigateUrl = BuildListUrl();
+        close_loc.NavigateUrl = AppendTrashModeIfNeeded(BuildListUrl());
+        close_xuat.NavigateUrl = AppendTrashModeIfNeeded(BuildListUrl());
+        close_in.NavigateUrl = AppendTrashModeIfNeeded(BuildListUrl());
+    }
+
     private void HideOtherPanels()
     {
         pn_add.Visible = false;
@@ -61,7 +134,7 @@ public partial class admin_Default : System.Web.UI.Page
 
     private void ShowAddViewFromQuery()
     {
-        check_login_cl.check_login_admin("none", "none");
+        AdminRolePolicy_cl.RequireContentManager();
         HideOtherPanels();
         reset_control_add_edit();
         ViewState["add_edit"] = "add";
@@ -75,7 +148,7 @@ public partial class admin_Default : System.Web.UI.Page
 
     private void ShowEditViewFromQuery(string id)
     {
-        check_login_cl.check_login_admin("none", "none");
+        AdminRolePolicy_cl.RequireContentManager();
         HideOtherPanels();
         ViewState["add_edit"] = "edit";
         Label1.Text = "CHỈNH SỬA MENU";
@@ -118,7 +191,7 @@ public partial class admin_Default : System.Web.UI.Page
 
     private void ShowFilterViewFromQuery()
     {
-        check_login_cl.check_login_admin("none", "none");
+        AdminRolePolicy_cl.RequireContentManager();
         HideOtherPanels();
         pn_loc.Visible = true;
         up_loc.Update();
@@ -127,7 +200,7 @@ public partial class admin_Default : System.Web.UI.Page
 
     private void ShowExportViewFromQuery()
     {
-        check_login_cl.check_login_admin("none", "none");
+        AdminRolePolicy_cl.RequireContentManager();
         HideOtherPanels();
 
         check_list_page.Items.Clear();
@@ -145,7 +218,7 @@ public partial class admin_Default : System.Web.UI.Page
 
     private void ShowPrintViewFromQuery()
     {
-        check_login_cl.check_login_admin("none", "none");
+        AdminRolePolicy_cl.RequireContentManager();
         HideOtherPanels();
         pn_in.Visible = true;
         up_in.Update();
@@ -155,8 +228,14 @@ public partial class admin_Default : System.Web.UI.Page
     private void ApplyOpenViewFromQuery()
     {
         string view = (Request.QueryString["view"] ?? "").Trim().ToLowerInvariant();
+        bool isTransferredRoute = AdminFullPageRoute_cl.IsTransferredRequest(Context);
         if (view == ViewAdd)
         {
+            if (!isTransferredRoute)
+            {
+                RedirectTo(BuildAddUrl());
+                return;
+            }
             ShowAddViewFromQuery();
             return;
         }
@@ -168,21 +247,41 @@ public partial class admin_Default : System.Web.UI.Page
                 RedirectToListWithNotice("Thông báo", "Thiếu ID menu để chỉnh sửa.");
                 return;
             }
+            if (!isTransferredRoute)
+            {
+                RedirectTo(BuildEditUrl(id));
+                return;
+            }
             ShowEditViewFromQuery(id);
             return;
         }
         if (view == ViewFilter)
         {
+            if (!isTransferredRoute)
+            {
+                RedirectTo(BuildFilterUrl());
+                return;
+            }
             ShowFilterViewFromQuery();
             return;
         }
         if (view == ViewExport)
         {
+            if (!isTransferredRoute)
+            {
+                RedirectTo(BuildExportUrl());
+                return;
+            }
             ShowExportViewFromQuery();
             return;
         }
         if (view == ViewPrint)
         {
+            if (!isTransferredRoute)
+            {
+                RedirectTo(BuildPrintUrl());
+                return;
+            }
             ShowPrintViewFromQuery();
         }
     }
@@ -250,14 +349,16 @@ public partial class admin_Default : System.Web.UI.Page
             try
             {
                 Session["url_back"] = HttpContext.Current.Request.Url.AbsoluteUri;
-                check_login_cl.check_login_admin("none", "none");
+                AdminRolePolicy_cl.RequireContentManager();
 
 
                 //Nó k kịp lưu vì nó tải trang này trước khi load menu-left
                 //if (Session["title"] != null)
                 //    ViewState["title"] = Session["title"].ToString();
 
+                ApplyRouteLinks();
                 set_dulieu_macdinh();
+                ApplyTrashModeFromQuery();
                 show_main();
                 lb_tree_view.Text = dm_cl.Show_CayDanhMuc(1, 0, false, "web", "0");
                 ApplyOpenViewFromQuery();
@@ -351,6 +452,7 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
+            UpdateTrashModeControls();
             using (dbDataContext db = new dbDataContext())
             {
                 #region lấy dữ liệu
@@ -457,7 +559,7 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireContentManager();
             ViewState["current_page_qlmn"] = int.Parse(ViewState["current_page_qlmn"].ToString()) - 1;
 
             #region LƯU TRANG HIỆN TẠI
@@ -491,7 +593,7 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireContentManager();
             ViewState["current_page_qlmn"] = int.Parse(ViewState["current_page_qlmn"].ToString()) + 1;
 
             #region LƯU TRANG HIỆN TẠI
@@ -526,7 +628,7 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireContentManager();
             ViewState["current_page_qlmn"] = 1;
             show_main();
         }
@@ -549,16 +651,8 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
-            ViewState["showbin"] = "1";//đánh dấu hiển thị thùng rác
-            but_remove_bin.Visible = false;//ẨN nút Di chuyển vào thùng rác
-            but_khoiphuc.Visible = true;//HIỆN nút xóa vĩnh viễn và khôi phục
-            but_show_thungrac.Visible = false;//ẨN nút Xem thùng rác
-            but_show_main.Visible = true;//HIỆN nút về trang chính (xem mục k nằm trong thùng rác)
-            but_quayve_trangchu.Visible = true;//HIỆN nút về trang chính (xem mục k nằm trong thùng rác)
-
-            ViewState["current_page_qlmn"] = 1;
-            show_main();
+            AdminRolePolicy_cl.RequireContentManager();
+            RedirectTo(BuildListUrl(true));
         }
         catch (Exception _ex)
         {
@@ -577,15 +671,8 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
-            ViewState["showbin"] = "0";//đánh dấu hiển thị mục chưa xóa
-            but_remove_bin.Visible = true;//ẨN nút Di chuyển vào thùng rác
-            but_khoiphuc.Visible = false;//HIỆN nút xóa vĩnh viễn và khôi phục
-            but_show_thungrac.Visible = true;//ẨN nút Xem thùng rác
-            but_show_main.Visible = false;//HIỆN nút về trang chính (xem mục k nằm trong thùng rác)
-            but_quayve_trangchu.Visible = false;//HIỆN nút về trang chính (xem mục k nằm trong thùng rác)
-            ViewState["current_page_qlmn"] = 1;
-            show_main();
+            AdminRolePolicy_cl.RequireContentManager();
+            RedirectTo(BuildListUrl());
         }
         catch (Exception _ex)
         {
@@ -603,15 +690,8 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
-            ViewState["showbin"] = "0";//đánh dấu hiển thị mục chưa xóa
-            but_remove_bin.Visible = true;//ẨN nút Di chuyển vào thùng rác
-            but_khoiphuc.Visible = false;//HIỆN nút xóa vĩnh viễn và khôi phục
-            but_show_thungrac.Visible = true;//ẨN nút Xem thùng rác
-            but_show_main.Visible = false;//HIỆN nút về trang chính (xem mục k nằm trong thùng rác)
-            but_quayve_trangchu.Visible = false;//HIỆN nút về trang chính (xem mục k nằm trong thùng rác)
-            ViewState["current_page_qlmn"] = 1;
-            show_main();
+            AdminRolePolicy_cl.RequireContentManager();
+            RedirectTo(BuildListUrl());
         }
         catch (Exception _ex)
         {
@@ -633,8 +713,8 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
-            RedirectTo(BuildViewUrl(ViewAdd));
+            AdminRolePolicy_cl.RequireContentManager();
+            RedirectTo(BuildAddUrl());
         }
         catch (Exception _ex)
         {
@@ -652,7 +732,7 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireContentManager();
             //reset control
             reset_control_add_edit();
             RedirectTo(BuildListUrl());
@@ -675,7 +755,7 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireContentManager();
             using (dbDataContext db = new dbDataContext())
             {
                 var q = db.DanhMuc_tbs.FirstOrDefault(p => p.id.ToString() == ViewState["id_edit"].ToString());
@@ -707,7 +787,7 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireContentManager();
             LinkButton button = (LinkButton)sender;
             string idMenu = button.CommandArgument ?? "";
             RedirectTo(BuildEditUrl(idMenu));
@@ -728,7 +808,7 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireContentManager();
             //reset control
             reset_control_add_edit();
             RedirectTo(BuildListUrl());
@@ -771,7 +851,7 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireContentManager();
             using (dbDataContext db = new dbDataContext())
             {
                 if (ViewState["add_edit"].ToString() == "add")
@@ -807,7 +887,7 @@ public partial class admin_Default : System.Web.UI.Page
                     #region Kiểm tra ngoại lệ. Sau đó thêm mới
                     if (_name == "")
                     {
-                        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng nhập tên Menu.", "false", "false", "OK", "alert", ""), true);
+                        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Vui lòng nhập tên Menu.", "2600", "danger"), true);
                         return;
                     }
                     else
@@ -869,7 +949,7 @@ public partial class admin_Default : System.Web.UI.Page
                         #region Kiểm tra ngoại lệ. Sau đó cập nhật
                         if (_name == "")
                         {
-                            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng nhập tên Menu.", "false", "false", "OK", "alert", ""), true);
+                            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Vui lòng nhập tên Menu.", "2600", "danger"), true);
                             return;
                         }
                         else
@@ -937,12 +1017,12 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireContentManager();
             string view = (Request.QueryString["view"] ?? "").Trim().ToLowerInvariant();
             if (view == ViewExport)
                 RedirectTo(BuildListUrl());
             else
-                RedirectTo(BuildViewUrl(ViewExport));
+                RedirectTo(BuildExportUrl());
         }
         catch (Exception _ex)
         {
@@ -961,7 +1041,7 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireContentManager();
             bool _chonmuc = false, _chonPage = false;
 
             foreach (ListItem item in check_list_excel.Items)
@@ -974,7 +1054,7 @@ public partial class admin_Default : System.Web.UI.Page
             }
             if (!_chonmuc)
             {
-                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Không có mục nào được chọn.", "false", "false", "OK", "alert", ""), true);
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Không có mục nào được chọn.", "2600", "danger"), true);
                 return; // Kết thúc sớm nếu không có mục nào được chọn
             }
 
@@ -991,7 +1071,7 @@ public partial class admin_Default : System.Web.UI.Page
             }
             if (!_chonPage)
             {
-                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Không có trang nào được chọn.", "false", "false", "OK", "alert", ""), true);
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Không có trang nào được chọn.", "2600", "danger"), true);
                 return; // Kết thúc sớm nếu không có mục nào được chọn
             }
 
@@ -1235,7 +1315,7 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireContentManager();
             // Kiểm tra trạng thái của checkbox "Chọn tất cả"
             bool isChecked = check_all_excel.Checked;
 
@@ -1261,7 +1341,7 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireContentManager();
             // Kiểm tra xem tất cả các mục trong CheckBoxList đã được chọn hay chưa
             bool allSelected = true;
 
@@ -1293,7 +1373,7 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireContentManager();
             // Kiểm tra trạng thái của checkbox "Chọn tất cả"
             bool isChecked = check_all_page.Checked;
 
@@ -1319,7 +1399,7 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireContentManager();
             // Kiểm tra xem tất cả các mục trong CheckBoxList đã được chọn hay chưa
             bool allSelected = true;
 
@@ -1430,12 +1510,12 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireContentManager();
             string view = (Request.QueryString["view"] ?? "").Trim().ToLowerInvariant();
             if (view == ViewFilter)
                 RedirectTo(BuildListUrl());
             else
-                RedirectTo(BuildViewUrl(ViewFilter));
+                RedirectTo(BuildFilterUrl());
         }
         catch (Exception _ex)
         {
@@ -1453,7 +1533,7 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireContentManager();
             if (Request.Cookies["cookie_qlmn"] != null)//nếu có ck r thì lưu giá trị mới
             {
                 HttpCookie _ck = Request.Cookies["cookie_qlmn"];
@@ -1485,7 +1565,7 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireContentManager();
             if (Request.Cookies["cookie_qlmn"] != null)
                 Response.Cookies["cookie_qlmn"].Expires = AhaTime_cl.Now.AddYears(-1);
             RedirectTo(BuildListUrl());
@@ -1509,7 +1589,7 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireContentManager();
 
             var selectedIds = new List<int>(); // Danh sách để lưu trữ ID của các mục đã được chọn
 
@@ -1552,10 +1632,10 @@ public partial class admin_Default : System.Web.UI.Page
             else
             {
                 // Hiển thị thông báo không có mục nào được chọn
-                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Không có mục nào được chọn.", "false", "false", "OK", "alert", ""), true);
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Không có mục nào được chọn.", "2600", "danger"), true);
             }
             #region CÁCH CỦ, TRUY VẤN NHIỀU LẦN
-            //check_login_cl.check_login_admin("none", "none");
+            //AdminRolePolicy_cl.RequireContentManager();
             //int _count = 0;
             //using (dbDataContext db = new dbDataContext())
             //{
@@ -1591,7 +1671,7 @@ public partial class admin_Default : System.Web.UI.Page
             //}
             //else
             //{
-            //    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Không có mục nào được chọn.", "false", "false", "OK", "alert", ""), true);
+            //    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Không có mục nào được chọn.", "2600", "danger"), true);
             //}
             #endregion
         }
@@ -1611,7 +1691,7 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireContentManager();
 
             var selectedIds = new List<int>(); // Danh sách để lưu trữ ID của các mục đã được chọn
 
@@ -1654,7 +1734,7 @@ public partial class admin_Default : System.Web.UI.Page
             else
             {
                 // Hiển thị thông báo không có mục nào được chọn
-                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Không có mục nào được chọn.", "false", "false", "OK", "alert", ""), true);
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Không có mục nào được chọn.", "2600", "danger"), true);
             }
         }
         catch (Exception _ex)
@@ -1673,7 +1753,7 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireContentManager();
 
             var selectedIds = new List<int>(); // Danh sách để lưu trữ ID của các mục đã được chọn
 
@@ -1716,7 +1796,7 @@ public partial class admin_Default : System.Web.UI.Page
             else
             {
                 // Hiển thị thông báo không có mục nào được chọn
-                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Không có mục nào được chọn.", "false", "false", "OK", "alert", ""), true);
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Không có mục nào được chọn.", "2600", "danger"), true);
             }
         }
         catch (Exception _ex)
@@ -1735,7 +1815,7 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireContentManager();
             // Tạo một từ điển để lưu trữ các cập nhật cần thực hiện (tương thích C# cũ trên host)
             var updates = new Dictionary<int, int>();
             // Lấy thông tin từ Repeater1
@@ -1840,7 +1920,7 @@ public partial class admin_Default : System.Web.UI.Page
     //protected void but_xoa_vinh_vien_only_Click(object sender, EventArgs e)
     //{
     //    //demo CommandArgument
-    //    //check_login_cl.check_login_admin("none", "none");
+    //    //AdminRolePolicy_cl.RequireContentManager();
     //    //LinkButton button = (LinkButton)sender;
     //    //string _id = button.CommandArgument;
     //}
@@ -1851,12 +1931,12 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireContentManager();
             string view = (Request.QueryString["view"] ?? "").Trim().ToLowerInvariant();
             if (view == ViewPrint)
                 RedirectTo(BuildListUrl());
             else
-                RedirectTo(BuildViewUrl(ViewPrint));
+                RedirectTo(BuildPrintUrl());
         }
         catch (Exception _ex)
         {
@@ -1874,7 +1954,7 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireContentManager();
             RedirectTo(BuildListUrl());
         }
         catch (Exception _ex)
@@ -1893,15 +1973,8 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
-            // URL bạn muốn chuyển hướng đến
-            string url = "/admin/quan-ly-menu/in.aspx";
-
-            // Script để mở trang mới trong tab mới
-            string script = string.Format("window.open('{0}', '_blank');", url);
-
-            // Đăng ký script để thực thi sau khi UpdatePanel postback hoàn thành
-            ScriptManager.RegisterStartupScript(this, GetType(), "OpenNewTab", script, true);
+            AdminRolePolicy_cl.RequireContentManager();
+            RedirectTo("/admin/quan-ly-menu/in.aspx");
         }
         catch (Exception _ex)
         {

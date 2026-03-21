@@ -5,7 +5,7 @@
 <asp:Content ID="Content2" ContentPlaceHolderID="main" runat="Server">
     <asp:UpdatePanel ID="UpdatePanel1" runat="server" UpdateMode="Conditional">
         <ContentTemplate>
-            <div class="<%--border-top bd-lightGray--%> pt-3 pl-3 pr-3 pb-20">
+            <div class="<%--border-top bd-lightGray--%> pt-3 pl-3 pr-3 pb-20 admin-settings-grid">
                 <div class="row">
                     <div class="cell-lg-6 pr-4-lg mt-8">
                         <div data-role="panel"
@@ -274,11 +274,7 @@
     </asp:UpdatePanel>
     <asp:UpdateProgress ID="UpdateProgress3" runat="server" AssociatedUpdatePanelID="UpdatePanel1">
         <ProgressTemplate>
-            <div class="bg-dark fixed-top h-100 w-100" style="opacity: 0.9; z-index: 99999!important">
-                <div style="padding-top: 45vh;">
-                    <div class="mx-auto color-style activity-atom" data-role="activity" data-type="atom" data-style="color" data-role-activity="true"><span class="electron"></span><span class="electron"></span><span class="electron"></span></div>
-                </div>
-            </div>
+            <div class="admin-inline-progress" role="status" aria-live="polite"><span class="admin-inline-progress-spinner"></span><span class="admin-inline-progress-text">Đang xử lý...</span></div>
         </ProgressTemplate>
     </asp:UpdateProgress>
 </asp:Content>
@@ -619,4 +615,3 @@
         }
 </script>
 </asp:Content>
-

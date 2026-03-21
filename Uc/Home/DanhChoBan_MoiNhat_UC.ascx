@@ -973,7 +973,17 @@
         }
 
         .sp-actions {
-            display: none;
+            display: grid;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .sp-actions .btn {
+            min-height: 36px;
+            padding: 8px 10px;
+            font-size: 12px;
+            white-space: normal;
+            line-height: 1.2;
         }
 
         .kebab-wrap {
@@ -1690,6 +1700,5 @@
                 });
             })();
         </script>
-
     </ContentTemplate>
 </asp:UpdatePanel>

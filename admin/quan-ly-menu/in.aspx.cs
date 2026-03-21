@@ -9,6 +9,6 @@ public partial class admin_quan_ly_menu_in : System.Web.UI.Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
-
+        AdminRolePolicy_cl.RequireContentManager();
     }
 }

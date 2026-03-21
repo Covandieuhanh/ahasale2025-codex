@@ -8,9 +8,6 @@ using System.Web.UI.WebControls;
 public partial class admin_uc_menu_left_uc : System.Web.UI.UserControl
 {
     public string loi, tuvan;
-    private const string PermissionManageAdminAccounts = "5";
-    private const string PermissionLegacyGeneralAdmin = "1";
-    private const string PermissionHomeContent = "q3_1";
 
     private bool GetFlag(string key)
     {
@@ -25,84 +22,57 @@ public partial class admin_uc_menu_left_uc : System.Web.UI.UserControl
         ViewState[key] = value ? "true" : "false";
     }
 
-    private static HashSet<string> ParsePermissionTokens(string permissionRaw)
-    {
-        var tokens = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        if (string.IsNullOrWhiteSpace(permissionRaw))
-            return tokens;
-
-        string[] arr = permissionRaw
-            .Split(new[] { ',', '|', ';' }, StringSplitOptions.RemoveEmptyEntries);
-        foreach (string token in arr)
-        {
-            string t = (token ?? "").Trim();
-            if (t != "")
-                tokens.Add(t);
-        }
-        return tokens;
-    }
-
     private void BuildLeftMenuPermissionFlags(taikhoan_tb account)
     {
-        bool isRoot = account != null && PermissionProfile_cl.IsRootAdmin(account.taikhoan);
+        string tk = account != null ? (account.taikhoan ?? "").Trim() : "";
+        bool isRoot = account != null && AdminRolePolicy_cl.IsSuperAdmin(tk);
         SetFlag("left_is_root", isRoot);
-        if (isRoot)
-        {
-            SetFlag("left_admin_dashboard", true);
-            SetFlag("left_admin_account", true);
-            SetFlag("left_transfer_history", true);
-            SetFlag("left_home_account", true);
-            SetFlag("left_home_approve_hanhvi", true);
-            SetFlag("left_home_issue_card", true);
-            SetFlag("left_home_tier_desc", true);
-            SetFlag("left_home_sell_product", true);
-            SetFlag("left_shop_account", true);
-            SetFlag("left_shop_approve", true);
-            SetFlag("left_shop_email_template", true);
-            SetFlag("left_content_home", true);
-            SetFlag("left_content_home_text", true);
-            SetFlag("left_content_menu", true);
-            SetFlag("left_content_baiviet", true);
-            SetFlag("left_content_banner", true);
-            SetFlag("left_content_gopy", true);
-            SetFlag("left_content_thongbao", true);
-            SetFlag("left_content_tuvan", true);
-            SetFlag("left_group_admin", true);
-            SetFlag("left_group_home", true);
-            SetFlag("left_group_shop", true);
-            SetFlag("left_group_content", true);
-            return;
-        }
 
-        HashSet<string> tokens = ParsePermissionTokens(account != null ? account.permission : "");
-        bool legacyGeneral = tokens.Contains(PermissionLegacyGeneralAdmin);
-        bool canManageAdminAccounts = tokens.Contains(PermissionManageAdminAccounts);
-
-        bool canLegacyTransfer = PermissionProfile_cl.LegacyTieuDungPermissions.Any(code => tokens.Contains(code));
-        bool canTieuDung = tokens.Contains(PermissionProfile_cl.HoSoTieuDung);
-        bool canUuDai = tokens.Contains(PermissionProfile_cl.HoSoUuDai);
-        bool canLaoDong = tokens.Contains(PermissionProfile_cl.HoSoLaoDong);
-        bool canGanKet = tokens.Contains(PermissionProfile_cl.HoSoGanKet);
-        bool canShopOnly = tokens.Contains(PermissionProfile_cl.HoSoShopOnly);
-        bool canHomeContent = tokens.Contains(PermissionHomeContent);
-
-        bool canApproveHanhVi = canUuDai || canLaoDong || canGanKet;
-        bool canHomeAccount = canTieuDung || canApproveHanhVi;
-        bool canTransferHistory = canLegacyTransfer || canTieuDung;
-
-        bool showAdminDashboard = false;
-        bool showAdminAccount = canManageAdminAccounts;
-        bool showTransferHistory = legacyGeneral || canTransferHistory;
-        bool showHomeAccount = legacyGeneral || canHomeAccount;
-        bool showApproveHanhVi = legacyGeneral || canApproveHanhVi;
-        bool showIssueCard = legacyGeneral || canTieuDung;
-        bool showTierDescription = legacyGeneral || canApproveHanhVi;
-        bool showSellProduct = legacyGeneral || canTieuDung;
-        bool showShopAccount = legacyGeneral || canShopOnly;
-        bool showShopApprove = legacyGeneral || canShopOnly;
-        bool showShopEmailTemplate = legacyGeneral || canShopOnly;
+        bool showAdminDashboard = account != null;
+        bool showAdminAccount = false;
+        bool showTransferHistory = false;
+        bool showHomeAccount = false;
+        bool showApproveHanhVi = false;
+        bool showIssueCard = false;
+        bool showTierDescription = false;
+        bool showSellProduct = false;
+        bool showShopAccount = false;
+        bool showShopApprove = false;
+        bool showShopEmailTemplate = false;
+        bool showShopPointApproval = false;
         bool showHomeSettings = false;
-        bool showOtherContent = legacyGeneral || canHomeContent;
+        bool showHomeTextContent = false;
+        bool showContentMenu = false;
+        bool showContentBaiViet = false;
+        bool showContentBanner = false;
+        bool showContentGopY = false;
+        bool showContentThongBao = false;
+        bool showContentTuVan = false;
+
+        using (dbDataContext db = new dbDataContext())
+        {
+            showAdminAccount = AdminRolePolicy_cl.CanManageAdminAccounts(db, tk);
+            showTransferHistory = AdminRolePolicy_cl.CanAccessTransferHistory(db, tk);
+            showHomeAccount = AdminRolePolicy_cl.CanManageHomeAccounts(db, tk);
+            showApproveHanhVi = AdminRolePolicy_cl.CanReviewHomePointRequests(db, tk);
+            showIssueCard = AdminRolePolicy_cl.CanIssueCards(db, tk);
+            showTierDescription = AdminRolePolicy_cl.CanViewTierReference(db, tk);
+            showSellProduct = AdminRolePolicy_cl.CanSellSystemProducts(db, tk);
+            showShopAccount = AdminRolePolicy_cl.CanManageShopAccounts(db, tk);
+            showShopApprove = AdminRolePolicy_cl.CanApproveShopPartnerRegistration(db, tk);
+            showShopEmailTemplate = AdminRolePolicy_cl.CanManageShopOperations(db, tk);
+            showShopPointApproval = AdminRolePolicy_cl.CanReviewShopPointRequests(db, tk) || AdminRolePolicy_cl.CanManageShopAccounts(db, tk);
+
+            bool canManageHomeContent = AdminRolePolicy_cl.CanManageHomeContent(db, tk);
+            showHomeSettings = false;
+            showHomeTextContent = canManageHomeContent;
+            showContentMenu = isRoot;
+            showContentBaiViet = isRoot;
+            showContentBanner = isRoot;
+            showContentGopY = isRoot;
+            showContentThongBao = isRoot;
+            showContentTuVan = isRoot;
+        }
 
         SetFlag("left_admin_dashboard", showAdminDashboard);
         SetFlag("left_admin_account", showAdminAccount);
@@ -115,19 +85,20 @@ public partial class admin_uc_menu_left_uc : System.Web.UI.UserControl
         SetFlag("left_shop_account", showShopAccount);
         SetFlag("left_shop_approve", showShopApprove);
         SetFlag("left_shop_email_template", showShopEmailTemplate);
+        SetFlag("left_shop_point_approval", showShopPointApproval);
         SetFlag("left_content_home", showHomeSettings);
-        SetFlag("left_content_home_text", showOtherContent);
-        SetFlag("left_content_menu", showOtherContent);
-        SetFlag("left_content_baiviet", showOtherContent);
-        SetFlag("left_content_banner", showOtherContent);
-        SetFlag("left_content_gopy", showOtherContent);
-        SetFlag("left_content_thongbao", showOtherContent);
-        SetFlag("left_content_tuvan", showOtherContent);
+        SetFlag("left_content_home_text", showHomeTextContent);
+        SetFlag("left_content_menu", showContentMenu);
+        SetFlag("left_content_baiviet", showContentBaiViet);
+        SetFlag("left_content_banner", showContentBanner);
+        SetFlag("left_content_gopy", showContentGopY);
+        SetFlag("left_content_thongbao", showContentThongBao);
+        SetFlag("left_content_tuvan", showContentTuVan);
 
         SetFlag("left_group_admin", showAdminDashboard || showAdminAccount || showTransferHistory);
         SetFlag("left_group_home", showHomeAccount || showApproveHanhVi || showIssueCard || showTierDescription || showSellProduct);
-        SetFlag("left_group_shop", showShopAccount || showShopApprove || showShopEmailTemplate);
-        SetFlag("left_group_content", showHomeSettings || showOtherContent);
+        SetFlag("left_group_shop", showShopAccount || showShopApprove || showShopEmailTemplate || showShopPointApproval);
+        SetFlag("left_group_content", showHomeSettings || showHomeTextContent || showContentMenu || showContentBaiViet || showContentBanner || showContentGopY || showContentThongBao || showContentTuVan);
     }
 
     private bool IsRootAdminCurrent()
@@ -144,22 +115,11 @@ public partial class admin_uc_menu_left_uc : System.Web.UI.UserControl
 
     private bool CanManageHomeContentCurrent()
     {
-        string tkEnc = Session["taikhoan"] as string;
-        if (string.IsNullOrEmpty(tkEnc))
-            return false;
-
-        string tk = "";
-        try { tk = mahoa_cl.giaima_Bcorn(tkEnc); }
-        catch { tk = tkEnc; }
-
-        if (PermissionProfile_cl.IsRootAdmin(tk))
-            return true;
-
         try
         {
             using (dbDataContext db = new dbDataContext())
             {
-                return PermissionProfile_cl.HasPermission(db, tk, PermissionHomeContent);
+                return AdminRolePolicy_cl.CanManageHomeContent(db, AdminRolePolicy_cl.GetCurrentAdminUser());
             }
         }
         catch
@@ -198,12 +158,79 @@ public partial class admin_uc_menu_left_uc : System.Web.UI.UserControl
     public bool ShowLeftShopAccount() { return GetFlag("left_shop_account"); }
     public bool ShowLeftShopApprove() { return GetFlag("left_shop_approve"); }
     public bool ShowLeftShopEmailTemplate() { return GetFlag("left_shop_email_template"); }
+    public bool ShowLeftShopPointApproval() { return GetFlag("left_shop_point_approval"); }
     public bool ShowLeftContentMenu() { return GetFlag("left_content_menu"); }
     public bool ShowLeftContentBaiViet() { return GetFlag("left_content_baiviet"); }
     public bool ShowLeftContentBanner() { return GetFlag("left_content_banner"); }
     public bool ShowLeftContentGopY() { return GetFlag("left_content_gopy"); }
     public bool ShowLeftContentThongBao() { return GetFlag("left_content_thongbao"); }
     public bool ShowLeftContentTuVan() { return GetFlag("left_content_tuvan"); }
+
+    private string GetCurrentAdminAccount()
+    {
+        string tkEnc = Session["taikhoan"] as string;
+        if (string.IsNullOrEmpty(tkEnc))
+            return "";
+
+        try { return mahoa_cl.giaima_Bcorn(tkEnc); }
+        catch { return tkEnc; }
+    }
+
+    public string GetApproveHomePointUrl()
+    {
+        string taiKhoan = GetCurrentAdminAccount();
+        if (!string.IsNullOrWhiteSpace(taiKhoan))
+        {
+            using (dbDataContext db = new dbDataContext())
+            {
+                return AdminRolePolicy_cl.ResolveHomePointApprovalUrl(db, taiKhoan);
+            }
+        }
+
+        return "/admin/duyet-yeu-cau-len-cap.aspx";
+    }
+
+    public string GetAdminAccountManagementUrl()
+    {
+        string taiKhoan = GetCurrentAdminAccount();
+        if (!string.IsNullOrWhiteSpace(taiKhoan))
+        {
+            using (dbDataContext db = new dbDataContext())
+            {
+                return AdminRolePolicy_cl.ResolveAdminAccountManagementUrl(db, taiKhoan);
+            }
+        }
+
+        return "/admin/quan-ly-tai-khoan/Default.aspx?scope=admin&fscope=admin";
+    }
+
+    public string GetHomeAccountManagementUrl()
+    {
+        string taiKhoan = GetCurrentAdminAccount();
+        if (!string.IsNullOrWhiteSpace(taiKhoan))
+        {
+            using (dbDataContext db = new dbDataContext())
+            {
+                return AdminRolePolicy_cl.ResolveHomeAccountManagementUrl(db, taiKhoan);
+            }
+        }
+
+        return "/admin/quan-ly-tai-khoan/Default.aspx?scope=home&fscope=home";
+    }
+
+    public string GetShopAccountManagementUrl()
+    {
+        string taiKhoan = GetCurrentAdminAccount();
+        if (!string.IsNullOrWhiteSpace(taiKhoan))
+        {
+            using (dbDataContext db = new dbDataContext())
+            {
+                return AdminRolePolicy_cl.ResolveShopAccountManagementUrl(db, taiKhoan);
+            }
+        }
+
+        return "/admin/quan-ly-tai-khoan/Default.aspx?scope=shop&fscope=shop&frole=shop_partner";
+    }
 
     public string MenuActive(params string[] urls)
     {
@@ -216,10 +243,55 @@ public partial class admin_uc_menu_left_uc : System.Web.UI.UserControl
         return "";
     }
 
+    public string MenuActiveTransferHistory()
+    {
+        string currentUrl = (HttpContext.Current.Request.Url.AbsolutePath ?? "").ToLower().Trim();
+        if (currentUrl != "/admin/lich-su-chuyen-diem/default.aspx"
+            && currentUrl != "/admin/lich-su-chuyen-diem/chuyen-diem.aspx")
+            return "";
+
+        string tab = (Request.QueryString["tab"] ?? "").Trim().ToLowerInvariant();
+        if (tab == "uu-dai" || tab == "lao-dong" || tab == "gan-ket")
+            return "";
+
+        return "active";
+    }
+
+    public string MenuActivePointApproval()
+    {
+        string currentUrl = (HttpContext.Current.Request.Url.AbsolutePath ?? "").ToLower().Trim();
+        if (currentUrl == "/admin/duyet-yeu-cau-len-cap.aspx")
+            return "active";
+        if (currentUrl != "/admin/lich-su-chuyen-diem/default.aspx"
+            && currentUrl != "/admin/lich-su-chuyen-diem/chuyen-diem.aspx")
+            return "";
+
+        string tab = (Request.QueryString["tab"] ?? "").Trim().ToLowerInvariant();
+        if (tab == "uu-dai" || tab == "lao-dong" || tab == "gan-ket")
+            return "active";
+
+        return "";
+    }
+
+    public string MenuActiveShopPointApproval()
+    {
+        string currentUrl = (HttpContext.Current.Request.Url.AbsolutePath ?? "").ToLower().Trim();
+        if (currentUrl != "/admin/lich-su-chuyen-diem/default.aspx"
+            && currentUrl != "/admin/lich-su-chuyen-diem/chuyen-diem.aspx")
+            return "";
+
+        string tab = (Request.QueryString["tab"] ?? "").Trim().ToLowerInvariant();
+        return tab == "shop-only" ? "active" : "";
+    }
+
     public string MenuActiveTaiKhoanScope(string scope)
     {
         string currentUrl = (HttpContext.Current.Request.Url.AbsolutePath ?? "").ToLower().Trim();
-        if (currentUrl != "/admin/quan-ly-tai-khoan/default.aspx")
+        if (currentUrl != "/admin/quan-ly-tai-khoan/default.aspx"
+            && currentUrl != "/admin/quan-ly-tai-khoan/them-moi.aspx"
+            && currentUrl != "/admin/quan-ly-tai-khoan/bo-loc.aspx"
+            && currentUrl != "/admin/quan-ly-tai-khoan/chinh-sua.aspx"
+            && currentUrl != "/admin/quan-ly-tai-khoan/phan-quyen.aspx")
             return "";
 
         string currentScope = (Request.QueryString["scope"] ?? "").Trim().ToLowerInvariant();
@@ -231,39 +303,72 @@ public partial class admin_uc_menu_left_uc : System.Web.UI.UserControl
 
     private static string ResolveTitle(string url)
     {
-        switch ((url ?? "").ToLower().Trim())
+        string normalized = (url ?? "").ToLower().Trim();
+        switch (normalized)
         {
             case "/admin/quan-ly-menu/default.aspx":
+            case "/admin/quan-ly-menu/them-moi.aspx":
+            case "/admin/quan-ly-menu/bo-loc.aspx":
+            case "/admin/quan-ly-menu/chinh-sua.aspx":
+            case "/admin/quan-ly-menu/xuat-du-lieu.aspx":
+            case "/admin/quan-ly-menu/ban-in.aspx":
                 return "Quản lý menu";
             case "/admin/quan-ly-bai-viet/default.aspx":
             case "/admin/quan-ly-bai-viet/in.aspx":
+            case "/admin/quan-ly-bai-viet/them-moi.aspx":
+            case "/admin/quan-ly-bai-viet/bo-loc.aspx":
+            case "/admin/quan-ly-bai-viet/chinh-sua.aspx":
+            case "/admin/quan-ly-bai-viet/xuat-du-lieu.aspx":
+            case "/admin/quan-ly-bai-viet/ban-in.aspx":
                 return "Quản lý bài viết";
             case "/admin/quan-ly-banner/default.aspx":
+            case "/admin/quan-ly-banner/them-moi.aspx":
                 return "Quản lý banner";
             case "/admin/quan-ly-gop-y/default.aspx":
                 return "Quản lý góp ý";
             case "/admin/quan-ly-thong-bao/default.aspx":
             case "/admin/quan-ly-thong-bao/in.aspx":
+            case "/admin/quan-ly-thong-bao/bo-loc.aspx":
+            case "/admin/quan-ly-thong-bao/xuat-du-lieu.aspx":
+            case "/admin/quan-ly-thong-bao/ban-in.aspx":
                 return "Quản lý thông báo";
             case "/admin/yeu-cau-tu-van/default.aspx":
+            case "/admin/yeu-cau-tu-van/bo-loc.aspx":
+            case "/admin/yeu-cau-tu-van/xuat-du-lieu.aspx":
+            case "/admin/yeu-cau-tu-van/ban-in.aspx":
                 return "Yêu cầu tư vấn";
             case "/admin/lich-su-chuyen-diem/default.aspx":
+            case "/admin/lich-su-chuyen-diem/chuyen-diem.aspx":
                 return "Lịch sử chuyển điểm";
             case "/admin/cai-dat-trang-chu/default.aspx":
                 return "Cài đặt trang chủ";
             case "/admin/quan-ly-noi-dung-home/default.aspx":
                 return "Nội dung trang chủ Home";
             case "/admin/quan-ly-tai-khoan/Default.aspx":
+            case "/admin/quan-ly-tai-khoan/them-moi.aspx":
+            case "/admin/quan-ly-tai-khoan/bo-loc.aspx":
+            case "/admin/quan-ly-tai-khoan/chinh-sua.aspx":
+            case "/admin/quan-ly-tai-khoan/phan-quyen.aspx":
                 return "Quản lý tài khoản";
             case "/admin/duyet-yeu-cau-len-cap.aspx":
                 return "Duyệt yêu cầu xác nhận hành vi";
             case "/admin/duyet-gian-hang-doi-tac.aspx":
                 return "Duyệt gian hàng đối tác";
             case "/admin/phat-hanh-the.aspx":
+            case "/admin/phat-hanh-the/them-moi.aspx":
                 return "Phát hành thẻ";
+            case "/admin/doi-mat-khau/default.aspx":
+                return "Đổi mật khẩu";
+            case "/admin/quen-mat-khau/default.aspx":
+            case "/admin/khoi-phuc-mat-khau.aspx":
+                return "Quên mật khẩu";
+            case "/admin/vi-token-diem/default.aspx":
+                return "Ví token điểm";
             case "/admin/motacapbac.aspx":
                 return "Mô tả cấp bậc";
             case "/admin/he-thong-san-pham/ban-san-pham.aspx":
+            case "/admin/he-thong-san-pham/ban-the.aspx":
+            case "/admin/he-thong-san-pham/chi-tiet-giao-dich.aspx":
                 return "Bán sản phẩm";
             default:
                 return "Trang chủ admin";
@@ -285,6 +390,14 @@ public partial class admin_uc_menu_left_uc : System.Web.UI.UserControl
                     else if (scope == "home") title = "Quản lý tài khoản home";
                     else if (scope == "shop") title = "Quản lý tài khoản gian hàng đối tác";
                 }
+                else if (_url == "/admin/lich-su-chuyen-diem/default.aspx")
+                {
+                    string tab = (Request.QueryString["tab"] ?? "").Trim().ToLowerInvariant();
+                    if (tab == "uu-dai") title = "Duyệt điểm hồ sơ Khách hàng";
+                    else if (tab == "lao-dong") title = "Duyệt điểm hồ sơ Cộng tác phát triển";
+                    else if (tab == "gan-ket") title = "Duyệt điểm hồ sơ Đồng hành hệ sinh thái";
+                    else if (tab == "shop-only") title = "Duyệt điểm / nghiệp vụ shop";
+                }
                 Session["title"] = title;
 
                 using (dbDataContext db = new dbDataContext())
@@ -298,6 +411,16 @@ public partial class admin_uc_menu_left_uc : System.Web.UI.UserControl
                     }
                     taikhoan_tb account = db.taikhoan_tbs.FirstOrDefault(x => x.taikhoan == tk);
                     BuildLeftMenuPermissionFlags(account);
+                    if (account != null)
+                    {
+                        ViewState["admin_role_label"] = AdminRolePolicy_cl.GetAdminRoleLabel(db, account.taikhoan, account.phanloai, account.permission);
+                        ViewState["admin_scope_label"] = AdminRolePolicy_cl.GetScopeDisplayLabel(PortalScope_cl.ResolveScope(account.taikhoan, account.phanloai, account.permission));
+                    }
+                    else
+                    {
+                        ViewState["admin_role_label"] = "Trang quản trị";
+                        ViewState["admin_scope_label"] = "Cổng Admin";
+                    }
 
                     #region ĐẾM LỖI HỆ THỐNG CHƯA XỬ LÝ
                     int q_loi = db.Log_tbs.Count(p => p.trangthai == "Chưa sửa" && p.bin == false);

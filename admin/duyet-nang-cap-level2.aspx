@@ -8,7 +8,7 @@
 <asp:Content ID="Content2" ContentPlaceHolderID="main" runat="Server">
     <asp:UpdatePanel ID="up_main" runat="server" UpdateMode="Conditional">
         <ContentTemplate>
-            <div class="p-3">
+            <div class="p-3 aha-admin-section">
                 <h4 class="mb-3">DUYỆT NÂNG CẤP LEVEL 2</h4>
 
                 <div class="row">
@@ -29,7 +29,7 @@
                     </div>
                 </div>
 
-                <div class="bcorn-fix-title-table-container">
+                <div class="bcorn-fix-title-table-container aha-admin-grid">
                     <table class="bcorn-fix-title-table">
                         <thead>
                             <tr>

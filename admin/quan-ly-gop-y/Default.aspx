@@ -11,7 +11,7 @@
         <ContentTemplate>
 
             <div class="pos-relative pb-11">
-                <div id="menutop-tool-bc" style="position: fixed; top: 52px; width: 100%; z-index: 4">
+                <div id="menutop-tool-bc" class="aha-admin-toolbar">
                     <ul class="h-menu bg-white">
                         <li class="d-block-lg d-none" data-role="hint" data-hint-position="top" data-hint-text="Lùi">
                             <asp:LinkButton ID="but_quaylai" OnClick="but_quaylai_Click" runat="server"><span class="mif-chevron-left"></span></asp:LinkButton>
@@ -23,7 +23,7 @@
                 </div>
             </div>
 
-            <div class="<%--border-top bd-lightGray--%> <%--pt-3 pl-3-lg pl-0 pr-3-lg pr-0 pb-3--%>p-3">
+            <div class="<%--border-top bd-lightGray--%> <%--pt-3 pl-3-lg pl-0 pr-3-lg pr-0 pb-3--%>p-3 aha-admin-section">
                 <div class="d-none-lg d-block mb-3 mt-0-lg mt-3">
                     <div class="place-left">
                         <%--<b><%=ViewState["title"] %></b> Nó k kịp lưu vì nó tải trang này trước khi load menu-left--%>
@@ -40,7 +40,7 @@
 
                 <div class="row">
                     <div class="cell-lg-12">
-                        <div class="bcorn-fix-title-table-container">
+                        <div class="bcorn-fix-title-table-container aha-admin-grid">
                             <%--style="padding-bottom: 300px"--%>
                             <table class="bcorn-fix-title-table">
                                 <thead>
@@ -94,11 +94,7 @@
     </asp:UpdatePanel>
     <asp:UpdateProgress ID="UpdateProgress2" runat="server" AssociatedUpdatePanelID="up_main">
         <ProgressTemplate>
-            <div class="bg-dark fixed-top h-100 w-100" style="opacity: 0.9; z-index: 99999!important">
-                <div style="padding-top: 45vh;">
-                    <div class="mx-auto color-style activity-atom" data-role="activity" data-type="atom" data-style="color" data-role-activity="true"><span class="electron"></span><span class="electron"></span><span class="electron"></span></div>
-                </div>
-            </div>
+            <div class="admin-inline-progress" role="status" aria-live="polite"><span class="admin-inline-progress-spinner"></span><span class="admin-inline-progress-text">Đang xử lý...</span></div>
         </ProgressTemplate>
     </asp:UpdateProgress>
 </asp:Content>

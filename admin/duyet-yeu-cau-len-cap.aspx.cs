@@ -23,15 +23,25 @@ public partial class admin_duyet_yeu_cau_len_cap : System.Web.UI.Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
+        AdminRolePolicy_cl.RequireHomePointApprovalAdmin();
+
+        string tkAdmin = GetCurrentAdminUser();
+        if (!PermissionProfile_cl.IsRootAdmin(tkAdmin))
+        {
+            using (dbDataContext db = new dbDataContext())
+            {
+                string targetUrl = AdminRolePolicy_cl.ResolveHomePointApprovalUrl(db, tkAdmin);
+                if (!string.IsNullOrWhiteSpace(targetUrl))
+                {
+                    Response.Redirect(targetUrl, false);
+                    Context.ApplicationInstance.CompleteRequest();
+                    return;
+                }
+            }
+        }
+
         if (!IsPostBack)
         {
-            string allApprovalPermission = string.Join("|", new[]
-            {
-                PermissionProfile_cl.HoSoUuDai,
-                PermissionProfile_cl.HoSoLaoDong,
-                PermissionProfile_cl.HoSoGanKet
-            });
-            check_login_cl.check_login_admin(allApprovalPermission, allApprovalPermission);
             txt_timkiem.Text = "";
             ddl_trangthai.SelectedValue = "";
             LoadDanhSach();
@@ -63,7 +73,13 @@ public partial class admin_duyet_yeu_cau_len_cap : System.Web.UI.Page
         if (IsRootAdmin(tkAdmin)) return true;
         string permission = GetPermissionByHanhVi(GetHanhViByRequest(capYeuCau, giaTriYeuCau));
         if (permission == "") return false;
-        return PermissionProfile_cl.HasPermission(db, tkAdmin, permission);
+        if (permission == PermissionProfile_cl.HoSoUuDai)
+            return AdminRolePolicy_cl.CanReviewCustomerPointRequests(db, tkAdmin);
+        if (permission == PermissionProfile_cl.HoSoLaoDong)
+            return AdminRolePolicy_cl.CanReviewDevelopmentPointRequests(db, tkAdmin);
+        if (permission == PermissionProfile_cl.HoSoGanKet)
+            return AdminRolePolicy_cl.CanReviewEcosystemPointRequests(db, tkAdmin);
+        return false;
     }
 
     private IQueryable<YeuCau_HeThongSanPham_tb> BuildScopedQuery(dbDataContext db, string tkAdmin)
@@ -72,9 +88,9 @@ public partial class admin_duyet_yeu_cau_len_cap : System.Web.UI.Page
         if (IsRootAdmin(tkAdmin))
             return query;
 
-        bool canUuDai = PermissionProfile_cl.HasPermission(db, tkAdmin, PermissionProfile_cl.HoSoUuDai);
-        bool canLaoDong = PermissionProfile_cl.HasPermission(db, tkAdmin, PermissionProfile_cl.HoSoLaoDong);
-        bool canGanKet = PermissionProfile_cl.HasPermission(db, tkAdmin, PermissionProfile_cl.HoSoGanKet);
+        bool canUuDai = AdminRolePolicy_cl.CanReviewCustomerPointRequests(db, tkAdmin);
+        bool canLaoDong = AdminRolePolicy_cl.CanReviewDevelopmentPointRequests(db, tkAdmin);
+        bool canGanKet = AdminRolePolicy_cl.CanReviewEcosystemPointRequests(db, tkAdmin);
 
         if (!canUuDai && !canLaoDong && !canGanKet)
             return query.Where(x => x.id < 0);
@@ -183,6 +199,7 @@ public partial class admin_duyet_yeu_cau_len_cap : System.Web.UI.Page
 
     protected void btn_duyet_Click(object sender, EventArgs e)
     {
+        AdminRolePolicy_cl.RequireHomePointApprovalAdmin();
         int id;
         if (!TryGetRequestIdFromSender(sender, out id))
         {
@@ -254,6 +271,7 @@ public partial class admin_duyet_yeu_cau_len_cap : System.Web.UI.Page
 
     protected void btn_tuchoi_Click(object sender, EventArgs e)
     {
+        AdminRolePolicy_cl.RequireHomePointApprovalAdmin();
         int id;
         if (!TryGetRequestIdFromSender(sender, out id))
         {

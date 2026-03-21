@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Web.UI;
 
 public partial class admin_tools_reindex_baiviet : Page
@@ -8,7 +8,7 @@ public partial class admin_tools_reindex_baiviet : Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
-        check_login_cl.check_login_admin("none", "none");
+        AdminRolePolicy_cl.RequireSuperAdmin();
 
         if (!IsPostBack)
             ShowStatus();

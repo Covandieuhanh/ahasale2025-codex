@@ -6,17 +6,12 @@
 
 
     <asp:UpdatePanel ID="up_add" runat="server" UpdateMode="Conditional">
-        <%--<Triggers>
-            <asp:AsyncPostBackTrigger ControlID="but_show_form_add" EventName="Click" />
-        </Triggers>--%>
         <ContentTemplate>
             <asp:Panel ID="pn_add" runat="server" Visible="false" DefaultButton="but_add_edit">
-                <div style="position: fixed; width: 100%; height: 52px; background-color: none; top: 0; left: 0; z-index: 1041!important;">
-                    <div style='top: 0; left: 0px; margin: 0 auto; max-width: 600px; opacity: 1;'>
-                        <div style='position: absolute; right: 18px; top: 14px; z-index: 1040!important'>
-                            <a href='#' class='fg-white d-inline' id="close_add" runat="server" onserverclick="but_close_form_add_Click" title='Đóng'>
-                                <span class='mif mif-cross mif-2x fg-red fg-lightRed-hover'></span>
-                            </a>
+                <div class="admin-fullpage-head admin-route-panel-head">
+                    <div class='admin-fullpage-shell admin-fullpage-head-shell admin-route-panel-shell admin-route-panel-head-shell'>
+                        <div class="admin-route-panel-actions">
+                            <asp:HyperLink ID="close_add" runat="server" CssClass="admin-route-back-link">Quay lại danh sách</asp:HyperLink>
                         </div>
                         <div class="bg-white pl-4 pl-8-md pr-8-md pr-4" style="height: 52px;">
                             <div class="pt-4 text-upper text-bold">
@@ -26,9 +21,9 @@
                         </div>
                     </div>
                 </div>
-                <div style="position: fixed; width: 100%; height: 100%; top: 0; left: 0; overflow: auto; z-index: 1040!important; background-image: url('/uploads/images/bg1.png');">
-                    <div style='top: 0; left: 0; margin: 0 auto; max-width: 606px; opacity: 1;'>
-                        <div class="bg-white border bd-transparent pl-4 pl-8-md pr-8-md pr-4" style="padding-top: 52px">
+                <div class="admin-fullpage-body-wrap admin-route-panel-body-wrap">
+                    <div class='admin-fullpage-shell admin-fullpage-dialog admin-route-panel-shell admin-route-panel-dialog'>
+                        <div class="bg-white border bd-transparent admin-fullpage-body admin-route-panel-body pl-4 pl-8-md pr-8-md pr-4">
                             <%--pl-4 pl-8-md pr-8-md pr-4--%>
                             <div class="row">
                                 <div class="cell-lg-12">
@@ -67,27 +62,20 @@
     </asp:UpdatePanel>
     <asp:UpdateProgress ID="UpdateProgress5" runat="server" AssociatedUpdatePanelID="up_add">
         <ProgressTemplate>
-            <div class="bg-dark fixed-top h-100 w-100" style="opacity: 0.9; z-index: 99999!important">
-                <div style="padding-top: 45vh;">
-                    <div class="mx-auto color-style activity-atom" data-role="activity" data-type="atom" data-style="color" data-role-activity="true"><span class="electron"></span><span class="electron"></span><span class="electron"></span></div>
-                </div>
-            </div>
+            <div class="admin-inline-progress" role="status" aria-live="polite"><span class="admin-inline-progress-spinner"></span><span class="admin-inline-progress-text">Đang xử lý...</span></div>
         </ProgressTemplate>
     </asp:UpdateProgress>
 
 
     <asp:UpdatePanel ID="up_main" runat="server" UpdateMode="Conditional">
-        <Triggers>
-            <%--<asp:AsyncPostBackTrigger ControlID="but_add" EventName="Click" />--%>
-        </Triggers>
         <ContentTemplate>
 
             <div class="pos-relative pb-11">
-                <div id="menutop-tool-bc" style="position: fixed; top: 52px; width: 100%; z-index: 4">
+                <div id="menutop-tool-bc" class="admin-fullpage-toolbar admin-route-toolbar">
                     <ul class="h-menu bg-white">
 
                         <li data-role="hint" data-hint-position="top" data-hint-text="Thêm">
-                            <asp:LinkButton ID="but_show_form_add" OnClick="but_show_form_add_Click" runat="server"><span class="mif-plus"></span></asp:LinkButton>
+                            <asp:HyperLink ID="but_show_form_add" runat="server"><span class="mif-plus"></span></asp:HyperLink>
                         </li>
                         <li data-role="hint" data-hint-position="top" data-hint-text="Lưu">
                             <asp:LinkButton ID="but_save" OnClick="but_save_Click" runat="server"><span class="mif-floppy-disk"></span></asp:LinkButton>
@@ -110,7 +98,7 @@
                         </li>
                     </ul>
                 </div>
-                <div id="timkiem-fixtop-bc" style="position: fixed; right: 10px; top: 58px; width: 240px; z-index: 4" class="d-none d-block-sm">
+                <div id="timkiem-fixtop-bc" class="aha-admin-toolbar-search admin-fullpage-searchbar admin-route-searchbar d-none d-block-sm">
                     <asp:TextBox MaxLength="50" data-prepend="<span class='mif mif-search'></span>" ID="txt_timkiem" runat="server" placeholder="Nhập từ khóa" data-role="input" CssClass="input-small" AutoPostBack="true" OnTextChanged="txt_timkiem_TextChanged"></asp:TextBox>
                 </div>
             </div>
@@ -135,7 +123,7 @@
 
                 <div class="row">
                     <div class="cell-lg-12">
-                        <div class="bcorn-fix-title-table-container">
+                        <div class="bcorn-fix-title-table-container aha-admin-grid">
                             <%--style="padding-bottom: 300px"--%>
                             <table class="bcorn-fix-title-table">
                                 <thead>
@@ -194,11 +182,7 @@
     </asp:UpdatePanel>
     <asp:UpdateProgress ID="UpdateProgress2" runat="server" AssociatedUpdatePanelID="up_main">
         <ProgressTemplate>
-            <div class="bg-dark fixed-top h-100 w-100" style="opacity: 0.9; z-index: 99999!important">
-                <div style="padding-top: 45vh;">
-                    <div class="mx-auto color-style activity-atom" data-role="activity" data-type="atom" data-style="color" data-role-activity="true"><span class="electron"></span><span class="electron"></span><span class="electron"></span></div>
-                </div>
-            </div>
+            <div class="admin-inline-progress" role="status" aria-live="polite"><span class="admin-inline-progress-spinner"></span><span class="admin-inline-progress-text">Đang xử lý...</span></div>
         </ProgressTemplate>
     </asp:UpdateProgress>
 </asp:Content>

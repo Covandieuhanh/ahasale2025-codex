@@ -157,7 +157,7 @@
 
 <asp:Content ID="Content2" ContentPlaceHolderID="main" runat="Server">
 
-    <!-- ======================= POPUP BÁN SẢN PHẨM (NEW) ======================= -->
+    <!-- ======================= FULL-PAGE BÁN SẢN PHẨM (NEW) ======================= -->
     <asp:UpdatePanel ID="up_banthe" runat="server" UpdateMode="Conditional">
         <Triggers>
             <asp:PostBackTrigger ControlID="but_tao_banthe" />
@@ -252,28 +252,20 @@
 
     <asp:UpdateProgress ID="UpdateProgress1" runat="server" AssociatedUpdatePanelID="up_banthe">
         <ProgressTemplate>
-            <div class="bg-dark fixed-top h-100 w-100" style="opacity: 0.9; z-index: 99999!important">
-                <div style="padding-top: 45vh;">
-                    <div class="mx-auto color-style activity-atom" data-role="activity" data-type="atom" data-style="color" data-role-activity="true">
-                        <span class="electron"></span><span class="electron"></span><span class="electron"></span>
-                    </div>
-                </div>
-            </div>
+            <div class="admin-inline-progress" role="status" aria-live="polite"><span class="admin-inline-progress-spinner"></span><span class="admin-inline-progress-text">Đang xử lý...</span></div>
         </ProgressTemplate>
     </asp:UpdateProgress>
 
-    <!-- ======================= POPUP CHI TIẾT GIAO DỊCH ======================= -->
+    <!-- ======================= FULL-PAGE CHI TIẾT GIAO DỊCH ======================= -->
     <asp:UpdatePanel ID="up_chitiet" runat="server" UpdateMode="Conditional">
         <ContentTemplate>
             <asp:Panel ID="pn_chitiet" runat="server" Visible="false">
 
                 <!-- header fixed -->
-                <div style="position: fixed; width: 100%; height: 52px; top: 0; left: 0; z-index: 1041!important;">
-                    <div style='margin: 0 auto; max-width: 860px; opacity: 1;'>
-                        <div style='position: absolute; right: 18px; top: 14px; z-index: 1040!important'>
-                            <a href='#' class='fg-white d-inline' runat="server" id="close_chitiet" onserverclick="but_close_chitiet_Click" title='Đóng'>
-                                <span class='mif mif-cross mif-2x fg-red fg-lightRed-hover'></span>
-                            </a>
+                <div class="admin-fullpage-head admin-route-panel-head">
+                    <div class='admin-fullpage-shell admin-fullpage-head-shell admin-route-panel-shell admin-route-panel-head-shell'>
+                        <div class="admin-route-panel-actions">
+                            <asp:HyperLink ID="close_chitiet" runat="server" CssClass="admin-route-back-link">Quay lại danh sách</asp:HyperLink>
                         </div>
                         <div class="bg-white pl-4 pr-4" style="height: 52px;">
                             <div class="pt-4 text-upper text-bold">
@@ -285,9 +277,9 @@
                 </div>
 
                 <!-- overlay -->
-                <div style="position: fixed; width: 100%; height: 100%; top: 0; left: 0; overflow: auto; z-index: 1040!important; background-image: url('/uploads/images/bg1.png');">
-                    <div style='margin: 0 auto; max-width: 866px; opacity: 1;'>
-                        <div class="bg-white border bd-transparent pl-4 pr-4" style="padding-top: 52px; padding-bottom: 30px">
+                <div class="admin-fullpage-body-wrap admin-route-panel-body-wrap">
+                    <div class='admin-fullpage-shell admin-fullpage-dialog admin-route-panel-shell admin-route-panel-dialog'>
+                        <div class="bg-white border bd-transparent admin-fullpage-body admin-route-panel-body pl-4 pr-4" style="padding-bottom: 30px">
 
                             <!-- Header info -->
                             <div class="mt-3">
@@ -429,7 +421,7 @@
         <ContentTemplate>
 
             <div class="pos-relative pb-11">
-                <div id="menutop-tool-bc" style="position: fixed; top: 52px; width: 100%; z-index: 4">
+                <div id="menutop-tool-bc" class="admin-fullpage-toolbar admin-route-toolbar">
                     <ul class="h-menu bg-white">
 
                         <li data-role="hint" data-hint-position="top" data-hint-text="Bán thẻ">
@@ -460,10 +452,10 @@
                 </div>
             </div>
 
-            <div class="p-3">
+            <div class="p-3 aha-admin-section">
                 <div class="row">
                     <div class="cell-lg-12">
-                     <div class="bg-white p-4 shadow-2 rounded">
+                     <div class="aha-admin-card p-4">
 
     <div class="d-flex flex-align-center mb-3">
         <h5 class="m-0 text-bold"> LỊCH SỬ BÁN SẢN PHẨM</h5>
@@ -472,7 +464,7 @@
         </span>
     </div>
 
-    <div class="table-responsive">
+    <div class="table-responsive aha-admin-grid">
         <table class="table table-border striped cell-border compact">
             <thead class="bg-light">
                 <tr>

@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap");
+﻿@import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap");
 
 body.admin-shell {
     --aha-sync-font-ui: "Be Vietnam Pro", "Segoe UI", Arial, sans-serif;
@@ -222,14 +222,6 @@ body.admin-shell #admin-avatar-shell.admin-shop-dd.open .admin-shop-menu {
     display: flex;
 }
 
-body.admin-shell #admin-avatar-shell.admin-shop-dd:hover .admin-shop-menu {
-    display: flex;
-}
-
-body.admin-shell.admin-avatar-nav-only #admin-avatar-shell.admin-shop-dd:hover .admin-shop-menu {
-    display: flex;
-}
-
 body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-menu-head {
     padding: 14px 16px;
     background: linear-gradient(135deg, rgba(13, 143, 91, .12), rgba(18, 163, 106, .08));
@@ -253,6 +245,41 @@ body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-menu-sub {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-menu-role-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-role-pill {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 0 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+}
+
+body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-role-pill-primary {
+    background: #eaf7ef;
+    color: #145035;
+}
+
+body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-role-pill-scope {
+    background: #eef5fb;
+    color: #2b5878;
+}
+
+body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-menu-help {
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #5b7183;
 }
 
 body.admin-shell #admin-avatar-shell.admin-shop-dd .admin-shop-menu-body {
@@ -504,6 +531,15 @@ body.admin-shell #nv .navview-pane .admin-left-subtitle {
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: #6b8092;
+    font-weight: 700;
+    margin-top: 2px;
+}
+
+body.admin-shell #nv .navview-pane .admin-left-role-scope {
+    font-family: var(--aha-sync-font-ui);
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    color: #90a3b4;
     font-weight: 700;
     margin-top: 2px;
 }
@@ -1191,6 +1227,26 @@ body.admin-shell .admin-page .aha-admin-grid .table {
     margin-bottom: 0;
 }
 
+body.admin-shell .admin-page .aha-admin-card {
+    background: #ffffff;
+    border: 1px solid var(--aha-sync-border);
+    border-radius: var(--aha-sync-radius-lg);
+    box-shadow: var(--aha-sync-shadow);
+}
+
+body.admin-shell .admin-page .admin-settings-grid [data-role="panel"] {
+    background: #ffffff;
+    border: 1px solid var(--aha-sync-border);
+    border-radius: var(--aha-sync-radius-lg);
+    box-shadow: var(--aha-sync-shadow);
+    overflow: hidden;
+}
+
+body.admin-shell .admin-page .admin-settings-grid [data-role="panel"] .panel-title,
+body.admin-shell .admin-page .admin-settings-grid [data-role="panel"] .heading {
+    border-bottom: 1px solid #e6eef5;
+}
+
 body.admin-shell .admin-page .profile-tabs {
     display: flex;
     flex-wrap: wrap;
@@ -1777,4 +1833,681 @@ body.admin-shell #thongbao-charms .thongbao-thoigian {
     body.admin-shell #nv .navview-pane {
         width: min(85vw, 320px);
     }
+}
+
+body.admin-shell.admin-route-fullview .admin-page {
+    padding: 0 !important;
+}
+
+body.admin-shell.admin-route-fullview .admin-page .aha-admin-modal-head-wrap,
+body.admin-shell.admin-route-fullview .admin-page .qltk-fullview-head-wrap,
+body.admin-shell.admin-route-fullview .admin-page div[style*="position: fixed"][style*="height: 52px"][style*="z-index: 1041"] {
+    position: static !important;
+    inset: auto !important;
+    top: auto !important;
+    left: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    z-index: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+}
+
+body.admin-shell.admin-route-fullview .admin-page .aha-admin-modal-overlay,
+body.admin-shell.admin-route-fullview .admin-page .qltk-fullview-overlay,
+body.admin-shell.admin-route-fullview .admin-page div[style*="position: fixed"][style*="height: 100%"][style*="z-index: 1040"] {
+    position: static !important;
+    inset: auto !important;
+    top: auto !important;
+    left: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    z-index: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    background-image: none !important;
+    backdrop-filter: none !important;
+}
+
+body.admin-shell.admin-route-fullview .admin-page .aha-admin-modal-head-card,
+body.admin-shell.admin-route-fullview .admin-page .aha-admin-modal-dialog,
+body.admin-shell.admin-route-fullview .admin-page .qltk-fullview-head-card,
+body.admin-shell.admin-route-fullview .admin-page .qltk-fullview-shell,
+body.admin-shell.admin-route-fullview .admin-page div[style*="margin: 0 auto"][style*="max-width"] {
+    margin: 0 auto !important;
+    width: min(1180px, 100%) !important;
+    max-width: 1180px !important;
+}
+
+body.admin-shell.admin-route-fullview .admin-page .aha-admin-modal-head-card > .bg-white,
+body.admin-shell.admin-route-fullview .admin-page .qltk-fullview-head-card > .bg-white,
+body.admin-shell.admin-route-fullview .admin-page .bg-white[style*="height: 52px"] {
+    min-height: 72px !important;
+    height: auto !important;
+    border-radius: 20px 20px 0 0 !important;
+    border: 1px solid var(--aha-sync-border) !important;
+    border-bottom: 0 !important;
+    box-shadow: none !important;
+}
+
+body.admin-shell.admin-route-fullview .admin-page .aha-admin-modal-body,
+body.admin-shell.admin-route-fullview .admin-page .qltk-fullview-body,
+body.admin-shell.admin-route-fullview .admin-page .bg-white.border.bd-transparent[style*="padding-top: 52px"] {
+    padding: 18px 22px 28px !important;
+    border-radius: 0 0 20px 20px !important;
+    border: 1px solid var(--aha-sync-border) !important;
+    box-shadow: var(--aha-sync-shadow) !important;
+    background: #ffffff !important;
+}
+
+body.admin-shell.admin-route-fullview .admin-page .aha-admin-modal-body .row:first-child,
+body.admin-shell.admin-route-fullview .admin-page .aha-admin-modal-body .pt-10:first-child,
+body.admin-shell.admin-route-fullview .admin-page .qltk-fullview-body .row:first-child,
+body.admin-shell.admin-route-fullview .admin-page .qltk-fullview-body .pt-10:first-child,
+body.admin-shell.admin-route-fullview .admin-page .bg-white.border.bd-transparent[style*="padding-top: 52px"] .row:first-child,
+body.admin-shell.admin-route-fullview .admin-page .bg-white.border.bd-transparent[style*="padding-top: 52px"] .pt-10:first-child {
+    margin-top: 4px;
+}
+
+body.admin-shell.admin-route-fullview .admin-page .aha-admin-modal-body .button,
+body.admin-shell.admin-route-fullview .admin-page .aha-admin-modal-body input[type="submit"],
+body.admin-shell.admin-route-fullview .admin-page .aha-admin-modal-body input[type="button"],
+body.admin-shell.admin-route-fullview .admin-page .qltk-fullview-body .button,
+body.admin-shell.admin-route-fullview .admin-page .qltk-fullview-body input[type="submit"],
+body.admin-shell.admin-route-fullview .admin-page .qltk-fullview-body input[type="button"],
+body.admin-shell.admin-route-fullview .admin-page .bg-white.border.bd-transparent[style*="padding-top: 52px"] .button,
+body.admin-shell.admin-route-fullview .admin-page .bg-white.border.bd-transparent[style*="padding-top: 52px"] input[type="submit"],
+body.admin-shell.admin-route-fullview .admin-page .bg-white.border.bd-transparent[style*="padding-top: 52px"] input[type="button"] {
+    min-height: 42px;
+}
+
+body.admin-shell.admin-route-fullview .admin-page .aha-admin-modal-body [data-role="input"],
+body.admin-shell.admin-route-fullview .admin-page .aha-admin-modal-body [data-role="select"],
+body.admin-shell.admin-route-fullview .admin-page .aha-admin-modal-body textarea,
+body.admin-shell.admin-route-fullview .admin-page .aha-admin-modal-body .input,
+body.admin-shell.admin-route-fullview .admin-page .aha-admin-modal-body select,
+body.admin-shell.admin-route-fullview .admin-page .qltk-fullview-body [data-role="input"],
+body.admin-shell.admin-route-fullview .admin-page .qltk-fullview-body [data-role="select"],
+body.admin-shell.admin-route-fullview .admin-page .qltk-fullview-body textarea,
+body.admin-shell.admin-route-fullview .admin-page .qltk-fullview-body .input,
+body.admin-shell.admin-route-fullview .admin-page .qltk-fullview-body select,
+body.admin-shell.admin-route-fullview .admin-page .bg-white.border.bd-transparent[style*="padding-top: 52px"] [data-role="input"],
+body.admin-shell.admin-route-fullview .admin-page .bg-white.border.bd-transparent[style*="padding-top: 52px"] [data-role="select"],
+body.admin-shell.admin-route-fullview .admin-page .bg-white.border.bd-transparent[style*="padding-top: 52px"] textarea,
+body.admin-shell.admin-route-fullview .admin-page .bg-white.border.bd-transparent[style*="padding-top: 52px"] .input,
+body.admin-shell.admin-route-fullview .admin-page .bg-white.border.bd-transparent[style*="padding-top: 52px"] select {
+    max-width: 100%;
+}
+
+body.admin-shell.admin-route-fullview .admin-page .aha-admin-modal-body .cell-lg-12,
+body.admin-shell.admin-route-fullview .admin-page .aha-admin-modal-body .cell-lg-6,
+body.admin-shell.admin-route-fullview .admin-page .aha-admin-modal-body .cell-12,
+body.admin-shell.admin-route-fullview .admin-page .qltk-fullview-body .cell-lg-12,
+body.admin-shell.admin-route-fullview .admin-page .qltk-fullview-body .cell-lg-6,
+body.admin-shell.admin-route-fullview .admin-page .qltk-fullview-body .cell-12,
+body.admin-shell.admin-route-fullview .admin-page .bg-white.border.bd-transparent[style*="padding-top: 52px"] .cell-lg-12,
+body.admin-shell.admin-route-fullview .admin-page .bg-white.border.bd-transparent[style*="padding-top: 52px"] .cell-lg-6,
+body.admin-shell.admin-route-fullview .admin-page .bg-white.border.bd-transparent[style*="padding-top: 52px"] .cell-12 {
+    min-width: 0;
+}
+
+body.admin-shell.admin-route-fullview .admin-page #menutop-tool-bc,
+body.admin-shell.admin-route-fullview .admin-page #timkiem-fixtop-bc,
+body.admin-shell.admin-route-fullview .admin-page #menu-tool-bc,
+body.admin-shell.admin-route-fullview .admin-page .admin-route-toolbar,
+body.admin-shell.admin-route-fullview .admin-page .admin-route-searchbar,
+body.admin-shell.admin-route-fullview .admin-page .admin-route-bottom-toolbar,
+body.admin-shell.admin-fullpage-view .admin-page .admin-fullpage-toolbar,
+body.admin-shell.admin-fullpage-view .admin-page .admin-fullpage-searchbar,
+body.admin-shell.admin-fullpage-view .admin-page .admin-fullpage-bottom-toolbar {
+    position: static !important;
+    inset: auto !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    width: auto !important;
+    margin: 0 0 14px !important;
+    z-index: auto !important;
+}
+
+body.admin-shell.admin-route-fullview .admin-page #menutop-tool-bc .h-menu,
+body.admin-shell.admin-route-fullview .admin-page #menu-tool-bc .h-menu,
+body.admin-shell.admin-route-fullview .admin-page .admin-route-toolbar .h-menu,
+body.admin-shell.admin-route-fullview .admin-page .admin-route-bottom-toolbar .h-menu,
+body.admin-shell.admin-fullpage-view .admin-page .admin-fullpage-toolbar .h-menu,
+body.admin-shell.admin-fullpage-view .admin-page .admin-fullpage-bottom-toolbar .h-menu {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    padding: 0;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+body.admin-shell.admin-route-fullview .admin-page #menutop-tool-bc .h-menu > li,
+body.admin-shell.admin-route-fullview .admin-page #menu-tool-bc .h-menu > li,
+body.admin-shell.admin-route-fullview .admin-page .admin-route-toolbar .h-menu > li,
+body.admin-shell.admin-route-fullview .admin-page .admin-route-bottom-toolbar .h-menu > li,
+body.admin-shell.admin-fullpage-view .admin-page .admin-fullpage-toolbar .h-menu > li,
+body.admin-shell.admin-fullpage-view .admin-page .admin-fullpage-bottom-toolbar .h-menu > li {
+    margin: 0 !important;
+}
+
+body.admin-shell.admin-route-fullview .admin-page #menutop-tool-bc .h-menu > li > a,
+body.admin-shell.admin-route-fullview .admin-page #menu-tool-bc .h-menu > li > a,
+body.admin-shell.admin-route-fullview .admin-page .admin-route-toolbar .h-menu > li > a,
+body.admin-shell.admin-route-fullview .admin-page .admin-route-bottom-toolbar .h-menu > li > a,
+body.admin-shell.admin-fullpage-view .admin-page .admin-fullpage-toolbar .h-menu > li > a,
+body.admin-shell.admin-fullpage-view .admin-page .admin-fullpage-bottom-toolbar .h-menu > li > a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 14px;
+    border-radius: 12px;
+    border: 1px solid var(--aha-sync-border);
+    background: #ffffff !important;
+    color: #18354d !important;
+    box-shadow: var(--aha-sync-shadow);
+}
+
+body.admin-shell.admin-route-fullview .admin-page #timkiem-fixtop-bc,
+body.admin-shell.admin-route-fullview .admin-page .admin-route-searchbar,
+body.admin-shell.admin-fullpage-view .admin-page .admin-fullpage-searchbar {
+    width: min(320px, 100%) !important;
+    max-width: 100% !important;
+    margin-left: auto !important;
+}
+
+body.admin-shell.admin-route-fullview .admin-page #timkiem-fixtop-bc .input,
+body.admin-shell.admin-route-fullview .admin-page #timkiem-fixtop-bc input,
+body.admin-shell.admin-route-fullview .admin-page #timkiem-fixtop-bc select,
+body.admin-shell.admin-route-fullview .admin-page .admin-route-searchbar .input,
+body.admin-shell.admin-route-fullview .admin-page .admin-route-searchbar input,
+body.admin-shell.admin-route-fullview .admin-page .admin-route-searchbar select,
+body.admin-shell.admin-fullpage-view .admin-page .admin-fullpage-searchbar .input,
+body.admin-shell.admin-fullpage-view .admin-page .admin-fullpage-searchbar input,
+body.admin-shell.admin-fullpage-view .admin-page .admin-fullpage-searchbar select {
+    box-shadow: var(--aha-sync-shadow);
+}
+
+body.admin-shell .admin-route-panel-head,
+body.admin-shell .admin-fullpage-head {
+    position: static !important;
+    inset: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    z-index: auto !important;
+    padding: 0 !important;
+}
+
+body.admin-shell .admin-route-panel-body-wrap,
+body.admin-shell .admin-fullpage-body-wrap {
+    position: static !important;
+    inset: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    z-index: auto !important;
+    background: transparent !important;
+    background-image: none !important;
+    backdrop-filter: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+body.admin-shell .admin-route-panel-shell,
+body.admin-shell .admin-fullpage-shell {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+}
+
+body.admin-shell .admin-route-panel-head-shell,
+body.admin-shell .admin-route-panel-dialog,
+body.admin-shell .admin-fullpage-head-shell,
+body.admin-shell .admin-fullpage-dialog {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+}
+
+body.admin-shell .admin-route-panel-head .bg-white,
+body.admin-shell .admin-route-panel-body,
+body.admin-shell .admin-fullpage-head .bg-white,
+body.admin-shell .admin-fullpage-body {
+    box-shadow: var(--aha-sync-shadow) !important;
+}
+
+body.admin-shell .admin-route-panel-head .bg-white,
+body.admin-shell .admin-fullpage-head .bg-white {
+    border-radius: 18px 18px 0 0 !important;
+}
+
+body.admin-shell .admin-route-panel-actions,
+body.admin-shell .admin-fullpage-actions {
+    position: static !important;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 14px 18px 0 18px;
+}
+
+body.admin-shell .admin-route-back-link,
+body.admin-shell .admin-fullpage-back-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: 1px solid #dce7f2;
+    background: #ffffff;
+    color: #123148 !important;
+    font-size: 13px;
+    font-weight: 800;
+    text-decoration: none !important;
+    box-shadow: 0 10px 24px rgba(18, 49, 72, 0.08);
+}
+
+body.admin-shell .admin-route-back-link:hover,
+body.admin-shell .admin-fullpage-back-link:hover {
+    background: #f8fbff;
+    color: #0f2740 !important;
+}
+
+body.admin-shell .admin-route-panel-body,
+body.admin-shell .admin-fullpage-body {
+    border-radius: 0 0 18px 18px !important;
+    padding-top: 16px !important;
+}
+
+@media (max-width: 767px) {
+    body.admin-shell.admin-route-fullview .admin-page .aha-admin-modal-head-card,
+    body.admin-shell.admin-route-fullview .admin-page .aha-admin-modal-dialog,
+    body.admin-shell.admin-route-fullview .admin-page .qltk-fullview-head-card,
+    body.admin-shell.admin-route-fullview .admin-page .qltk-fullview-shell,
+    body.admin-shell.admin-route-fullview .admin-page div[style*="margin: 0 auto"][style*="max-width"] {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    body.admin-shell.admin-route-fullview .admin-page .aha-admin-modal-head-card > .bg-white,
+    body.admin-shell.admin-route-fullview .admin-page .qltk-fullview-head-card > .bg-white,
+    body.admin-shell.admin-route-fullview .admin-page .bg-white[style*="height: 52px"] {
+        border-radius: 16px 16px 0 0 !important;
+    }
+
+    body.admin-shell.admin-route-fullview .admin-page .aha-admin-modal-body,
+    body.admin-shell.admin-route-fullview .admin-page .qltk-fullview-body,
+    body.admin-shell.admin-route-fullview .admin-page .bg-white.border.bd-transparent[style*="padding-top: 52px"] {
+        padding: 16px 14px 22px !important;
+        border-radius: 0 0 16px 16px !important;
+    }
+
+    body.admin-shell.admin-route-fullview .admin-page #timkiem-fixtop-bc,
+    body.admin-shell.admin-route-fullview .admin-page .admin-route-searchbar,
+    body.admin-shell.admin-fullpage-view .admin-page .admin-fullpage-searchbar {
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+}
+
+
+
+body.admin-shell .admin-role-home-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+body.admin-shell .admin-role-home-hero,
+body.admin-shell .admin-role-home-section {
+    background: #ffffff;
+    border: 1px solid var(--aha-sync-border);
+    border-radius: 22px;
+    box-shadow: var(--aha-sync-shadow);
+}
+
+body.admin-shell .admin-role-home-hero {
+    padding: 24px;
+    display: grid;
+    grid-template-columns: minmax(0, 1.8fr) minmax(280px, 0.9fr);
+    gap: 18px;
+}
+
+body.admin-shell .admin-role-home-eyebrow {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .1em;
+    color: #5b7183;
+    text-transform: uppercase;
+}
+
+body.admin-shell .admin-role-home-title {
+    margin: 8px 0 0;
+    font-size: clamp(28px, 3.2vw, 40px);
+    line-height: 1.12;
+}
+
+body.admin-shell .admin-role-home-pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+body.admin-shell .admin-role-home-pill {
+    display: inline-flex;
+    align-items: center;
+    min-height: 34px;
+    padding: 0 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+body.admin-shell .admin-role-home-pill-primary {
+    background: #eaf7ef;
+    color: #145035;
+}
+
+body.admin-shell .admin-role-home-pill-scope {
+    background: #eef5fb;
+    color: #2b5878;
+}
+
+body.admin-shell .admin-role-home-pill-count {
+    background: #fff5e8;
+    color: #a25d00;
+}
+
+body.admin-shell .admin-role-home-description {
+    margin: 16px 0 0;
+    color: var(--aha-sync-ink-700);
+    font-size: 15px;
+    line-height: 1.7;
+}
+
+body.admin-shell .admin-role-home-cta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    margin-top: 20px;
+}
+
+body.admin-shell .admin-role-home-primary-hint {
+    color: #5b7183;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+body.admin-shell .admin-role-home-sidecard {
+    background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+    border: 1px solid #dfe9f3;
+    border-radius: 18px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+body.admin-shell .admin-role-home-side-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: #5b7183;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+
+body.admin-shell .admin-role-home-side-line {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+body.admin-shell .admin-role-home-side-label {
+    font-size: 12px;
+    color: #6f8396;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+}
+
+body.admin-shell .admin-role-home-side-value {
+    font-size: 15px;
+    font-weight: 800;
+    color: #18374f;
+    word-break: break-word;
+}
+
+body.admin-shell .admin-role-home-side-alert {
+    border: 1px solid #ffe1b8;
+    background: #fff7ea;
+    color: #8a5a00;
+    border-radius: 16px;
+    padding: 12px 14px;
+    font-size: 13px;
+    line-height: 1.6;
+    font-weight: 700;
+}
+
+body.admin-shell .admin-role-home-section {
+    padding: 22px 24px;
+}
+
+body.admin-shell .admin-role-home-section-head h2 {
+    margin: 0;
+    font-size: 24px;
+}
+
+body.admin-shell .admin-role-home-section-head p {
+    margin: 6px 0 0;
+    color: #62788c;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+body.admin-shell .admin-role-home-note-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+body.admin-shell .admin-role-home-note-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    background: #f7fbff;
+    border: 1px solid #dfe9f3;
+    border-radius: 16px;
+    padding: 12px 14px;
+    color: #274a65;
+    line-height: 1.6;
+    font-weight: 600;
+}
+
+body.admin-shell .admin-role-home-note-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #148647, #2cbc6b);
+    margin-top: 7px;
+    flex: 0 0 auto;
+}
+
+body.admin-shell .admin-role-home-empty {
+    margin-top: 18px;
+    border: 1px dashed #c8d8e7;
+    background: #f8fbfe;
+    border-radius: 18px;
+    padding: 18px;
+    color: #5e7488;
+    line-height: 1.7;
+    font-weight: 600;
+}
+
+body.admin-shell .admin-role-home-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+    gap: 16px;
+    margin-top: 18px;
+}
+
+body.admin-shell .admin-role-home-tab-card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    border: 1px solid #dbe7f0;
+    border-radius: 18px;
+    padding: 18px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+body.admin-shell .admin-role-home-tab-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+body.admin-shell .admin-role-home-tab-head h3 {
+    margin: 0;
+    font-size: 20px;
+    line-height: 1.35;
+}
+
+body.admin-shell .admin-role-home-tab-scope {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: #eef5fb;
+    color: #2b5878;
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+body.admin-shell .admin-role-home-tab-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+body.admin-shell .admin-role-home-tab-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+body.admin-shell .admin-role-home-tab-row-guardrail {
+    border: 1px dashed #f4cdd1;
+    border-radius: 14px;
+    background: #fff6f7;
+    padding: 10px 12px;
+}
+
+body.admin-shell .admin-role-home-tab-row-guardrail .admin-role-home-tab-label {
+    color: #b42318;
+}
+
+body.admin-shell .admin-role-home-tab-label {
+    font-size: 12px;
+    font-weight: 800;
+    color: #6f8396;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+}
+
+body.admin-shell .admin-role-home-tab-text {
+    color: #274a65;
+    font-size: 14px;
+    line-height: 1.65;
+    font-weight: 600;
+}
+
+body.admin-shell .admin-role-home-tab-foot {
+    display: flex;
+    justify-content: flex-end;
+}
+
+body.admin-shell .admin-role-home-root-section {
+    background: linear-gradient(180deg, #ffffff 0%, #f5fbf7 100%);
+}
+
+@media (max-width: 1024px) {
+    body.admin-shell .admin-role-home-hero {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    body.admin-shell .admin-role-home-shell {
+        gap: 14px;
+    }
+
+    body.admin-shell .admin-role-home-hero,
+    body.admin-shell .admin-role-home-section {
+        padding: 18px;
+        border-radius: 18px;
+    }
+
+    body.admin-shell .admin-role-home-tab-head {
+        flex-direction: column;
+    }
+
+    body.admin-shell .admin-role-home-tab-foot {
+        justify-content: stretch;
+    }
+
+    body.admin-shell .admin-role-home-tab-foot .button {
+        width: 100%;
+    }
+}
+
+body.admin-shell .admin-inline-progress {
+    position: sticky;
+    top: 66px;
+    z-index: 96;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin: 12px auto 0;
+    padding: 10px 16px;
+    border: 1px solid var(--aha-sync-border);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 12px 26px rgba(15, 41, 64, 0.14);
+    color: var(--aha-sync-ink-900);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+body.admin-shell .admin-inline-progress-spinner {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid rgba(200, 30, 30, 0.18);
+    border-top-color: var(--aha-sync-brand-600);
+    animation: adminInlineSpin .8s linear infinite;
+}
+
+body.admin-shell .admin-inline-progress-text {
+    line-height: 1;
+    white-space: nowrap;
+}
+
+@keyframes adminInlineSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }

@@ -7,7 +7,7 @@ using System.Web.UI;
 using System.Web.UI.WebControls;
 
 public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
-{// ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Tài khoản đã bị khóa.", "false", "false", "OK", "alert", ""), true);
+{// ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Tài khoản đã bị khóa.", "2600", "danger"), true);
     //ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Xóa ảnh thành công.", "1000", "warning"), true);
     DateTime_cl dt_cl = new DateTime_cl();
 
@@ -39,7 +39,7 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
-        check_login_cl.check_login_admin("none", "none");
+        AdminRolePolicy_cl.RequireSuperAdmin();
         if (!EnsureRootAdminAccess())
             return;
 
@@ -144,7 +144,7 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireSuperAdmin();
             TextBox1.Text = "";
             Label1.Text = "";
             Button11.Visible = false;
@@ -165,7 +165,7 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireSuperAdmin();
             using (dbDataContext db = new dbDataContext())
             {
                 var q = db.CaiDatChung_tbs.Where(p => p.phanloai_trang == "home".ToString()).FirstOrDefault();
@@ -279,7 +279,7 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireSuperAdmin();
             using (dbDataContext db = new dbDataContext())
             {
                 string _check_baotri = DropDownList1.SelectedValue.ToString();
@@ -313,7 +313,7 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireSuperAdmin();
             string _check_baotri = DropDownList1.SelectedValue.ToString();
             if (_check_baotri == "0")//k bảo trì
             {
@@ -344,13 +344,13 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
 
                 if (!dt_cl.check_date(_ngaygio_batdau))
                 {
-                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Ngày giờ bắt đầu không hợp lệ.", "false", "false", "OK", "alert", ""), true);
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Ngày giờ bắt đầu không hợp lệ.", "2600", "danger"), true);
                     return;
                 }
 
                 if (!dt_cl.check_date(_ngaygio_ketthuc))
                 {
-                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Ngày giờ kết thúc không hợp lệ.", "false", "false", "OK", "alert", ""), true);
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Ngày giờ kết thúc không hợp lệ.", "2600", "danger"), true);
                     return;
                 }
                 DateTime _batdau = DateTime.Parse(_ngaygio_batdau);
@@ -359,7 +359,7 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
                 {
 
 
-                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc.", "false", "false", "OK", "alert", ""), true);
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Thời gian bắt đầu phải nhỏ hơn thời gian kết thúc.", "2600", "danger"), true);
                     return;
                 }
                 using (dbDataContext db = new dbDataContext())
@@ -441,7 +441,7 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireSuperAdmin();
             using (dbDataContext db = new dbDataContext())
             {
                 var q = db.CaiDatChung_tbs.Where(p => p.phanloai_trang == "home".ToString()).FirstOrDefault();
@@ -532,7 +532,7 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireSuperAdmin();
             using (dbDataContext db = new dbDataContext())
             {
                 var q = db.CaiDatChung_tbs.Where(p => p.phanloai_trang == "home".ToString()).FirstOrDefault();
@@ -756,7 +756,7 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireSuperAdmin();
             txt_link_upload_2.Text = "";
             Label2.Text = "";
             Button22.Visible = false;
@@ -777,7 +777,7 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireSuperAdmin();
             txt_link_upload_3.Text = "";
             Label3.Text = "";
             Button33.Visible = false;
@@ -798,7 +798,7 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireSuperAdmin();
             txt_link_upload_shop.Text = "";
             Label4.Text = "";
             Button44.Visible = false;
@@ -819,7 +819,7 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireSuperAdmin();
             txt_link_upload_admin.Text = "";
             Label5.Text = "";
             Button55.Visible = false;
@@ -840,7 +840,7 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminRolePolicy_cl.RequireSuperAdmin();
             using (dbDataContext db = new dbDataContext())
             {
                 var qHome = GetOrCreateSetting(db, "home");

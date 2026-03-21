@@ -19,7 +19,7 @@ public partial class admin_phat_hanh_the : System.Web.UI.Page
 
     private string BuildAddUrl()
     {
-        return ResolveUrl("~/admin/phat-hanh-the.aspx?view=" + ViewAdd);
+        return ResolveUrl("~/admin/phat-hanh-the/them-moi.aspx");
     }
 
     private void ShowAddPage(bool bindData)
@@ -34,12 +34,21 @@ public partial class admin_phat_hanh_the : System.Web.UI.Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
+        AdminRolePolicy_cl.RequireSuperAdmin();
+
         try
         {
             but_show_add.NavigateUrl = BuildAddUrl();
             lnk_back_list.NavigateUrl = BuildListUrl();
             string view = (Request.QueryString["view"] ?? "").Trim().ToLowerInvariant();
             bool isAddView = view == ViewAdd;
+
+            if (isAddView && !AdminFullPageRoute_cl.IsTransferredRequest(Context))
+            {
+                Response.Redirect(BuildAddUrl(), false);
+                Context.ApplicationInstance.CompleteRequest();
+                return;
+            }
 
             if (isAddView)
             {
@@ -48,7 +57,7 @@ public partial class admin_phat_hanh_the : System.Web.UI.Page
 
             if (!IsPostBack)
             {
-                check_login_cl.check_login_admin(PermissionProfile_cl.HoSoTieuDung, PermissionProfile_cl.HoSoTieuDung);
+                AdminRolePolicy_cl.RequireSuperAdmin();
                 ViewState["title"] = "Phát hành thẻ";
                 if (!isAddView)
                     show_main();
@@ -57,7 +66,7 @@ public partial class admin_phat_hanh_the : System.Web.UI.Page
         catch (Exception ex)
         {
             Log_cl.Add_Log(ex.Message, "admin", ex.StackTrace);
-            Session["thongbao"] = thongbao_class.metro_dialog_onload("Thông báo", "Trang phát hành thẻ đang gặp lỗi dữ liệu. Vui lòng đăng nhập lại hoặc thử lại sau.", "false", "false", "OK", "alert", "");
+            Session["thongbao"] = thongbao_class.metro_notifi_onload("Thông báo", "Trang phát hành thẻ đang gặp lỗi dữ liệu. Vui lòng đăng nhập lại hoặc thử lại sau.", "2600", "warning");
             Response.Redirect("/admin/login.aspx", false);
             Context.ApplicationInstance.CompleteRequest();
         }
@@ -151,19 +160,19 @@ public partial class admin_phat_hanh_the : System.Web.UI.Page
         }
     }
 
-    // ================== UI: OPEN/CLOSE POPUP ==================
+    // ================== UI: OPEN/CLOSE FULL-PAGE ==================
     protected void but_show_add_Click(object sender, EventArgs e)
     {
         try
         {
-            check_login_cl.check_login_admin(PermissionProfile_cl.HoSoTieuDung, PermissionProfile_cl.HoSoTieuDung);
+            AdminRolePolicy_cl.RequireSuperAdmin();
             Response.Redirect(BuildAddUrl(), false);
             Context.ApplicationInstance.CompleteRequest();
         }
         catch (Exception ex)
         {
             Log_cl.Add_Log(ex.Message, "admin", ex.StackTrace);
-            RunClientScriptSafe(thongbao_class.metro_dialog("Lỗi", ex.Message, "false", "false", "OK", "alert", ""));
+            RunClientScriptSafe(thongbao_class.metro_notifi("Lỗi", ex.Message, "2600", "warning"));
         }
     }
 
@@ -244,7 +253,7 @@ public partial class admin_phat_hanh_the : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin(PermissionProfile_cl.HoSoTieuDung, PermissionProfile_cl.HoSoTieuDung);
+            AdminRolePolicy_cl.RequireSuperAdmin();
 
             string tk = (ddl_taikhoan.SelectedValue ?? "").Trim();
             int loai;
@@ -252,7 +261,7 @@ public partial class admin_phat_hanh_the : System.Web.UI.Page
 
             if (string.IsNullOrEmpty(tk) || loai <= 0)
             {
-                RunClientScriptSafe(thongbao_class.metro_dialog("Thông báo", "Vui lòng chọn tài khoản và loại thẻ.", "false", "false", "OK", "alert", ""));
+                RunClientScriptSafe(thongbao_class.metro_notifi("Thông báo", "Vui lòng chọn tài khoản và loại thẻ.", "2600", "warning"));
                 return;
             }
 
@@ -272,7 +281,7 @@ public partial class admin_phat_hanh_the : System.Web.UI.Page
                     if (acc == null)
                     {
                         try { tran.Rollback(); } catch { }
-                        RunClientScriptSafe(thongbao_class.metro_dialog("Thông báo", "Tài khoản không tồn tại.", "false", "false", "OK", "alert", ""));
+                        RunClientScriptSafe(thongbao_class.metro_notifi("Thông báo", "Tài khoản không tồn tại.", "2600", "warning"));
                         return;
                     }
 
@@ -280,7 +289,7 @@ public partial class admin_phat_hanh_the : System.Web.UI.Page
                     if (!IsCardTypeAllowedForScope(scope, loai))
                     {
                         try { tran.Rollback(); } catch { }
-                        RunClientScriptSafe(thongbao_class.metro_dialog("Thông báo", BuildInvalidCardTypeMessage(scope), "false", "false", "OK", "alert", ""));
+                        RunClientScriptSafe(thongbao_class.metro_notifi("Thông báo", BuildInvalidCardTypeMessage(scope), "2600", "warning"));
                         return;
                     }
 
@@ -329,7 +338,7 @@ public partial class admin_phat_hanh_the : System.Web.UI.Page
                 {
                     try { tran.Rollback(); } catch { }
                     Log_cl.Add_Log(ex2.Message, actor, ex2.StackTrace);
-                    RunClientScriptSafe(thongbao_class.metro_dialog("Thông báo", "Có lỗi: " + ex2.Message, "false", "false", "OK", "alert", ""));
+                    RunClientScriptSafe(thongbao_class.metro_notifi("Thông báo", "Có lỗi: " + ex2.Message, "2600", "warning"));
                 }
                 finally
                 {
@@ -341,7 +350,7 @@ public partial class admin_phat_hanh_the : System.Web.UI.Page
         catch (Exception ex)
         {
             Log_cl.Add_Log(ex.Message, "admin", ex.StackTrace);
-            RunClientScriptSafe(thongbao_class.metro_dialog("Lỗi", ex.Message, "false", "false", "OK", "alert", ""));
+            RunClientScriptSafe(thongbao_class.metro_notifi("Lỗi", ex.Message, "2600", "warning"));
         }
     }
 
@@ -410,7 +419,7 @@ public partial class admin_phat_hanh_the : System.Web.UI.Page
             {
                 try { tran.Rollback(); } catch { }
                 Log_cl.Add_Log(ex.Message, actor, ex.StackTrace);
-                RunClientScriptSafe(thongbao_class.metro_dialog("Thông báo", "Có lỗi: " + ex.Message, "false", "false", "OK", "alert", ""));
+                RunClientScriptSafe(thongbao_class.metro_notifi("Thông báo", "Có lỗi: " + ex.Message, "2600", "warning"));
             }
             finally
             {

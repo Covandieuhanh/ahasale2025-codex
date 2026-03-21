@@ -7,7 +7,7 @@ using System.Linq;
 
 public static class ShopEmailNotify_cl
 {
-    public sealed class TemplateContext
+    public sealed class TemplateMailData
     {
         public string ShopName { get; set; }
         public string ShopEmail { get; set; }
@@ -38,7 +38,7 @@ public static class ShopEmailNotify_cl
         string orderStatus = DonHangStateMachine_cl.GetOrderStatus(order);
         string orderUrl = BuildOrderDetailUrl(seller, order.id.ToString());
 
-        TemplateContext ctx = new TemplateContext
+        TemplateMailData ctx = new TemplateMailData
         {
             ShopName = ResolveShopName(seller),
             ShopEmail = shopEmail,
@@ -54,7 +54,7 @@ public static class ShopEmailNotify_cl
         return TrySendTemplate(db, templateCode, ctx, out error);
     }
 
-    public static bool TrySendTemplate(dbDataContext db, string templateCode, TemplateContext ctx, out string error)
+    public static bool TrySendTemplate(dbDataContext db, string templateCode, TemplateMailData ctx, out string error)
     {
         error = "";
         if (db == null || ctx == null) return false;
@@ -72,7 +72,7 @@ public static class ShopEmailNotify_cl
         return SendTextMail(db, ctx.ShopEmail, subject, body, out error);
     }
 
-    private static string ApplyTokens(string input, TemplateContext ctx)
+    private static string ApplyTokens(string input, TemplateMailData ctx)
     {
         if (string.IsNullOrEmpty(input)) return "";
 

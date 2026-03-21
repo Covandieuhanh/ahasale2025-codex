@@ -2,13 +2,13 @@
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="Server">
     <style>
-        /* view=... => render như trang độc lập, không còn popup/nền mờ */
+        /* Các route them-moi/bo-loc/chinh-sua/phan-quyen đều render theo full-page. */
         body.admin-shell #qltk-page-root.qltk-standalone-view {
             padding: 0 !important;
         }
 
-        body.admin-shell #qltk-page-root.qltk-standalone-view .aha-admin-modal-head-wrap,
-        body.admin-shell #qltk-page-root.qltk-standalone-view div[style*="position: fixed"][style*="height: 52px"][style*="z-index: 1041"] {
+        body.admin-shell #qltk-page-root.qltk-standalone-view .admin-route-panel-head,
+        body.admin-shell #qltk-page-root.qltk-standalone-view .admin-account-route-head {
             position: static !important;
             inset: auto !important;
             top: auto !important;
@@ -19,8 +19,8 @@
             padding: 0 !important;
         }
 
-        body.admin-shell #qltk-page-root.qltk-standalone-view .aha-admin-modal-overlay,
-        body.admin-shell #qltk-page-root.qltk-standalone-view div[style*="position: fixed"][style*="height: 100%"][style*="z-index: 1040"] {
+        body.admin-shell #qltk-page-root.qltk-standalone-view .admin-route-panel-body-wrap,
+        body.admin-shell #qltk-page-root.qltk-standalone-view .admin-account-route-body-wrap {
             position: static !important;
             inset: auto !important;
             top: auto !important;
@@ -37,30 +37,27 @@
             margin: 0 !important;
         }
 
-        body.admin-shell #qltk-page-root.qltk-standalone-view .aha-admin-modal-head-card,
-        body.admin-shell #qltk-page-root.qltk-standalone-view .aha-admin-modal-dialog,
-        body.admin-shell #qltk-page-root.qltk-standalone-view div[style*="max-width: 520px"],
-        body.admin-shell #qltk-page-root.qltk-standalone-view div[style*="max-width: 526px"],
-        body.admin-shell #qltk-page-root.qltk-standalone-view div[style*="max-width: 550px"],
-        body.admin-shell #qltk-page-root.qltk-standalone-view div[style*="max-width: 556px"],
-        body.admin-shell #qltk-page-root.qltk-standalone-view div[style*="max-width: 600px"],
-        body.admin-shell #qltk-page-root.qltk-standalone-view div[style*="max-width: 606px"] {
+        body.admin-shell #qltk-page-root.qltk-standalone-view .admin-route-panel-head-shell,
+        body.admin-shell #qltk-page-root.qltk-standalone-view .admin-route-panel-dialog,
+        body.admin-shell #qltk-page-root.qltk-standalone-view .admin-account-route-shell {
             margin: 0 !important;
             max-width: none !important;
             width: 100% !important;
         }
 
-        body.admin-shell #qltk-page-root.qltk-standalone-view .aha-admin-modal-head-card {
+        body.admin-shell #qltk-page-root.qltk-standalone-view .admin-route-panel-head-shell,
+        body.admin-shell #qltk-page-root.qltk-standalone-view .admin-account-route-head-card {
             border-radius: 16px 16px 0 0 !important;
             box-shadow: none !important;
         }
 
-        body.admin-shell #qltk-page-root.qltk-standalone-view .aha-admin-modal-head-card > .bg-white {
+        body.admin-shell #qltk-page-root.qltk-standalone-view .admin-route-panel-head-shell > .bg-white,
+        body.admin-shell #qltk-page-root.qltk-standalone-view .admin-account-route-head-card > .bg-white {
             border-radius: 16px 16px 0 0 !important;
         }
 
-        body.admin-shell #qltk-page-root.qltk-standalone-view .aha-admin-modal-body,
-        body.admin-shell #qltk-page-root.qltk-standalone-view .bg-white.border.bd-transparent[style*="padding-top: 52px"] {
+        body.admin-shell #qltk-page-root.qltk-standalone-view .admin-route-panel-body,
+        body.admin-shell #qltk-page-root.qltk-standalone-view .admin-account-route-body {
             border-radius: 0 0 16px 16px !important;
             box-shadow: var(--aha-sync-shadow) !important;
             padding: 12px 16px 24px !important;
@@ -163,21 +160,109 @@
         .admin-create-account-btn .mif-plus {
             font-size: 15px;
         }
+
+        .admin-role-quickview {
+            margin-bottom: 16px;
+            padding: 14px;
+            border-radius: 18px;
+            border: 1px solid #dce7f2;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            box-shadow: 0 12px 28px rgba(15, 41, 64, 0.06);
+        }
+
+        .admin-role-quickview-title {
+            margin: 0 0 4px;
+            font-size: 18px;
+            font-weight: 800;
+            color: #10314a;
+        }
+
+        .admin-role-quickview-note {
+            margin: 0 0 12px;
+            color: #688094;
+            font-size: 13px;
+        }
+
+        .admin-role-quick-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+        }
+
+        .admin-role-quick-card {
+            display: block;
+            padding: 14px;
+            border-radius: 16px;
+            border: 1px solid #dce7f2;
+            background: #fff;
+            text-decoration: none !important;
+            transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+        }
+
+        .admin-role-quick-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(15, 41, 64, 0.08);
+            border-color: #bfd4e6;
+        }
+
+        .admin-role-quick-card.active {
+            border-color: #d61f1f;
+            background: linear-gradient(180deg, #fff4f4 0%, #fff 100%);
+            box-shadow: 0 14px 26px rgba(214, 31, 31, 0.12);
+        }
+
+        .admin-role-quick-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .admin-role-quick-title {
+            color: #123148;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .admin-role-quick-count {
+            min-width: 42px;
+            height: 32px;
+            padding: 0 10px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #eef5fb;
+            color: #14354f;
+            font-weight: 800;
+            font-size: 13px;
+        }
+
+        .admin-role-quick-card.active .admin-role-quick-count {
+            background: #d61f1f;
+            color: #fff;
+        }
+
+        .admin-role-quick-desc {
+            margin-top: 8px;
+            color: #6b8092;
+            font-size: 12px;
+            line-height: 1.5;
+            min-height: 54px;
+        }
     </style>
 </asp:Content>
 
 <asp:Content ID="Content2" ContentPlaceHolderID="main" runat="Server">
     <div id="qltk-page-root" class="qltk-page-root <%= IsStandaloneViewByQuery() ? "qltk-standalone-view" : "" %> <%= GetAccountListScopeCssClass() %>">
-    <!-- ======================= POPUP PHÂN QUYỀN ======================= -->
+    <!-- ======================= FULL-PAGE PHÂN QUYỀN ======================= -->
     <asp:UpdatePanel ID="up_phanquyen" runat="server" UpdateMode="Conditional">
         <ContentTemplate>
             <asp:Panel ID="pn_phanquyen" runat="server" Visible="false" DefaultButton="but_phanquyen">
-                <div style="position: fixed; width: 100%; height: 52px; background-color: none; top: 0; left: 0; z-index: 1041!important;">
-                    <div style='top: 0; left: 0px; margin: 0 auto; max-width: 550px; opacity: 1;'>
-                        <div style='position: absolute; right: 18px; top: 14px; z-index: 1040!important'>
-                            <a href='#' class='fg-white d-inline' runat="server" id="A1" onserverclick="but_close_form_phanquyen_Click" title='Đóng'>
-                                <span class='mif mif-cross mif-2x fg-red fg-lightRed-hover'></span>
-                            </a>
+                <div class="admin-account-route-head admin-route-panel-head">
+                    <div class="admin-account-route-shell admin-account-route-head-card admin-route-panel-shell">
+                        <div class="admin-route-panel-actions">
+                            <asp:HyperLink ID="A1" runat="server" CssClass="admin-route-back-link">Quay lại danh sách</asp:HyperLink>
                         </div>
                         <div class="bg-white pl-4 pl-8-md pr-8-md pr-4" style="height: 52px;">
                             <div class="pt-4 text-upper text-bold">
@@ -188,57 +273,128 @@
                     </div>
                 </div>
 
-                <div style="position: fixed; width: 100%; height: 100%; top: 0; left: 0; overflow: auto; z-index: 1040!important; background-image: url('/uploads/images/bg1.png');">
-                    <div style='top: 0; left: 0; margin: 0 auto; max-width: 556px; opacity: 1;'>
-                        <div class="bg-white border bd-transparent pl-4 pl-8-md pr-8-md pr-4" style="padding-top: 52px">
+                <div class="admin-account-route-body-wrap admin-route-panel-body-wrap">
+                    <div class="admin-account-route-shell admin-route-panel-shell">
+                        <div class="bg-white border bd-transparent pl-4 pl-8-md pr-8-md pr-4 admin-account-route-body admin-route-panel-body">
                             <small>
                                 <div class="row">
                                     <div class="cell-lg-12">
+                                        <div class="admin-permission-scope-grid mt-4">
+                                            <div class="admin-permission-scope-card super-admin">
+                                                <span class="admin-permission-scope-tag">Super Admin</span>
+                                                <h3>Tài sản lõi và cấu trúc hệ thống</h3>
+                                                <p>Chỉ Super Admin mới được cấu hình ví token điểm, điều phối điểm lõi, cấp quyền admin và thay đổi cấu trúc phân quyền.</p>
+                                            </div>
+                                            <div class="admin-permission-scope-card">
+                                                <span class="admin-permission-scope-tag">Tầng Home</span>
+                                                <h3>Tài khoản tầng khách hàng</h3>
+                                                <p>Duyệt yêu cầu điểm và xử lý hồ sơ thuộc tầng khách hàng. Chỉ xem điểm, không thao tác trực tiếp tài sản lõi.</p>
+                                            </div>
+                                            <div class="admin-permission-scope-card">
+                                                <span class="admin-permission-scope-tag">Tầng Home</span>
+                                                <h3>Tài khoản tầng cộng tác phát triển</h3>
+                                                <p>Duyệt yêu cầu điểm của hồ sơ lao động và cộng tác phát triển theo đúng phạm vi được giao.</p>
+                                            </div>
+                                            <div class="admin-permission-scope-card">
+                                                <span class="admin-permission-scope-tag">Tầng Home</span>
+                                                <h3>Tài khoản tầng đồng hành hệ sinh thái</h3>
+                                                <p>Duyệt yêu cầu điểm của hồ sơ gắn kết hệ sinh thái. Không được tự cộng trừ tài sản lõi.</p>
+                                            </div>
+                                            <div class="admin-permission-scope-card">
+                                                <span class="admin-permission-scope-tag">Hệ Shop</span>
+                                                <h3>Tài khoản gian hàng đối tác</h3>
+                                                <p>Quản trị tài khoản shop, duyệt nghiệp vụ shop và các yêu cầu điểm phát sinh trong phạm vi gian hàng đối tác.</p>
+                                            </div>
+                                            <div class="admin-permission-scope-card">
+                                                <span class="admin-permission-scope-tag">Ahasale.vn</span>
+                                                <h3>Tài khoản quản lý nội dung web Ahasale.vn</h3>
+                                                <p>Chỉ chỉnh sửa nội dung văn bản hiển thị trên web Ahasale.vn. Không quản lý menu, banner, bài viết tổng quan.</p>
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-3">
+                                            <label class="fw-600">Mẫu vai trò admin</label>
+                                            <div>
+                                                <asp:DropDownList ID="ddl_admin_permission_preset" runat="server" data-role="select">
+                                                    <asp:ListItem Value="" Text="Tự chọn thủ công"></asp:ListItem>
+                                                    <asp:ListItem Value="home_customer" Text="Admin khách hàng"></asp:ListItem>
+                                                    <asp:ListItem Value="home_development" Text="Admin cộng tác phát triển"></asp:ListItem>
+                                                    <asp:ListItem Value="home_ecosystem" Text="Admin đồng hành hệ sinh thái"></asp:ListItem>
+                                                    <asp:ListItem Value="shop_partner" Text="Admin gian hàng đối tác"></asp:ListItem>
+                                                    <asp:ListItem Value="home_content" Text="Admin nội dung web"></asp:ListItem>
+                                                </asp:DropDownList>
+                                            </div>
+                                            <small class="fg-gray">Mẫu này chỉ gán quyền nghiệp vụ theo đúng tầng. Các thao tác tiền, quyền, điểm lõi vẫn chỉ Super Admin mới được thao tác trực tiếp.</small>
+                                        </div>
 
                                         <div class="mt-3">
                                             <div class="mt-1">
-                                                <asp:CheckBox ID="check_all_quyen_quanlynhanvien" runat="server" CssClass="text-bold" Text="QUẢN LÝ TÀI KHOẢN" OnCheckedChanged="check_all_quyen_quanlynhanvien_CheckedChanged" AutoPostBack="true" />
+                                                <asp:CheckBox ID="check_all_quyen_quanlynhanvien" runat="server" CssClass="text-bold" Text="SUPER ADMIN: CẤU TRÚC CỔNG ADMIN / PHÂN QUYỀN" />
                                             </div>
-                                            <asp:CheckBoxList ID="check_list_quyen_quanlynhanvien" runat="server" AutoPostBack="true" OnSelectedIndexChanged="check_list_quyen_quanlynhanvien_SelectedIndexChanged">
-                                                <asp:ListItem Text="Tạo + phân quyền tài khoản admin" Value="5" Selected="false"></asp:ListItem>
-                                                <asp:ListItem Text="Các quyền còn lại (tạm thời)" Value="1" Selected="false"></asp:ListItem>
+                                            <asp:CheckBoxList ID="check_list_quyen_quanlynhanvien" runat="server">
+                                                    <asp:ListItem Text="Super Admin: tạo tài khoản admin và gán 5 vai trò vận hành" Value="5" Selected="false"></asp:ListItem>
+                                                    <asp:ListItem Text="Super Admin: các quyền cấu trúc admin mở rộng (tạm thời)" Value="1" Selected="false"></asp:ListItem>
                                             </asp:CheckBoxList>
                                         </div>
 
                                         <div class="mt-3">
                                             <div class="mt-1">
-                                                <asp:CheckBox ID="check_all_quyen_1" runat="server" CssClass="text-bold" Text="CHUYỂN ĐIỂM" OnCheckedChanged="check_all_quyen_1_CheckedChanged" AutoPostBack="true" />
+                                                <asp:CheckBox ID="check_all_quyen_1" runat="server" CssClass="text-bold" Text="SUPER ADMIN: TÀI SẢN LÕI / ĐIỀU PHỐI ĐIỂM" />
                                             </div>
-                                            <asp:CheckBoxList ID="check_list_quyen_1" runat="server" AutoPostBack="true" OnSelectedIndexChanged="check_list_quyen_1_SelectedIndexChanged">
-                                                <asp:ListItem Text="Xem lịch sử chuyển điểm (Toàn hệ thống)" Value="q1_6" Selected="false"></asp:ListItem>
-                                                <asp:ListItem Text="Xem lịch sử chuyển điểm (Được phân quyền)" Value="q1_7" Selected="false"></asp:ListItem>
-                                                <asp:ListItem Text="Chuyển điểm đến các tài khoản tổng" Value="q1_1" Selected="false"></asp:ListItem>
-                                                <asp:ListItem Text="Chuyển điểm từ tài khoản tổng Khách hàng đến các tài khoản Khách hàng" Value="q1_2" Selected="false"></asp:ListItem>
-                                                <asp:ListItem Text="Chuyển điểm từ tài khoản tổng Gian hàng đối tác đến các tài khoản Gian hàng đối tác" Value="q1_3" Selected="false"></asp:ListItem>
-                                                <asp:ListItem Text="Chuyển điểm từ tài khoản tổng Đồng hành hệ sinh thái đến các tài khoản Đồng hành hệ sinh thái" Value="q1_4" Selected="false"></asp:ListItem>
-                                                <asp:ListItem Text="Chuyển điểm từ tài khoản tổng Cộng tác phát triển đến các tài khoản Cộng tác phát triển" Value="q1_5" Selected="false"></asp:ListItem>
+                                            <asp:CheckBoxList ID="check_list_quyen_1" runat="server">
+                                                    <asp:ListItem Text="Super Admin: tài khoản tài sản lõi / ví token điểm / bridge đối soát" Value="q2_1" Selected="false"></asp:ListItem>
+                                                    <asp:ListItem Text="Super Admin: xem lịch sử chuyển điểm toàn hệ thống" Value="q1_6" Selected="false"></asp:ListItem>
+                                                    <asp:ListItem Text="Super Admin: xem lịch sử chuyển điểm theo phân quyền vận hành" Value="q1_7" Selected="false"></asp:ListItem>
+                                                    <asp:ListItem Text="Super Admin: chuyển điểm đến các tài khoản tổng" Value="q1_1" Selected="false"></asp:ListItem>
+                                                    <asp:ListItem Text="Super Admin: điều phối điểm cho tài khoản tầng khách hàng" Value="q1_2" Selected="false"></asp:ListItem>
+                                                    <asp:ListItem Text="Super Admin: điều phối điểm cho tài khoản gian hàng đối tác" Value="q1_3" Selected="false"></asp:ListItem>
+                                                    <asp:ListItem Text="Super Admin: điều phối điểm cho tài khoản đồng hành hệ sinh thái" Value="q1_4" Selected="false"></asp:ListItem>
+                                                    <asp:ListItem Text="Super Admin: điều phối điểm cho tài khoản cộng tác phát triển" Value="q1_5" Selected="false"></asp:ListItem>
                                             </asp:CheckBoxList>
                                         </div>
 
                                         <div class="mt-3">
                                             <div class="mt-1">
-                                                <asp:CheckBox ID="check_all_quyen_hoso" runat="server" CssClass="text-bold" Text="QUYỀN THEO 5 HỒ SƠ" OnCheckedChanged="check_all_quyen_hoso_CheckedChanged" AutoPostBack="true" />
+                                                <asp:CheckBox ID="check_all_quyen_home_customer" runat="server" CssClass="text-bold" Text="TÀI KHOẢN TẦNG KHÁCH HÀNG" />
                                             </div>
-                                            <asp:CheckBoxList ID="check_list_quyen_hoso" runat="server" AutoPostBack="true" OnSelectedIndexChanged="check_list_quyen_hoso_SelectedIndexChanged">
-                                                <asp:ListItem Text="Hồ sơ quyền tiêu dùng (điểm A, bán thẻ/chuyển điểm A)" Value="q2_1" Selected="false"></asp:ListItem>
-                                                <asp:ListItem Text="Hồ sơ quyền ưu đãi (duyệt ghi nhận điểm + đổi tầng Khách hàng)" Value="q2_2" Selected="false"></asp:ListItem>
-                                                <asp:ListItem Text="Hồ sơ hành vi lao động (duyệt ghi nhận điểm + đổi tầng Cộng tác phát triển)" Value="q2_3" Selected="false"></asp:ListItem>
-                                                <asp:ListItem Text="Hồ sơ chỉ số gắn kết (duyệt ghi nhận điểm + đổi tầng Đồng hành hệ sinh thái)" Value="q2_4" Selected="false"></asp:ListItem>
-                                                <asp:ListItem Text="Hồ sơ gian hàng đối tác (duyệt ghi nhận điểm ShopOnly tiêu dùng + ưu đãi)" Value="q2_5" Selected="false"></asp:ListItem>
+                                            <asp:CheckBoxList ID="check_list_quyen_home_customer" runat="server">
+                                                <asp:ListItem Text="Xem hồ sơ khách hàng, duyệt yêu cầu điểm theo rule hệ thống và chỉ xử lý đúng phạm vi tầng khách hàng" Value="q2_2" Selected="false"></asp:ListItem>
                                             </asp:CheckBoxList>
                                         </div>
 
                                         <div class="mt-3">
                                             <div class="mt-1">
-                                                <asp:CheckBox ID="check_all_quyen_noidung_home" runat="server" CssClass="text-bold" Text="NỘI DUNG TRANG CHỦ HOME" OnCheckedChanged="check_all_quyen_noidung_home_CheckedChanged" AutoPostBack="true" />
+                                                <asp:CheckBox ID="check_all_quyen_home_development" runat="server" CssClass="text-bold" Text="TÀI KHOẢN TẦNG CỘNG TÁC PHÁT TRIỂN" />
                                             </div>
-                                            <asp:CheckBoxList ID="check_list_quyen_noidung_home" runat="server" AutoPostBack="true" OnSelectedIndexChanged="check_list_quyen_noidung_home_SelectedIndexChanged">
-                                                <asp:ListItem Text="Quản lý nội dung hiển thị trang chủ Home (mở rộng cho các vị trí mới sau này)" Value="q3_1" Selected="false"></asp:ListItem>
+                                            <asp:CheckBoxList ID="check_list_quyen_home_development" runat="server">
+                                                <asp:ListItem Text="Xem hồ sơ cộng tác phát triển, duyệt yêu cầu điểm đúng tầng và không tự ý can thiệp tài sản lõi" Value="q2_3" Selected="false"></asp:ListItem>
+                                            </asp:CheckBoxList>
+                                        </div>
+
+                                        <div class="mt-3">
+                                            <div class="mt-1">
+                                                <asp:CheckBox ID="check_all_quyen_home_ecosystem" runat="server" CssClass="text-bold" Text="TÀI KHOẢN TẦNG ĐỒNG HÀNH HỆ SINH THÁI" />
+                                            </div>
+                                            <asp:CheckBoxList ID="check_list_quyen_home_ecosystem" runat="server">
+                                                <asp:ListItem Text="Xem hồ sơ đồng hành hệ sinh thái, duyệt yêu cầu điểm đúng tầng và chỉ vận hành trong phạm vi hệ sinh thái" Value="q2_4" Selected="false"></asp:ListItem>
+                                            </asp:CheckBoxList>
+                                        </div>
+
+                                        <div class="mt-3">
+                                            <div class="mt-1">
+                                                <asp:CheckBox ID="check_all_quyen_shop_partner" runat="server" CssClass="text-bold" Text="TÀI KHOẢN GIAN HÀNG ĐỐI TÁC" />
+                                            </div>
+                                            <asp:CheckBoxList ID="check_list_quyen_shop_partner" runat="server">
+                                                <asp:ListItem Text="Quản trị tài khoản shop, duyệt nghiệp vụ shop và các yêu cầu điểm phát sinh trong phạm vi gian hàng đối tác" Value="q2_5" Selected="false"></asp:ListItem>
+                                            </asp:CheckBoxList>
+                                        </div>
+
+                                        <div class="mt-3">
+                                            <div class="mt-1">
+                                                <asp:CheckBox ID="check_all_quyen_home_content" runat="server" CssClass="text-bold" Text="TÀI KHOẢN QUẢN LÝ NỘI DUNG WEB AHASALE.VN" />
+                                            </div>
+                                            <asp:CheckBoxList ID="check_list_quyen_home_content" runat="server">
+                                                <asp:ListItem Text="Chỉnh sửa nội dung văn bản hiển thị trên web Ahasale.vn; không quản lý menu, banner, bài viết tổng quan và không can thiệp dữ liệu tài sản lõi" Value="q3_1" Selected="false"></asp:ListItem>
                                             </asp:CheckBoxList>
                                         </div>
                                     </div>
@@ -258,24 +414,18 @@
 
     <asp:UpdateProgress ID="UpdateProgress4" runat="server" AssociatedUpdatePanelID="up_phanquyen">
         <ProgressTemplate>
-            <div class="bg-dark fixed-top h-100 w-100" style="opacity: 0.9; z-index: 99999!important">
-                <div style="padding-top: 45vh;">
-                    <div class="mx-auto color-style activity-atom" data-role="activity" data-type="atom" data-style="color" data-role-activity="true"><span class="electron"></span><span class="electron"></span><span class="electron"></span></div>
-                </div>
-            </div>
+            <div class="admin-inline-progress" role="status" aria-live="polite"><span class="admin-inline-progress-spinner"></span><span class="admin-inline-progress-text">Đang xử lý...</span></div>
         </ProgressTemplate>
     </asp:UpdateProgress>
 
-    <!-- ======================= POPUP ADD/EDIT ======================= -->
+    <!-- ======================= FULL-PAGE ADD/EDIT ======================= -->
     <asp:UpdatePanel ID="up_add" runat="server" UpdateMode="Conditional">
         <ContentTemplate>
             <asp:Panel ID="pn_add" runat="server" Visible="false" DefaultButton="but_add_edit">
-                <div style="position: fixed; width: 100%; height: 52px; background-color: none; top: 0; left: 0; z-index: 1041!important;">
-                    <div style='top: 0; left: 0px; margin: 0 auto; max-width: 600px; opacity: 1;'>
-                        <div style='position: absolute; right: 18px; top: 14px; z-index: 1040!important'>
-                            <a href='#' class='fg-white d-inline' id="close_add" runat="server" onserverclick="but_close_form_add_Click" title='Đóng'>
-                                <span class='mif mif-cross mif-2x fg-red fg-lightRed-hover'></span>
-                            </a>
+                <div class="admin-account-route-head admin-route-panel-head">
+                    <div class="admin-account-route-shell admin-account-route-head-card admin-route-panel-shell">
+                        <div class="admin-route-panel-actions">
+                            <asp:HyperLink ID="close_add" runat="server" CssClass="admin-route-back-link">Quay lại danh sách</asp:HyperLink>
                         </div>
                         <div class="bg-white pl-4 pl-8-md pr-8-md pr-4" style="height: 52px;">
                             <div class="pt-4 text-upper text-bold">
@@ -286,9 +436,9 @@
                     </div>
                 </div>
 
-                <div style="position: fixed; width: 100%; height: 100%; top: 0; left: 0; overflow: auto; z-index: 1040!important; background-image: url('/uploads/images/bg1.png');">
-                    <div style='top: 0; left: 0; margin: 0 auto; max-width: 606px; opacity: 1;'>
-                        <div class="bg-white border bd-transparent pl-4 pl-8-md pr-8-md pr-4" style="padding-top: 52px">
+                <div class="admin-account-route-body-wrap admin-route-panel-body-wrap">
+                    <div class="admin-account-route-shell admin-route-panel-shell">
+                        <div class="bg-white border bd-transparent pl-4 pl-8-md pr-8-md pr-4 admin-account-route-body admin-route-panel-body">
                             <div class="row">
                                 <div class="cell-lg-12">
 
@@ -319,6 +469,21 @@
                                                 <asp:ListItem Value="Tài khoản tổng" Text="Tài khoản tổng"></asp:ListItem>
                                             </asp:DropDownList>
                                         </div>
+                                    </asp:Panel>
+
+                                    <asp:Panel ID="pn_admin_create_preset" runat="server" CssClass="mt-3" Visible="false">
+                                        <label class="fw-600">Vai trò admin khởi tạo</label>
+                                        <div>
+                                            <asp:DropDownList ID="ddl_admin_create_preset" runat="server" data-role="select">
+                                                <asp:ListItem Value="" Text="Tự gán sau khi tạo"></asp:ListItem>
+                                                <asp:ListItem Value="home_customer" Text="Admin khách hàng"></asp:ListItem>
+                                                <asp:ListItem Value="home_development" Text="Admin cộng tác phát triển"></asp:ListItem>
+                                                <asp:ListItem Value="home_ecosystem" Text="Admin đồng hành hệ sinh thái"></asp:ListItem>
+                                                <asp:ListItem Value="shop_partner" Text="Admin gian hàng đối tác"></asp:ListItem>
+                                                <asp:ListItem Value="home_content" Text="Admin nội dung web"></asp:ListItem>
+                                            </asp:DropDownList>
+                                        </div>
+                                        <small class="fg-gray">Nếu chọn mẫu, tài khoản admin sẽ được gán đúng 1 vai trò chính ngay khi tạo. Nếu để trống, Super Admin sẽ phân quyền thủ công ở bước sau.</small>
                                     </asp:Panel>
 
 <asp:Panel ID="pn_tang_home" runat="server" CssClass="mt-3" Visible="false">
@@ -455,24 +620,18 @@
 
     <asp:UpdateProgress ID="UpdateProgress5" runat="server" AssociatedUpdatePanelID="up_add">
         <ProgressTemplate>
-            <div class="bg-dark fixed-top h-100 w-100" style="opacity: 0.9; z-index: 99999!important">
-                <div style="padding-top: 45vh;">
-                    <div class="mx-auto color-style activity-atom" data-role="activity" data-type="atom" data-style="color" data-role-activity="true"><span class="electron"></span><span class="electron"></span><span class="electron"></span></div>
-                </div>
-            </div>
+            <div class="admin-inline-progress" role="status" aria-live="polite"><span class="admin-inline-progress-spinner"></span><span class="admin-inline-progress-text">Đang xử lý...</span></div>
         </ProgressTemplate>
     </asp:UpdateProgress>
 
-    <!-- ======================= POPUP LỌC (NEW) ======================= -->
+    <!-- ======================= FULL-PAGE LỌC ======================= -->
     <asp:UpdatePanel ID="up_filter" runat="server" UpdateMode="Conditional">
         <ContentTemplate>
             <asp:Panel ID="pn_filter" runat="server" Visible="false" DefaultButton="but_apdung_loc">
-                <div style="position: fixed; width: 100%; height: 52px; background-color: none; top: 0; left: 0; z-index: 1041!important;">
-                    <div style='top: 0; left: 0px; margin: 0 auto; max-width: 520px; opacity: 1;'>
-                        <div style='position: absolute; right: 18px; top: 14px; z-index: 1040!important'>
-                            <a href='#' class='fg-white d-inline' id="close_filter" runat="server" onserverclick="but_close_form_filter_Click" title='Đóng'>
-                                <span class='mif mif-cross mif-2x fg-red fg-lightRed-hover'></span>
-                            </a>
+                <div class="admin-account-route-head admin-route-panel-head">
+                    <div class="admin-account-route-shell admin-account-route-head-card admin-route-panel-shell">
+                        <div class="admin-route-panel-actions">
+                            <asp:HyperLink ID="close_filter" runat="server" CssClass="admin-route-back-link">Quay lại danh sách</asp:HyperLink>
                         </div>
                         <div class="bg-white pl-4 pl-8-md pr-8-md pr-4" style="height: 52px;">
                             <div class="pt-4 text-upper text-bold">
@@ -483,9 +642,9 @@
                     </div>
                 </div>
 
-                <div style="position: fixed; width: 100%; height: 100%; top: 0; left: 0; overflow: auto; z-index: 1040!important; background-image: url('/uploads/images/bg1.png');">
-                    <div style='top: 0; left: 0; margin: 0 auto; max-width: 526px; opacity: 1;'>
-                        <div class="bg-white border bd-transparent pl-4 pl-8-md pr-8-md pr-4" style="padding-top: 52px">
+                <div class="admin-account-route-body-wrap admin-route-panel-body-wrap">
+                    <div class="admin-account-route-shell admin-route-panel-shell">
+                        <div class="bg-white border bd-transparent pl-4 pl-8-md pr-8-md pr-4 admin-account-route-body admin-route-panel-body">
                             <div class="row">
                                 <div class="cell-lg-12">
 
@@ -516,6 +675,22 @@
                                         </div>
                                     </div>
 
+                                    <asp:Panel ID="pn_filter_admin_role" runat="server" CssClass="mt-3">
+                                        <label class="fw-600 fg-red">Nhóm admin nghiệp vụ</label>
+                                        <div>
+                                            <asp:DropDownList ID="ddl_loc_admin_role" runat="server" data-role="select">
+                                                <asp:ListItem Value="" Text="-- Tất cả nhóm admin --"></asp:ListItem>
+                                                <asp:ListItem Value="super_admin" Text="Super Admin"></asp:ListItem>
+                                                <asp:ListItem Value="home_customer" Text="Admin khách hàng"></asp:ListItem>
+                                                <asp:ListItem Value="home_development" Text="Admin cộng tác phát triển"></asp:ListItem>
+                                                <asp:ListItem Value="home_ecosystem" Text="Admin đồng hành hệ sinh thái"></asp:ListItem>
+                                                <asp:ListItem Value="shop_partner" Text="Admin gian hàng đối tác"></asp:ListItem>
+                                                <asp:ListItem Value="home_content" Text="Admin nội dung web"></asp:ListItem>
+                                            </asp:DropDownList>
+                                        </div>
+                                        <small class="fg-gray">Bộ lọc này giúp Super Admin tách riêng 5 nhóm admin chính như sơ đồ vận hành đã chốt.</small>
+                                    </asp:Panel>
+
                                 </div>
                             </div>
 
@@ -534,11 +709,7 @@
 
     <asp:UpdateProgress ID="UpdateProgress6" runat="server" AssociatedUpdatePanelID="up_filter">
         <ProgressTemplate>
-            <div class="bg-dark fixed-top h-100 w-100" style="opacity: 0.9; z-index: 99999!important">
-                <div style="padding-top: 45vh;">
-                    <div class="mx-auto color-style activity-atom" data-role="activity" data-type="atom" data-style="color" data-role-activity="true"><span class="electron"></span><span class="electron"></span><span class="electron"></span></div>
-                </div>
-            </div>
+            <div class="admin-inline-progress" role="status" aria-live="polite"><span class="admin-inline-progress-spinner"></span><span class="admin-inline-progress-text">Đang xử lý...</span></div>
         </ProgressTemplate>
     </asp:UpdateProgress>
 
@@ -548,7 +719,7 @@
 
             <div class="pos-relative pb-11">
                 <asp:HiddenField ID="hf_selected_taikhoan" runat="server" ClientIDMode="Static" />
-                <div id="menutop-tool-bc" style="position: fixed; top: 52px; width: 100%; z-index: 4">
+                <div id="menutop-tool-bc" class="aha-admin-toolbar">
                     <ul class="h-menu bg-white">
 
                         <!-- nút tạo tài khoản admin -->
@@ -594,12 +765,20 @@
                     </ul>
                 </div>
 
-                <div id="timkiem-fixtop-bc" style="position: fixed; right: 10px; top: 58px; width: 240px; z-index: 4" class="d-none d-block-sm">
+                <div id="timkiem-fixtop-bc" class="aha-admin-toolbar-search d-none d-block-sm">
                     <asp:TextBox MaxLength="50" data-prepend="<span class='mif mif-search'></span>" ID="txt_timkiem" runat="server" placeholder="Tìm bất kỳ dữ liệu" data-role="input" CssClass="input-small" AutoPostBack="false" data-sync-key="qltk-search" data-enter-click="but_timkiem"></asp:TextBox>
                 </div>
             </div>
 
             <div class="p-3">
+                <asp:PlaceHolder ID="ph_admin_role_quickview" runat="server" Visible="false">
+                    <div class="admin-role-quickview">
+                        <div class="admin-role-quickview-title">5 nhóm admin nghiệp vụ</div>
+                        <div class="admin-role-quickview-note">Từ đây Super Admin có thể nhìn nhanh số lượng tài khoản ở từng vai trò và bấm vào từng nhóm để lọc ngay.</div>
+                        <asp:Literal ID="lit_admin_role_quickview" runat="server"></asp:Literal>
+                    </div>
+                </asp:PlaceHolder>
+
                 <div class="d-none-sm d-block">
                     <asp:TextBox MaxLength="50" data-prepend="<span class='mif mif-search'></span>" ID="txt_timkiem1" runat="server" placeholder="Tìm bất kỳ dữ liệu" data-role="input" AutoPostBack="false" data-sync-key="qltk-search" data-enter-click="but_timkiem"></asp:TextBox>
                 </div>
@@ -616,7 +795,7 @@
 
                 <div class="row">
                     <div class="cell-lg-12">
-                        <div class="bcorn-fix-title-table-container">
+                        <div class="bcorn-fix-title-table-container aha-admin-grid">
                             <table class="bcorn-fix-title-table">
                                 <thead>
                                     <tr class="">
@@ -689,6 +868,9 @@
                                                             <%# Convert.ToBoolean(Eval("IsBlocked")) ? "Đã khóa Home" : "Home hoạt động" %>
                                                         </div>
                                                     </asp:PlaceHolder>
+                                                    <asp:PlaceHolder ID="PlaceHolderAdminRoleSummary" runat="server" Visible='<%# Convert.ToBoolean(Eval("IsAdminScope")) && !string.IsNullOrEmpty(Eval("AdminVaiTroHienThi") as string) %>'>
+                                                        <div class="mt-1 fg-gray"><small>Vai trò: <%# Eval("AdminVaiTroHienThi") %></small></div>
+                                                    </asp:PlaceHolder>
                                                 </td>
                                                 <td class="text-left qltkc-balance">
                                                     <img src="/uploads/images/dong-a.png" width="20" />
@@ -760,11 +942,7 @@
 
     <asp:UpdateProgress ID="UpdateProgress2" runat="server" AssociatedUpdatePanelID="up_main">
         <ProgressTemplate>
-            <div class="bg-dark fixed-top h-100 w-100" style="opacity: 0.9; z-index: 99999!important">
-                <div style="padding-top: 45vh;">
-                    <div class="mx-auto color-style activity-atom" data-role="activity" data-type="atom" data-style="color" data-role-activity="true"><span class="electron"></span><span class="electron"></span><span class="electron"></span></div>
-                </div>
-            </div>
+            <div class="admin-inline-progress" role="status" aria-live="polite"><span class="admin-inline-progress-spinner"></span><span class="admin-inline-progress-text">Đang xử lý...</span></div>
         </ProgressTemplate>
     </asp:UpdateProgress>
 
@@ -813,4 +991,165 @@
             }
         }
     </script>
+
+    <script type="text/javascript">
+        (function () {
+            function toArray(nodes) {
+                return Array.prototype.slice.call(nodes || []);
+            }
+
+            function getInputs(containerId) {
+                var host = document.getElementById(containerId);
+                if (!host) {
+                    return [];
+                }
+                return toArray(host.querySelectorAll('input[type="checkbox"]'));
+            }
+
+            function syncMaster(masterId, listId) {
+                var master = document.getElementById(masterId);
+                var inputs = getInputs(listId);
+                if (!master) {
+                    return;
+                }
+                if (!inputs.length) {
+                    master.checked = false;
+                    master.indeterminate = false;
+                    return;
+                }
+                var checkedCount = inputs.filter(function (item) { return item.checked; }).length;
+                master.checked = checkedCount === inputs.length;
+                master.indeterminate = checkedCount > 0 && checkedCount < inputs.length;
+            }
+
+            function bindGroup(masterId, listId) {
+                var master = document.getElementById(masterId);
+                var inputs = getInputs(listId);
+                if (!master || master.getAttribute('data-admin-bound') === '1') {
+                    syncMaster(masterId, listId);
+                    return;
+                }
+
+                master.addEventListener('change', function () {
+                    var items = getInputs(listId);
+                    items.forEach(function (item) {
+                        item.checked = master.checked;
+                    });
+                    syncMaster(masterId, listId);
+                });
+
+                inputs.forEach(function (item) {
+                    item.addEventListener('change', function () {
+                        syncMaster(masterId, listId);
+                    });
+                });
+
+                master.setAttribute('data-admin-bound', '1');
+                syncMaster(masterId, listId);
+            }
+
+            function bindPreset(selectId, pairs) {
+                var select = document.getElementById(selectId);
+                if (!select || select.getAttribute('data-admin-preset-bound') === '1') {
+                    return;
+                }
+
+                select.addEventListener('change', function () {
+                    var permissionMap = {
+                        home_customer: ['q2_2'],
+                        home_development: ['q2_3'],
+                        home_ecosystem: ['q2_4'],
+                        shop_partner: ['q2_5'],
+                        home_content: ['q3_1']
+                    };
+                    var selected = permissionMap[select.value] || [];
+                    pairs.forEach(function (pair) {
+                        getInputs(pair.listId).forEach(function (item) {
+                            item.checked = false;
+                        });
+                    });
+                    selected.forEach(function (code) {
+                        pairs.forEach(function (pair) {
+                            getInputs(pair.listId).forEach(function (item) {
+                                if ((item.value || '').trim() === code) {
+                                    item.checked = true;
+                                }
+                            });
+                        });
+                    });
+                    pairs.forEach(function (pair) {
+                        syncMaster(pair.masterId, pair.listId);
+                    });
+                });
+
+                select.setAttribute('data-admin-preset-bound', '1');
+            }
+
+            function initAdminPermissionPage() {
+                var pairs = [
+                    { masterId: '<%= check_all_quyen_quanlynhanvien.ClientID %>', listId: '<%= check_list_quyen_quanlynhanvien.ClientID %>' },
+                    { masterId: '<%= check_all_quyen_1.ClientID %>', listId: '<%= check_list_quyen_1.ClientID %>' },
+                    { masterId: '<%= check_all_quyen_home_customer.ClientID %>', listId: '<%= check_list_quyen_home_customer.ClientID %>' },
+                    { masterId: '<%= check_all_quyen_home_development.ClientID %>', listId: '<%= check_list_quyen_home_development.ClientID %>' },
+                    { masterId: '<%= check_all_quyen_home_ecosystem.ClientID %>', listId: '<%= check_list_quyen_home_ecosystem.ClientID %>' },
+                    { masterId: '<%= check_all_quyen_shop_partner.ClientID %>', listId: '<%= check_list_quyen_shop_partner.ClientID %>' },
+                    { masterId: '<%= check_all_quyen_home_content.ClientID %>', listId: '<%= check_list_quyen_home_content.ClientID %>' }
+                ];
+
+                pairs.forEach(function (pair) {
+                    bindGroup(pair.masterId, pair.listId);
+                    syncMaster(pair.masterId, pair.listId);
+                });
+                bindPreset('<%= ddl_admin_permission_preset.ClientID %>', pairs);
+            }
+
+            function syncAdminCreatePresetVisibility() {
+                var accountTypeSelect = document.getElementById('<%= DropDownList1.ClientID %>');
+                var presetPanel = document.getElementById('<%= pn_admin_create_preset.ClientID %>');
+                var presetSelect = document.getElementById('<%= ddl_admin_create_preset.ClientID %>');
+                if (!accountTypeSelect || !presetPanel) {
+                    return;
+                }
+
+                var showPreset = (accountTypeSelect.value || '').trim() === 'Nhân viên admin';
+                presetPanel.style.display = showPreset ? '' : 'none';
+                presetPanel.setAttribute('aria-hidden', showPreset ? 'false' : 'true');
+                if (!showPreset && presetSelect) {
+                    presetSelect.value = '';
+                }
+            }
+
+            function bindAdminCreatePresetVisibility() {
+                var accountTypeSelect = document.getElementById('<%= DropDownList1.ClientID %>');
+                if (!accountTypeSelect) {
+                    return;
+                }
+
+                if (accountTypeSelect.getAttribute('data-admin-create-bound') !== '1') {
+                    accountTypeSelect.addEventListener('change', syncAdminCreatePresetVisibility);
+                    accountTypeSelect.setAttribute('data-admin-create-bound', '1');
+                }
+
+                syncAdminCreatePresetVisibility();
+            }
+
+            function initAdminAccountPage() {
+                initAdminPermissionPage();
+                bindAdminCreatePresetVisibility();
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initAdminAccountPage);
+            } else {
+                initAdminAccountPage();
+            }
+
+            if (window.Sys && Sys.WebForms && Sys.WebForms.PageRequestManager) {
+                Sys.WebForms.PageRequestManager.getInstance().add_endRequest(function () {
+                    initAdminAccountPage();
+                });
+            }
+        })();
+    </script>
+
 </asp:Content>

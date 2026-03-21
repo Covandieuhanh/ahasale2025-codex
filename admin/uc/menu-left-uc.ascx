@@ -6,7 +6,8 @@
         </span>
         <div class="app-title h4 text-light m-0 fg-white pl-2" style="line-height: 1.2; padding-top: 10px; padding-bottom: 10px;">
             <div>AHASALE.VN</div>
-            <div class="admin-left-subtitle">Trang quản trị</div>
+            <div class="admin-left-subtitle"><%=Server.HtmlEncode(ViewState["admin_role_label"] as string ?? "Trang quản trị") %></div>
+            <div class="admin-left-role-scope"><%=Server.HtmlEncode(ViewState["admin_scope_label"] as string ?? "Cổng Admin") %></div>
         </div>
     </div>
 
@@ -90,14 +91,14 @@
         <% } %>
         <% if (ShowLeftAdminAccount()) { %>
         <li class="<%=MenuActiveTaiKhoanScope("admin") %>">
-            <a href="/admin/quan-ly-tai-khoan/Default.aspx?scope=admin">
+            <a href="<%= GetAdminAccountManagementUrl() %>">
                 <span class="icon"><span class="mif-users"></span></span>
                 <span class="caption">Quản lý tài khoản admin</span>
             </a>
         </li>
         <% } %>
         <% if (ShowLeftTransferHistory()) { %>
-        <li class="<%=MenuActive("/admin/lich-su-chuyen-diem/default.aspx") %>">
+        <li class="<%=MenuActiveTransferHistory() %>">
             <a href="/admin/lich-su-chuyen-diem/default.aspx">
                 <span class="icon"><span class="mif-tab"></span></span>
                 <span class="caption">Lịch sử chuyển điểm</span>
@@ -110,23 +111,23 @@
         <li class="item-header">QUẢN LÝ HOME</li>
         <% if (ShowLeftHomeAccount()) { %>
         <li class="<%=MenuActiveTaiKhoanScope("home") %>">
-            <a href="/admin/quan-ly-tai-khoan/Default.aspx?scope=home">
+            <a href="<%= GetHomeAccountManagementUrl() %>">
                 <span class="icon"><span class="mif-users"></span></span>
                 <span class="caption">Quản lý tài khoản home</span>
             </a>
         </li>
         <% } %>
         <% if (ShowLeftApproveHanhVi()) { %>
-        <li class="<%=MenuActive("/admin/duyet-yeu-cau-len-cap.aspx") %>">
-            <a href="/admin/duyet-yeu-cau-len-cap.aspx">
+        <li class="<%=MenuActivePointApproval() %>">
+            <a href="<%= GetApproveHomePointUrl() %>">
                 <span class="icon"><span class="mif-list2"></span></span>
-                <span class="caption">Duyệt yêu cầu xác nhận hành vi</span>
+                <span class="caption">Duyệt yêu cầu điểm / hành vi</span>
             </a>
         </li>
         <% } %>
         <% if (ShowLeftIssueCard()) { %>
-        <li class="<%=MenuActive("/admin/phat-hanh-the.aspx") %>">
-            <a href="/admin/phat-hanh-the.aspx">
+        <li class="<%=MenuActive("/admin/phat-hanh-the.aspx", "/admin/phat-hanh-the/them-moi.aspx") %>">
+            <a href="/admin/phat-hanh-the/them-moi.aspx">
                 <span class="icon"><span class="mif-list2"></span></span>
                 <span class="caption">Phát hành thẻ</span>
             </a>
@@ -141,8 +142,8 @@
         </li>
         <% } %>
         <% if (ShowLeftSellProduct()) { %>
-        <li class="<%=MenuActive("/admin/he-thong-san-pham/ban-san-pham.aspx") %>">
-            <a href="/admin/he-thong-san-pham/ban-san-pham.aspx">
+        <li class="<%=MenuActive("/admin/he-thong-san-pham/ban-san-pham.aspx", "/admin/he-thong-san-pham/ban-the.aspx", "/admin/he-thong-san-pham/chi-tiet-giao-dich.aspx") %>">
+            <a href="/admin/he-thong-san-pham/ban-the.aspx">
                 <span class="icon"><span class="mif-credit-card"></span></span>
                 <span class="caption">Bán sản phẩm</span>
             </a>
@@ -154,9 +155,17 @@
         <li class="item-header">QUẢN LÝ SHOP</li>
         <% if (ShowLeftShopAccount()) { %>
         <li class="<%=MenuActiveTaiKhoanScope("shop") %>">
-            <a href="/admin/quan-ly-tai-khoan/Default.aspx?scope=shop">
+            <a href="<%= GetShopAccountManagementUrl() %>">
                 <span class="icon"><span class="mif-users"></span></span>
                 <span class="caption">Quản lý tài khoản gian hàng đối tác</span>
+            </a>
+        </li>
+        <% } %>
+        <% if (ShowLeftShopPointApproval()) { %>
+        <li class="<%=MenuActiveShopPointApproval() %>">
+            <a href="/admin/lich-su-chuyen-diem/default.aspx?tab=shop-only">
+                <span class="icon"><span class="mif-list2"></span></span>
+                <span class="caption">Duyệt điểm / nghiệp vụ shop</span>
             </a>
         </li>
         <% } %>
@@ -203,7 +212,7 @@
         </li>
         <% } %>
         <% if (ShowLeftContentMenu()) { %>
-        <li class="<%=MenuActive("/admin/quan-ly-menu/default.aspx") %>">
+        <li class="<%=MenuActive("/admin/quan-ly-menu/default.aspx", "/admin/quan-ly-menu/them-moi.aspx", "/admin/quan-ly-menu/bo-loc.aspx", "/admin/quan-ly-menu/chinh-sua.aspx", "/admin/quan-ly-menu/xuat-du-lieu.aspx", "/admin/quan-ly-menu/ban-in.aspx") %>">
             <a href="/admin/quan-ly-menu/default.aspx">
                 <span class="icon"><span class="mif-list2"></span></span>
                 <span class="caption">Quản lý menu</span>
@@ -211,7 +220,7 @@
         </li>
         <% } %>
         <% if (ShowLeftContentBaiViet()) { %>
-        <li class="<%=MenuActive("/admin/quan-ly-bai-viet/default.aspx") %>">
+        <li class="<%=MenuActive("/admin/quan-ly-bai-viet/default.aspx", "/admin/quan-ly-bai-viet/in.aspx", "/admin/quan-ly-bai-viet/them-moi.aspx", "/admin/quan-ly-bai-viet/bo-loc.aspx", "/admin/quan-ly-bai-viet/chinh-sua.aspx", "/admin/quan-ly-bai-viet/xuat-du-lieu.aspx", "/admin/quan-ly-bai-viet/ban-in.aspx") %>">
             <a href="/admin/quan-ly-bai-viet/default.aspx">
                 <span class="icon"><span class="mif-news"></span></span>
                 <span class="caption">Quản lý bài viết</span>
@@ -219,7 +228,7 @@
         </li>
         <% } %>
         <% if (ShowLeftContentBanner()) { %>
-        <li class="<%=MenuActive("/admin/quan-ly-banner/default.aspx") %>">
+        <li class="<%=MenuActive("/admin/quan-ly-banner/default.aspx", "/admin/quan-ly-banner/them-moi.aspx") %>">
             <a href="/admin/quan-ly-banner/default.aspx">
                 <span class="icon"><span class="mif-images"></span></span>
                 <span class="caption">Quản lý banner</span>
@@ -235,7 +244,7 @@
         </li>
         <% } %>
         <% if (ShowLeftContentThongBao()) { %>
-        <li class="<%=MenuActive("/admin/quan-ly-thong-bao/default.aspx") %>">
+        <li class="<%=MenuActive("/admin/quan-ly-thong-bao/default.aspx", "/admin/quan-ly-thong-bao/in.aspx", "/admin/quan-ly-thong-bao/bo-loc.aspx", "/admin/quan-ly-thong-bao/xuat-du-lieu.aspx", "/admin/quan-ly-thong-bao/ban-in.aspx") %>">
             <a href="/admin/quan-ly-thong-bao/default.aspx">
                 <span class="icon"><span class="mif-bell"></span></span>
                 <span class="caption">Quản lý thông báo</span>
@@ -243,7 +252,7 @@
         </li>
         <% } %>
         <% if (ShowLeftContentTuVan()) { %>
-        <li class="<%=MenuActive("/admin/yeu-cau-tu-van/default.aspx") %>">
+        <li class="<%=MenuActive("/admin/yeu-cau-tu-van/default.aspx", "/admin/yeu-cau-tu-van/bo-loc.aspx", "/admin/yeu-cau-tu-van/xuat-du-lieu.aspx", "/admin/yeu-cau-tu-van/ban-in.aspx") %>">
             <a href="/admin/yeu-cau-tu-van/default.aspx">
                 <span class="icon"><span class="mif-bubbles"></span></span>
                 <span class="caption">Yêu cầu tư vấn</span>

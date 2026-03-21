@@ -5,40 +5,54 @@
 
 <asp:Content ID="Content2" ContentPlaceHolderID="main" runat="Server">
 
-    <!-- FORM PHÁT HÀNH (TRANG RIÊNG) -->
+    <!-- FORM PHÁT HÀNH (TRANG RIÊNG / FULL-PAGE) -->
     <asp:Panel ID="pn_add" runat="server" Visible="false" DefaultButton="but_tao_the">
-        <div class="p-3">
-            <div class="bg-white p-4 shadow-2 rounded" style="max-width: 760px;">
-                <div class="d-flex flex-justify-between flex-align-center mb-3">
-                    <h4 class="m-0 text-bold">PHÁT HÀNH THẺ</h4>
-                    <asp:HyperLink ID="lnk_back_list" runat="server" CssClass="button light">Quay lại danh sách</asp:HyperLink>
+        <div class="admin-fullpage-head admin-route-panel-head">
+            <div class='admin-fullpage-shell admin-fullpage-head-shell admin-route-panel-shell admin-route-panel-head-shell'>
+                <div class="admin-route-panel-actions">
+                    <asp:HyperLink ID="lnk_back_list" runat="server" CssClass="admin-route-back-link">Quay lại danh sách</asp:HyperLink>
                 </div>
-                <hr class="mt-0 mb-4" />
-
-                <div class="mt-3">
-                    <label class="fw-600 fg-red">Chọn tài khoản</label>
-                    <div>
-                        <asp:DropDownList ID="ddl_taikhoan" runat="server" data-role="select" data-filter="true"></asp:DropDownList>
+                <div class="bg-white pl-4 pl-8-md pr-8-md pr-4" style="height: 52px;">
+                    <div class="pt-4 text-upper text-bold">
+                        PHÁT HÀNH THẺ
                     </div>
+                    <hr />
                 </div>
+            </div>
+        </div>
+        <div class="admin-fullpage-body-wrap admin-route-panel-body-wrap">
+            <div class='admin-fullpage-shell admin-fullpage-dialog admin-route-panel-shell admin-route-panel-dialog'>
+                <div class="bg-white border bd-transparent admin-fullpage-body admin-route-panel-body pl-4 pl-8-md pr-8-md pr-4">
+                    <div class="row">
+                        <div class="cell-lg-12">
+                            <div class="mt-3">
+                                <label class="fw-600 fg-red">Chọn tài khoản</label>
+                                <div>
+                                    <asp:DropDownList ID="ddl_taikhoan" runat="server" data-role="select" data-filter="true"></asp:DropDownList>
+                                </div>
+                            </div>
 
-                <div class="mt-3">
-                    <label class="fw-600 fg-red">Loại thẻ</label>
-                    <div>
-                        <asp:DropDownList ID="ddl_loaithe" runat="server" CssClass="input-large">
-                            <asp:ListItem Value="" Text="-- Chọn tài khoản trước --"></asp:ListItem>
-                            <asp:ListItem Value="1" Text="Thẻ ưu đãi"></asp:ListItem>
-                            <asp:ListItem Value="2" Text="Thẻ tiêu dùng"></asp:ListItem>
-                            <asp:ListItem Value="5" Text="Thẻ lao động"></asp:ListItem>
-                            <asp:ListItem Value="4" Text="Thẻ đồng hành hệ sinh thái"></asp:ListItem>
-                            <asp:ListItem Value="3" Text="Thẻ gian hàng đối tác"></asp:ListItem>
-                        </asp:DropDownList>
+                            <div class="mt-3">
+                                <label class="fw-600 fg-red">Loại thẻ</label>
+                                <div>
+                                    <asp:DropDownList ID="ddl_loaithe" runat="server" CssClass="input-large">
+                                        <asp:ListItem Value="" Text="-- Chọn tài khoản trước --"></asp:ListItem>
+                                        <asp:ListItem Value="1" Text="Thẻ ưu đãi"></asp:ListItem>
+                                        <asp:ListItem Value="2" Text="Thẻ tiêu dùng"></asp:ListItem>
+                                        <asp:ListItem Value="5" Text="Thẻ lao động"></asp:ListItem>
+                                        <asp:ListItem Value="4" Text="Thẻ đồng hành hệ sinh thái"></asp:ListItem>
+                                        <asp:ListItem Value="3" Text="Thẻ gian hàng đối tác"></asp:ListItem>
+                                    </asp:DropDownList>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <div class="mt-6 mb-2 text-right">
-                    <asp:Button ID="but_tao_the" runat="server" Text="PHÁT HÀNH"
-                        CssClass="button success" OnClick="but_tao_the_Click" />
+                    <div class="mt-6 mb-20 text-right">
+                        <asp:Button ID="but_tao_the" runat="server" Text="PHÁT HÀNH"
+                            CssClass="button success" OnClick="but_tao_the_Click" />
+                    </div>
+                    <div class="mb-20"></div>
                 </div>
             </div>
         </div>
@@ -49,7 +63,7 @@
         <ContentTemplate>
 
             <div class="pos-relative pb-11">
-                <div id="menutop-tool-bc" style="position: fixed; top: 52px; width: 100%; z-index: 4">
+                <div id="menutop-tool-bc" class="aha-admin-toolbar">
                     <ul class="h-menu bg-white">
                         <li data-role="hint" data-hint-position="top" data-hint-text="Phát hành thẻ">
                             <asp:HyperLink ID="but_show_add" runat="server" CssClass="button primary">
@@ -69,8 +83,8 @@
                 </div>
             </div>
 
-            <div class="p-3">
-                <div class="bg-white p-4 shadow-2 rounded">
+            <div class="p-3 aha-admin-section">
+                <div class="aha-admin-card p-4">
                     <div class="d-flex flex-align-center mb-3">
                         <h5 class="m-0 text-bold">DANH SÁCH THẺ</h5>
                     </div>

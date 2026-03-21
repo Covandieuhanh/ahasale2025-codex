@@ -1493,19 +1493,14 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
                     return;
                 }
 
-                ViewState["idsp_giohang"] = _idsp;
-                Literal1.Text = q.name;
-                txt_soluong1.Text = "1";
+                string errorMessage;
+                if (!TryAddProductToCart(db, tk, _idsp, 1, out errorMessage))
+                {
+                    Helper_Tabler_cl.ShowModal(this.Page, errorMessage, "Thông báo", true, "warning");
+                    return;
+                }
 
-                up_add_cart.Update();
-
-                ScriptManager.RegisterStartupScript(
-                    this.Page,
-                    this.Page.GetType(),
-                    "openModalAddCart_" + Guid.NewGuid().ToString("N"),
-                    "ModalHelper.show('modalAddCart');",
-                    true
-                );
+                Helper_Tabler_cl.ShowToast(this.Page, "Đã thêm vào giỏ hàng thành công. Bạn có thể chỉnh số lượng trong giỏ hàng.", "success", true, 2200, "Thông báo");
             }
 
             up_all.Update();
@@ -1531,31 +1526,11 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
                 int.TryParse((txt_soluong1.Text ?? "0").Trim(), out slAdd);
                 if (slAdd <= 0) slAdd = 1;
 
-                var q = db.GioHang_tbs.FirstOrDefault(p => p.idsp == idsp && p.taikhoan == tk);
-                if (q != null)
+                string errorMessage;
+                if (!TryAddProductToCart(db, tk, idsp, slAdd, out errorMessage))
                 {
-                    q.soluong = q.soluong + slAdd;
-                    q.ngaythem = DateTime.Now;
-                    db.SubmitChanges();
-                }
-                else
-                {
-                    var sp = AccountVisibility_cl.FindVisibleProductById(db, idsp);
-                    if (sp == null)
-                    {
-                        Helper_Tabler_cl.ShowModal(this.Page, "Sản phẩm đã ngừng bán hoặc tài khoản đã bị khóa.", "Thông báo", true, "warning");
-                        return;
-                    }
-
-                    GioHang_tb ob = new GioHang_tb();
-                    ob.ngaythem = DateTime.Now;
-                    ob.taikhoan = tk;
-                    ob.idsp = idsp;
-                    ob.soluong = slAdd;
-                    ob.nguoiban_goc = sp.nguoitao;
-                    ob.nguoiban_danglai = "";
-                    db.GioHang_tbs.InsertOnSubmit(ob);
-                    db.SubmitChanges();
+                    Helper_Tabler_cl.ShowModal(this.Page, errorMessage, "Thông báo", true, "warning");
+                    return;
                 }
 
                 Helper_Tabler_cl.ShowToast(this.Page, "Xử lý thành công.", "success", true, 2000, "Thông báo");
@@ -1572,6 +1547,59 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
                 up_all.Update();
             }
         });
+    }
+
+    private bool TryAddProductToCart(dbDataContext db, string tk, string idsp, int slAdd, out string errorMessage)
+    {
+        errorMessage = "";
+
+        if (db == null)
+        {
+            errorMessage = "Không thể kết nối dữ liệu giỏ hàng.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(tk))
+        {
+            errorMessage = "Bạn cần đăng nhập.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(idsp))
+        {
+            errorMessage = "Không xác định được sản phẩm.";
+            return false;
+        }
+
+        if (slAdd <= 0)
+            slAdd = 1;
+
+        var q = db.GioHang_tbs.FirstOrDefault(p => p.idsp == idsp && p.taikhoan == tk);
+        if (q != null)
+        {
+            q.soluong = q.soluong + slAdd;
+            q.ngaythem = DateTime.Now;
+            db.SubmitChanges();
+            return true;
+        }
+
+        var sp = AccountVisibility_cl.FindVisibleProductById(db, idsp);
+        if (sp == null)
+        {
+            errorMessage = "Sản phẩm đã ngừng bán hoặc tài khoản đã bị khóa.";
+            return false;
+        }
+
+        GioHang_tb ob = new GioHang_tb();
+        ob.ngaythem = DateTime.Now;
+        ob.taikhoan = tk;
+        ob.idsp = idsp;
+        ob.soluong = slAdd;
+        ob.nguoiban_goc = sp.nguoitao;
+        ob.nguoiban_danglai = "";
+        db.GioHang_tbs.InsertOnSubmit(ob);
+        db.SubmitChanges();
+        return true;
     }
 
     private void TrapClick(string actionName, Action run)

@@ -71,9 +71,17 @@ public partial class home_quan_ly_bai_Default : System.Web.UI.Page
             : "/home/quan-ly-tin/them.aspx";
     }
 
+    private string GetManageAuctionUrl()
+    {
+        return PortalRequest_cl.IsShopPortalRequest()
+            ? "/shop/dau-gia"
+            : "/home/dau-gia";
+    }
+
     protected void Page_Load(object sender, EventArgs e)
     {
         lnk_add_new.NavigateUrl = GetCreatePostUrl();
+        lnk_manage_auction.NavigateUrl = GetManageAuctionUrl();
         bool isCompanyShopPortal = IsCurrentCompanyShopPortal();
         ViewState["is_company_shop_portal"] = isCompanyShopPortal ? "1" : "0";
         ph_company_shop_options.Visible = isCompanyShopPortal;
@@ -263,6 +271,28 @@ public partial class home_quan_ly_bai_Default : System.Web.UI.Page
             ? "/shop/quan-ly-tin?edit_id=" + HttpUtility.UrlEncode(id)
             : "/home/quan-ly-tin/default.aspx?edit_id=" + HttpUtility.UrlEncode(id);
         return url;
+    }
+
+    protected string GetAuctionCreateUrl(object idObj, object nameObj)
+    {
+        string id = (idObj ?? "").ToString().Trim();
+        int postId;
+        if (!int.TryParse(id, out postId) || postId <= 0)
+            return "/daugia/tao";
+
+        var query = HttpUtility.ParseQueryString(string.Empty);
+        query["source_type"] = "shop_post";
+        query["source_id"] = postId.ToString();
+        query["scope"] = "shop";
+
+        string title = ((nameObj ?? "") + "").Trim();
+        if (!string.IsNullOrEmpty(title))
+            query["title"] = title;
+
+        if (PortalRequest_cl.IsShopPortalRequest())
+            query["shop_portal"] = "1";
+
+        return "/daugia/tao?" + query.ToString();
     }
 
     private void LoadEditPost(int id)

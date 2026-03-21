@@ -97,7 +97,7 @@
                     </div>
                 </div>
 
-                <div class="bcorn-fix-title-table-container">
+                <div class="bcorn-fix-title-table-container aha-admin-grid">
                     <table class="bcorn-fix-title-table">
                         <thead>
                             <tr>

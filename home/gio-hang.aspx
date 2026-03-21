@@ -259,6 +259,52 @@
             object-fit: cover;
         }
 
+        .cart-product-inline {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .cart-product-inline-thumb {
+            display: none;
+            width: 72px;
+            min-width: 72px;
+            height: 72px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(98, 105, 118, .18);
+            background: #f8fafc;
+        }
+
+        .cart-product-inline-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .cart-product-inline-content {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .cart-product-inline-name {
+            color: inherit;
+            text-decoration: none;
+            font-weight: 700;
+            line-height: 1.35;
+        }
+
+        .cart-product-inline-shop {
+            display: none;
+            font-size: 12px;
+            color: var(--checkout-muted);
+            line-height: 1.3;
+        }
+
         .qty-input {
             width: 56px;
             min-width: 56px;
@@ -632,6 +678,14 @@
                 width: 48px;
                 min-width: 48px;
             }
+
+            .cart-product-inline-thumb {
+                display: block;
+            }
+
+            .cart-product-inline-shop {
+                display: block;
+            }
         }
 
         @media (max-width: 767.98px) {
@@ -687,8 +741,7 @@
             }
 
             .checkout-table .cell-price::before,
-            .checkout-table .cell-qty::before,
-            .checkout-table .cell-total::before {
+            .checkout-table .cell-qty::before {
                 content: attr(data-label);
                 display: inline-block;
                 font-size: 12px;
@@ -781,9 +834,17 @@
                                                     </td>
 
                                                     <td class="text-start">
-                                                        <a href="/<%# Eval("name_en") %>-<%# Eval("id") %>.html" class="text-decoration-none fw-semibold">
-                                                            <%# Eval("name") %>
-                                                        </a>
+                                                        <div class="cart-product-inline">
+                                                            <div class="cart-product-inline-thumb">
+                                                                <img src="<%# ResolveCardImage(Eval("image")) %>" alt="" />
+                                                            </div>
+                                                            <div class="cart-product-inline-content">
+                                                                <a href="/<%# Eval("name_en") %>-<%# Eval("id") %>.html" class="cart-product-inline-name">
+                                                                    <%# Eval("name") %>
+                                                                </a>
+                                                                <div class="cart-product-inline-shop">Shop: <%# Eval("TenShop") %></div>
+                                                            </div>
+                                                        </div>
                                                     </td>
 
                                                     <td class="text-end text-price">
@@ -853,7 +914,6 @@
                                                                 <th class="text-start" style="min-width: 180px;">Sản phẩm</th>
                                                                 <th class="text-end" style="min-width: 120px;">Giá</th>
                                                                 <th class="text-center" style="width:1px;">SL</th>
-                                                                <th class="text-end" style="min-width: 130px;">Thành tiền</th>
                                                                 <th class="text-start col-shop" style="min-width: 160px;">Shop</th>
                                                             </tr>
                                                         </thead>
@@ -898,10 +958,6 @@
                                                                                     onkeypress="if (event.keyCode==13) return false;"></asp:TextBox>
                                                                                 <button type="button" class="qty-step-btn" onclick="ahaQtyAdjust(this,1)" aria-label="Tăng số lượng">+</button>
                                                                             </div>
-                                                                        </td>
-
-                                                                        <td class="text-end text-line-total cell-total" data-label="Thành tiền">
-                                                                            <span class="js-checkout-line-total-vnd"><%# Eval("ThanhTien","{0:#,##0}") %> đ</span>
                                                                         </td>
 
                                                                         <td class="text-start col-shop cell-shop">Shop: <%# Eval("TenShop") %></td>
