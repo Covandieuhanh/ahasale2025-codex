@@ -11,11 +11,36 @@ using System.Web.UI.WebControls;
 
 public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
 {
+    private const string SessionHomeLinkFilterKey = "home_link_filter_taikhoan";
+
+    private sealed class AccountListItem
+    {
+        public string taikhoan { get; set; }
+        public string hoten { get; set; }
+        public string hoten_khongdau { get; set; }
+        public string avt { get; set; }
+        public string trangthai { get; set; }
+        public DateTime? ngaytao { get; set; }
+        public string sdt { get; set; }
+        public string email { get; set; }
+        public string id_nganh { get; set; }
+        public string tennganh { get; set; }
+        public string lienket_home_status { get; set; }
+        public string lienket_home_label { get; set; }
+        public string lienket_home_note { get; set; }
+        public string lienket_home_css { get; set; }
+        public string lienket_home_action { get; set; }
+        public string lienket_home_url { get; set; }
+        public string gianhang_admin_access_label { get; set; }
+        public string gianhang_admin_access_css { get; set; }
+    }
+
     dbDataContext db = new dbDataContext();
     taikhoan_class tk_cl = new taikhoan_class();
     datetime_class dt_cl = new datetime_class();
     nganh_class ng_cl = new nganh_class();
     public string user, user_parent;
+    public string CurrentHomeLinkFilter = "all";
     #region phân trang
     public int stt = 1, current_page = 1, total_page = 1, show = 30;
     List<string> list_id_split;
@@ -58,7 +83,7 @@ public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
         #endregion
         #region Check quyen theo nganh
         user = Session["user"].ToString();
-        user_parent = "admin";
+        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
         if (bcorn_class.check_quyen(user, "q2_4") == "" || bcorn_class.check_quyen(user, "n2_4") == "")
         {
             //main
@@ -131,6 +156,29 @@ public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
                 }
                 else
                     txt_denngay.Text = Session["denngay_taikhoan"].ToString();
+
+                string requestedHomeLinkFilter = (Request.QueryString["home_link"] ?? "").Trim();
+                if (requestedHomeLinkFilter != "")
+                {
+                    Session[SessionHomeLinkFilterKey] = NormalizeHomeLinkFilter(requestedHomeLinkFilter);
+                    Session["current_page_taikhoan"] = "1";
+                }
+                else if (Session[SessionHomeLinkFilterKey] == null)
+                {
+                    Session[SessionHomeLinkFilterKey] = "all";
+                }
+
+                string selectedHomeLinkFilter = NormalizeHomeLinkFilter(((Session[SessionHomeLinkFilterKey] ?? "all") + "").Trim());
+                ListItem selectedItem = DropDownList6.Items.FindByValue(selectedHomeLinkFilter);
+                if (selectedItem != null)
+                    DropDownList6.SelectedValue = selectedHomeLinkFilter;
+            }
+            CurrentHomeLinkFilter = NormalizeHomeLinkFilter(((Session[SessionHomeLinkFilterKey] ?? "all") + "").Trim());
+            if (DropDownList6.Items.Count > 0)
+            {
+                ListItem selectedItem = DropDownList6.Items.FindByValue(CurrentHomeLinkFilter);
+                if (selectedItem != null)
+                    DropDownList6.SelectedValue = CurrentHomeLinkFilter;
             }
             main();
         }
@@ -146,62 +194,8 @@ public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
 
     public void main()
     {
-        //Intersect: lấy ra các phần tử mà cả 2 bên đều có (phần chung)
         #region lấy dữ liệu
-        var list_all = (from ob1 in db.taikhoan_table_2023s.Where(p => p.id_chinhanh == Session["chinhanh"].ToString()).ToList()
-                            //join ob2 in db.chinhanh_tables.ToList() on ob1.id_chinhanh.ToString() equals ob2.id.ToString()
-                        select new
-                        {
-                            taikhoan = ob1.taikhoan,
-                            hoten = ob1.hoten,
-                            hoten_khongdau = ob1.hoten_khongdau,
-                            avt = ob1.anhdaidien,
-                            trangthai = ob1.trangthai,
-                            ngaytao = ob1.ngaytao,
-                            sdt = ob1.dienthoai,
-                            email = ob1.email,
-                            id_nganh = ob1.id_nganh,
-                            tennganh = ng_cl.return_name(ob1.id_nganh),
-                            //id_chinhanh= ob2.ten,
-                            //tenchinhanh = ob2.ten,
-                        });
-
-        //xử lý theo thời gian
-        var list_time = list_all.Where(p => p.ngaytao.Value.Date >= DateTime.Parse(Session["tungay_taikhoan"].ToString()).Date && p.ngaytao.Value.Date <= DateTime.Parse(Session["denngay_taikhoan"].ToString()).Date);
-        list_all = list_all.Intersect(list_time).ToList();
-
-        //xử lý từ khóa
-        string _key = txt_search.Text.ToLower();
-        if (_key != "")
-        {
-            var list_search = list_all.Where(p => p.hoten.ToLower().Contains(_key) || p.hoten_khongdau.ToLower().Contains(_key) || p.taikhoan.ToString() == _key || p.sdt.ToString() == _key || p.email.ToString() == _key).ToList();
-            list_all = list_all.Intersect(list_search).ToList();
-        }
-        //xử lý trạng thái
-
-        //lọc dữ liệu
-        //if (DropDownList1.SelectedValue.ToString() != "0")
-        //{
-        switch (DropDownList1.SelectedValue.ToString())
-        {
-            case ("0"): var list_0 = list_all.Where(p => p.trangthai == "Đang hoạt động").ToList(); list_all = list_all.Intersect(list_0).ToList(); break;
-            case ("1"): var list_1 = list_all.Where(p => p.trangthai == "Đã bị khóa").ToList(); list_all = list_all.Intersect(list_1).ToList(); break;
-            default: var list_2 = list_all.ToList(); list_all = list_all.Intersect(list_2).ToList(); break;//tất cả
-        }
-        //}
-
-        if (DropDownList5.SelectedValue.ToString() != "")//ngành
-        {
-            var list_1 = list_all.Where(p => p.id_nganh == DropDownList5.SelectedValue.ToString()).ToList(); list_all = list_all.Intersect(list_1).ToList();
-        }
-
-        //sắp xếp
-        switch (Session["index_sapxep_taikhoan"].ToString())
-        {
-            case ("0"): list_all = list_all.OrderBy(p => p.ngaytao).ToList(); break;
-            case ("1"): list_all = list_all.OrderByDescending(p => p.ngaytao).ToList(); break;
-            default: break;
-        }
+        List<AccountListItem> list_all = GetFilteredAccountList(CurrentHomeLinkFilter != "all");
         #endregion
 
         //xử lý số lượng hiển thị
@@ -229,6 +223,8 @@ public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
         //main
         stt = (show * current_page) - show + 1;
         var list_split = list_all.Skip(current_page * show - show).Take(show).ToList();
+        if (CurrentHomeLinkFilter == "all")
+            DecorateHomeBindingInfo(list_split);
         list_id_split = new List<string>();
         foreach (var t in list_split)
         {
@@ -243,12 +239,227 @@ public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
         Repeater1.DataBind();
     }
 
+    private List<AccountListItem> GetFilteredAccountList(bool preloadHomeBinding)
+    {
+        List<AccountListItem> list_all = (from ob1 in db.taikhoan_table_2023s.Where(p => p.id_chinhanh == Session["chinhanh"].ToString()).ToList()
+                                          select new AccountListItem
+                                          {
+                                              taikhoan = (ob1.taikhoan ?? "").Trim(),
+                                              hoten = (ob1.hoten ?? "").Trim(),
+                                              hoten_khongdau = (ob1.hoten_khongdau ?? "").Trim(),
+                                              avt = ob1.anhdaidien,
+                                              trangthai = (ob1.trangthai ?? "").Trim(),
+                                              ngaytao = ob1.ngaytao,
+                                              sdt = (ob1.dienthoai ?? "").Trim(),
+                                              email = (ob1.email ?? "").Trim(),
+                                              id_nganh = (ob1.id_nganh ?? "").Trim(),
+                                              tennganh = ng_cl.return_name(ob1.id_nganh),
+                                              lienket_home_status = "",
+                                              lienket_home_label = "Chưa liên kết",
+                                              lienket_home_note = "Nhấn vào chi tiết để liên kết với tài khoản Home.",
+                                              lienket_home_css = "bg-gray fg-white",
+                                              lienket_home_action = "Mở hồ sơ người",
+                                              lienket_home_url = "/gianhang/admin/quan-ly-tai-khoan/tai-khoan.aspx?user=" + HttpUtility.UrlEncode((ob1.taikhoan ?? "").Trim()),
+                                              gianhang_admin_access_label = "Có vai trò nội bộ nhưng chưa mở quyền /gianhang/admin",
+                                              gianhang_admin_access_css = "bg-gray fg-white"
+                                          }).ToList();
+
+        DateTime tuNgay = DateTime.Parse(Session["tungay_taikhoan"].ToString()).Date;
+        DateTime denNgay = DateTime.Parse(Session["denngay_taikhoan"].ToString()).Date;
+        list_all = list_all.Where(p => p.ngaytao.HasValue && p.ngaytao.Value.Date >= tuNgay && p.ngaytao.Value.Date <= denNgay).ToList();
+
+        string _key = txt_search.Text.ToLower();
+        if (_key != "")
+        {
+            list_all = list_all.Where(p =>
+                p.hoten.ToLower().Contains(_key)
+                || p.hoten_khongdau.ToLower().Contains(_key)
+                || p.taikhoan == _key
+                || p.sdt == _key
+                || p.email == _key).ToList();
+        }
+
+        switch (DropDownList1.SelectedValue.ToString())
+        {
+            case "0":
+                list_all = list_all.Where(p => p.trangthai == "Đang hoạt động").ToList();
+                break;
+            case "1":
+                list_all = list_all.Where(p => p.trangthai == "Đã bị khóa").ToList();
+                break;
+            default:
+                break;
+        }
+
+        if (DropDownList5.SelectedValue.ToString() != "")
+            list_all = list_all.Where(p => p.id_nganh == DropDownList5.SelectedValue.ToString()).ToList();
+
+        if (preloadHomeBinding || CurrentHomeLinkFilter != "all")
+        {
+            DecorateHomeBindingInfo(list_all);
+            list_all = ApplyHomeLinkFilter(list_all, CurrentHomeLinkFilter);
+        }
+
+        switch (Session["index_sapxep_taikhoan"].ToString())
+        {
+            case "0":
+                list_all = list_all.OrderBy(p => p.ngaytao).ToList();
+                break;
+            case "1":
+                list_all = list_all.OrderByDescending(p => p.ngaytao).ToList();
+                break;
+            default:
+                break;
+        }
+
+        return list_all;
+    }
+
+    private List<AccountListItem> ApplyHomeLinkFilter(List<AccountListItem> source, string filterValue)
+    {
+        if (source == null)
+            return new List<AccountListItem>();
+
+        switch (NormalizeHomeLinkFilter(filterValue))
+        {
+            case "active":
+                return source.Where(p => p.lienket_home_status == "active").ToList();
+            case "pending":
+                return source.Where(p => p.lienket_home_status == "pending").ToList();
+            case "none":
+                return source.Where(p => p.lienket_home_status == "").ToList();
+            default:
+                return source;
+        }
+    }
+
+    private static string NormalizeHomeLinkFilter(string raw)
+    {
+        string value = (raw ?? "").Trim().ToLowerInvariant();
+        switch (value)
+        {
+            case "active":
+            case "pending":
+            case "none":
+            case "all":
+                return value;
+            default:
+                return "all";
+        }
+    }
+
+    public string HomeFilterButtonCss(string filterValue)
+    {
+        string value = NormalizeHomeLinkFilter(filterValue);
+        bool active = string.Equals(CurrentHomeLinkFilter, value, StringComparison.OrdinalIgnoreCase);
+        if (!active)
+            return "button small light";
+
+        switch (value)
+        {
+            case "active":
+                return "button small bg-cyan fg-white";
+            case "pending":
+                return "button small bg-orange fg-white";
+            case "none":
+                return "button small bg-gray fg-white";
+            default:
+                return "button small bg-dark fg-white";
+        }
+    }
+
+    public string HomeFilterSummaryLabel()
+    {
+        switch (NormalizeHomeLinkFilter(CurrentHomeLinkFilter))
+        {
+            case "active":
+                return "Đang xem: chỉ các hồ sơ đã liên kết với tài khoản Home.";
+            case "pending":
+                return "Đang xem: chỉ các hồ sơ chờ tài khoản Home tự liên kết.";
+            case "none":
+                return "Đang xem: chỉ các hồ sơ chưa gắn với tài khoản Home.";
+            default:
+                return "Đang xem: toàn bộ hồ sơ nhân sự và chuyên gia.";
+        }
+    }
+
+    private void DecorateHomeBindingInfo(List<AccountListItem> listSplit)
+    {
+        if (listSplit == null || listSplit.Count == 0)
+            return;
+
+        string ownerKey = (user_parent ?? "").Trim();
+        if (ownerKey == "")
+            ownerKey = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
+
+        foreach (AccountListItem item in listSplit)
+        {
+            string normalizedPhone = AccountAuth_cl.NormalizePhone(item.sdt);
+            if (string.IsNullOrWhiteSpace(normalizedPhone))
+            {
+                item.lienket_home_status = "";
+                item.lienket_home_label = "Thiếu số điện thoại";
+                item.lienket_home_css = "bg-gray fg-white";
+                item.lienket_home_note = "Cập nhật số điện thoại để gom người này vào hồ sơ người chung.";
+                item.lienket_home_action = "Cập nhật nhân sự";
+                item.lienket_home_url = "/gianhang/admin/quan-ly-tai-khoan/tai-khoan.aspx?user=" + HttpUtility.UrlEncode(item.taikhoan ?? "");
+                item.gianhang_admin_access_label = "Có vai trò nội bộ nhưng chưa mở quyền /gianhang/admin";
+                item.gianhang_admin_access_css = "bg-gray fg-white";
+                continue;
+            }
+
+            GianHangAdminPersonHub_cl.PersonLinkInfo linkInfo = GianHangAdminPersonHub_cl.GetLinkInfo(db, ownerKey, normalizedPhone, item.hoten);
+            item.lienket_home_status = linkInfo == null ? "" : ((linkInfo.Status ?? "").Trim().ToLowerInvariant());
+            item.lienket_home_label = linkInfo == null ? "Chưa liên kết" : linkInfo.StatusLabel;
+            item.lienket_home_css = linkInfo == null ? "bg-gray fg-white" : linkInfo.LinkCss;
+            item.lienket_home_action = "Mở hồ sơ người";
+            item.lienket_home_url = GianHangAdminPersonHub_cl.BuildDetailUrl(normalizedPhone);
+            GianHangAdminPersonHub_cl.PersonSourceRef sourceInfo = GianHangAdminPersonHub_cl.GetSourceInfo(db, ownerKey, normalizedPhone, "staff", item.taikhoan);
+            item.gianhang_admin_access_label = sourceInfo == null || string.IsNullOrWhiteSpace(sourceInfo.AdminAccessLabel)
+                ? "Có vai trò nội bộ nhưng chưa mở quyền /gianhang/admin"
+                : sourceInfo.AdminAccessLabel;
+            item.gianhang_admin_access_css = sourceInfo == null || string.IsNullOrWhiteSpace(sourceInfo.AdminAccessCss)
+                ? "bg-gray fg-white"
+                : sourceInfo.AdminAccessCss;
+
+            if (linkInfo != null && linkInfo.LinkedHomeAccount != null)
+            {
+                string accountKey = (linkInfo.LinkedHomeAccount.taikhoan ?? "").Trim();
+                string phone = (linkInfo.LinkedHomeAccount.dienthoai ?? "").Trim();
+                item.lienket_home_note = "Home: " + accountKey;
+                if (phone != "")
+                    item.lienket_home_note += " - " + phone;
+                continue;
+            }
+
+            if (linkInfo != null && string.Equals(linkInfo.Status, "pending", StringComparison.OrdinalIgnoreCase))
+            {
+                item.lienket_home_note = (linkInfo.PendingPhone ?? "").Trim();
+                if (item.lienket_home_note == "")
+                    item.lienket_home_note = "Đang chờ tài khoản Home đăng ký hoặc đăng nhập.";
+                else
+                    item.lienket_home_note += " - Chờ tài khoản Home xác lập tự động";
+                continue;
+            }
+
+            item.lienket_home_note = "Mở hồ sơ người để liên kết hoặc tạo chờ liên kết theo số điện thoại này.";
+        }
+    }
+
 
     #region autopostback
     protected void txt_search_TextChanged(object sender, EventArgs e)
     {
-        Session["search_taikhoan"] = txt_search.Text.Trim();
+        ApplySearchState();
+    }
+    protected void but_search_Click(object sender, EventArgs e)
+    {
+        ApplySearchState();
+    }
+    private void ApplySearchState()
+    {
         Session["current_page_taikhoan"] = "1";
+
         main();
     }
     //protected void txt_show_TextChanged(object sender, EventArgs e)
@@ -284,6 +495,8 @@ public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
         Session["denngay_taikhoan"] = txt_denngay.Text;
 
         Session["index_loc_nganh_taikhoan"] = DropDownList5.SelectedIndex;
+        Session[SessionHomeLinkFilterKey] = NormalizeHomeLinkFilter(DropDownList6.SelectedValue);
+        CurrentHomeLinkFilter = NormalizeHomeLinkFilter(DropDownList6.SelectedValue);
         main();
         ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Lọc thành công.", "4000", "warning"), true);
     }
@@ -299,6 +512,7 @@ public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
         Session["denngay_taikhoan"] = null;
 
         Session["index_loc_nganh_taikhoan"] = null;
+        Session[SessionHomeLinkFilterKey] = null;
         Session["notifi"] = thongbao_class.metro_notifi_onload("Thông báo", "Xử lý thành công.", "4000", "warning");
         Response.Redirect("/gianhang/admin/quan-ly-tai-khoan/Default.aspx");
     }
@@ -370,62 +584,7 @@ public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
 
     protected void Button4_Click(object sender, EventArgs e)
     {
-        #region lấy dữ liệu
-        var list_all = (from ob1 in db.taikhoan_table_2023s.Where(p => p.id_chinhanh == Session["chinhanh"].ToString()).ToList()
-                            //join ob2 in db.chinhanh_tables.ToList() on ob1.id_chinhanh.ToString() equals ob2.id.ToString()
-                        select new
-                        {
-                            taikhoan = ob1.taikhoan,
-                            hoten = ob1.hoten,
-                            hoten_khongdau = ob1.hoten_khongdau,
-                            avt = ob1.anhdaidien,
-                            trangthai = ob1.trangthai,
-                            ngaytao = ob1.ngaytao,
-                            sdt = ob1.dienthoai,
-                            email = ob1.email,
-                            id_nganh = ob1.id_nganh,
-                            tennganh = ng_cl.return_name(ob1.id_nganh),
-                            //id_chinhanh= ob2.ten,
-                            //tenchinhanh = ob2.ten,
-                        });
-
-        //xử lý theo thời gian
-        var list_time = list_all.Where(p => p.ngaytao.Value.Date >= DateTime.Parse(Session["tungay_taikhoan"].ToString()).Date && p.ngaytao.Value.Date <= DateTime.Parse(Session["denngay_taikhoan"].ToString()).Date);
-        list_all = list_all.Intersect(list_time).ToList();
-
-        //xử lý từ khóa
-        string _key = txt_search.Text.ToLower();
-        if (_key != "")
-        {
-            var list_search = list_all.Where(p => p.hoten.ToLower().Contains(_key) || p.hoten_khongdau.ToLower().Contains(_key) || p.taikhoan.ToString() == _key || p.sdt.ToString() == _key || p.email.ToString() == _key).ToList();
-            list_all = list_all.Intersect(list_search).ToList();
-        }
-        //xử lý trạng thái
-
-        //lọc dữ liệu
-        //if (DropDownList1.SelectedValue.ToString() != "0")
-        //{
-        switch (DropDownList1.SelectedValue.ToString())
-        {
-            case ("0"): var list_0 = list_all.Where(p => p.trangthai == "Đang hoạt động").ToList(); list_all = list_all.Intersect(list_0).ToList(); break;
-            case ("1"): var list_1 = list_all.Where(p => p.trangthai == "Đã bị khóa").ToList(); list_all = list_all.Intersect(list_1).ToList(); break;
-            default: var list_2 = list_all.ToList(); list_all = list_all.Intersect(list_2).ToList(); break;//tất cả
-        }
-        //}
-
-        if (DropDownList5.SelectedValue.ToString() != "")//ngành
-        {
-            var list_1 = list_all.Where(p => p.id_nganh == DropDownList5.SelectedValue.ToString()).ToList(); list_all = list_all.Intersect(list_1).ToList();
-        }
-
-        //sắp xếp
-        switch (Session["index_sapxep_taikhoan"].ToString())
-        {
-            case ("0"): list_all = list_all.OrderBy(p => p.ngaytao).ToList(); break;
-            case ("1"): list_all = list_all.OrderByDescending(p => p.ngaytao).ToList(); break;
-            default: break;
-        }
-        #endregion
+        List<AccountListItem> list_all = GetFilteredAccountList(CurrentHomeLinkFilter != "all");
         if (check_list_excel.Items.Count == 0)
             ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Không có mục nào được chọn.", "4000", "warning"), true);
         else
@@ -524,6 +683,7 @@ public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
                         taikhoan_table_2023 _ob = q.First();
                         _ob.trangthai = "Đã bị khóa";
                         db.SubmitChanges();
+                        GianHangAdminWorkspace_cl.SyncLegacySourceAccess(db, user_parent, _ob.taikhoan, false);
                         _count = _count + 1;
                     }
                 }
@@ -566,6 +726,7 @@ public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
                         taikhoan_table_2023 _ob = q.First();
                         _ob.trangthai = "Đang hoạt động";
                         db.SubmitChanges();
+                        GianHangAdminWorkspace_cl.SyncLegacySourceAccess(db, user_parent, _ob.taikhoan, true);
                         _count = _count + 1;
                     }
                 }

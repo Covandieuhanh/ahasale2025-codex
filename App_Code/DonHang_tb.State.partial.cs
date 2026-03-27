@@ -40,4 +40,17 @@ public partial class DonHang_tb
             }
         }
     }
+
+    // Legacy compatibility: some old call sites still reference `ngaytao`.
+    public System.Nullable<System.DateTime> ngaytao
+    {
+        get
+        {
+            return this.ngaydat;
+        }
+        set
+        {
+            this.ngaydat = value;
+        }
+    }
 }

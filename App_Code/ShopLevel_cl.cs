@@ -142,6 +142,21 @@ public static class ShopLevel_cl
             db.SubmitChanges();
 
         ownerAdmin = AhaShineContext_cl.EnsureAdvancedAdminBootstrapForShop(db, shopTk);
+        if (ownerAdmin != null)
+        {
+            try
+            {
+                GianHangWorkspaceLink_cl.EnsureWorkspaceLinked(
+                    db,
+                    shopTk,
+                    ownerAdmin.id_chinhanh,
+                    ownerAdmin.id_nganh,
+                    true);
+            }
+            catch
+            {
+            }
+        }
         createdOwnerAdmin = !ownerExisted && ownerAdmin != null;
         return permissionChanged || ownerAdmin != null;
     }

@@ -12,6 +12,24 @@ using System.Web.UI.WebControls;
 
 public partial class badmin_Default : System.Web.UI.Page
 {
+    private sealed class CustomerListRow
+    {
+        public Int64 id { get; set; }
+        public string sdt { get; set; }
+        public string tenkhachhang { get; set; }
+        public string diachi { get; set; }
+        public int sl_hoadon { get; set; }
+        public string avt { get; set; }
+        public DateTime? ngaytao { get; set; }
+        public string nguoitao { get; set; }
+        public Int64 sauck { get; set; }
+        public Int64 sotien_conlai { get; set; }
+        public int sl_dv { get; set; }
+        public int sl_sp { get; set; }
+        public string tennhom { get; set; }
+        public string idnhom { get; set; }
+    }
+
     taikhoan_class tk_cl = new taikhoan_class();
     dbDataContext db = new dbDataContext();
     string_class str_cl = new string_class();
@@ -61,7 +79,7 @@ public partial class badmin_Default : System.Web.UI.Page
         }
         #endregion
         user = Session["user"].ToString();
-        user_parent = "admin";
+        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
         if (!IsPostBack)
         {
             var list_nhanvien = (from ob1 in db.taikhoan_table_2023s.Where(p => p.trangthai == "Đang hoạt động" && p.id_chinhanh == Session["chinhanh"].ToString()).ToList()
@@ -137,6 +155,11 @@ public partial class badmin_Default : System.Web.UI.Page
             }
             else
                 Session["index_loc_nhomkh_dtkh"] = DropDownList3.SelectedIndex.ToString();
+
+            if (Session["index_loc_nguon_dtkh"] != null)
+                ddl_trangthai_nguon.SelectedIndex = int.Parse(Session["index_loc_nguon_dtkh"].ToString());
+            else
+                Session["index_loc_nguon_dtkh"] = ddl_trangthai_nguon.SelectedIndex.ToString();
         }
         main();
         if (!string.IsNullOrWhiteSpace(Request.QueryString["q"]))//khi ng dùng nhấn vào nút tạo hóa đơn từ menutop --> tạo nhanh
@@ -148,99 +171,40 @@ public partial class badmin_Default : System.Web.UI.Page
     }
     public void main()
     {
-        //lấy dữ liệu từ bên hoadon
-        //var list_all = (from ob1 in db.bspa_data_khachhang_tables.Where(p => p.kyhieu == "hoadon").ToList()
-        //                join ob2 in db.bspa_hoadon_tables.ToList() on ob1.sdt.ToString() equals ob2.sdt
-        //                group ob2 by new { ob1.id, ob1.sdt, ob1.diachi, ob1.tenkhachhang,ob1.anhdaidien } into g
-        //                select new
-        //                {
-        //                    id = g.Key.id,
-        //                    sdt = g.Key.sdt,
-        //                    tenkhachhang = g.Key.tenkhachhang,
-        //                    diachi = g.Key.diachi,
-        //                    sl_hoadon = g.Count(),
-        //                    avt=g.Key.anhdaidien,
-        //                    //tongtien = Int64.Parse(g.Sum(ob2 => ob2.tongtien).ToString()),
-        //                    sauck = Int64.Parse(g.Sum(ob2 => ob2.tongsauchietkhau).ToString()),
-        //                    //dathanhtoan = Int64.Parse(g.Sum(ob2 => ob2.sotien_dathanhtoan).ToString()),
-        //                    sotien_conlai = Int64.Parse(g.Sum(ob2 => ob2.sotien_conlai).ToString()),
-        //                    sl_dv = int.Parse(g.Sum(ob2 => ob2.sl_dichvu).ToString()),
-        //                    sl_sp = int.Parse(g.Sum(ob2 => ob2.sl_sanpham).ToString()),
-        //                });
+        string branchId = Session["chinhanh"].ToString();
+        var query = db.bspa_data_khachhang_tables.Where(p => p.id_chinhanh == branchId);
 
-        var list_all = (from ob1 in db.bspa_data_khachhang_tables.Where(p => p.nhomkhachhang != "" && p.id_chinhanh == Session["chinhanh"].ToString()).ToList()
-                        join ob2 in db.nhomkhachhang_tables.Where(p => p.id_chinhanh == Session["chinhanh"].ToString()).ToList() on ob1.nhomkhachhang equals ob2.id.ToString()
-                        select new
-                        {
-                            id = ob1.id,
-                            sdt = ob1.sdt,
-                            tenkhachhang = ob1.tenkhachhang,
-                            diachi = ob1.diachi,
-                            sl_hoadon = 0,
-                            avt = ob1.anhdaidien,
-                            ngaytao = ob1.ngaytao,
-                            nguoitao = tk_cl.return_hoten(ob1.nguoitao),
-                            //tongtien = Int64.Parse("0"),
-                            sauck = Int64.Parse("0"),
-                            //dathanhtoan = Int64.Parse("0"),
-                            sotien_conlai = Int64.Parse("0"),
-                            sl_dv = int.Parse("0"),
-                            sl_sp = int.Parse("0"),
-                            tennhom = ob2.tennhom,
-                            idnhom = ob2.id.ToString(),
-                        }).ToList();
+        string keyword = txt_search.Text.Trim();
+        if (keyword != "")
+            query = query.Where(p => (p.tenkhachhang != null && p.tenkhachhang.Contains(keyword)) || (p.sdt != null && p.sdt.Contains(keyword)));
 
-        var list_no = db.bspa_data_khachhang_tables.Where(p => p.nhomkhachhang == "" && p.id_chinhanh == Session["chinhanh"].ToString()).Select(p => new
-        {
-            id = p.id,
-            sdt = p.sdt,
-            tenkhachhang = p.tenkhachhang,
-            diachi = p.diachi,
-            sl_hoadon = 0,
-            avt = p.anhdaidien,
-            ngaytao = p.ngaytao,
-            nguoitao = tk_cl.return_hoten(p.nguoitao),
-            //tongtien = Int64.Parse("0"),
-            sauck = Int64.Parse("0"),
-            //dathanhtoan = Int64.Parse("0"),
-            sotien_conlai = Int64.Parse("0"),
-            sl_dv = int.Parse("0"),
-            sl_sp = int.Parse("0"),
-            tennhom = "",
-            idnhom = "",
-        });
-        list_all = list_all.Union(list_no).ToList();
-
-        //xử lý từ khóa
-        string _key = txt_search.Text.ToLower();
-        if (_key != "")
-        {
-            var list_search = list_all.Where(p => p.tenkhachhang.ToLower().Contains(_key) || p.sdt.Contains(_key)).ToList();
-            list_all = list_all.Intersect(list_search).ToList();
-        }
-
-        //lọc theo nhóm khách hàng
         if (DropDownList3.SelectedValue.ToString() != "")
+            query = query.Where(p => p.nhomkhachhang == DropDownList3.SelectedValue.ToString());
+
+        List<Int64> inactiveCustomerIds = GianHangAdminSourceLifecycle_cl
+            .GetInactiveKeySet(db, user_parent, "customer")
+            .Select(p =>
+            {
+                Int64 id;
+                return Int64.TryParse((p ?? "").Trim(), out id) ? (Int64?)id : null;
+            })
+            .Where(p => p.HasValue)
+            .Select(p => p.Value)
+            .Distinct()
+            .ToList();
+
+        switch (ddl_trangthai_nguon.SelectedValue.ToString())
         {
-            var list_1 = list_all.Where(p => p.idnhom == DropDownList3.SelectedValue.ToString()).ToList();
-            list_all = list_all.Intersect(list_1).ToList();
-        }
-
-        //tongdon = list_all.Sum(p => p.sl_hoadon);
-        //tong_sl_dv = list_all.Sum(p => p.sl_dv);
-        //tong_sl_sp = list_all.Sum(p => p.sl_sp);
-
-        //tongtien = list_all.Sum(p => p.tongtien);
-        //sauck = list_all.Sum(p => p.sauck);
-        //tong_thanhtoan = list_all.Sum(p => p.dathanhtoan);
-        //tong_congno = list_all.Sum(p => p.sotien_conlai);
-
-        //sắp xếp
-        switch (Session["index_sapxep_dtkh"].ToString())
-        {
-            case ("0"): list_all = list_all.OrderBy(p => p.ngaytao).ToList(); break;
-            case ("1"): list_all = list_all.OrderByDescending(p => p.ngaytao).ToList(); break;
-            default: list_all = list_all.OrderByDescending(p => p.ngaytao).ToList(); break;
+            case "1":
+                if (inactiveCustomerIds.Count != 0)
+                    query = query.Where(p => !inactiveCustomerIds.Contains(p.id));
+                break;
+            case "2":
+                if (inactiveCustomerIds.Count != 0)
+                    query = query.Where(p => inactiveCustomerIds.Contains(p.id));
+                else
+                    query = query.Where(p => false);
+                break;
         }
 
         //xử lý số lượng hiển thị
@@ -250,7 +214,8 @@ public partial class badmin_Default : System.Web.UI.Page
             show = 50;
         txt_show.Text = show.ToString();
 
-        total_page = number_of_page_class.return_total_page(list_all.Count(), show);
+        int totalRows = query.Count();
+        total_page = number_of_page_class.return_total_page(totalRows, show);
 
         //xử lý số trang        
         current_page = int.Parse(Session["current_page_dtkh"].ToString());
@@ -267,15 +232,89 @@ public partial class badmin_Default : System.Web.UI.Page
 
         //main
         stt = (show * current_page) - show + 1;
-        var list_split = list_all.Skip(current_page * show - show).Take(show).ToList();
+        bool sortAsc = Session["index_sapxep_dtkh"].ToString() == "0";
+        query = sortAsc ? query.OrderBy(p => p.ngaytao) : query.OrderByDescending(p => p.ngaytao);
+        var pageRows = query.Skip(current_page * show - show)
+            .Take(show)
+            .Select(p => new
+            {
+                p.id,
+                p.sdt,
+                p.tenkhachhang,
+                p.diachi,
+                p.anhdaidien,
+                p.ngaytao,
+                p.nguoitao,
+                p.nhomkhachhang
+            })
+            .ToList();
+
+        var groupIds = pageRows
+            .Select(p => (p.nhomkhachhang ?? "").Trim())
+            .Where(p => p != "")
+            .Distinct()
+            .ToList();
+        var groupIdNumbers = groupIds
+            .Select(p =>
+            {
+                Int64 value;
+                return Int64.TryParse(p, out value) ? (Int64?)value : null;
+            })
+            .Where(p => p.HasValue)
+            .Select(p => p.Value)
+            .Distinct()
+            .ToList();
+        var groupMap = db.nhomkhachhang_tables
+            .Where(p => p.id_chinhanh == branchId && groupIdNumbers.Contains(p.id))
+            .Select(p => new { id = p.id.ToString(), p.tennhom })
+            .ToList()
+            .ToDictionary(p => p.id, p => p.tennhom ?? "");
+
+        var creatorKeys = pageRows
+            .Select(p => (p.nguoitao ?? "").Trim())
+            .Where(p => p != "")
+            .Distinct()
+            .ToList();
+        var creatorMap = db.taikhoan_table_2023s
+            .Where(p => creatorKeys.Contains(p.taikhoan))
+            .Select(p => new { p.taikhoan, p.hoten })
+            .ToList()
+            .ToDictionary(p => p.taikhoan, p => p.hoten ?? "");
+
+        var list_split = pageRows.Select(p =>
+        {
+            string groupId = (p.nhomkhachhang ?? "").Trim();
+            string creatorKey = (p.nguoitao ?? "").Trim();
+            string creatorName;
+            if (!creatorMap.TryGetValue(creatorKey, out creatorName) || creatorName == "")
+                creatorName = creatorKey;
+
+            return new CustomerListRow
+            {
+                id = p.id,
+                sdt = p.sdt,
+                tenkhachhang = p.tenkhachhang,
+                diachi = p.diachi,
+                sl_hoadon = 0,
+                avt = p.anhdaidien,
+                ngaytao = p.ngaytao,
+                nguoitao = creatorName,
+                sauck = 0,
+                sotien_conlai = 0,
+                sl_dv = 0,
+                sl_sp = 0,
+                tennhom = groupId != "" && groupMap.ContainsKey(groupId) ? groupMap[groupId] : "",
+                idnhom = groupId
+            };
+        }).ToList();
         list_id_split = new List<string>();
         foreach (var t in list_split)
         {
             list_id_split.Add("check_" + t.id);
         }
         int _s1 = stt + list_split.Count - 1;
-        if (list_all.Count() != 0)
-            lb_show.Text = "Hiển thị " + stt + "-" + _s1 + " trong số " + list_all.Count().ToString("#,##0") + " mục";
+        if (totalRows != 0)
+            lb_show.Text = "Hiển thị " + stt + "-" + _s1 + " trong số " + totalRows.ToString("#,##0") + " mục";
         else
             lb_show.Text = "Hiển thị 0-0 trong số 0";
         Repeater1.DataSource = list_split;
@@ -283,10 +322,11 @@ public partial class badmin_Default : System.Web.UI.Page
     }
     protected void txt_search_TextChanged(object sender, EventArgs e)
     {
-        Session["search_dtkh"] = txt_search.Text.Trim();
-        Session["current_page_dtkh"] = "1";
-        main();
-
+        ApplySearchState();
+    }
+    protected void but_search_Click(object sender, EventArgs e)
+    {
+        ApplySearchState();
     }
     protected void but_quaylai_Click(object sender, EventArgs e)
     {
@@ -301,6 +341,87 @@ public partial class badmin_Default : System.Web.UI.Page
         if (int.Parse(Session["current_page_dtkh"].ToString()) > total_page)
             Session["current_page_dtkh"] = total_page;
         main();
+    }
+
+    protected void Repeater1_ItemDataBound(object sender, RepeaterItemEventArgs e)
+    {
+        if (e.Item.ItemType != ListItemType.Item && e.Item.ItemType != ListItemType.AlternatingItem)
+            return;
+
+        Literal litPersonHub = e.Item.FindControl("litPersonHub") as Literal;
+        Literal litLifecycle = e.Item.FindControl("litLifecycle") as Literal;
+        if (litPersonHub == null || litLifecycle == null)
+            return;
+
+        string displayName = (DataBinder.Eval(e.Item.DataItem, "tenkhachhang") + "").Trim();
+        string phone = (DataBinder.Eval(e.Item.DataItem, "sdt") + "").Trim();
+        string sourceKey = (DataBinder.Eval(e.Item.DataItem, "id") + "").Trim();
+        litPersonHub.Text = BuildPersonHubListHtml(displayName, phone, "khách hàng", "customer", sourceKey);
+        litLifecycle.Text = BuildSourceLifecycleHtml(sourceKey);
+    }
+
+    private void ApplySearchState()
+    {
+        Session["search_dtkh"] = txt_search.Text.Trim();
+        Session["current_page_dtkh"] = "1";
+        main();
+    }
+
+    private string BuildPersonHubListHtml(string displayName, string phone, string roleLabel, string sourceType, string sourceKey)
+    {
+        string normalizedPhone = AccountAuth_cl.NormalizePhone(phone);
+        if (normalizedPhone == "")
+        {
+            return "<small class='fg-gray'>Thiếu số điện thoại để gắn Home. Cập nhật hồ sơ " + HttpUtility.HtmlEncode(roleLabel) + " này trước.</small>";
+        }
+
+        GianHangAdminPersonHub_cl.PersonLinkInfo linkInfo = GianHangAdminPersonHub_cl.GetLinkInfo(db, user_parent, normalizedPhone, displayName);
+        string css = linkInfo == null || string.IsNullOrWhiteSpace(linkInfo.LinkCss) ? "bg-gray fg-white" : linkInfo.LinkCss;
+        string label = linkInfo == null || string.IsNullOrWhiteSpace(linkInfo.StatusLabel) ? "Chưa liên kết" : linkInfo.StatusLabel;
+        string url = GianHangAdminPersonHub_cl.BuildDetailUrl(normalizedPhone);
+        string note = "Mở hồ sơ người để liên kết Home một lần cho toàn bộ vai trò cùng số điện thoại.";
+        GianHangAdminPersonHub_cl.PersonSourceRef sourceInfo = GianHangAdminPersonHub_cl.GetSourceInfo(db, user_parent, normalizedPhone, sourceType, sourceKey);
+        string accessCss = sourceInfo == null || string.IsNullOrWhiteSpace(sourceInfo.AdminAccessCss) ? "bg-gray fg-white" : sourceInfo.AdminAccessCss;
+        string accessLabel = sourceInfo == null || string.IsNullOrWhiteSpace(sourceInfo.AdminAccessLabel) ? "Không mở quyền /gianhang/admin ở nguồn này" : sourceInfo.AdminAccessLabel;
+
+        if (linkInfo != null && linkInfo.LinkedHomeAccount != null)
+        {
+            string linkedName = string.IsNullOrWhiteSpace(linkInfo.LinkedHomeAccount.hoten)
+                ? (linkInfo.LinkedHomeAccount.taikhoan ?? "")
+                : linkInfo.LinkedHomeAccount.hoten;
+            note = "Đã liên kết với Home " + linkedName + " • " + (linkInfo.LinkedHomeAccount.taikhoan ?? "");
+        }
+        else if (linkInfo != null && !string.IsNullOrWhiteSpace(linkInfo.PendingPhone))
+        {
+            note = "Đang chờ số " + linkInfo.PendingPhone + " đăng ký hoặc đăng nhập AhaSale.";
+        }
+
+        return "<span class='data-wrapper'><code class='" + HttpUtility.HtmlAttributeEncode(css) + "'>" + HttpUtility.HtmlEncode(label) + "</code></span>"
+            + "<div class='mt-1'><span class='data-wrapper'><code class='" + HttpUtility.HtmlAttributeEncode(accessCss) + "'>" + HttpUtility.HtmlEncode(accessLabel) + "</code></span></div>"
+            + "<div class='mt-1'><small class='fg-gray'>" + HttpUtility.HtmlEncode(note) + "</small></div>"
+            + "<div class='mt-1'><a class='fg-blue fg-darkBlue-hover' href='" + HttpUtility.HtmlAttributeEncode(url) + "'>Mở hồ sơ người</a></div>";
+    }
+
+    private string BuildSourceLifecycleHtml(string sourceKey)
+    {
+        GianHangAdminSourceLifecycle_cl.SourceLifecycleInfo info = GianHangAdminSourceLifecycle_cl.GetInfo(
+            db,
+            user_parent,
+            "customer",
+            sourceKey,
+            "Đang dùng khách hàng",
+            "Đã ngừng dùng khách hàng",
+            "Hồ sơ khách hàng này đang được dùng bình thường trong module nguồn.",
+            "Hồ sơ khách hàng này đang ở trạng thái ngừng dùng an toàn. Lịch sử và liên kết Home trung tâm vẫn được giữ.");
+
+        string css = info == null || string.IsNullOrWhiteSpace(info.Css) ? "bg-green fg-white" : info.Css;
+        string label = info == null || string.IsNullOrWhiteSpace(info.Label) ? "Đang dùng khách hàng" : info.Label;
+        string note = info == null || string.IsNullOrWhiteSpace(info.Note)
+            ? "Hồ sơ khách hàng này đang được dùng bình thường trong module nguồn."
+            : info.Note;
+
+        return "<span class='data-wrapper'><code class='" + HttpUtility.HtmlAttributeEncode(css) + "'>" + HttpUtility.HtmlEncode(label) + "</code></span>"
+            + "<div class='mt-1'><small class='fg-gray'>" + HttpUtility.HtmlEncode(note) + "</small></div>";
     }
 
 
@@ -323,6 +444,52 @@ public partial class badmin_Default : System.Web.UI.Page
         }
         else
             ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", ""), true);
+    }
+
+    protected void but_ngung_Click(object sender, EventArgs e)
+    {
+        UpdateSelectedCustomerLifecycle(false, "Đã chuyển các khách hàng được chọn sang trạng thái ngừng dùng an toàn.");
+    }
+
+    protected void but_molai_Click(object sender, EventArgs e)
+    {
+        UpdateSelectedCustomerLifecycle(true, "Đã mở lại các khách hàng được chọn.");
+    }
+
+    private void UpdateSelectedCustomerLifecycle(bool makeActive, string successMessage)
+    {
+        if (bcorn_class.check_quyen(user, "q8_3") != "")
+        {
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Bạn không đủ quyền để đổi trạng thái khách hàng.", "4000", "warning"), true);
+            return;
+        }
+
+        int affected = 0;
+        for (int i = 0; i < list_id_split.Count; i++)
+        {
+            if (Request.Form[list_id_split[i]] != "on")
+                continue;
+
+            string selectedId = list_id_split[i].Replace("check_", "");
+            if (!dtkh_cl.exist_id(selectedId, user_parent))
+                continue;
+
+            if (makeActive)
+                GianHangAdminSourceLifecycle_cl.SetActive(db, user_parent, "customer", selectedId, user, "Khách hàng được mở lại từ danh sách khách hàng.");
+            else
+                GianHangAdminSourceLifecycle_cl.SetInactive(db, user_parent, "customer", selectedId, user, "Khách hàng được chuyển sang trạng thái ngừng dùng an toàn từ danh sách khách hàng.");
+
+            affected++;
+        }
+
+        if (affected > 0)
+        {
+            main();
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", successMessage, "4000", makeActive ? "success" : "warning"), true);
+            return;
+        }
+
+        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Không có khách hàng nào phù hợp để đổi trạng thái.", "4000", "warning"), true);
     }
     #region chọn ngày nhanh
     protected void but_homqua_Click(object sender, EventArgs e)
@@ -399,6 +566,7 @@ public partial class badmin_Default : System.Web.UI.Page
         Session["denngay_dtkh"] = null;
 
         Session["index_loc_nhomkh_dtkh"] = null;
+        Session["index_loc_nguon_dtkh"] = null;
 
     }
     protected void Button2_Click(object sender, EventArgs e)//reset
@@ -418,6 +586,7 @@ public partial class badmin_Default : System.Web.UI.Page
         Session["denngay_dtkh"] = txt_denngay.Text;
 
         Session["index_loc_nhomkh_dtkh"] = DropDownList3.SelectedIndex;
+        Session["index_loc_nguon_dtkh"] = ddl_trangthai_nguon.SelectedIndex;
 
         main();
         ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Lọc thành công.", "4000", "warning"), true);
@@ -458,6 +627,7 @@ public partial class badmin_Default : System.Web.UI.Page
                     _ob1.capbac = ""; _ob1.vnd_tu_e_aha = 0; _ob1.sodiem_e_aha = 0; _ob1.solan_lencap = 0;
                     db.bspa_data_khachhang_tables.InsertOnSubmit(_ob1);
                     db.SubmitChanges();
+                    GianHangAdminPersonHub_cl.SyncSourcePhoneState(db, user_parent, "", _sdt, _tenkhachhang, user);
 
                     reset_control();
                     main();

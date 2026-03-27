@@ -7,44 +7,6 @@ using System.Web.UI.WebControls;
 
 public partial class home_lich_su_giao_dich : System.Web.UI.Page
 {
-    private string ResolveCurrentAccount()
-    {
-        string tkEnc = PortalRequest_cl.GetCurrentAccountEncrypted();
-        if (string.IsNullOrEmpty(tkEnc))
-        {
-            tkEnc = Session["taikhoan_home"] as string;
-            if (string.IsNullOrEmpty(tkEnc))
-            {
-                HttpCookie ckHome = Request.Cookies["cookie_userinfo_home_bcorn"];
-                if (ckHome != null && !string.IsNullOrEmpty(ckHome["taikhoan"]))
-                    tkEnc = ckHome["taikhoan"];
-            }
-        }
-
-        if (string.IsNullOrEmpty(tkEnc))
-        {
-            tkEnc = Session["taikhoan_shop"] as string;
-            if (string.IsNullOrEmpty(tkEnc))
-            {
-                HttpCookie ckShop = Request.Cookies["cookie_userinfo_shop_bcorn"];
-                if (ckShop != null && !string.IsNullOrEmpty(ckShop["taikhoan"]))
-                    tkEnc = ckShop["taikhoan"];
-            }
-        }
-
-        if (string.IsNullOrEmpty(tkEnc))
-            return "";
-
-        try
-        {
-            return (mahoa_cl.giaima_Bcorn(tkEnc) ?? "").Trim().ToLowerInvariant();
-        }
-        catch
-        {
-            return "";
-        }
-    }
-
     protected void Page_Load(object sender, EventArgs e)
     {
         if (!IsPostBack)
@@ -52,13 +14,14 @@ public partial class home_lich_su_giao_dich : System.Web.UI.Page
             Session["url_back_home"] = HttpContext.Current.Request.Url.AbsoluteUri.ToLower();
             check_login_cl.check_login_home("none", "none", true); //check tài khoản, có chuyển hướng. YÊU CẦU ĐĂNG NHẬP.
 
-            string tk = ResolveCurrentAccount();
-            if (string.IsNullOrEmpty(tk))
+            string _tk = Session["taikhoan_home"] as string;
+
+            if (!string.IsNullOrEmpty(_tk))//nếu có khách đăng nhập
             {
-                Response.Redirect("/dang-nhap", true);
-                return;
+                ViewState["taikhoan"] = mahoa_cl.giaima_Bcorn(_tk);
             }
-            ViewState["taikhoan"] = tk;
+            else
+            { }
 
             set_dulieu_macdinh();
             show_main();
@@ -73,16 +36,13 @@ public partial class home_lich_su_giao_dich : System.Web.UI.Page
     #region main - phân trang - tìm kiếm
     public void show_main()
     {
-        string taikhoan = (ViewState["taikhoan"] ?? "").ToString().Trim().ToLowerInvariant();
-        if (string.IsNullOrEmpty(taikhoan))
-            return;
-
         using (dbDataContext db = new dbDataContext())
         {
             #region lấy dữ liệu
             var list_all = (from ob1 in db.LichSu_DongA_tbs.Where(p =>
-           p.taikhoan == taikhoan
+           p.taikhoan == ViewState["taikhoan"].ToString()
            && p.LoaiHoSo_Vi == 1
+           && (p.ghichu == null || p.ghichu == "" || !p.ghichu.Contains("|SHOPONLY|CREDIT_SELLER|"))
        )
                             join ob2 in db.taikhoan_tbs on ob1.taikhoan equals ob2.taikhoan into Group1
                             from ob2 in Group1.DefaultIfEmpty()
@@ -94,18 +54,15 @@ public partial class home_lich_su_giao_dich : System.Web.UI.Page
                                 ob1.CongTru,
                                 ob1.ghichu,
                                 ob1.id_donhang,
-                            }).ToList();
+                            }).AsQueryable();
 
-            list_all = list_all
-                .Where(p => string.IsNullOrEmpty(p.ghichu) || !p.ghichu.Contains("|SHOPONLY|CREDIT_SELLER|"))
-                .ToList();
 
 
 
             // (đang comment phần tìm kiếm y như code cũ)
 
             //sắp xếp
-            list_all = list_all.OrderByDescending(p => p.ngay).ToList();
+            list_all = list_all.OrderByDescending(p => p.ngay);
             int _Tong_Record = list_all.Count();
             #endregion
 
@@ -142,7 +99,7 @@ public partial class home_lich_su_giao_dich : System.Web.UI.Page
                 but_quaylai1.Enabled = true;
             }
 
-            var list_split = list_all.Skip(current_page * show - show).Take(show).ToList();
+            var list_split = list_all.Skip(current_page * show - show).Take(show);
 
             int stt = (show * current_page) - show + 1;
             int _s1 = stt + list_split.Count() - 1;

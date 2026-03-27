@@ -59,7 +59,7 @@ public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
 
         #region Check quyen theo nganh
         user = Session["user"].ToString();
-        user_parent = "admin";
+        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
         if (bcorn_class.check_quyen(user, "q15_1") == "" || bcorn_class.check_quyen(user, "n15_1") == "")
         {
             if (!IsPostBack)
@@ -250,12 +250,70 @@ public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
         Repeater1.DataBind();
     }
 
+    protected void Repeater1_ItemDataBound(object sender, RepeaterItemEventArgs e)
+    {
+        if (e.Item.ItemType != ListItemType.Item && e.Item.ItemType != ListItemType.AlternatingItem)
+            return;
+
+        Literal litPersonHub = e.Item.FindControl("litPersonHub") as Literal;
+        if (litPersonHub == null)
+            return;
+
+        string displayName = (DataBinder.Eval(e.Item.DataItem, "hoten") + "").Trim();
+        string phone = (DataBinder.Eval(e.Item.DataItem, "sdt") + "").Trim();
+        string sourceKey = (DataBinder.Eval(e.Item.DataItem, "id") + "").Trim();
+        litPersonHub.Text = BuildPersonHubListHtml(displayName, phone, "chuyên gia", "lecturer", sourceKey);
+    }
+
+    private string BuildPersonHubListHtml(string displayName, string phone, string roleLabel, string sourceType, string sourceKey)
+    {
+        string normalizedPhone = AccountAuth_cl.NormalizePhone(phone);
+        if (normalizedPhone == "")
+        {
+            return "<small class='fg-gray'>Thiếu số điện thoại để gắn Home. Cập nhật hồ sơ " + HttpUtility.HtmlEncode(roleLabel) + " này trước.</small>";
+        }
+
+        GianHangAdminPersonHub_cl.PersonLinkInfo linkInfo = GianHangAdminPersonHub_cl.GetLinkInfo(db, user_parent, normalizedPhone, displayName);
+        string css = linkInfo == null || string.IsNullOrWhiteSpace(linkInfo.LinkCss) ? "bg-gray fg-white" : linkInfo.LinkCss;
+        string label = linkInfo == null || string.IsNullOrWhiteSpace(linkInfo.StatusLabel) ? "Chưa liên kết" : linkInfo.StatusLabel;
+        string url = GianHangAdminPersonHub_cl.BuildDetailUrl(normalizedPhone);
+        string note = "Mở hồ sơ người để liên kết Home một lần cho toàn bộ vai trò cùng số điện thoại.";
+        GianHangAdminPersonHub_cl.PersonSourceRef sourceInfo = GianHangAdminPersonHub_cl.GetSourceInfo(db, user_parent, normalizedPhone, sourceType, sourceKey);
+        string accessCss = sourceInfo == null || string.IsNullOrWhiteSpace(sourceInfo.AdminAccessCss) ? "bg-gray fg-white" : sourceInfo.AdminAccessCss;
+        string accessLabel = sourceInfo == null || string.IsNullOrWhiteSpace(sourceInfo.AdminAccessLabel) ? "Không mở quyền /gianhang/admin ở nguồn này" : sourceInfo.AdminAccessLabel;
+
+        if (linkInfo != null && linkInfo.LinkedHomeAccount != null)
+        {
+            string linkedName = string.IsNullOrWhiteSpace(linkInfo.LinkedHomeAccount.hoten)
+                ? (linkInfo.LinkedHomeAccount.taikhoan ?? "")
+                : linkInfo.LinkedHomeAccount.hoten;
+            note = "Đã liên kết với Home " + linkedName + " • " + (linkInfo.LinkedHomeAccount.taikhoan ?? "");
+        }
+        else if (linkInfo != null && !string.IsNullOrWhiteSpace(linkInfo.PendingPhone))
+        {
+            note = "Đang chờ số " + linkInfo.PendingPhone + " đăng ký hoặc đăng nhập AhaSale.";
+        }
+
+        return "<span class='data-wrapper'><code class='" + HttpUtility.HtmlAttributeEncode(css) + "'>" + HttpUtility.HtmlEncode(label) + "</code></span>"
+            + "<div class='mt-1'><span class='data-wrapper'><code class='" + HttpUtility.HtmlAttributeEncode(accessCss) + "'>" + HttpUtility.HtmlEncode(accessLabel) + "</code></span></div>"
+            + "<div class='mt-1'><small class='fg-gray'>" + HttpUtility.HtmlEncode(note) + "</small></div>"
+            + "<div class='mt-1'><a class='fg-blue fg-darkBlue-hover' href='" + HttpUtility.HtmlAttributeEncode(url) + "'>Mở hồ sơ người</a></div>";
+    }
+
 
     #region autopostback
     protected void txt_search_TextChanged(object sender, EventArgs e)
     {
-        Session["search_giangvien"] = txt_search.Text.Trim();
+        ApplySearchState();
+    }
+    protected void but_search_Click(object sender, EventArgs e)
+    {
+        ApplySearchState();
+    }
+    private void ApplySearchState()
+    {
         Session["current_page_giangvien"] = "1";
+
         main();
     }
     //protected void txt_show_TextChanged(object sender, EventArgs e)
@@ -391,8 +449,21 @@ public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
                     if (q.Count() != 0)
                     {
                         giangvien_table _ob = q.First();
+                        string _oldPhone = _ob == null ? "" : (_ob.dienthoai ?? "");
+                        string _oldName = _ob == null ? "" : (_ob.hoten ?? "");
                         db.giangvien_tables.DeleteOnSubmit(_ob);
                         db.SubmitChanges();
+                        GianHangAdminPersonHub_cl.PreserveLinkAfterSourceRemoval(
+                            db,
+                            user_parent,
+                            _oldPhone,
+                            _oldName,
+                            user,
+                            "lecturer",
+                            "Chuyên gia đào tạo",
+                            _id,
+                            "Chuyên gia đào tạo",
+                            "Vai trò chuyên gia đào tạo đã bị xóa khỏi module nguồn.");
                         _count = _count + 1;
                     }
                 }
@@ -409,5 +480,52 @@ public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
         }
         else
             ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", ""), true);
+    }
+
+    protected void but_ngung_Click(object sender, EventArgs e)
+    {
+        UpdateSelectedLecturerStatus("Ngưng giảng dạy", "Đã chuyển các chuyên gia được chọn sang trạng thái ngừng dùng an toàn.");
+    }
+
+    protected void but_molai_Click(object sender, EventArgs e)
+    {
+        UpdateSelectedLecturerStatus("Đang giảng dạy", "Đã mở lại các chuyên gia được chọn.");
+    }
+
+    private void UpdateSelectedLecturerStatus(string targetStatus, string successMessage)
+    {
+        if (!(bcorn_class.check_quyen(user, "q15_3") == "" || bcorn_class.check_quyen(user, "n15_3") == ""))
+        {
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Bạn không đủ quyền để đổi trạng thái chuyên gia.", "4000", "warning"), true);
+            return;
+        }
+
+        int affected = 0;
+        for (int i = 0; i < list_id_split.Count; i++)
+        {
+            if (Request.Form[list_id_split[i]] != "on")
+                continue;
+
+            string selectedId = list_id_split[i].Replace("check_", "");
+            giangvien_table lecturer = db.giangvien_tables.FirstOrDefault(p => p.id.ToString() == selectedId && p.id_chinhanh == Session["chinhanh"].ToString());
+            if (lecturer == null)
+                continue;
+
+            if (string.Equals((lecturer.trangthai ?? "").Trim(), targetStatus, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            lecturer.trangthai = targetStatus;
+            db.SubmitChanges();
+            affected++;
+        }
+
+        if (affected > 0)
+        {
+            main();
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", successMessage, "4000", targetStatus == "Đang giảng dạy" ? "success" : "warning"), true);
+            return;
+        }
+
+        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Không có chuyên gia nào phù hợp để đổi trạng thái.", "4000", "warning"), true);
     }
 }

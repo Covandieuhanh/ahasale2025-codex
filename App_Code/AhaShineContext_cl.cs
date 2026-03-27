@@ -25,7 +25,24 @@ public static class AhaShineContext_cl
 
     public static string ResolveUserParent()
     {
-        string fromSession = HttpContext.Current != null ? (HttpContext.Current.Session["user_parent"] as string) : null;
+        HttpContext context = HttpContext.Current;
+        if (IsGianHangStorefrontRequest(context))
+        {
+            try
+            {
+                using (dbDataContext db = new dbDataContext())
+                {
+                    string storefrontAccount = GianHangPublic_cl.ResolveCurrentStoreAccountKey(db, context.Request);
+                    if (!string.IsNullOrWhiteSpace(storefrontAccount))
+                        return storefrontAccount.Trim().ToLowerInvariant();
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        string fromSession = context != null ? (context.Session["user_parent"] as string) : null;
         if (!string.IsNullOrWhiteSpace(fromSession))
             return fromSession.Trim().ToLowerInvariant();
 
@@ -38,10 +55,24 @@ public static class AhaShineContext_cl
 
     public static string ResolveChiNhanhId()
     {
-        var ss = HttpContext.Current != null ? HttpContext.Current.Session : null;
-        if (ss == null)
-            return "1";
-        return (ss["id_chinhanh_webcon"] ?? ss["chinhanh"] ?? "1").ToString();
+        HttpContext context = HttpContext.Current;
+        if (IsGianHangStorefrontRequest(context))
+        {
+            try
+            {
+                using (dbDataContext db = new dbDataContext())
+                {
+                    string chiNhanhId = GianHangPublic_cl.ResolveCurrentChiNhanhId(db, context.Request, ResolveSessionChiNhanhId(context));
+                    if (!string.IsNullOrWhiteSpace(chiNhanhId))
+                        return chiNhanhId.Trim();
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        return ResolveSessionChiNhanhId(context);
     }
 
     public static string ResolveChiNhanhIdForShopAccount(dbDataContext db, string taiKhoan, string fallback = null)
@@ -67,8 +98,30 @@ public static class AhaShineContext_cl
                 return chiNhanh.id.ToString();
         }
 
-        string sessionFallback = ResolveChiNhanhId();
+        string sessionFallback = ResolveSessionChiNhanhId(HttpContext.Current);
         return string.IsNullOrWhiteSpace(sessionFallback) ? "1" : sessionFallback.Trim();
+    }
+
+    private static string ResolveSessionChiNhanhId(HttpContext context)
+    {
+        var session = context != null ? context.Session : null;
+        return GianHangContext_cl.ResolveSessionChiNhanhId(session);
+    }
+
+    private static bool IsGianHangStorefrontRequest(HttpContext context)
+    {
+        string path = context == null || context.Request == null
+            ? string.Empty
+            : (context.Request.Path ?? string.Empty).Trim().ToLowerInvariant();
+        if (path == string.Empty)
+            return false;
+
+        if (path.StartsWith("/gianhang/admin", StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        return path == "/gianhang"
+            || path == "/gianhang/"
+            || path.StartsWith("/gianhang/", StringComparison.OrdinalIgnoreCase);
     }
 
     public static taikhoan_table_2023 EnsureAdvancedAdminBootstrapForShop(dbDataContext db, string shopAccount)

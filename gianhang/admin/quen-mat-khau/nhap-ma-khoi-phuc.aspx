@@ -1,4 +1,5 @@
 ﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="nhap-ma-khoi-phuc.aspx.cs" Inherits="admin_Default2" %>
+<%@ Register Src="~/Uc/Shared/SpaceLauncher_uc.ascx" TagPrefix="uc1" TagName="SpaceLauncher" %>
 
 <!DOCTYPE html>
 
@@ -88,12 +89,13 @@
     <%--fb chat hỗ trợ--%>
     <form id="form1" runat="server">
         <asp:ScriptManager ID="ScriptManager1" runat="server" EnableScriptGlobalization="True"></asp:ScriptManager>
-        <div class="bg-ma-xac-nhan">
-            <div class="container-fluid pos-fixed fixed-top bg-darkCrimson z-1 fg-white" style="height: 50px; line-height: 50px;">
-                <div class="fg-white container bg-transparent pl-0 pr-0" data-role="app-bar" data-expand-point="lg">
-                    <a class="app-bar-item" href="/gianhang/admin/quen-mat-khau/default.aspx" title="Quay lại"><span class="mif-arrow-left mr-3"></span>Quay lại</a>
-                    <%--<a class="app-bar-item" href="#">Quên mật khẩu</a>--%>
-                    <div class="app-bar-container ml-auto">
+            <div class="bg-ma-xac-nhan">
+                <div class="container-fluid pos-fixed fixed-top bg-darkCrimson z-1 fg-white" style="height: 50px; line-height: 50px;">
+                    <div class="fg-white container bg-transparent pl-0 pr-0" data-role="app-bar" data-expand-point="lg">
+                        <uc1:SpaceLauncher runat="server" ID="spaceLauncher" ButtonCssClass="app-bar-item" />
+                        <a class="app-bar-item" href="/gianhang/admin/quen-mat-khau/default.aspx" title="Quay lại"><span class="mif-arrow-left mr-3"></span>Quay lại</a>
+                        <%--<a class="app-bar-item" href="#">Quên mật khẩu</a>--%>
+                        <div class="app-bar-container ml-auto">
                         <a class="app-bar-item" href="/gianhang/admin/login.aspx">Đăng nhập ngay</a>
                     </div>
                 </div>

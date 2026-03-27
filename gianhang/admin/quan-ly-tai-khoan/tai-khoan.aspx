@@ -1,6 +1,56 @@
 ﻿<%@ Page Title="Chi tiết tài khoản" Language="C#" MasterPageFile="~/gianhang/admin/mp-admin.master" AutoEventWireup="true" CodeFile="tai-khoan.aspx.cs" Inherits="gianhang_taikhoan_detail" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="Server">
+    <style>
+        .home-account-search-box {
+            position: relative;
+        }
+
+        .home-account-search-result {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            right: 0;
+            z-index: 30;
+            background: #fff;
+            border: 1px solid #d7e3f4;
+            border-radius: 14px;
+            box-shadow: 0 18px 40px rgba(13, 37, 63, 0.12);
+            overflow: hidden;
+            display: none;
+        }
+
+        .home-account-search-item {
+            width: 100%;
+            display: block;
+            text-align: left;
+            padding: 12px 14px;
+            border: 0;
+            background: #fff;
+            cursor: pointer;
+        }
+
+        .home-account-search-item + .home-account-search-item {
+            border-top: 1px solid #eef3fb;
+        }
+
+        .home-account-search-item:hover {
+            background: #f7fbff;
+        }
+
+        .home-account-search-meta {
+            display: block;
+            margin-top: 4px;
+            color: #6b7b90;
+            font-size: 12px;
+        }
+
+        .home-account-search-empty {
+            padding: 12px 14px;
+            color: #6b7b90;
+            font-size: 13px;
+        }
+    </style>
 </asp:Content>
 <asp:Content ID="Content2" ContentPlaceHolderID="main" runat="Server">
 
@@ -165,8 +215,51 @@
                         <%=songaycong %>
                     </div>
                 </div>
+            </div>
+        </div>
 
+        <hr class="mt-6" />
 
+        <div class="row">
+            <div class="cell-12 p-3-lg mt-0-lg mt-5">
+                <h5>Hồ sơ người AhaSale</h5>
+                <p class="fg-gray">
+                    Việc gắn tài khoản Home cho con người trong `/gianhang/admin` đã được chuyển sang module trung tâm <strong>Hồ sơ người</strong>. Màn chi tiết tài khoản này chỉ còn hiển thị trạng thái và mở nhanh tới hồ sơ người theo số điện thoại.
+                </p>
+                <div class="mt-3">
+                    <label class="fw-600">Trạng thái liên kết AhaSale</label>
+                    <div>
+                        <asp:Literal ID="lit_home_linked" runat="server" />
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <label class="fw-600">Quyền vào /gianhang/admin</label>
+                    <div>
+                        <span class="data-wrapper"><code class="<%=HttpUtility.HtmlAttributeEncode(personHubAdminAccessCss) %>"><%=HttpUtility.HtmlEncode(personHubAdminAccessLabel) %></code></span>
+                    </div>
+                    <div class="mt-1 fg-gray"><%=HttpUtility.HtmlEncode(personHubAdminAccessNote) %></div>
+                </div>
+                <div class="mt-4 p-3 border" style="border-radius: 14px; border-color: #f3d6b3!important; background: #fff9f2;">
+                    <div class="fw-700"><%=HttpUtility.HtmlEncode(personHubImpactTitle) %></div>
+                    <div class="mt-1 fg-gray"><%=HttpUtility.HtmlEncode(personHubImpactNote) %></div>
+                </div>
+                <div class="mt-4">
+                    <a class="button success" href="<%=personHubUrl %>">Mở hồ sơ người</a>
+                </div>
+                <div class="mt-3 fg-gray">
+                    Khi bạn liên kết tại hồ sơ người, các hồ sơ khác cùng số điện thoại trong không gian này cũng sẽ tự nhận trạng thái liên kết tương ứng.
+                </div>
+                <% if (!string.IsNullOrWhiteSpace(personHubRelatedRolesHtml)) { %>
+                <div class="mt-4 p-3 border bd-default bg-light" style="border-radius: 14px;">
+                    <div class="fw-700">Cùng số điện thoại này còn có thêm vai trò khác</div>
+                    <div class="mt-1 fg-gray">
+                        Đây là các hồ sơ khác trong cùng không gian đang dùng chung số điện thoại với nhân sự này.
+                    </div>
+                    <div class="mt-2">
+                        <%=personHubRelatedRolesHtml %>
+                    </div>
+                </div>
+                <% } %>
             </div>
         </div>
 
@@ -177,4 +270,3 @@
 <asp:Content ID="Content3" ContentPlaceHolderID="foot" runat="Server">
     <%=notifi %>
 </asp:Content>
-

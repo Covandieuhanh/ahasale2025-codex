@@ -10,12 +10,13 @@
 
     <script>
         (function () {
-            try {
-                const key = 'theme-preference';
-                const saved = localStorage.getItem(key);
-                const theme = (saved === 'dark' || saved === 'light') ? saved : 'light';
-                document.documentElement.setAttribute('data-bs-theme', theme);
-            } catch (e) { }
+            document.documentElement.setAttribute('data-bs-theme', 'light');
+            try { localStorage.removeItem('theme-preference'); } catch (e) { }
+            document.addEventListener('DOMContentLoaded', function () {
+                if (!document.body) return;
+                document.body.setAttribute('data-bs-theme', 'light');
+                document.body.classList.remove('theme-dark', 'dark', 'dark-mode');
+            });
         })();
     </script>
 

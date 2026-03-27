@@ -123,7 +123,12 @@
             <ContentTemplate>
                 <div class="row mt-1-minus <%--mt-0-lg-minus mt-12-minus--%>">
                     <div class="cell-md-6 order-2 order-md-1 mt-0">
-                        <asp:TextBox ID="txt_search" runat="server" data-role="input" data-prepend="<span class='mif mif-search'></span>" placeholder="Tìm kiếm nhân viên" OnTextChanged="txt_search_TextChanged" AutoPostBack="true"></asp:TextBox>
+                        <div class="d-flex flex-align-center gap-2">
+                            <asp:TextBox ID="txt_search" runat="server" data-role="input" data-prepend="<span class='mif mif-search'></span>" placeholder="Tìm kiếm nhân viên"></asp:TextBox>
+                            <asp:LinkButton ID="but_search" runat="server" CssClass="button" OnClick="but_search_Click" CausesValidation="false">
+                                <span class="mif mif-search"></span>
+                            </asp:LinkButton>
+                        </div>
                     </div>
                     <div class="cell-md-6 order-1 order-md-2 mt-0">
                         <div class="place-right">
@@ -160,7 +165,7 @@
                                     <td class=" text-bold " style="min-width: 60px; width: 60px;"></td>
                                     <td class="text-bold" style="min-width: 220px; width: 220px">Nhân viên</td>
                                     <td class="" style="min-width: 220px; width: 220px;">
-                                        <asp:TextBox ID="txt_ngaychamcong" data-clear-button="false" runat="server" MaxLength="10" data-role="calendar-picker" data-outside="true" data-week-start="1" data-locale="vi-VN" data-format="DD/MM/YYYY" data-input-format="DD/MM/YYYY" OnTextChanged="txt_ngaychamcong_TextChanged" AutoPostBack="true"></asp:TextBox>
+                                        <asp:TextBox ID="txt_ngaychamcong" data-clear-button="false" runat="server" MaxLength="10" data-role="calendar-picker" data-outside="true" data-week-start="1" data-locale="vi-VN" data-format="DD/MM/YYYY" data-input-format="DD/MM/YYYY"></asp:TextBox>
                                     </td>
                                     <td></td>
                                 </tr>
@@ -233,5 +238,32 @@
 </asp:Content>
 <asp:Content ID="Content3" ContentPlaceHolderID="foot" runat="Server">
     <%=notifi %>
-</asp:Content>
 
+    <script src="/js/gianhang-invoice-fast.js?v=20260326a"></script>
+    <script>
+        (function () {
+            function bindFastUi() {
+                if (!window.ahaInvoiceFast) return;
+                window.ahaInvoiceFast.initSearchSubmit({
+                    inputId: "<%=txt_search.ClientID %>",
+                    buttonId: "<%=but_search.ClientID %>"
+                });
+                var dateInput = document.getElementById("<%=txt_ngaychamcong.ClientID %>");
+                if (dateInput && !dateInput.dataset.ahaDateBound) {
+                    dateInput.dataset.ahaDateBound = "1";
+                    dateInput.addEventListener("change", function () {
+                        var value = (dateInput.value || "").trim();
+                        if (!value) return;
+                        var url = new URL(window.location.href);
+                        url.searchParams.set("ngay", value);
+                        window.location.href = url.toString();
+                    });
+                }
+            }
+            bindFastUi();
+            if (window.Sys && Sys.Application) {
+                Sys.Application.add_load(bindFastUi);
+            }
+        })();
+    </script>
+</asp:Content>

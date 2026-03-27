@@ -45,6 +45,18 @@ public static class app_cookie_policy_class
         context.Response.Cookies.Add(cookie);
     }
 
+    public static string read_cookie(HttpContext context, string name)
+    {
+        if (context == null || context.Request == null || context.Request.Cookies == null || string.IsNullOrWhiteSpace(name))
+            return "";
+
+        HttpCookie cookie = context.Request.Cookies[name];
+        if (cookie == null)
+            return "";
+
+        return (cookie.Value ?? "").Trim();
+    }
+
     private static void apply_policy(HttpCookie cookie, HttpRequest request)
     {
         if (cookie == null)

@@ -13,10 +13,9 @@ public partial class admin_duyet_nang_cap_level2 : System.Web.UI.Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
-        AdminRolePolicy_cl.RequireSuperAdmin();
-
         if (!IsPostBack)
         {
+            check_login_cl.check_login_admin("none", "none");
             txt_timkiem.Text = "";
             ddl_trangthai.SelectedValue = "";
             LoadDanhSach();
@@ -69,7 +68,6 @@ public partial class admin_duyet_nang_cap_level2 : System.Web.UI.Page
 
     protected void btn_duyet_Click(object sender, EventArgs e)
     {
-        AdminRolePolicy_cl.RequireSuperAdmin();
         int id;
         if (!int.TryParse(((System.Web.UI.WebControls.LinkButton)sender).CommandArgument, out id))
         {
@@ -94,7 +92,6 @@ public partial class admin_duyet_nang_cap_level2 : System.Web.UI.Page
 
     protected void btn_tuchoi_Click(object sender, EventArgs e)
     {
-        AdminRolePolicy_cl.RequireSuperAdmin();
         int id;
         if (!int.TryParse(((System.Web.UI.WebControls.LinkButton)sender).CommandArgument, out id))
         {

@@ -130,6 +130,9 @@ public partial class admin_MasterPageAdmin : System.Web.UI.MasterPage
         if (!AdminRolePolicy_cl.EnsureMasterRouteAccess(this.Page))
             return;
 
+        if (!AdminManagementSpace_cl.EnsureSelectedSpaceRouteAccess(this.Page))
+            return;
+
         if (!IsPostBack)
         {
             try

@@ -37,16 +37,29 @@ public static class DauGiaNotify_cl
         if (receiver == "")
             return;
 
-        ThongBao_tb notice = new ThongBao_tb();
-        notice.id = Guid.NewGuid();
-        notice.nguoithongbao = string.IsNullOrWhiteSpace(fromAccount) ? "admin" : fromAccount.Trim().ToLowerInvariant();
-        notice.nguoinhan = receiver;
-        notice.link = string.IsNullOrWhiteSpace(link) ? "/daugia" : link.Trim();
-        notice.noidung = BuildSuccessMessage(content);
-        notice.thoigian = AhaTime_cl.Now;
-        notice.daxem = false;
-        notice.bin = false;
-        db.ThongBao_tbs.InsertOnSubmit(notice);
-        db.SubmitChanges();
+        try
+        {
+            db.ExecuteCommand(@"
+INSERT INTO dbo.ThongBao_tb
+(
+    id, nguoithongbao, nguoinhan, link, noidung, thoigian, daxem, bin
+)
+VALUES
+(
+    {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}
+)
+", Guid.NewGuid(),
+   string.IsNullOrWhiteSpace(fromAccount) ? "admin" : fromAccount.Trim().ToLowerInvariant(),
+   receiver,
+   string.IsNullOrWhiteSpace(link) ? "/daugia" : link.Trim(),
+   BuildSuccessMessage(content),
+   AhaTime_cl.Now,
+   false,
+   false);
+        }
+        catch (Exception ex)
+        {
+            Log_cl.Add_Log(ex.Message, "daugia_notify", ex.StackTrace);
+        }
     }
 }

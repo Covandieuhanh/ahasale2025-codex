@@ -13,7 +13,7 @@
                         <ContentTemplate>
                             <div class="mt-0">
                                 <label class="fw-600">Trạng thái</label>
-                                <asp:DropDownList ID="DropDownList1" CssClass="select-input select" runat="server" AutoPostBack="true" OnSelectedIndexChanged="DropDownList1_SelectedIndexChanged">
+                                <asp:DropDownList ID="DropDownList1" CssClass="select-input select" runat="server">
                                     <asp:ListItem Text="Không bảo trì" Value="0"></asp:ListItem>
                                     <asp:ListItem Text="Bảo trì" Value="1"></asp:ListItem>
                                 </asp:DropDownList>
@@ -65,5 +65,24 @@
 </asp:Content>
 <asp:Content ID="Content3" ContentPlaceHolderID="foot" runat="Server">
     <%=notifi %>
+    <script>
+        (function () {
+            function syncBaoTriState() {
+                var select = document.getElementById("<%=DropDownList1.ClientID %>");
+                var panel = document.getElementById("<%=Panel2.ClientID %>");
+                if (!select || !panel) return;
+                var enabled = select.value === "1";
+                panel.style.opacity = enabled ? "1" : "0.55";
+                var fields = panel.querySelectorAll("input, select, textarea, button");
+                for (var i = 0; i < fields.length; i++) {
+                    fields[i].disabled = !enabled;
+                }
+            }
+            syncBaoTriState();
+            var select = document.getElementById("<%=DropDownList1.ClientID %>");
+            if (select) {
+                select.addEventListener("change", syncBaoTriState);
+            }
+        })();
+    </script>
 </asp:Content>
-

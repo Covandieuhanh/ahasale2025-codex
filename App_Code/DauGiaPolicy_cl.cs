@@ -17,6 +17,11 @@ public static class DauGiaPolicy_cl
     public const string SettlementManualFulfillment = "manual_fulfillment";
     public const string SettlementSystemTransfer = "system_transfer";
 
+    public const string SourceManualAsset = "manual_asset";
+    public const string SourceShopPost = "shop_post";
+    public const string SourceHomeQuyenUuDai = "home_quyen_uu_dai";
+    public const string SourceHomeQuyenTieuDung = "home_quyen_tieu_dung";
+
     public const string AdminPermissionCode = "daugia_admin";
 
     public static string NormalizeStatus(string status)
@@ -52,6 +57,26 @@ public static class DauGiaPolicy_cl
         return SettlementManualFulfillment;
     }
 
+    public static string NormalizeSourceType(string sourceType)
+    {
+        string normalized = (sourceType ?? "").Trim().ToLowerInvariant();
+        switch (normalized)
+        {
+            case SourceManualAsset:
+            case SourceShopPost:
+            case SourceHomeQuyenUuDai:
+            case SourceHomeQuyenTieuDung:
+                return normalized;
+            default:
+                return SourceManualAsset;
+        }
+    }
+
+    public static bool RequiresSourceId(string sourceType)
+    {
+        return NormalizeSourceType(sourceType) != SourceManualAsset;
+    }
+
     public static bool IsTerminalStatus(string status)
     {
         string normalized = NormalizeStatus(status);
@@ -83,7 +108,7 @@ public static class DauGiaPolicy_cl
         if (db != null && check_login_cl.CheckQuyen(db, normalized, AdminPermissionCode))
             return true;
 
-        return PortalScope_cl.CanLoginAdmin(normalized, "", permissionRaw);
+        return false;
     }
 
     public static bool IsValidTransition(string fromStatus, string toStatus)

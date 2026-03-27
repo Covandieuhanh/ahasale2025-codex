@@ -28,6 +28,9 @@ public class hocvien_class
     }
     public void del(string _id)
     {
+        hocvien_table _ob = return_object(_id);
+        string _oldPhone = _ob == null ? "" : (_ob.dienthoai ?? "");
+        string _oldName = _ob == null ? "" : (_ob.hoten ?? "");
         HoaDonThuChiSync_cl.DeleteForHocVien(db, _id, System.Web.HttpContext.Current.Session["chinhanh"].ToString());
         db.SubmitChanges();
         //xóa lịch sử thanh toán
@@ -40,9 +43,19 @@ public class hocvien_class
         }
 
         //xóa
-        hocvien_table _ob = return_object(_id);
         db.hocvien_tables.DeleteOnSubmit(_ob);
         db.SubmitChanges();
+        GianHangAdminPersonHub_cl.PreserveLinkAfterSourceRemoval(
+            db,
+            AhaShineContext_cl.ResolveUserParent(),
+            _oldPhone,
+            _oldName,
+            (System.Web.HttpContext.Current != null && System.Web.HttpContext.Current.Session != null ? ((System.Web.HttpContext.Current.Session["user"] ?? "") + "") : ""),
+            "member",
+            "Thành viên / Học viên",
+            _id,
+            "Thành viên / Học viên",
+            "Vai trò thành viên / học viên đã bị xóa khỏi module nguồn.");
 
     }
 }

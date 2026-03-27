@@ -52,7 +52,7 @@ public partial class badmin_Default : System.Web.UI.Page
         }
         #endregion 
         user = Session["user"].ToString();
-        user_parent = "admin";
+        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
         if (!IsPostBack)
         {
             Session["index_sapxep_nhomvattu"] = "0";
@@ -70,13 +70,9 @@ public partial class badmin_Default : System.Web.UI.Page
                             ten = ob1.tennhom,
                         }).ToList();
 
-        //xử lý từ khóa
-        string _key = txt_search.Text.ToLower();
+        string _key = txt_search.Text.Trim();
         if (_key != "")
-        {
-            var list_search = list_all.Where(p => p.ten.ToLower().Contains(_key)).ToList();
-            list_all = list_all.Intersect(list_search).ToList();
-        }
+            list_all = list_all.Where(p => p.ten.ToLower().Contains(_key.ToLower())).ToList();
 
         //sắp xếp
         switch (Session["index_sapxep_nhomvattu"].ToString())
@@ -125,10 +121,16 @@ public partial class badmin_Default : System.Web.UI.Page
     }
     protected void txt_search_TextChanged(object sender, EventArgs e)
     {
+        ApplySearchState();
+    }
+    protected void but_search_Click(object sender, EventArgs e)
+    {
+        ApplySearchState();
+    }
+    private void ApplySearchState()
+    {
         Session["current_page_nhomvattu"] = "1";
-
         main();
-
     }
     protected void txt_show_TextChanged(object sender, EventArgs e)
     {

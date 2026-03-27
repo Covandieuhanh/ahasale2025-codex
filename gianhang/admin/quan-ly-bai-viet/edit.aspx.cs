@@ -14,6 +14,21 @@ public partial class badmin_temp : System.Web.UI.Page
     string_class str_cl = new string_class();
     dbDataContext db = new dbDataContext();
     nganh_class nganh_cl = new nganh_class();
+
+    private void EnsureLegacyAdminSession()
+    {
+        if (Session == null)
+            return;
+
+        string legacyUser = (Session["user"] ?? "").ToString().Trim();
+        if (legacyUser != "")
+            return;
+
+        string homeAccount;
+        string deniedMessage;
+        GianHangAdminBridge_cl.EnsureLegacyAdminSessionFromCurrentHome(db, out homeAccount, out deniedMessage);
+    }
+
     protected void FileBrowser1_Load(object sender, EventArgs e)
     {
         FileBrowser1 = new CKFinder.FileBrowser();
@@ -24,6 +39,8 @@ public partial class badmin_temp : System.Web.UI.Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
+        EnsureLegacyAdminSession();
+
         #region Check_Login
         string _quyen = "q4_3";
         string _cookie_user = "", _cookie_pass = "";
@@ -58,7 +75,7 @@ public partial class badmin_temp : System.Web.UI.Page
         }
         #endregion
         user = Session["user"].ToString();
-        user_parent = "admin";
+        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
         if (!string.IsNullOrWhiteSpace(Request.QueryString["id"]))
         {
             id = Request.QueryString["id"].ToString().Trim();
@@ -96,7 +113,7 @@ public partial class badmin_temp : System.Web.UI.Page
                     txt_name.Text = q.name;
                     txt_description.Text = q.description;
                     txt_content.Text = q.content_post;
-                    
+
 
                     show_menu_dropdownbox();
 
@@ -117,12 +134,13 @@ public partial class badmin_temp : System.Web.UI.Page
                                 DropDownList1.SelectedIndex = 2;
                         }
                     }
-                    
+
                     txt_dvt_sp.Text = q.donvitinh_sp;
                     //txt_soluong_ton_sanpham.Text = q.soluong_ton_sanpham.Value.ToString("#,##0");
                     txt_giadichvu.Text = q.giaban_dichvu.Value.ToString("#,##0"); txt_lam_dichvu.Text = q.phantram_lamdichvu.Value.ToString("#,##0"); txt_chotsale_dichvu.Text = q.phantram_chotsale_dichvu.Value.ToString("#,##0"); txt_thoiluong_dichvu.Text = datlich_class.chuanhoa_thoiluong_dichvu_phut(q.thoiluong_dichvu_phut).ToString("#,##0");
-                    xuly_phanloai();
                 }
+
+                xuly_phanloai();
 
             }
             else
@@ -310,7 +328,7 @@ public partial class badmin_temp : System.Web.UI.Page
     }
     protected void Button2_Click(object sender, EventArgs e)
     {
-        var q = db.web_post_tables.Where(p => p.id.ToString() == id&& p.id_chinhanh == Session["chinhanh"].ToString());//câu lệnh này nếu thay bằng mn_cl.return_object sẽ k lưu lại đc        
+        var q = db.web_post_tables.Where(p => p.id.ToString() == id&& p.id_chinhanh == Session["chinhanh"].ToString());//câu lệnh này nếu thay bằng mn_cl.return_object sẽ k lưu lại đc
         if (q.Count() != 0)
         {
             web_post_table _ob = q.First();

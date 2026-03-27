@@ -41,6 +41,168 @@ public partial class home_edit_info : System.Web.UI.Page
         TextBox4.Text = full;
         return full;
     }
+
+    private static string NormalizeSocialPreset(string value)
+    {
+        string preset = (value ?? "").Trim().ToLowerInvariant();
+        switch (preset)
+        {
+            case "facebook":
+            case "zalo":
+            case "tiktok":
+            case "youtube":
+            case "instagram":
+            case "telegram":
+            case "shopee":
+            case "website":
+                return preset;
+            default:
+                return "";
+        }
+    }
+
+    private static string StripSocialPrefix(string value, params string[] prefixes)
+    {
+        string result = (value ?? "").Trim();
+        foreach (string prefix in prefixes)
+        {
+            if (result.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                result = result.Substring(prefix.Length);
+            }
+        }
+
+        return result.Trim().TrimStart('/');
+    }
+
+    private static string BuildPresetSocialLink(string presetValue, string rawValue)
+    {
+        string raw = (rawValue ?? "").Trim();
+        if (raw.Length == 0)
+            return "";
+
+        string normalized = SocialLinkIcon_cl.NormalizeExternalLink(raw);
+        if (!string.IsNullOrEmpty(normalized))
+            return normalized;
+
+        string preset = NormalizeSocialPreset(presetValue);
+        string candidate = "";
+        string value = raw.Trim().TrimStart('/');
+
+        switch (preset)
+        {
+            case "facebook":
+                value = StripSocialPrefix(value, "www.facebook.com/", "facebook.com/");
+                value = value.TrimStart('@');
+                candidate = "https://www.facebook.com/" + value;
+                break;
+
+            case "zalo":
+                value = StripSocialPrefix(value, "zalo.me/", "chat.zalo.me/", "zaloapp.com/qr/p/");
+                string digits = new string(value.Where(char.IsDigit).ToArray());
+                candidate = "https://zalo.me/" + (string.IsNullOrEmpty(digits) ? value : digits);
+                break;
+
+            case "tiktok":
+                value = StripSocialPrefix(value, "www.tiktok.com/", "tiktok.com/");
+                if (!value.StartsWith("@", StringComparison.OrdinalIgnoreCase) && value.IndexOf('/') < 0)
+                    value = "@" + value;
+                candidate = "https://www.tiktok.com/" + value;
+                break;
+
+            case "youtube":
+                value = StripSocialPrefix(value, "www.youtube.com/", "youtube.com/", "youtu.be/");
+                if (value.StartsWith("@", StringComparison.OrdinalIgnoreCase)
+                    || value.StartsWith("channel/", StringComparison.OrdinalIgnoreCase)
+                    || value.StartsWith("c/", StringComparison.OrdinalIgnoreCase)
+                    || value.StartsWith("user/", StringComparison.OrdinalIgnoreCase))
+                {
+                    candidate = "https://www.youtube.com/" + value;
+                }
+                else
+                {
+                    candidate = "https://www.youtube.com/@" + value.TrimStart('@');
+                }
+                break;
+
+            case "instagram":
+                value = StripSocialPrefix(value, "www.instagram.com/", "instagram.com/");
+                candidate = "https://www.instagram.com/" + value.TrimStart('@');
+                break;
+
+            case "telegram":
+                value = StripSocialPrefix(value, "t.me/", "telegram.me/");
+                candidate = "https://t.me/" + value.TrimStart('@');
+                break;
+
+            case "shopee":
+                value = StripSocialPrefix(value, "www.shopee.vn/", "shopee.vn/");
+                if (value.All(char.IsDigit))
+                    value = "shop/" + value;
+                candidate = "https://shopee.vn/" + value;
+                break;
+
+            case "website":
+                candidate = "https://" + raw.TrimStart('/');
+                break;
+
+            default:
+                if (raw.Contains("."))
+                    candidate = "https://" + raw.TrimStart('/');
+                break;
+        }
+
+        return SocialLinkIcon_cl.NormalizeExternalLink(candidate);
+    }
+
+    private static string DetectSocialPreset(string link)
+    {
+        string normalized = SocialLinkIcon_cl.NormalizeExternalLink(link);
+        if (string.IsNullOrEmpty(normalized))
+            return "";
+
+        Uri uri;
+        if (!Uri.TryCreate(normalized, UriKind.Absolute, out uri))
+            return "";
+
+        string host = (uri.Host ?? "").Trim().ToLowerInvariant();
+        if (host.Contains("facebook.com") || host == "fb.com" || host.EndsWith(".fb.com"))
+            return "facebook";
+        if (host.Contains("zalo.me") || host.Contains("zalo.vn") || host.Contains("chat.zalo"))
+            return "zalo";
+        if (host.Contains("tiktok.com") || host == "vt.tiktok.com")
+            return "tiktok";
+        if (host.Contains("youtube.com") || host == "youtu.be")
+            return "youtube";
+        if (host.Contains("instagram.com"))
+            return "instagram";
+        if (host == "t.me" || host.Contains("telegram.me"))
+            return "telegram";
+        if (host.Contains("shopee.vn") || host.Contains("shopee.com"))
+            return "shopee";
+
+        return "";
+    }
+
+    private string ResolveDefaultSocialLinkTitle(taikhoan_tb account)
+    {
+        bool isShop = string.Equals((txtKieu.Text ?? "").Trim(), "Cửa hàng", StringComparison.OrdinalIgnoreCase);
+        string titleFromForm = isShop ? (TextBox2.Text ?? "").Trim() : (txt_hoten.Text ?? "").Trim();
+        if (!string.IsNullOrEmpty(titleFromForm))
+            return titleFromForm;
+
+        if (account != null)
+        {
+            string titleFromAccount = isShop ? (account.ten_shop ?? "").Trim() : (account.hoten ?? "").Trim();
+            if (!string.IsNullOrEmpty(titleFromAccount))
+                return titleFromAccount;
+
+            if (!string.IsNullOrEmpty(account.taikhoan))
+                return account.taikhoan;
+        }
+
+        return "";
+    }
     protected void Page_Load(object sender, EventArgs e)
     {
         if (!IsPostBack)
@@ -71,8 +233,7 @@ public partial class home_edit_info : System.Web.UI.Page
         var user = db.taikhoan_tbs.FirstOrDefault(x => x.taikhoan == tk);
         if (user == null) return true;
 
-        // Không thuộc scope shop thì không được chỉnh dữ liệu cửa hàng.
-        if (!PortalScope_cl.CanLoginShop(user.taikhoan, user.phanloai, user.permission))
+        if (!SpaceAccess_cl.CanAccessShop(db, user))
             return true;
 
         return false;
@@ -136,13 +297,6 @@ public partial class home_edit_info : System.Web.UI.Page
         if (lockShop) preferShopTab = false;
         ViewState["prefer_shop_tab"] = preferShopTab;
 
-        // Bind link mạng xã hội
-        var link = db.MangXaHoi_tbs.Where(x => x.TaiKhoan.Equals(q_tk.taikhoan)).ToList();
-        rptMangXaHoiCN.DataSource = link.Where(x => x.Kieu == "Cá nhân");
-        rptMangXaHoiCH.DataSource = link.Where(x => x.Kieu == "Cửa hàng");
-        rptMangXaHoiCN.DataBind();
-        rptMangXaHoiCH.DataBind();
-
         string metaTags = string.Format(@"
             <!-- Title -->
             <title>Chỉnh sửa thông tin {0}</title>
@@ -195,6 +349,12 @@ public partial class home_edit_info : System.Web.UI.Page
         chk_profile_reviews.Checked = profileSettings.ShowReviews;
         if (chk_profile_shop != null) chk_profile_shop.Checked = profileSettings.ShowShop;
         if (chk_profile_products != null) chk_profile_products.Checked = profileSettings.ShowProducts;
+
+        var link = db.MangXaHoi_tbs.Where(x => x.TaiKhoan.Equals(q_tk.taikhoan)).ToList();
+        rptMangXaHoiCN.DataSource = SocialLinkOrder_cl.SortLinks(link.Where(x => x.Kieu == "Cá nhân"), profileSettings.SocialOrderPersonal);
+        rptMangXaHoiCH.DataSource = SocialLinkOrder_cl.SortLinks(link.Where(x => x.Kieu == "Cửa hàng"), profileSettings.SocialOrderShop);
+        rptMangXaHoiCN.DataBind();
+        rptMangXaHoiCH.DataBind();
 
         // left summary card removed -> no Literal4/Literal5
         #endregion
@@ -356,9 +516,13 @@ public partial class home_edit_info : System.Web.UI.Page
             return;
         }
 
-        txtTen.Text = "";
+        txtTen.Text = ResolveDefaultSocialLinkTitle(null);
         txtLink.Text = "";
         TxtIcon.Text = "";
+        hfIdLink.Value = "";
+        hfSocialPreset.Value = "";
+        lblLinkError.Text = "";
+        lblLinkError.Visible = false;
         ViewState["EditLinkId"] = null;
         uploadedFileContainer.Visible = false;
 
@@ -371,6 +535,10 @@ public partial class home_edit_info : System.Web.UI.Page
         txtTen.Text = "";
         txtLink.Text = "";
         TxtIcon.Text = "";
+        hfIdLink.Value = "";
+        hfSocialPreset.Value = "";
+        lblLinkError.Text = "";
+        lblLinkError.Visible = false;
         ViewState["EditLinkId"] = null;
 
         pn_themlink.Visible = false;
@@ -399,7 +567,11 @@ public partial class home_edit_info : System.Web.UI.Page
                 {
                     txtTen.Text = item.Ten;
                     txtLink.Text = item.Link;
+                    txtKieu.Text = item.Kieu;
                     hfIdLink.Value = item.id.ToString();
+                    hfSocialPreset.Value = DetectSocialPreset(item.Link);
+                    lblLinkError.Text = "";
+                    lblLinkError.Visible = false;
                     pn_themlink.Visible = true;
 
                     if (!string.IsNullOrEmpty(item.Icon))
@@ -428,10 +600,67 @@ public partial class home_edit_info : System.Web.UI.Page
 
                 if (item != null)
                 {
+                    string deletedKind = item.Kieu ?? "";
                     File_Folder_cl.del_file(item.Icon);
                     db.MangXaHoi_tbs.DeleteOnSubmit(item);
                     db.SubmitChanges();
+
+                    string currentAccountKey = Convert.ToString(ViewState["taikhoan"]) ?? "";
+                    var currentAccount = db.taikhoan_tbs.FirstOrDefault(x => x.taikhoan == currentAccountKey);
+                    if (currentAccount != null)
+                    {
+                        bool isShopAccount = ShopSlug_cl.IsShopAccount(db, currentAccount);
+                        var settings = HomeProfileSetting_cl.GetSettings(db, currentAccountKey, isShopAccount);
+                        var scopedLinks = db.MangXaHoi_tbs
+                            .Where(x => x.TaiKhoan == currentAccountKey && x.Kieu == deletedKind)
+                            .ToList();
+
+                        if (string.Equals(deletedKind, "Cửa hàng", StringComparison.OrdinalIgnoreCase))
+                            settings.SocialOrderShop = SocialLinkOrder_cl.Normalize(settings.SocialOrderShop, scopedLinks);
+                        else
+                            settings.SocialOrderPersonal = SocialLinkOrder_cl.Normalize(settings.SocialOrderPersonal, scopedLinks);
+
+                        HomeProfileSetting_cl.Upsert(db, currentAccountKey, settings, currentAccountKey, isShopAccount);
+                    }
                 }
+                show_main(db);
+                up_main.Update();
+            }
+            else if (e.CommandName == "MoveUpItem" || e.CommandName == "MoveDownItem")
+            {
+                bool lockShop = (ViewState["lock_shop"] as bool?) ?? false;
+                if (lockShop && item != null && item.Kieu == "Cửa hàng")
+                {
+                    Helper_Tabler_cl.ShowToast(this.Page, "Bạn không thể sắp xếp link cửa hàng lúc này.", "warning", true, 2500, "Thông báo");
+                    return;
+                }
+
+                if (item != null)
+                {
+                    string currentAccountKey = Convert.ToString(ViewState["taikhoan"]) ?? "";
+                    var currentAccount = db.taikhoan_tbs.FirstOrDefault(x => x.taikhoan == currentAccountKey);
+                    if (currentAccount != null)
+                    {
+                        bool isShopAccount = ShopSlug_cl.IsShopAccount(db, currentAccount);
+                        var settings = HomeProfileSetting_cl.GetSettings(db, currentAccountKey, isShopAccount);
+                        var scopedLinks = db.MangXaHoi_tbs
+                            .Where(x => x.TaiKhoan == currentAccountKey && x.Kieu == item.Kieu)
+                            .ToList();
+
+                        int offset = e.CommandName == "MoveUpItem" ? -1 : 1;
+                        if (string.Equals(item.Kieu, "Cửa hàng", StringComparison.OrdinalIgnoreCase))
+                        {
+                            settings.SocialOrderShop = SocialLinkOrder_cl.Move(settings.SocialOrderShop, scopedLinks, item.id, offset);
+                        }
+                        else
+                        {
+                            settings.SocialOrderPersonal = SocialLinkOrder_cl.Move(settings.SocialOrderPersonal, scopedLinks, item.id, offset);
+                        }
+
+                        HomeProfileSetting_cl.Upsert(db, currentAccountKey, settings, currentAccountKey, isShopAccount);
+                    }
+                }
+
                 show_main(db);
                 up_main.Update();
             }
@@ -482,11 +711,12 @@ public partial class home_edit_info : System.Web.UI.Page
                 m.TaiKhoan = q_tk.taikhoan;
             }
 
-            m.Ten = txtTen.Text;
-            m.Link = SocialLinkIcon_cl.NormalizeExternalLink(txtLink.Text);
+            string preparedLink = BuildPresetSocialLink(hfSocialPreset.Value, txtLink.Text);
+            m.Ten = string.IsNullOrWhiteSpace(txtTen.Text) ? ResolveDefaultSocialLinkTitle(q_tk) : txtTen.Text.Trim();
+            m.Link = SocialLinkIcon_cl.NormalizeExternalLink(preparedLink);
             if (string.IsNullOrEmpty(m.Link))
             {
-                lblLinkError.Text = "Link chưa hợp lệ. Vui lòng nhập đúng định dạng http/https.";
+                lblLinkError.Text = "Link chưa hợp lệ. Bạn có thể dán link đầy đủ hoặc chỉ nhập username/số điện thoại theo ứng dụng đã chọn.";
                 lblLinkError.Visible = true;
                 return;
             }
@@ -500,15 +730,28 @@ public partial class home_edit_info : System.Web.UI.Page
 
             db.SubmitChanges();
 
+            var refreshedSettings = HomeProfileSetting_cl.GetSettings(db, q_tk.taikhoan, ShopSlug_cl.IsShopAccount(db, q_tk));
+            var scopedLinks = db.MangXaHoi_tbs
+                .Where(x => x.TaiKhoan == q_tk.taikhoan && x.Kieu == m.Kieu)
+                .ToList();
+            if (string.Equals(m.Kieu, "Cửa hàng", StringComparison.OrdinalIgnoreCase))
+                refreshedSettings.SocialOrderShop = SocialLinkOrder_cl.Normalize(refreshedSettings.SocialOrderShop, scopedLinks);
+            else
+                refreshedSettings.SocialOrderPersonal = SocialLinkOrder_cl.Normalize(refreshedSettings.SocialOrderPersonal, scopedLinks);
+            HomeProfileSetting_cl.Upsert(db, q_tk.taikhoan, refreshedSettings, q_tk.taikhoan, ShopSlug_cl.IsShopAccount(db, q_tk));
+
             show_main(db);
             up_main.Update();
         }
 
         hfIdLink.Value = "";
+        hfSocialPreset.Value = "";
         txtTen.Text = "";
         txtLink.Text = "";
         TxtIcon.Text = "";
         txtKieu.Text = "";
+        lblLinkError.Text = "";
+        lblLinkError.Visible = false;
 
         pn_themlink.Visible = false;
         up_themlink.Update();
@@ -581,6 +824,7 @@ public partial class home_edit_info : System.Web.UI.Page
             }
 
             bool isShopAccount = ShopSlug_cl.IsShopAccount(db, q);
+            var currentProfileSettings = HomeProfileSetting_cl.GetSettings(db, q.taikhoan, isShopAccount);
             var settings = new HomeProfileSetting_cl.ProfileSettings
             {
                 TemplateKey = ddl_profile_template.SelectedValue,
@@ -589,7 +833,9 @@ public partial class home_edit_info : System.Web.UI.Page
                 ShowSocial = chk_profile_social.Checked,
                 ShowReviews = chk_profile_reviews.Checked,
                 ShowShop = (chk_profile_shop != null && chk_profile_shop.Checked),
-                ShowProducts = (chk_profile_products != null && chk_profile_products.Checked)
+                ShowProducts = (chk_profile_products != null && chk_profile_products.Checked),
+                SocialOrderPersonal = currentProfileSettings.SocialOrderPersonal,
+                SocialOrderShop = currentProfileSettings.SocialOrderShop
             };
             HomeProfileSetting_cl.Upsert(db, q.taikhoan, settings, q.taikhoan, isShopAccount);
 

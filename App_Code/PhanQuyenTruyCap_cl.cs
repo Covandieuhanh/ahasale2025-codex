@@ -8,6 +8,7 @@ public static class PhanQuyenTruyCap_cl
     public const string KhongGianShop = "shop";
     public const string KhongGianAdmin = "admin";
     public const string KhongGianDauGia = "daugia";
+    public const string KhongGianEvent = "event";
     public const string KhongGianGianHangAdmin = "gianhang_admin";
 
     public static string ChuanHoaKhongGian(string raw)
@@ -17,6 +18,7 @@ public static class PhanQuyenTruyCap_cl
         if (value == KhongGianShop) return KhongGianShop;
         if (value == KhongGianAdmin) return KhongGianAdmin;
         if (value == KhongGianDauGia) return KhongGianDauGia;
+        if (value == KhongGianEvent) return KhongGianEvent;
         if (value == KhongGianGianHangAdmin) return KhongGianGianHangAdmin;
         return "";
     }
@@ -79,6 +81,9 @@ public static class PhanQuyenTruyCap_cl
         if (taiKhoan == null)
             return false;
 
+        if (CoTheVaoHome(taiKhoan))
+            return true;
+
         return CoMaQuyen(taiKhoan.permission, "portal_daugia", "daugia", "mod_daugia");
     }
 
@@ -88,6 +93,14 @@ public static class PhanQuyenTruyCap_cl
             return false;
 
         return CoMaQuyen(taiKhoan.permission, "portal_gianhang_admin", "gianhang_admin", "mod_gianhang_admin");
+    }
+
+    public static bool CoTheVaoEvent(taikhoan_tb taiKhoan)
+    {
+        if (taiKhoan == null)
+            return false;
+
+        return CoMaQuyen(taiKhoan.permission, EventPolicy_cl.HomePermissionCode, EventPolicy_cl.AdminPermissionCode, "portal_event", "event", "mod_event");
     }
 
     public static string DoanKhongGianTheoDuongDan(string duongDan)
@@ -102,7 +115,10 @@ public static class PhanQuyenTruyCap_cl
             return KhongGianShop;
         if (path.StartsWith("/daugia/", StringComparison.OrdinalIgnoreCase))
             return KhongGianDauGia;
-        if (path.StartsWith("/gianhang/admin/", StringComparison.OrdinalIgnoreCase))
+        if (path.StartsWith("/event/", StringComparison.OrdinalIgnoreCase))
+            return KhongGianEvent;
+        if (path.Equals("/gianhang/admin", StringComparison.OrdinalIgnoreCase)
+            || path.StartsWith("/gianhang/admin/", StringComparison.OrdinalIgnoreCase))
             return KhongGianGianHangAdmin;
         if (path.StartsWith("/home/", StringComparison.OrdinalIgnoreCase))
             return KhongGianHome;
@@ -122,6 +138,8 @@ public static class PhanQuyenTruyCap_cl
                 return CoTheVaoAdmin(taiKhoan);
             case KhongGianDauGia:
                 return CoTheVaoDauGia(taiKhoan);
+            case KhongGianEvent:
+                return CoTheVaoEvent(taiKhoan);
             case KhongGianGianHangAdmin:
                 return CoTheVaoGianHangAdmin(taiKhoan);
             default:
@@ -148,6 +166,8 @@ public static class PhanQuyenTruyCap_cl
                 return "Tai khoan chua du quyen vao khong gian quan tri.";
             case KhongGianDauGia:
                 return "Tai khoan chua du quyen vao khong gian dau gia.";
+            case KhongGianEvent:
+                return "Tai khoan chua du quyen vao khong gian event admin.";
             case KhongGianGianHangAdmin:
                 return "Tai khoan chua du quyen vao khong gian quan tri gian hang.";
             case KhongGianHome:
@@ -157,4 +177,3 @@ public static class PhanQuyenTruyCap_cl
         }
     }
 }
-

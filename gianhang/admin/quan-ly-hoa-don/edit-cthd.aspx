@@ -40,7 +40,7 @@
                                                 <div class="mt-3">
                                                     <label class="fw-600">Dịch vụ</label>
                                                     <%--<asp:DropDownList ID="ddl_dichvu" runat="server" AutoPostBack="true" OnSelectedIndexChanged="ddl_dichvu_SelectedIndexChanged"></asp:DropDownList>--%>
-                                                    <asp:TextBox ID="txt_tendichvu" runat="server" data-role="input" placeholder="Nhập và chọn tên dịch vụ" OnTextChanged="txt_tendichvu_TextChanged" AutoPostBack="true"></asp:TextBox></div>
+                                                    <asp:TextBox ID="txt_tendichvu" runat="server" data-role="input" placeholder="Nhập và chọn tên dịch vụ"></asp:TextBox></div>
                                                 <div class="mt-3">
                                                     <label class="fw-600">Giá</label>
                                                     <asp:TextBox ID="txt_gia" MaxLength="13" runat="server" data-role="input" onchange="format_sotien(this);"></asp:TextBox><%--autocomplete="off" --%>
@@ -127,7 +127,7 @@
                                                 <div class="mt-3">
                                                     <label class="fw-600">Sản phẩm</label>
                                                     <%--<asp:DropDownList ID="ddl_sanpham" runat="server" AutoPostBack="true" OnSelectedIndexChanged="ddl_sanpham_SelectedIndexChanged"></asp:DropDownList>--%>
-                                                    <asp:TextBox ID="txt_tensanpham" runat="server" data-role="input" placeholder="Nhập và chọn tên sản phẩm" OnTextChanged="txt_tensanpham_TextChanged" AutoPostBack="true"></asp:TextBox></div>
+                                                    <asp:TextBox ID="txt_tensanpham" runat="server" data-role="input" placeholder="Nhập và chọn tên sản phẩm"></asp:TextBox></div>
                                                 <div class="mt-3">
                                                     <label class="fw-600">Giá</label>
                                                     <asp:TextBox ID="txt_gia_sanpham" MaxLength="13" runat="server" data-role="input" onchange="format_sotien(this);"></asp:TextBox><%--autocomplete="off" --%>
@@ -374,6 +374,35 @@
         </asp:UpdateProgress>
     </div>
 </asp:Content>
+<asp:Content ID="ContentFast" ContentPlaceHolderID="foot" runat="Server">
+    <script src="/js/gianhang-invoice-fast.js?v=2026-03-26.2"></script>
+    <script>
+        (function () {
+            function bindFastUi() {
+                if (!window.ahaInvoiceFast) return;
+                window.ahaInvoiceFast.initItemLookup({
+                    endpoint: "/gianhang/admin/quan-ly-hoa-don/lookup-data.ashx",
+                    mode: "service",
+                    inputId: "<%=txt_tendichvu.ClientID %>",
+                    priceId: "<%=txt_gia.ClientID %>",
+                    saleId: "<%=txt_chietkhau_chotsale.ClientID %>",
+                    performerId: "<%=txt_chietkhau_lamdichvu.ClientID %>"
+                });
+                window.ahaInvoiceFast.initItemLookup({
+                    endpoint: "/gianhang/admin/quan-ly-hoa-don/lookup-data.ashx",
+                    mode: "product",
+                    inputId: "<%=txt_tensanpham.ClientID %>",
+                    priceId: "<%=txt_gia_sanpham.ClientID %>",
+                    saleId: "<%=txt_chietkhau_chotsale_sanpham.ClientID %>"
+                });
+            }
+            bindFastUi();
+            if (window.Sys && Sys.Application) {
+                Sys.Application.add_load(bindFastUi);
+            }
+        })();
+    </script>
+</asp:Content>
 <asp:Content ID="Content3" ContentPlaceHolderID="foot" runat="Server">
     <script>
         function show_saochep() {
@@ -382,4 +411,3 @@
     </script>
     <%--<%=notifi %>--%>
 </asp:Content>
-

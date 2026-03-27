@@ -53,7 +53,7 @@ public partial class taikhoan_add : System.Web.UI.Page
         #endregion
         #region Check quyen theo nganh
         user = Session["user"].ToString();
-        user_parent = "admin";
+        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
         if (bcorn_class.check_quyen(user, "q2_5") == "" || bcorn_class.check_quyen(user, "n2_5") == "")
         {
             if (Request.Cookies["save_url_admin_aka_1"] != null)
@@ -226,13 +226,15 @@ public partial class taikhoan_add : System.Web.UI.Page
                                                             _ob1.luongngay = 0;
 
                                                         //new aka
-                                                        _ob1.user_parent = "admin";
+                                                        _ob1.user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
 
                                                         if (_checkloi == false)
                                                         {
                                                             db.taikhoan_table_2023s.InsertOnSubmit(_ob1);
                                                             db.SubmitChanges();
-                                                            Session["notifi"] = thongbao_class.metro_notifi_onload("Thông báo", "Tạo tài khoản thành công. Tiếp theo, hãy phần quyền cho tài khoản này nhé.", "4000", "warning");
+                                                            GianHangAdminPersonHub_cl.SyncSourcePhoneState(db, user_parent, "", _sdt, _fullname, user);
+                                                            GianHangAdminWorkspace_cl.SyncLegacySourceAccess(db, user_parent, _user, DropDownList1.SelectedValue.ToString() == "Đang hoạt động");
+                                                            Session["notifi"] = thongbao_class.metro_notifi_onload("Thông báo", "Đã tạo hồ sơ nội bộ thành công. Tiếp theo, hãy phân quyền và liên kết tài khoản Home cho hồ sơ này nhé.", "4000", "warning");
                                                             Response.Redirect("/gianhang/admin/quan-ly-tai-khoan/tai-khoan.aspx?user=" + _user);
                                                         }
                                                     }

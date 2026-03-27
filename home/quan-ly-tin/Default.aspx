@@ -185,10 +185,6 @@
                                     <i class="ti ti-plus me-1"></i> Thêm
                                 </asp:HyperLink>
 
-                                <asp:HyperLink ID="lnk_manage_auction" runat="server" CssClass="btn btn-outline-warning">
-                                    <i class="ti ti-gavel me-1"></i> Đấu giá
-                                </asp:HyperLink>
-
                                 <asp:LinkButton ID="LinkButton1" OnClick="LinkButton1_Click" runat="server"
                                     CssClass="btn btn-outline-success">
                                     Đang bán
@@ -347,16 +343,10 @@
                                                     <%# Eval("ngaytao","{0:dd/MM/yyyy}") %>
                                                 </td>
                                                 <td class="text-center">
-                                                    <div class="d-flex flex-column gap-1 align-items-center">
-                                                        <asp:HyperLink ID="btn_edit" runat="server" CssClass="btn btn-sm btn-outline-primary"
-                                                            NavigateUrl='<%# GetEditPostUrl(Eval("id")) %>'>
-                                                            Cập nhật
-                                                        </asp:HyperLink>
-                                                        <asp:HyperLink ID="btn_auction" runat="server" CssClass="btn btn-sm btn-outline-warning"
-                                                            NavigateUrl='<%# GetAuctionCreateUrl(Eval("id"), Eval("name")) %>'>
-                                                            Đưa vào đấu giá
-                                                        </asp:HyperLink>
-                                                    </div>
+                                                    <asp:HyperLink ID="btn_edit" runat="server" CssClass="btn btn-sm btn-outline-primary"
+                                                        NavigateUrl='<%# GetEditPostUrl(Eval("id")) %>'>
+                                                        Cập nhật
+                                                    </asp:HyperLink>
                                                 </td>
                                             </tr>
                                         </ItemTemplate>

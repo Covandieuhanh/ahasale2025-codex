@@ -5,8 +5,10 @@ using System.Web.UI;
 public partial class uc_home_nhom_dv : System.Web.UI.UserControl
 {
     private readonly dbDataContext db = new dbDataContext();
+    private string currentChiNhanhId = "1";
 
     public gianhang_storefront_section_table SectionConfig { get; set; }
+    public string BookingUrl = GianHangRoutes_cl.BuildBookingHubUrl(string.Empty, string.Empty);
     public string SectionLabel = "Danh muc dich vu";
     public string SectionTitle = "Nhom dich vu duoc to chuc nhu mot catalog ro rang.";
     public string SectionDescription = string.Empty;
@@ -19,9 +21,21 @@ public partial class uc_home_nhom_dv : System.Web.UI.UserControl
     {
         if (!IsPostBack)
         {
+            LoadStorefrontContext();
             LoadSectionCopy();
             BindData();
         }
+    }
+
+    private void LoadStorefrontContext()
+    {
+        GianHangPublic_cl.StorefrontContextInfo context = GianHangPublic_cl.ResolveContext(db, Request);
+        currentChiNhanhId = (context.ChiNhanhId ?? string.Empty).Trim();
+        if (currentChiNhanhId == string.Empty)
+            currentChiNhanhId = GianHangPublic_cl.ResolveCurrentChiNhanhId(db, Request);
+        BookingUrl = string.IsNullOrWhiteSpace(context.BookingUrl)
+            ? GianHangRoutes_cl.BuildBookingHubUrl(context.AccountKey, Request.RawUrl)
+            : context.BookingUrl;
     }
 
     private void LoadSectionCopy()
@@ -39,7 +53,7 @@ public partial class uc_home_nhom_dv : System.Web.UI.UserControl
     private void BindData()
     {
         var section = ResolveSection();
-        string chiNhanhId = AhaShineContext_cl.ResolveChiNhanhId();
+        string chiNhanhId = currentChiNhanhId;
         string sourceValue = GianHangStorefrontConfig_cl.ResolveSectionSourceValue(section);
         int itemLimit = GianHangStorefrontConfig_cl.ResolveItemLimit(section, 6);
 
@@ -66,14 +80,14 @@ public partial class uc_home_nhom_dv : System.Web.UI.UserControl
     private gianhang_storefront_section_table ResolveSection()
     {
         if (SectionConfig == null)
-            SectionConfig = GianHangStorefrontConfig_cl.GetSection(db, AhaShineContext_cl.ResolveChiNhanhId(), GianHangStorefrontConfig_cl.SectionServiceGroups);
+            SectionConfig = GianHangStorefrontConfig_cl.GetSection(db, currentChiNhanhId, GianHangStorefrontConfig_cl.SectionServiceGroups);
         return SectionConfig;
     }
 
     private string ResolveMenuDescription()
     {
         string menuId = GianHangStorefrontConfig_cl.ResolveSectionSourceValue(ResolveSection());
-        var menu = db.web_menu_tables.FirstOrDefault(p => p.id.ToString() == menuId && p.bin == false && p.id_chinhanh == AhaShineContext_cl.ResolveChiNhanhId());
+        var menu = db.web_menu_tables.FirstOrDefault(p => p.id.ToString() == menuId && p.bin == false && p.id_chinhanh == currentChiNhanhId);
         string fallback = "Cac nhom dich vu duoc sap xep gon theo nhu cau de khach chon nhanh va chuyen sang dat lich.";
         if (menu == null)
             return fallback;
@@ -82,6 +96,6 @@ public partial class uc_home_nhom_dv : System.Web.UI.UserControl
 
     public string ResolveGroupUrl(object idObject, object urlOtherObject)
     {
-        return GianHangStorefront_cl.ResolveMenuUrl(idObject, GianHangStorefront_cl.MenuTypeService, urlOtherObject);
+        return GianHangPublic_cl.BuildContextMenuUrl(db, Request, idObject, GianHangStorefront_cl.MenuTypeService, urlOtherObject);
     }
 }

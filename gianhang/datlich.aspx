@@ -1,92 +1,119 @@
-﻿<%@ Page Title="Đặt lịch hẹn" Language="C#" MasterPageFile="~/gianhang/mp-home.master" AutoEventWireup="true" CodeFile="datlich.aspx.cs" Inherits="chitiettintuc" %>
+<%@ Page Language="C#" AutoEventWireup="true" CodeFile="datlich.aspx.cs" Inherits="gianhang_datlich_public" %>
 
-<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="Server">
-    <meta property="og:type" content="website" />
-    <title><%=title_web %></title>
-    <asp:PlaceHolder runat="server"><%=meta %></asp:PlaceHolder>
-</asp:Content>
-
-<asp:Content ID="Content2" ContentPlaceHolderID="main" runat="Server">
-    <div class="container-fluid pt-10 pb-20">
-        <div class="container">
-            <div style="border-left: 4px solid #008a00;" class="fw-600">
-                <div class="pl-3 fs-bc-34-28 pt-1 text-upper">ĐẶT LỊCH HẸN</div>
-                <div class="pl-3 title-sub-home-bc mt-2-minus pb-1">Vui lòng điền đầy đủ thông tin bên dưới</div>
-            </div>
-
-            <asp:Panel ID="Panel1" runat="server" DefaultButton="but_dathang">
-                <div class="example bg-light p-4 mt-6">
-                    <div class="row">
-
-                        <div class="cell-lg-6 mt-3 pr-2-lg">
-                            <label class="fw-600">Chọn ngày</label>
-                            <asp:TextBox ID="txt_ngay" runat="server" MaxLength="10"
-                                data-role="calendar-picker" data-outside="true" data-dialog-mode="true"
-                                data-week-start="1" data-locale="vi-VN" data-format="DD/MM/YYYY"
-                                data-input-format="DD/MM/YYYY" data-clear-button="true"></asp:TextBox>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>Đặt lịch</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        body { margin: 0; font-family: "Nunito Sans", "Segoe UI", Arial, sans-serif; background: #fff7ed; color: #17233b; }
+        a { text-decoration: none; color: inherit; }
+        .shell { width: min(980px, calc(100% - 24px)); margin: 18px auto 28px; }
+        .card { background: #fff; border: 1px solid #fed7aa; border-radius: 22px; box-shadow: 0 16px 32px rgba(15,23,42,.08); overflow: hidden; }
+        .head { padding: 18px 20px; border-bottom: 1px solid #ffedd5; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+        .title { margin: 0; font-size: 30px; line-height: 1.1; font-weight: 900; }
+        .sub { margin-top: 6px; color: #64748b; font-size: 14px; }
+        .btn { display:inline-flex; align-items:center; justify-content:center; min-height:40px; padding:0 16px; border-radius:999px; font-weight:800; border:1px solid transparent; }
+        .btn-soft { background:#ffedd5; color:#9a3412; border-color:#fed7aa; }
+        .btn-primary { background:#f97316; color:#fff; border-color:#f97316; }
+        .body { padding: 18px 20px 22px; }
+        .message { border-radius: 14px; padding: 14px 16px; margin-bottom: 16px; font-weight: 700; }
+        .message-success { background: #ecfdf3; border: 1px solid #86efac; color: #166534; }
+        .message-warning { background: #fff7ed; border: 1px solid #fdba74; color: #9a3412; }
+        .grid { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+        .field { display:flex; flex-direction:column; gap: 6px; }
+        .field label { font-size: 13px; font-weight: 800; color: #475569; }
+        .field input, .field textarea, .field select {
+            width: 100%;
+            min-height: 42px;
+            border-radius: 12px;
+            border: 1px solid #fdba74;
+            padding: 0 12px;
+            font-size: 14px;
+            outline: none;
+            background: #fff;
+        }
+        .field textarea { min-height: 130px; padding: 12px; resize: vertical; }
+        .actions { margin-top: 18px; display:flex; gap:10px; flex-wrap:wrap; }
+        .not-found { padding: 36px 24px; text-align:center; color:#64748b; }
+        @media (max-width: 767.98px) {
+            .grid { grid-template-columns: 1fr; }
+            .title { font-size: 26px; }
+        }
+    </style>
+</head>
+<body>
+    <form id="form1" runat="server">
+        <div class="shell">
+            <asp:PlaceHolder ID="pn_form" runat="server" Visible="false">
+                <div class="card">
+                    <div class="head">
+                        <div>
+                            <h1 class="title">Đặt lịch với <asp:Label ID="lb_store_name" runat="server" /></h1>
+                            <div class="sub"><asp:Label ID="lb_store_desc" runat="server" /></div>
                         </div>
+                        <asp:HyperLink ID="lnk_back" runat="server" CssClass="btn btn-soft">Quay lại</asp:HyperLink>
+                    </div>
+                    <div class="body">
+                        <asp:PlaceHolder ID="pn_message" runat="server" Visible="false">
+                            <div id="box_message" runat="server" class="message message-warning">
+                                <asp:Literal ID="lit_message" runat="server" />
+                            </div>
+                        </asp:PlaceHolder>
 
-                        <div class="cell-lg-6 mt-3 pl-2-lg">
-                            <label class="fw-600">Chọn giờ</label>
-                            <div class="d-flex">
-                                <asp:DropDownList ID="ddl_giobatdau" runat="server" data-role="select" data-filter="flase" CssClass="mr-1"></asp:DropDownList>
-                                <asp:DropDownList ID="ddl_phutbatdau" runat="server" data-role="select" data-filter="flase" CssClass="ml-1"></asp:DropDownList>
+                        <div class="grid">
+                            <div class="field">
+                                <label for="<%= txt_customer_name.ClientID %>">Họ tên</label>
+                                <asp:TextBox ID="txt_customer_name" runat="server" MaxLength="120" />
+                            </div>
+                            <div class="field">
+                                <label for="<%= txt_customer_phone.ClientID %>">Số điện thoại</label>
+                                <asp:TextBox ID="txt_customer_phone" runat="server" MaxLength="30" />
+                            </div>
+                            <div class="field">
+                                <label for="<%= ddl_service.ClientID %>">Dịch vụ</label>
+                                <asp:DropDownList ID="ddl_service" runat="server" />
+                            </div>
+                            <div class="field">
+                                <label for="<%= txt_booking_date.ClientID %>">Ngày hẹn</label>
+                                <asp:TextBox ID="txt_booking_date" runat="server" TextMode="Date" />
+                            </div>
+                            <div class="field">
+                                <label for="<%= txt_booking_time.ClientID %>">Giờ hẹn</label>
+                                <asp:TextBox ID="txt_booking_time" runat="server" TextMode="Time" />
+                            </div>
+                            <div class="field">
+                                <label for="<%= txt_notes.ClientID %>">Ghi chú</label>
+                                <asp:TextBox ID="txt_notes" runat="server" TextMode="MultiLine" />
                             </div>
                         </div>
 
-                        <div class="cell-lg-6 mt-3 pr-2-lg">
-                            <span class="place-left fw-600">Tên khách hàng</span>
-                            <span class="ani-float place-left pl-2">
-                                <asp:RequiredFieldValidator ID="RequiredFieldValidator1" runat="server"
-                                    ErrorMessage="!" ForeColor="#CE352C" ControlToValidate="txt_hoten"
-                                    ValidationGroup="val_dathang"></asp:RequiredFieldValidator>
-                            </span>
-                            <div class="input">
-                                <asp:TextBox ID="txt_hoten" runat="server" ValidationGroup="val_dathang" MaxLength="50"></asp:TextBox>
-                            </div>
+                        <div class="actions">
+                            <asp:Button ID="btn_submit" runat="server" CssClass="btn btn-primary" Text="Gửi lịch hẹn" OnClick="btn_submit_Click" />
+                            <asp:HyperLink ID="lnk_back_2" runat="server" CssClass="btn btn-soft" NavigateUrl="#">Quay lại</asp:HyperLink>
                         </div>
-
-                        <div class="cell-lg-6 mt-3 pl-2-lg">
-                            <span class="place-left fw-600">Điện thoại</span>
-                            <span class="ani-float place-left pl-2">
-                                <asp:RequiredFieldValidator ID="RequiredFieldValidator2" runat="server"
-                                    ErrorMessage="!" ForeColor="#CE352C" ControlToValidate="txt_sdt"
-                                    ValidationGroup="val_dathang"></asp:RequiredFieldValidator>
-                            </span>
-                            <div class="input">
-                                <asp:TextBox ID="txt_sdt" runat="server" ValidationGroup="val_dathang"></asp:TextBox>
-                            </div>
-                        </div>
-
-                        <div class="cell-lg-6 mt-3 pr-2-lg">
-                            <span class="place-left fw-600">Chọn dịch vụ muốn đặt</span>
-                            <span class="ani-float place-left pl-2">
-                                <asp:RequiredFieldValidator ID="RequiredFieldValidator3" runat="server"
-                                    ErrorMessage="!" ForeColor="#CE352C" ControlToValidate="DropDownList1"
-                                    InitialValue="" ValidationGroup="val_dathang"></asp:RequiredFieldValidator>
-                            </span>
-                            <div>
-                                <asp:DropDownList ID="DropDownList1" runat="server" data-role="select" data-filter="true"></asp:DropDownList>
-                            </div>
-                        </div>
-
-                        <div class="cell-lg-6 mt-3 pl-2-lg">
-                            <label class="fw-600">Ghi chú</label>
-                            <asp:TextBox ID="txt_ghichu" data-role="input" runat="server"></asp:TextBox>
-                        </div>
-
-                        <div class="cell-lg-12 text-center mt-8 mb-6">
-                            <asp:Button ID="but_dathang" runat="server" CssClass="button info large primary"
-                                Text="ĐẶT LỊCH HẸN" ValidationGroup="val_dathang" OnClick="but_dathang_Click" />
-                        </div>
-
                     </div>
                 </div>
-            </asp:Panel>
-        </div>
-    </div>
-</asp:Content>
+            </asp:PlaceHolder>
 
-<asp:Content ID="Content4" ContentPlaceHolderID="foot" runat="Server">
-    <%=notifi %>
-</asp:Content>
+            <asp:PlaceHolder ID="pn_not_found" runat="server" Visible="false">
+                <div class="card not-found">
+                    <h1>Không tìm thấy dịch vụ cần đặt lịch</h1>
+                    <p>Không tìm thấy dịch vụ phù hợp để đặt lịch.</p>
+                    <a href="/gianhang/public.aspx" class="btn btn-soft">Về trang công khai</a>
+                </div>
+            </asp:PlaceHolder>
+        </div>
+    </form>
+    <script>
+        (function () {
+            var topBack = document.getElementById('<%= lnk_back.ClientID %>');
+            var bottomBack = document.getElementById('<%= lnk_back_2.ClientID %>');
+            if (topBack && bottomBack) {
+                bottomBack.setAttribute('href', topBack.getAttribute('href') || '/gianhang/public.aspx');
+            }
+        })();
+    </script>
+</body>
+</html>

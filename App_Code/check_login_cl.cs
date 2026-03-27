@@ -8,25 +8,54 @@ using System.Web.UI;
 
 public class check_login_cl
 {
-    private static readonly string[] ShopReturnUrlBlockedPrefixes = new string[]
+    private static readonly string[] UnifiedLoginReturnUrlBlockedPrefixes = new string[]
     {
+        "/dang-nhap",
+        "/login",
+        "/home/login",
+        "/home/login.aspx",
         "/shop/login",
+        "/shop/login.aspx",
+        "/admin/login",
+        "/admin/login.aspx",
+        "/gianhang/admin/login",
+        "/gianhang/admin/login.aspx",
         "/shop/dang-ky",
         "/shop/xac-nhan-otp",
         "/shop/khoi-phuc-mat-khau",
         "/shop/dat-lai-mat-khau"
     };
 
-    public static string NormalizeShopReturnUrl(string raw)
+    public static string NormalizeUnifiedReturnUrl(string raw)
     {
         if (string.IsNullOrWhiteSpace(raw))
             return "";
 
         string cleaned = raw.Trim();
+        Uri absoluteUrl;
+        if (Uri.TryCreate(cleaned, UriKind.Absolute, out absoluteUrl))
+        {
+            HttpContext context = HttpContext.Current;
+            if (context == null || context.Request == null || context.Request.Url == null)
+                return "";
+
+            if (!string.Equals(absoluteUrl.Host, context.Request.Url.Host, StringComparison.OrdinalIgnoreCase))
+                return "";
+
+            cleaned = absoluteUrl.PathAndQuery ?? "";
+        }
+
+        if (cleaned.StartsWith("~/", StringComparison.Ordinal))
+            cleaned = cleaned.Substring(1);
+        if (!cleaned.StartsWith("/", StringComparison.Ordinal)
+            && cleaned.IndexOf("://", StringComparison.OrdinalIgnoreCase) < 0
+            && !cleaned.StartsWith("//", StringComparison.Ordinal))
+            cleaned = "/" + cleaned;
+
         if (!cleaned.StartsWith("/", StringComparison.Ordinal) || cleaned.StartsWith("//", StringComparison.Ordinal))
             return "";
 
-        foreach (string prefix in ShopReturnUrlBlockedPrefixes)
+        foreach (string prefix in UnifiedLoginReturnUrlBlockedPrefixes)
         {
             if (cleaned.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
                 return "";
@@ -35,13 +64,137 @@ public class check_login_cl
         return cleaned;
     }
 
+    public static string BuildUnifiedLoginUrl(string returnUrlRaw)
+    {
+        string safe = NormalizeUnifiedReturnUrl(returnUrlRaw);
+        if (string.IsNullOrEmpty(safe) && HttpContext.Current != null && HttpContext.Current.Request != null)
+        {
+            HttpRequest request = HttpContext.Current.Request;
+            safe = NormalizeUnifiedReturnUrl(request.RawUrl);
+            if (string.IsNullOrEmpty(safe) && request.Url != null)
+                safe = NormalizeUnifiedReturnUrl(request.Url.PathAndQuery);
+        }
+
+        if (string.IsNullOrEmpty(safe))
+            return "/dang-nhap";
+
+        return "/dang-nhap?return_url=" + HttpUtility.UrlEncode(safe);
+    }
+
+    public static string NormalizeShopReturnUrl(string raw)
+    {
+        return NormalizeUnifiedReturnUrl(raw);
+    }
+
     public static string BuildShopLoginUrl(string returnUrlRaw)
     {
-        string safe = NormalizeShopReturnUrl(returnUrlRaw);
-        if (string.IsNullOrEmpty(safe))
-            return "/shop/login.aspx";
+        return BuildUnifiedLoginUrl(returnUrlRaw);
+    }
 
-        return "/shop/login.aspx?return_url=" + HttpUtility.UrlEncode(safe);
+    public static string BuildAdminLoginUrl(string returnUrlRaw)
+    {
+        string safe = AdminFullPageRoute_cl.SanitizeAdminReturnUrl(returnUrlRaw, "");
+        if (string.IsNullOrEmpty(safe) && HttpContext.Current != null && HttpContext.Current.Request != null)
+        {
+            HttpRequest request = HttpContext.Current.Request;
+            safe = AdminFullPageRoute_cl.SanitizeAdminReturnUrl(request.RawUrl, "");
+            if (string.IsNullOrEmpty(safe) && request.Url != null)
+                safe = AdminFullPageRoute_cl.SanitizeAdminReturnUrl(request.Url.PathAndQuery, "");
+        }
+
+        if (string.IsNullOrEmpty(safe))
+            return "/admin/login.aspx";
+
+        return "/admin/login.aspx?return_url=" + HttpUtility.UrlEncode(safe);
+    }
+
+    private static string ResolveCurrentAdminReturnUrl()
+    {
+        HttpContext context = HttpContext.Current;
+        HttpRequest request = context == null ? null : context.Request;
+        const string invalidFallback = "/__invalid_admin_return__";
+        const string defaultFallback = "/admin/default.aspx";
+
+        if (request == null)
+            return defaultFallback;
+
+        string query = request.Url == null ? "" : (request.Url.Query ?? "");
+        string appRelative = request.AppRelativeCurrentExecutionFilePath ?? "";
+        string appRelativeAbsolute = "";
+        if (!string.IsNullOrWhiteSpace(appRelative))
+        {
+            try
+            {
+                appRelativeAbsolute = VirtualPathUtility.ToAbsolute(appRelative);
+            }
+            catch
+            {
+                appRelativeAbsolute = "";
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(appRelativeAbsolute) && !string.IsNullOrWhiteSpace(query))
+            appRelativeAbsolute += query;
+
+        string currentExecution = request.CurrentExecutionFilePath ?? "";
+        if (!string.IsNullOrWhiteSpace(currentExecution) && !string.IsNullOrWhiteSpace(query))
+            currentExecution += query;
+
+        string filePath = request.FilePath ?? "";
+        if (!string.IsNullOrWhiteSpace(filePath) && !string.IsNullOrWhiteSpace(query))
+            filePath += query;
+
+        string[] candidates = new[]
+        {
+            request.RawUrl ?? "",
+            request.Url == null ? "" : (request.Url.PathAndQuery ?? ""),
+            appRelativeAbsolute,
+            currentExecution,
+            filePath
+        };
+
+        foreach (string candidate in candidates)
+        {
+            string safe = AdminFullPageRoute_cl.SanitizeAdminReturnUrl(candidate, invalidFallback);
+            if (!string.Equals(safe, invalidFallback, StringComparison.OrdinalIgnoreCase))
+                return safe;
+        }
+
+        return defaultFallback;
+    }
+
+    private static void RememberAdminLoginReturnUrl(string rawReturnUrl)
+    {
+        HttpContext context = HttpContext.Current;
+        if (context == null)
+            return;
+
+        string safe = AdminFullPageRoute_cl.SanitizeAdminReturnUrl(rawReturnUrl, "/admin/default.aspx");
+        if (context.Session != null)
+        {
+            context.Session["url_back"] = safe;
+        }
+
+        app_cookie_policy_class.persist_cookie(context, app_cookie_policy_class.admin_return_url_cookie, safe, 1);
+        app_cookie_policy_class.expire_cookie(context, app_cookie_policy_class.home_return_url_cookie);
+    }
+
+    private static void RedirectAdminToLogin(string title, string message, string duration, string notificationType)
+    {
+        HttpContext context = HttpContext.Current;
+        if (context == null || context.Response == null)
+            return;
+
+        string returnUrl = ResolveCurrentAdminReturnUrl();
+        del_all_cookie_session_admin();
+        RememberAdminLoginReturnUrl(returnUrl);
+
+        if (context.Session != null)
+            context.Session["thongbao"] = thongbao_class.metro_notifi_onload(title, message, duration, notificationType);
+
+        context.Response.Redirect(BuildAdminLoginUrl(returnUrl), false);
+        if (context.ApplicationInstance != null)
+            context.ApplicationInstance.CompleteRequest();
     }
 
     private static bool IsLocalhostRequest()
@@ -118,7 +271,7 @@ public class check_login_cl
         "/home/lich-su-giao-dich.aspx"
     };
 
-    private static readonly string[] ShopHomeBridgePrefixes = new[] { "/home/page/", "/daugia/" };
+    private static readonly string[] ShopHomeBridgePrefixes = new[] { "/home/page/" };
 
     private static bool IsShopHomeBridgePath()
     {
@@ -310,10 +463,8 @@ public class check_login_cl
                     #region KIỂM TRA TÍNH HỢP LỆ & QUYỀN CỦA TÀI KHOẢN
                     if (!taikhoan_cl.exist_taikhoan(_tk)) // nếu tài khoản không tồn tại
                     {
-                        del_all_cookie_session_admin(); // xóa toàn bộ Cookie và Session
-                                                        // lưu nội dung thông báo
-                        HttpContext.Current.Session["thongbao"] = thongbao_class.metro_notifi_onload("Thông báo", "Vui lòng đăng nhập để tiếp tục.", "1000", "warning");
-                        HttpContext.Current.Response.Redirect("/admin/login.aspx"); // chuyển trang và nhận thông báo
+                        RedirectAdminToLogin("Thông báo", "Vui lòng đăng nhập để tiếp tục.", "1000", "warning");
+                        return;
                     }
                     else // nếu tài khoản tồn tại
                     {
@@ -321,17 +472,14 @@ public class check_login_cl
                         taikhoan_tb _ob = db.taikhoan_tbs.FirstOrDefault(tk => tk.taikhoan == _tk);
                         if (_ob == null)
                         {
-                            del_all_cookie_session_admin();
-                            HttpContext.Current.Session["thongbao"] = thongbao_class.metro_notifi_onload("Thông báo", "Vui lòng đăng nhập để tiếp tục.", "1000", "warning");
-                            HttpContext.Current.Response.Redirect("/admin/login.aspx");
+                            RedirectAdminToLogin("Thông báo", "Vui lòng đăng nhập để tiếp tục.", "1000", "warning");
                             return;
                         }
 
                         if (_mk != (_ob.matkhau ?? "")) // so sánh với mật khẩu được giải mã từ Cookie, nếu khác nhau
                         {
-                            del_all_cookie_session_admin(); // xóa toàn bộ Cookie và Session
-                            HttpContext.Current.Session["thongbao"] = thongbao_class.metro_notifi_onload("Thông báo", "Mật khẩu đã được thay đổi. Vui lòng đăng nhập lại.", "1800", "warning");
-                            HttpContext.Current.Response.Redirect("/admin/login.aspx"); // chuyển trang và nhận thông báo
+                            RedirectAdminToLogin("Thông báo", "Mật khẩu đã được thay đổi. Vui lòng đăng nhập lại.", "1800", "warning");
+                            return;
 
                         }
                         else // tiếp tục xử lý
@@ -340,18 +488,16 @@ public class check_login_cl
                             bool rootAdmin = IsRootAdmin(_tk);
                             if (_ob.block == true) // nếu tài khoản này bị khóa
                             {
-                                del_all_cookie_session_admin(); // xóa toàn bộ Cookie và Session
-                                HttpContext.Current.Session["thongbao"] = thongbao_class.metro_notifi_onload("Thông báo", "Tài khoản đã bị khóa.", "1800", "warning");
-                                HttpContext.Current.Response.Redirect("/admin/login.aspx"); // chuyển trang và nhận thông báo
+                                RedirectAdminToLogin("Thông báo", "Tài khoản đã bị khóa.", "1800", "warning");
+                                return;
 
                             }
                             else
                             {
                                 if (_ob.hansudung != null && AhaTime_cl.Now > _ob.hansudung.Value) // nếu có hạn sử dụng và hết hạn
                                 {
-                                    del_all_cookie_session_admin(); // xóa toàn bộ Cookie và Session
-                                    HttpContext.Current.Session["thongbao"] = thongbao_class.metro_notifi_onload("Thông báo", "Tài khoản của bạn đã hết hạn sử dụng.", "1800", "warning");
-                                    HttpContext.Current.Response.Redirect("/admin/login.aspx"); // chuyển trang và nhận thông báo
+                                    RedirectAdminToLogin("Thông báo", "Tài khoản của bạn đã hết hạn sử dụng.", "1800", "warning");
+                                    return;
 
                                 }
                                 else // kiểm tra phạm vi đăng nhập
@@ -359,11 +505,10 @@ public class check_login_cl
                                     bool canLoginAdmin = PortalScope_cl.CanLoginAdmin(_tk, _ob.phanloai, _ob.permission);
                                     if (!canLoginAdmin)
                                     {
-                                        del_all_cookie_session_admin(); // xóa toàn bộ Cookie và Session
                                         string scope = PortalScope_cl.ResolveScope(_tk, _ob.phanloai, _ob.permission);
                                         string targetPortal = scope == PortalScope_cl.ScopeShop ? "trang gian hàng đối tác" : "AhaSale";
-                                        HttpContext.Current.Session["thongbao"] = thongbao_class.metro_notifi_onload("Thông báo", "Tài khoản này chỉ được phép đăng nhập ở " + targetPortal + ".", "1800", "warning");
-                                        HttpContext.Current.Response.Redirect("/admin/login.aspx"); // chuyển trang và nhận thông báo
+                                        RedirectAdminToLogin("Thông báo", "Tài khoản này chỉ được phép đăng nhập ở " + targetPortal + ".", "1800", "warning");
+                                        return;
 
                                     }
                                     else // kiểm tra quyền
@@ -407,9 +552,7 @@ public class check_login_cl
             if (!SqlTransientGuard_cl.IsTransient(ex))
                 throw;
 
-            del_all_cookie_session_admin();
-            HttpContext.Current.Session["thongbao"] = thongbao_class.metro_notifi_onload("Thông báo", "Kết nối dữ liệu đang tạm thời gián đoạn. Vui lòng đăng nhập lại hoặc tải lại trang sau vài giây.", "2200", "warning");
-            HttpContext.Current.Response.Redirect("/admin/login.aspx");
+            RedirectAdminToLogin("Thông báo", "Kết nối dữ liệu đang tạm thời gián đoạn. Vui lòng đăng nhập lại hoặc tải lại trang sau vài giây.", "2200", "warning");
         }
     }
     #endregion
@@ -474,7 +617,7 @@ public class check_login_cl
                 if (_chuyentrang)
                 {
                     SetShopToast("Vui lòng chuyển sang tài khoản gian hàng đối tác để tiếp tục.", 1200, "warning");
-                    HttpContext.Current.Response.Redirect("/shop/login.aspx");
+                    HttpContext.Current.Response.Redirect(BuildUnifiedLoginUrl(HttpContext.Current.Request.RawUrl));
                 }
                 return;
             }
@@ -488,7 +631,7 @@ public class check_login_cl
                         "Vui lòng chuyển sang tài khoản cá nhân để tiếp tục.",
                         "1200",
                         "warning");
-                    HttpContext.Current.Response.Redirect("/dang-nhap");
+                    HttpContext.Current.Response.Redirect(BuildUnifiedLoginUrl(HttpContext.Current.Request.RawUrl));
                 }
                 return;
             }
@@ -544,12 +687,12 @@ public class check_login_cl
                     if (shopFlow)
                     {
                         SetShopToast("Vui lòng đăng nhập gian hàng đối tác để tiếp tục.", 1000, "warning");
-                        HttpContext.Current.Response.Redirect("/shop/login.aspx");
+                        HttpContext.Current.Response.Redirect(BuildUnifiedLoginUrl(HttpContext.Current.Request.RawUrl));
                     }
                     else
                     {
                         HttpContext.Current.Session["thongbao_home"] = thongbao_class.metro_notifi_onload("Thông báo", "Vui lòng đăng nhập để tiếp tục.", "1000", "warning");
-                        HttpContext.Current.Response.Redirect("/dang-nhap"); // chuyển trang và nhận thông báo
+                        HttpContext.Current.Response.Redirect(BuildUnifiedLoginUrl(HttpContext.Current.Request.RawUrl)); // chuyển trang và nhận thông báo
                     }
                 }
             }
@@ -566,12 +709,12 @@ public class check_login_cl
                         if (shopFlow)
                         {
                             SetShopToast("Vui lòng đăng nhập gian hàng đối tác để tiếp tục.", 1000, "warning");
-                            HttpContext.Current.Response.Redirect("/shop/login.aspx");
+                            HttpContext.Current.Response.Redirect(BuildUnifiedLoginUrl(HttpContext.Current.Request.RawUrl));
                         }
                         else
                         {
                             HttpContext.Current.Session["thongbao_home"] = thongbao_class.metro_notifi_onload("Thông báo", "Vui lòng đăng nhập để tiếp tục.", "1000", "warning");
-                            HttpContext.Current.Response.Redirect("/dang-nhap");
+                            HttpContext.Current.Response.Redirect(BuildUnifiedLoginUrl(HttpContext.Current.Request.RawUrl));
                         }
                     }
                     return;
@@ -586,12 +729,12 @@ public class check_login_cl
                         if (shopFlow)
                         {
                             SetShopModal("Mật khẩu đã được thay đổi. <br/>Vui lòng đăng nhập lại.", "warning");
-                            HttpContext.Current.Response.Redirect("/shop/login.aspx");
+                            HttpContext.Current.Response.Redirect(BuildUnifiedLoginUrl(HttpContext.Current.Request.RawUrl));
                         }
                         else
                         {
                             HttpContext.Current.Session["thongbao_home"] = thongbao_class.metro_dialog_onload("Thông báo", "Mật khẩu đã được thay đổi. <br/>Vui lòng đăng nhập lại.", "false", "false", "OK", "alert", "");
-                            HttpContext.Current.Response.Redirect("/dang-nhap"); // chuyển trang và nhận thông báo
+                            HttpContext.Current.Response.Redirect(BuildUnifiedLoginUrl(HttpContext.Current.Request.RawUrl)); // chuyển trang và nhận thông báo
                         }
                     }
                 }
@@ -606,12 +749,12 @@ public class check_login_cl
                             if (shopFlow)
                             {
                                 SetShopModal("Tài khoản gian hàng đối tác đã bị khóa.", "danger");
-                                HttpContext.Current.Response.Redirect("/shop/login.aspx");
+                                HttpContext.Current.Response.Redirect(BuildUnifiedLoginUrl(HttpContext.Current.Request.RawUrl));
                             }
                             else
                             {
                                 HttpContext.Current.Session["thongbao_home"] = thongbao_class.metro_dialog_onload("Thông báo", "Tài khoản đã bị khóa.", "false", "false", "OK", "alert", "");
-                                HttpContext.Current.Response.Redirect("/dang-nhap"); // chuyển trang và nhận thông báo
+                                HttpContext.Current.Response.Redirect(BuildUnifiedLoginUrl(HttpContext.Current.Request.RawUrl)); // chuyển trang và nhận thông báo
                             }
                         }
                     }
@@ -626,19 +769,21 @@ public class check_login_cl
                                 if (shopFlow)
                                 {
                                     SetShopModal("Tài khoản gian hàng đối tác của bạn đã hết hạn sử dụng.", "warning");
-                                    HttpContext.Current.Response.Redirect("/shop/login.aspx");
+                                    HttpContext.Current.Response.Redirect(BuildUnifiedLoginUrl(HttpContext.Current.Request.RawUrl));
                                 }
                                 else
                                 {
                                     HttpContext.Current.Session["thongbao_home"] = thongbao_class.metro_dialog_onload("Thông báo", "Tài khoản của bạn đã hết hạn sử dụng.", "false", "false", "OK", "alert", "");
-                                    HttpContext.Current.Response.Redirect("/dang-nhap"); // chuyển trang và nhận thông báo
+                                    HttpContext.Current.Response.Redirect(BuildUnifiedLoginUrl(HttpContext.Current.Request.RawUrl)); // chuyển trang và nhận thông báo
                                 }
                             }
                         }
                         else // kiểm tra phạm vi đăng nhập
                         {
                             bool canLoginHome = PortalScope_cl.CanLoginHome(_tk, _ob.phanloai, _ob.permission);
-                            bool canLoginShopBridge = allowShopBridge && PortalScope_cl.CanLoginShop(_tk, _ob.phanloai, _ob.permission);
+                            bool canLoginShopByScope = PortalScope_cl.CanLoginShop(_tk, _ob.phanloai, _ob.permission);
+                            bool canLoginShopBySpace = SpaceAccess_cl.CanAccessShop(db, _ob);
+                            bool canLoginShopBridge = allowShopBridge && (canLoginShopByScope || canLoginShopBySpace);
                             if (!canLoginHome && !canLoginShopBridge)
                             {
                                 if (!shopFlow)
@@ -656,12 +801,12 @@ public class check_login_cl
                                         if (scope == PortalScope_cl.ScopeShop)
                                         {
                                         SetShopModal("Tài khoản này chỉ được phép đăng nhập ở trang gian hàng đối tác.", "warning");
-                                            HttpContext.Current.Response.Redirect("/shop/login.aspx");
+                                            HttpContext.Current.Response.Redirect(BuildUnifiedLoginUrl(HttpContext.Current.Request.RawUrl));
                                         }
                                         else
                                         {
                                             HttpContext.Current.Session["thongbao_home"] = thongbao_class.metro_dialog_onload("Thông báo", "Tài khoản này chỉ được phép đăng nhập ở trang admin.", "false", "false", "OK", "alert", "");
-                                            HttpContext.Current.Response.Redirect("/dang-nhap"); // chuyển trang và nhận thông báo
+                                            HttpContext.Current.Response.Redirect(BuildUnifiedLoginUrl(HttpContext.Current.Request.RawUrl)); // chuyển trang và nhận thông báo
                                         }
                                     }
                                 }
@@ -670,7 +815,7 @@ public class check_login_cl
                             {
                                 if (canLoginHome && PortalScope_cl.EnsureScope(_ob, PortalScope_cl.ScopeHome))
                                     db.SubmitChanges();
-                                if (canLoginShopBridge && PortalScope_cl.EnsureScope(_ob, PortalScope_cl.ScopeShop))
+                                if (canLoginShopBridge && canLoginShopByScope && PortalScope_cl.EnsureScope(_ob, PortalScope_cl.ScopeShop))
                                     db.SubmitChanges();
 
                                 if (_chuyentrang)
@@ -888,7 +1033,9 @@ public class check_login_cl
                 return;
             }
 
-            bool canLoginShop = PortalScope_cl.CanLoginShop(_tk, _ob.phanloai, _ob.permission);
+            bool canLoginShopByScope = PortalScope_cl.CanLoginShop(_tk, _ob.phanloai, _ob.permission);
+            bool canLoginShopBySpace = SpaceAccess_cl.CanAccessShop(db, _ob);
+            bool canLoginShop = canLoginShopByScope || canLoginShopBySpace;
             if (!canLoginShop)
             {
                 del_all_cookie_session_shop();
@@ -902,7 +1049,7 @@ public class check_login_cl
                 return;
             }
 
-            if (PortalScope_cl.EnsureScope(_ob, PortalScope_cl.ScopeShop))
+            if (canLoginShopByScope && PortalScope_cl.EnsureScope(_ob, PortalScope_cl.ScopeShop))
                 db.SubmitChanges();
 
             if (_chuyentrang)

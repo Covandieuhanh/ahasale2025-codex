@@ -1,38 +1,67 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
+using System;
+using System.Globalization;
 using System.Web;
 using System.Web.UI;
-using System.Web.UI.WebControls;
 
-public partial class xoa_chitiet_giohang : System.Web.UI.Page
+public partial class xoa_chitiet_giohang : Page
 {
-    DataTable giohang = new DataTable();
+    private const string NoticePrefix = "__gh_public_cart_notice_";
+
     protected void Page_Load(object sender, EventArgs e)
     {
-        if (Session["giohang"] == null)
+        string storeAccount = ResolveStoreAccount();
+        if (string.IsNullOrWhiteSpace(storeAccount))
         {
-            Response.Redirect(AhaShineHomeRoutes_cl.HomeUrl);
+            Response.Redirect("/gianhang/public.aspx", false);
+            if (Context != null && Context.ApplicationInstance != null)
+                Context.ApplicationInstance.CompleteRequest();
+            return;
         }
-        else
+
+        int itemId;
+        if (int.TryParse((Request.QueryString["id"] ?? "").Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out itemId) && itemId > 0)
         {
-            giohang = Session["giohang"] as DataTable;
-        }    
-            
-        if (!String.IsNullOrWhiteSpace(Request.QueryString["id"]))
-        {
-            string _id = Request.QueryString["id"];
-            //Response.Write(giohang.Rows.Count);
-            foreach (DataRow row in giohang.Rows)
-            {
-                if (row["ID"].ToString() == _id)
-                {
-                    row.Delete(); break;
-                }
-            }
+            GianHangCart_cl.RemoveItem(storeAccount, itemId);
+            SetNotice(storeAccount, "Đã xóa mặt hàng khỏi giỏ.", "success");
         }
-        Session["notifi_home"] = "<script>function openNotify(){var notify = Metro.notify;notify.setup({timeout: 4000,});notify.create('Xóa thành công,', 'Thông báo', {cls: 'light'});}window.onload = function () {openNotify();};</script>";
-        Response.Redirect(AhaShineHomeRoutes_cl.CartUrl);
+
+        string returnUrl = NormalizeReturnUrl(Request.QueryString["return_url"]);
+        string redirectUrl = "/gianhang/giohang.aspx?user=" + HttpUtility.UrlEncode(storeAccount);
+        if (!string.IsNullOrWhiteSpace(returnUrl))
+            redirectUrl += "&return_url=" + HttpUtility.UrlEncode(returnUrl);
+
+        Response.Redirect(redirectUrl, false);
+        if (Context != null && Context.ApplicationInstance != null)
+            Context.ApplicationInstance.CompleteRequest();
+    }
+
+    private string ResolveStoreAccount()
+    {
+        string storeAccount = (Request.QueryString["user"] ?? "").Trim().ToLowerInvariant();
+        if (!string.IsNullOrWhiteSpace(storeAccount))
+            return storeAccount;
+
+        storeAccount = GianHangCart_cl.GetActiveStorefrontAccount();
+        return (storeAccount ?? "").Trim().ToLowerInvariant();
+    }
+
+    private void SetNotice(string storeAccount, string message, string kind)
+    {
+        if (Context == null || Context.Session == null || string.IsNullOrWhiteSpace(storeAccount))
+            return;
+
+        Context.Session[NoticePrefix + storeAccount] = (kind ?? "warning") + "||" + (message ?? "");
+    }
+
+    private static string NormalizeReturnUrl(string rawReturnUrl)
+    {
+        string value = (rawReturnUrl ?? "").Trim();
+        if (value == "")
+            return "";
+        if (!value.StartsWith("/", StringComparison.Ordinal))
+            return "";
+        if (value.StartsWith("//", StringComparison.Ordinal))
+            return "";
+        return value;
     }
 }

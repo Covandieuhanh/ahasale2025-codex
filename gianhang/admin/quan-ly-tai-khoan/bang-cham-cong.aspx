@@ -103,7 +103,12 @@
                     <div class="row">
                         <div class="cell-md-6 mt-3 pr-2-lg">
                             <div class="d-flex">
-                                <asp:TextBox ID="txt_search" runat="server" data-role="input" data-prepend="<span class='mif mif-search'></span>" placeholder="Tìm kiếm nhân viên" OnTextChanged="txt_search_TextChanged" AutoPostBack="true"></asp:TextBox>
+                                <div class="d-flex flex-align-center gap-2">
+                                    <asp:TextBox ID="txt_search" runat="server" data-role="input" data-prepend="<span class='mif mif-search'></span>" placeholder="Tìm kiếm nhân viên"></asp:TextBox>
+                                    <asp:LinkButton ID="but_search" runat="server" CssClass="button" OnClick="but_search_Click" CausesValidation="false">
+                                        <span class="mif mif-search"></span>
+                                    </asp:LinkButton>
+                                </div>
                             </div>
                         </div>
                         <div class="cell-md-6 mt-3 pl-2-lg">
@@ -205,5 +210,21 @@
 </asp:Content>
 <asp:Content ID="Content3" ContentPlaceHolderID="foot" runat="Server">
     <%=notifi %>
-</asp:Content>
 
+    <script src="/js/gianhang-invoice-fast.js?v=20260326a"></script>
+    <script>
+        (function () {
+            function bindFastUi() {
+                if (!window.ahaInvoiceFast) return;
+                window.ahaInvoiceFast.initSearchSubmit({
+                    inputId: "<%=txt_search.ClientID %>",
+                    buttonId: "<%=but_search.ClientID %>"
+                });
+            }
+            bindFastUi();
+            if (window.Sys && Sys.Application) {
+                Sys.Application.add_load(bindFastUi);
+            }
+        })();
+    </script>
+</asp:Content>

@@ -12,6 +12,20 @@ public partial class badmin_temp : System.Web.UI.Page
     menu_class mn_cl = new menu_class();
     string_class str_cl = new string_class();
     dbDataContext db = new dbDataContext();
+
+    private void EnsureLegacyAdminSession()
+    {
+        if (Session == null)
+            return;
+
+        string legacyUser = (Session["user"] ?? "").ToString().Trim();
+        if (legacyUser != "")
+            return;
+
+        string homeAccount;
+        string deniedMessage;
+        GianHangAdminBridge_cl.EnsureLegacyAdminSessionFromCurrentHome(db, out homeAccount, out deniedMessage);
+    }
     protected void FileBrowser1_Load(object sender, EventArgs e)
     {
         FileBrowser1 = new CKFinder.FileBrowser();
@@ -20,6 +34,8 @@ public partial class badmin_temp : System.Web.UI.Page
     }
     protected void Page_Load(object sender, EventArgs e)
     {
+        EnsureLegacyAdminSession();
+
         #region Check_Login
         string _quyen = "q4_2";
         string _cookie_user = "", _cookie_pass = "";
@@ -54,7 +70,7 @@ public partial class badmin_temp : System.Web.UI.Page
         }
         #endregion
         user = Session["user"].ToString();
-        user_parent = "admin";
+        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
 
         if (!IsPostBack)
         {
@@ -62,6 +78,10 @@ public partial class badmin_temp : System.Web.UI.Page
             show_menu_dropdownbox();
             load_nganh();
             txt_thoiluong_dichvu.Text = datlich_class.thoiluong_macdinh_dichvu_phut.ToString("#,##0");
+        }
+        else
+        {
+            xuly_phanloai();
         }
 
         if (Request.Cookies["save_url_admin_aka_1"] != null)

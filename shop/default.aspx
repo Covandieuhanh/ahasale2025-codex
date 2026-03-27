@@ -1,4 +1,5 @@
 <%@ Page Title="Trang chủ gian hàng đối tác" Language="C#" MasterPageFile="~/MasterPage/Tabler/TablerHome.master" AutoEventWireup="true" CodeFile="default.aspx.cs" Inherits="shop_default" %>
+<%@ Register Src="~/Uc/Shared/SpaceLauncher_uc.ascx" TagPrefix="uc1" TagName="SpaceLauncher" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head_truoc" runat="server">
     <style>
@@ -44,6 +45,13 @@
             gap: 16px;
         }
 
+        .shop-topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
         .brand {
             display: flex;
             align-items: center;
@@ -51,9 +59,29 @@
             min-width: 0;
         }
 
+        .shop-space-toggle {
+            width: 46px;
+            min-width: 46px;
+            height: 46px;
+            border-radius: 999px;
+            border: 1px solid var(--shop-line);
+            background: #fff;
+            color: var(--shop-ink-900);
+            box-shadow: 0 10px 24px rgba(16, 42, 67, .08);
+        }
+
+        .shop-space-toggle:hover {
+            background: #fff7ed;
+            color: #d9480f;
+            border-color: #ffd8a8;
+        }
+
         .brand-logo {
-            width: 44px;
+            min-width: 44px;
+            width: auto;
+            max-width: 156px;
             height: 44px;
+            padding: 0 8px;
             border-radius: 14px;
             background: linear-gradient(145deg, var(--shop-green-700), var(--shop-green-600));
             display: inline-flex;
@@ -64,8 +92,9 @@
         }
 
         .brand-logo img {
-            width: 26px;
-            height: 26px;
+            width: auto;
+            max-width: 100%;
+            height: 32px;
             object-fit: contain;
         }
 
@@ -90,6 +119,119 @@
             align-items: center;
             gap: 10px;
             position: relative;
+        }
+
+        .quick-wrap {
+            position: relative;
+        }
+
+        .quick-btn {
+            width: 46px;
+            min-width: 46px;
+            height: 46px;
+            border-radius: 999px;
+            border: 1px solid var(--shop-line);
+            background: #fff;
+            color: var(--shop-ink-900);
+            box-shadow: 0 10px 24px rgba(16, 42, 67, .08);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: .2s ease;
+        }
+
+        .quick-btn:hover,
+        .quick-wrap.open .quick-btn {
+            background: #fff7ed;
+            color: #d9480f;
+            border-color: #ffd8a8;
+        }
+
+        .quick-menu {
+            position: absolute;
+            top: calc(100% + 12px);
+            right: 0;
+            width: min(360px, calc(100vw - 24px));
+            display: none;
+            background: rgba(255, 255, 255, .98);
+            border: 1px solid rgba(217, 226, 236, .95);
+            border-radius: 22px;
+            box-shadow: 0 20px 42px rgba(16, 42, 67, .18);
+            padding: 12px;
+            z-index: 30;
+        }
+
+        .quick-wrap.open .quick-menu {
+            display: block;
+        }
+
+        .quick-title {
+            margin: 2px 4px 10px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: .05em;
+            text-transform: uppercase;
+            color: var(--shop-ink-500);
+        }
+
+        .quick-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .quick-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 18px;
+            border: 1px solid rgba(238, 77, 45, .14);
+            background: linear-gradient(145deg, #ffffff, #fff7ed);
+            color: var(--shop-ink-900);
+            text-decoration: none;
+            transition: .2s ease;
+        }
+
+        .quick-link:hover {
+            transform: translateY(-1px);
+            border-color: rgba(238, 77, 45, .26);
+            box-shadow: 0 14px 28px rgba(238, 77, 45, .12);
+        }
+
+        .quick-copy {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .quick-copy strong {
+            font-size: 14px;
+            font-weight: 800;
+            line-height: 1.3;
+            color: var(--shop-ink-900);
+        }
+
+        .quick-copy small {
+            margin-top: 2px;
+            font-size: 11px;
+            color: var(--shop-ink-500);
+            line-height: 1.35;
+        }
+
+        .quick-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(238, 77, 45, .12);
+            color: #d9480f;
+            font-size: 11px;
+            font-weight: 800;
+            white-space: nowrap;
         }
 
         .mode-pill {
@@ -603,6 +745,8 @@
         @media (max-width: 640px) {
             .shop-topbar { padding: 12px; }
             .shop-main { padding: 12px 12px 18px; }
+            .brand-logo { max-width: 132px; height: 40px; border-radius: 12px; }
+            .brand-logo img { height: 28px; }
             .brand-title { font-size: 17px; }
             .brand-sub { max-width: 240px; }
             .hero h1 { font-size: 22px; }
@@ -617,21 +761,54 @@
         <div class="shop-shell">
             <asp:PlaceHolder ID="ph_shop_topbar" runat="server" Visible="false">
             <header class="shop-topbar">
-                <div class="brand">
-                    <a href="/shop/default.aspx" class="brand-logo" aria-label="Trang chủ gian hàng đối tác">
-                        <img src="/uploads/images/favicon.png" alt="AHA" />
-                    </a>
-                    <div>
-                        <div class="brand-title"><asp:Label ID="lb_shop_brand_title" runat="server" Text="AHA Shop Portal"></asp:Label></div>
-                        <div class="brand-sub">
-                            Tài khoản: <asp:Label ID="lb_taikhoan" runat="server"></asp:Label>
-                            • Link: <asp:Label ID="lb_public_path" runat="server"></asp:Label>
+                <div class="shop-topbar-left">
+                    <uc1:SpaceLauncher runat="server" ID="spaceLauncher" ButtonCssClass="shop-space-toggle" />
+                    <div class="brand">
+                        <a href="/shop/default.aspx" class="brand-logo" aria-label="Trang chủ gian hàng đối tác">
+                            <img src="<%= ResolveShopBrandLogoUrl() %>" alt="AHA" />
+                        </a>
+                        <div>
+                            <div class="brand-title"><asp:Label ID="lb_shop_brand_title" runat="server" Text="AHA Shop Portal"></asp:Label></div>
+                            <div class="brand-sub">
+                                Tài khoản: <asp:Label ID="lb_taikhoan" runat="server"></asp:Label>
+                                • Link: <asp:Label ID="lb_public_path" runat="server"></asp:Label>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="top-actions">
                     <div class="mode-pill"><asp:Label ID="lb_shop_level" runat="server" Text="Level 1"></asp:Label> • <asp:Label ID="lb_shop_level_hint" runat="server" Text="Đang dùng bộ công cụ cơ bản trong /shop"></asp:Label></div>
+                    <div class="quick-wrap" id="quickWrap">
+                        <button type="button" class="quick-btn" id="quickToggle" title="Đi nhanh">
+                            <i class="ti ti-plus"></i>
+                        </button>
+                        <div class="quick-menu" id="quickMenu">
+                            <div class="quick-title">Đi nhanh gian hàng đối tác</div>
+                            <div class="quick-list">
+                                <a class="quick-link" href="/shop/default.aspx">
+                                    <span class="quick-copy"><strong>Trang chủ shop</strong><small>Dashboard vận hành không gian /shop</small></span>
+                                    <span class="quick-badge">Dashboard</span>
+                                </a>
+                                <a class="quick-link" href="/shop/bao-cao.aspx">
+                                    <span class="quick-copy"><strong>Báo cáo</strong><small>Xem nhanh doanh thu và hiệu suất</small></span>
+                                    <span class="quick-badge">Report</span>
+                                </a>
+                                <a class="quick-link" href="/shop/quan-ly-tin">
+                                    <span class="quick-copy"><strong>Quản lý tin</strong><small>Đăng và cập nhật tin gian hàng đối tác</small></span>
+                                    <span class="quick-badge">Tin</span>
+                                </a>
+                                <a class="quick-link" href="/shop/don-ban">
+                                    <span class="quick-copy"><strong>Đơn bán</strong><small>Theo dõi đơn và giao dịch của shop</small></span>
+                                    <span class="quick-badge">Đơn</span>
+                                </a>
+                                <a class="quick-link" href="/shop/khach-hang">
+                                    <span class="quick-copy"><strong>Khách hàng</strong><small>Danh sách khách hàng của shop</small></span>
+                                    <span class="quick-badge">CRM</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                     <div class="avatar-wrap" id="avatarWrap">
                         <button type="button" class="avatar-btn" id="avatarToggle">
                             <asp:Image ID="img_avatar" runat="server" CssClass="avatar-image" />
@@ -821,6 +998,8 @@
         (function () {
             var wrap = document.getElementById('avatarWrap');
             var toggle = document.getElementById('avatarToggle');
+            var quickWrap = document.getElementById('quickWrap');
+            var quickToggle = document.getElementById('quickToggle');
             if (!wrap || !toggle) return;
 
             toggle.addEventListener('click', function (ev) {
@@ -829,15 +1008,27 @@
                 wrap.classList.toggle('open');
             });
 
+            if (quickWrap && quickToggle) {
+                quickToggle.addEventListener('click', function (ev) {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    quickWrap.classList.toggle('open');
+                });
+            }
+
             document.addEventListener('click', function (ev) {
                 if (!wrap.contains(ev.target)) {
                     wrap.classList.remove('open');
+                }
+                if (quickWrap && !quickWrap.contains(ev.target)) {
+                    quickWrap.classList.remove('open');
                 }
             });
 
             document.addEventListener('keydown', function (ev) {
                 if (ev.key === 'Escape') {
                     wrap.classList.remove('open');
+                    if (quickWrap) quickWrap.classList.remove('open');
                 }
             });
 

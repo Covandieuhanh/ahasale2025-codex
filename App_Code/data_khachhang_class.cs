@@ -85,8 +85,21 @@ public class data_khachhang_class
 
         //xóa nhóm 
         bspa_data_khachhang_table _ob = return_object(_id);
+        string _oldPhone = _ob == null ? "" : (_ob.sdt ?? "");
+        string _oldName = _ob == null ? "" : (_ob.tenkhachhang ?? "");
         db.bspa_data_khachhang_tables.DeleteOnSubmit(_ob);
         db.SubmitChanges();
+        GianHangAdminPersonHub_cl.PreserveLinkAfterSourceRemoval(
+            db,
+            AhaShineContext_cl.ResolveUserParent(),
+            _oldPhone,
+            _oldName,
+            (System.Web.HttpContext.Current != null && System.Web.HttpContext.Current.Session != null ? ((System.Web.HttpContext.Current.Session["user"] ?? "") + "") : ""),
+            "customer",
+            "Khách hàng",
+            _id,
+            "Khách hàng",
+            "Hồ sơ khách hàng đã bị xóa khỏi module nguồn.");
     }
     public static string return_soluong_khachhang(string _user_parent)
     {

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.UI;
@@ -9,85 +8,83 @@ public partial class danh_sach_bai_viet : System.Web.UI.Page
 {
     public string notifi = "", idbv = "", noidung = "", name_mn, name_mn_en, phanloai_menu, url_menu;
     public string title_web = "", des = "", image = "", gia = "";
-
-    menu_homeaka_class mn_cl = new menu_homeaka_class();
-    poss_class_homeaka po_cl = new poss_class_homeaka();
-    dbDataContext db = new dbDataContext();
-
-    #region opengraph
     public string meta = "";
-    public void opengraph(string _idbv)
+
+    private readonly dbDataContext db = new dbDataContext();
+
+    public void opengraph(GH_BaiViet_tb article)
     {
-        var q = po_cl.return_object(_idbv);
-        title_web = q.name; des = q.description; this.Title = title_web; image = q.image;
+        if (article == null)
+            return;
+
+        title_web = article.name ?? string.Empty;
+        des = article.description ?? string.Empty;
+        image = article.image ?? string.Empty;
+        this.Title = title_web;
         string _title_op = "<meta property=\"og:title\" content=\"" + title_web + "\" />";
         string _image = "<meta property=\"og:image\" content=\"" + image + "\" />";
         string _description = "<meta name=\"description\" content=\"" + des + "\" />";
         string _description_op = "<meta property=\"og:description\" content=\"" + des + "\" />";
         meta = _title_op + _image + _description + _description_op;
     }
-    #endregion  
-    public string _idmenu;
-    protected void Page_Load(object sender, EventArgs e)
+
+    private string ResolveStoreAccountKey()
     {
-    
-        if (string.IsNullOrWhiteSpace(Request.QueryString["idbv"]))
-        {
-            Session["notifi_home"] = thongbao_class.metro_dialog_onload("Thông báo", "Trang bạn yêu cầu không hợp lệ. #1", "false", "false", "OK", "alert", "");
-            Response.Redirect(AhaShineHomeRoutes_cl.HomeUrl);
-        }
-        else
-        {
-            idbv = Request.QueryString["idbv"].ToString().Trim();
-            if (!po_cl.exist_id(idbv) || po_cl.check_id_in_bin(idbv))
-            {
-                Session["notifi_home"] = thongbao_class.metro_dialog_onload("Thông báo", "Trang bạn yêu cầu không hợp lệ. #2", "false", "false", "OK", "alert", "");
-                Response.Redirect(AhaShineHomeRoutes_cl.HomeUrl);
-            }
-            else
-            {
-                if (po_cl.return_object(idbv).hienthi != true)
-                {
-                    Session["notifi_home"] = thongbao_class.metro_dialog_onload("Thông báo", "Trang bạn yêu cầu không hợp lệ. #3", "false", "false", "OK", "alert", "");
-                    Response.Redirect(AhaShineHomeRoutes_cl.HomeUrl);
-                }
-                else
-                {
-                    _idmenu = po_cl.return_object(idbv).id_category;
-                    name_mn = mn_cl.return_object(_idmenu).name;
-                    name_mn_en = mn_cl.return_object(_idmenu).name_en;
-                    phanloai_menu = mn_cl.return_object(_idmenu).phanloai;
-                    url_menu = "/gianhang/page/danh-sach-bai-viet.aspx?idmn=" + _idmenu;
-                    if (phanloai_menu == "dsdv")
-                    {
-                        url_menu = "/gianhang/page/danh-sach-dich-vu.aspx?idmn=" + _idmenu;
-                    }
-                    else if (phanloai_menu == "dssp")
-                    {
-                        url_menu = "/gianhang/page/danh-sach-san-pham.aspx?idmn=" + _idmenu;
-                    }
-
-                    if (po_cl.return_object(idbv).phanloai != "ctbv")
-                    {
-                        Session["notifi_home"] = thongbao_class.metro_dialog_onload("Thông báo", "Trang bạn yêu cầu không hợp lệ.", "false", "false", "OK", "alert", "");
-                        Response.Redirect(AhaShineHomeRoutes_cl.HomeUrl);
-                    }
-
-                    opengraph(idbv);
-
-                    noidung = po_cl.return_object(idbv).content_post;
-
-
-                    var q2 = db.web_post_tables.Where(p => p.id_category == _idmenu && p.bin == false && p.id.ToString() != idbv && p.id_chinhanh == AhaShineContext_cl.ResolveChiNhanhId()).OrderByDescending(p => p.ngaytao);
-                    Repeater2.DataSource = q2.Take(9);
-                    Repeater2.DataBind();
-                    if (q2.Count() == 0)
-                    {
-                        Panel1.Visible = false;
-                    }
-                }
-            }
-        }
+        return GianHangPublic_cl.ResolveCurrentStoreAccountKey(db, Request);
     }
 
+    private void RedirectToStorefront(string message)
+    {
+        string storeAccountKey = ResolveStoreAccountKey();
+        if (!string.IsNullOrWhiteSpace(message))
+            Session["notifi_home"] = thongbao_class.metro_dialog_onload("Thông báo", message, "false", "false", "OK", "alert", "");
+
+        string targetUrl = GianHangRoutes_cl.BuildStorefrontUrl(storeAccountKey);
+
+        Response.Redirect(targetUrl, false);
+        if (Context != null && Context.ApplicationInstance != null)
+            Context.ApplicationInstance.CompleteRequest();
+    }
+
+    protected string BuildArticleUrl(object rawId)
+    {
+        return GianHangArticle_cl.BuildDetailUrl(rawId, ResolveStoreAccountKey());
+    }
+
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        idbv = (Request.QueryString["idbv"] ?? string.Empty).Trim();
+        if (idbv == string.Empty)
+        {
+            RedirectToStorefront("Trang ban yeu cau khong hop le.");
+            return;
+        }
+
+        string chiNhanhId = GianHangPublic_cl.ResolveCurrentChiNhanhId(db, Request);
+        string storeAccountKey = ResolveStoreAccountKey();
+        GianHangArticleView_cl.ArticleDetailPageState pageState = GianHangArticleView_cl.BuildDetailPageState(
+            db,
+            chiNhanhId,
+            idbv,
+            storeAccountKey);
+        if (pageState == null || pageState.Article == null || pageState.Menu == null)
+        {
+            RedirectToStorefront("Trang ban yeu cau khong hop le.");
+            return;
+        }
+
+        GH_BaiViet_tb article = pageState.Article;
+        web_menu_table menu = pageState.Menu;
+        name_mn = menu.name ?? string.Empty;
+        name_mn_en = menu.name_en ?? string.Empty;
+        phanloai_menu = menu.phanloai ?? string.Empty;
+        url_menu = pageState.MenuUrl ?? GianHangArticle_cl.BuildListUrl(article.id_category, storeAccountKey);
+
+        opengraph(article);
+        noidung = article.content_post ?? string.Empty;
+        Repeater2.DataSource = pageState.RelatedArticles;
+        Repeater2.DataBind();
+        if (pageState.RelatedArticles == null || pageState.RelatedArticles.Count == 0)
+            Panel1.Visible = false;
+    }
 }

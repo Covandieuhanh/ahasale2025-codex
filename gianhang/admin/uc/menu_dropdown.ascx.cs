@@ -16,7 +16,8 @@ public partial class badmin_uc_menu_dropdown : System.Web.UI.UserControl
     public string mn1_5_1;
 
     public string atv_caidatchung, atv_ql_hoadon, atv_ql_dichvu, atv_ql_sanpham, atv_ql_nhanvien, atv_ql_thuchi;
-    public string atv_doanhso_nv, atv_chamcong_nv, atv_bangchamcong_nv, atv_tinhluong_nv, atv_ql_lstt, atv_ql_lsbh, atv_kh_dtkh;
+    public string atv_doanhso_nv, atv_chamcong_nv, atv_bangchamcong_nv, atv_tinhluong_nv, atv_ql_lstt, atv_ql_lsbh, atv_kh_dtkh, atv_ql_connguoi;
+    public string atv_gh_space, atv_gh_center, atv_gh_present, atv_gh_public, atv_gh_content, atv_gh_products, atv_gh_services, atv_gh_articles, atv_gh_customers, atv_gh_bookings, atv_gh_create, atv_gh_orders, atv_gh_wait, atv_gh_buyer, atv_gh_cart, atv_gh_einvoice, atv_gh_utils, atv_gh_report;
 
     public string a0, a1, a11, a12, a13, a14, a15, a2, a3, a4, a5, a51, a6, a7, a8, a9;
     public string b0, b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15, b16, b17, b18, b19,b20;
@@ -25,7 +26,7 @@ public partial class badmin_uc_menu_dropdown : System.Web.UI.UserControl
     protected void Page_Load(object sender, EventArgs e)
     {
         user = (Session["user"] ?? "").ToString();
-        user_parent = "admin";
+        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
         if (Session["index_loc_phanloai_baiviet"] == null) Session["index_loc_phanloai_baiviet"] = "1";
         if (!IsPostBack)
         {
@@ -106,6 +107,31 @@ public partial class badmin_uc_menu_dropdown : System.Web.UI.UserControl
             case ("/admin/yeu-cau-tu-van/default.aspx"): a6 = "active"; Session["title"] = "Yêu cầu tư vấn"; break;
 
             //QUẢN LÝ BÁN HÀNG
+            case ("/admin/gianhang/default.aspx"): atv_gh_space = "active"; Session["title"] = "Không gian /gianhang"; break;
+            case ("/admin/gianhang/trung-tam.aspx"): atv_gh_center = "active"; Session["title"] = "Trung tâm /gianhang"; break;
+            case ("/admin/gianhang/trinh-bay.aspx"): atv_gh_present = "active"; Session["title"] = "Trình bày storefront"; break;
+            case ("/admin/gianhang/trang-cong-khai.aspx"): atv_gh_public = "active"; Session["title"] = "Trang công khai /gianhang"; break;
+            case ("/admin/gianhang/quan-ly-noi-dung.aspx"): atv_gh_content = "active"; Session["title"] = "Nội dung /gianhang"; break;
+            case ("/admin/gianhang/san-pham.aspx"): atv_gh_products = "active"; Session["title"] = "Sản phẩm /gianhang"; break;
+            case ("/admin/gianhang/san-pham-chi-tiet.aspx"): atv_gh_products = "active"; Session["title"] = "Chi tiết sản phẩm /gianhang"; break;
+            case ("/admin/gianhang/dich-vu.aspx"): atv_gh_services = "active"; Session["title"] = "Dịch vụ /gianhang"; break;
+            case ("/admin/gianhang/dich-vu-chi-tiet.aspx"): atv_gh_services = "active"; Session["title"] = "Chi tiết dịch vụ /gianhang"; break;
+            case ("/admin/gianhang/bai-viet.aspx"): atv_gh_articles = "active"; Session["title"] = "Bài viết /gianhang"; break;
+            case ("/admin/gianhang/bai-viet-chi-tiet.aspx"): atv_gh_articles = "active"; Session["title"] = "Chi tiết bài viết /gianhang"; break;
+            case ("/admin/gianhang/khach-hang.aspx"): atv_gh_customers = "active"; Session["title"] = "Khách hàng /gianhang"; break;
+            case ("/admin/gianhang/khach-hang-chi-tiet.aspx"): atv_gh_customers = "active"; Session["title"] = "Chi tiết khách hàng /gianhang"; break;
+            case ("/admin/gianhang/lich-hen.aspx"): atv_gh_bookings = "active"; Session["title"] = "Lịch hẹn /gianhang"; break;
+            case ("/admin/gianhang/lich-hen-chi-tiet.aspx"): atv_gh_bookings = "active"; Session["title"] = "Chi tiết lịch hẹn /gianhang"; break;
+            case ("/admin/gianhang/tao-giao-dich.aspx"): atv_gh_create = "active"; Session["title"] = "Tạo giao dịch"; break;
+            case ("/admin/gianhang/don-ban.aspx"): atv_gh_orders = "active"; Session["title"] = "Đơn gian hàng"; break;
+            case ("/admin/gianhang/cho-thanh-toan.aspx"): atv_gh_wait = "active"; Session["title"] = "Chờ thanh toán"; break;
+            case ("/admin/gianhang/don-mua.aspx"): atv_gh_buyer = "active"; Session["title"] = "Buyer-flow / Đơn mua"; break;
+            case ("/admin/gianhang/gio-hang.aspx"): atv_gh_cart = "active"; Session["title"] = "Giỏ hàng /gianhang"; break;
+            case ("/admin/gianhang/hoa-don-dien-tu.aspx"): atv_gh_einvoice = "active"; Session["title"] = "Hóa đơn điện tử /gianhang"; break;
+            case ("/admin/gianhang/tien-ich.aspx"): atv_gh_utils = "active"; Session["title"] = "Tiện ích /gianhang"; break;
+            case ("/admin/gianhang/tien-ich-co-cau.aspx"): atv_gh_utils = "active"; Session["title"] = "Cơ cấu /gianhang"; break;
+            case ("/admin/gianhang/tien-ich-quay-so.aspx"): atv_gh_utils = "active"; Session["title"] = "Quay số /gianhang"; break;
+            case ("/admin/gianhang/bao-cao.aspx"): atv_gh_report = "active"; Session["title"] = "Báo cáo gian hàng"; break;
             case ("/admin/quan-ly-hoa-don/default.aspx"): atv_ql_hoadon = "active"; Session["title"] = "Quản lý hóa đơn"; break;
             case ("/admin/quan-ly-hoa-don/chi-tiet.aspx"): atv_ql_hoadon = "active"; Session["title"] = "Chi tiết hóa đơn"; break;
             case ("/admin/quan-ly-hoa-don/lich-su-thanh-toan.aspx"): atv_ql_lstt = "active"; Session["title"] = "Lịch sử thanh toán"; break;
@@ -121,6 +147,8 @@ public partial class badmin_uc_menu_dropdown : System.Web.UI.UserControl
             //data khách hàng
             case ("/admin/quan-ly-khach-hang/default.aspx"): atv_kh_dtkh = "active"; Session["title"] = "Data khách hàng"; break;
             case ("/admin/quan-ly-khach-hang/chi-tiet.aspx"): atv_kh_dtkh = "active"; Session["title"] = "Info khách hàng"; break;
+            case ("/admin/quan-ly-con-nguoi/default.aspx"): atv_ql_connguoi = "active"; Session["title"] = "Hồ sơ người"; break;
+            case ("/admin/quan-ly-con-nguoi/chi-tiet.aspx"): atv_ql_connguoi = "active"; Session["title"] = "Chi tiết hồ sơ người"; break;
             case ("/admin/quan-ly-khach-hang/danh-sach-lich-hen.aspx"):
                 if (!string.IsNullOrWhiteSpace(Request.QueryString["q"]) && Request.QueryString["q"].ToString().Trim().ToLower() == "add")
                 {

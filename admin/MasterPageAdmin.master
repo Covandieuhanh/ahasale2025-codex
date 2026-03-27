@@ -175,6 +175,27 @@
         <script src="/js/bcorn.js"></script>
         <script src="/js/aha-ui-refresh.js?v=2026-03-07.3"></script>
         <script>
+            window.ahaAdminCharms = function (action) {
+                try {
+                    if (!window.Metro || typeof Metro.getPlugin !== "function") {
+                        return true;
+                    }
+                    var charms = Metro.getPlugin("#thongbao-charms", "charms");
+                    if (!charms) {
+                        return true;
+                    }
+                    if (action === "toggle" && typeof charms.toggle === "function") {
+                        charms.toggle();
+                    } else if (action === "open" && typeof charms.open === "function") {
+                        charms.open();
+                    } else if (typeof charms.close === "function") {
+                        charms.close();
+                    }
+                } catch (err) { }
+                return true;
+            };
+        </script>
+        <script>
             (function () {
                 function revealAdminAvatar() {
                     var shell = document.getElementById("admin-avatar-shell");
@@ -238,25 +259,84 @@
                     }
                 }
 
+                function bindAdminQuickDropdown() {
+                    var shell = document.getElementById("admin-quick-shell");
+                    var toggle = document.getElementById("admin-quick-toggle");
+                    var dropdown = document.getElementById("admin-quick-dropdown");
+                    if (!shell || !toggle || !dropdown) return;
+
+                    if (toggle.getAttribute("data-quick-bound") === "1") return;
+                    toggle.setAttribute("data-quick-bound", "1");
+
+                    function closeDropdown() {
+                        shell.classList.remove("open");
+                        toggle.setAttribute("aria-expanded", "false");
+                    }
+
+                    function openDropdown() {
+                        shell.classList.add("open");
+                        toggle.setAttribute("aria-expanded", "true");
+                    }
+
+                    toggle.addEventListener("click", function (event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        if (shell.classList.contains("open")) {
+                            closeDropdown();
+                        } else {
+                            openDropdown();
+                        }
+                    });
+
+                    dropdown.addEventListener("click", function (event) {
+                        event.stopPropagation();
+                    });
+
+                    if (!window.__ahaAdminQuickDocBound) {
+                        document.addEventListener("click", function (event) {
+                            var currentShell = document.getElementById("admin-quick-shell");
+                            var currentToggle = document.getElementById("admin-quick-toggle");
+                            if (!currentShell || !currentToggle) return;
+                            if (currentShell.contains(event.target)) return;
+                            currentShell.classList.remove("open");
+                            currentToggle.setAttribute("aria-expanded", "false");
+                        });
+
+                        document.addEventListener("keydown", function (event) {
+                            if (event.key !== "Escape") return;
+                            var currentShell = document.getElementById("admin-quick-shell");
+                            var currentToggle = document.getElementById("admin-quick-toggle");
+                            if (!currentShell || !currentToggle) return;
+                            currentShell.classList.remove("open");
+                            currentToggle.setAttribute("aria-expanded", "false");
+                        });
+                        window.__ahaAdminQuickDocBound = true;
+                    }
+                }
+
                 if (document.readyState === "loading") {
                     document.addEventListener("DOMContentLoaded", function () {
                         revealAdminAvatar();
                         bindAdminAvatarDropdown();
+                        bindAdminQuickDropdown();
                     });
                 } else {
                     revealAdminAvatar();
                     bindAdminAvatarDropdown();
+                    bindAdminQuickDropdown();
                 }
 
                 window.addEventListener("pageshow", function () {
                     revealAdminAvatar();
                     bindAdminAvatarDropdown();
+                    bindAdminQuickDropdown();
                 });
 
                 if (window.Sys && Sys.WebForms && Sys.WebForms.PageRequestManager) {
                     Sys.WebForms.PageRequestManager.getInstance().add_endRequest(function () {
                         revealAdminAvatar();
                         bindAdminAvatarDropdown();
+                        bindAdminQuickDropdown();
                     });
                 }
             })();

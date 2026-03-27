@@ -1,47 +1,6 @@
 <%@ Control Language="C#" AutoEventWireup="true" CodeFile="Footer_uc.ascx.cs" Inherits="Uc_Home_Footer_uc" %>
 
 <style>
-    .theme-toggle .theme-btn {
-        width: 34px;
-        height: 34px;
-        border-radius: 50%;
-        border: 1px solid #e6e8eb;
-        background: #fff;
-        color: #6c757d;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0;
-        transition: all .15s ease;
-    }
-
-    .theme-toggle .theme-btn i {
-        font-size: 18px;
-        line-height: 1;
-    }
-
-    .theme-toggle .theme-btn:hover {
-        background: rgba(0,0,0,.04);
-        color: #111;
-    }
-
-    .theme-toggle .theme-btn.active {
-        background: var(--tblr-primary);
-        border-color: var(--tblr-primary);
-        color: #fff;
-    }
-
-    [data-bs-theme="dark"] .theme-toggle .theme-btn {
-        background: transparent;
-        border-color: rgba(255,255,255,.2);
-        color: rgba(255,255,255,.7);
-    }
-
-    [data-bs-theme="dark"] .theme-toggle .theme-btn.active {
-        background: #fff;
-        color: #000;
-    }
-
     .footer .footer-top {
         border-top: 0 !important;
     }
@@ -75,21 +34,7 @@
     <div class="footer-top">
         <div class="container py-5">
             <div class="row g-4 align-items-start">
-
-                <div class="col-12 col-md-3">
-                    <div class="fw-bold mb-3 mt-3">Giao diện</div>
-
-                    <div class="d-flex align-items-center gap-2 theme-toggle">
-                        <button type="button" class="theme-btn" data-theme="light" title="Giao diện sáng">
-                            <i class="ti ti-sun"></i>
-                        </button>
-                        <button type="button" class="theme-btn" data-theme="dark" title="Giao diện tối">
-                            <i class="ti ti-moon"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="col-12 col-md-3">
+                <div class="col-12 col-md-4">
                     <div class="fw-bold mb-3">Hỗ trợ khách hàng</div>
                     <ul class="list-unstyled mb-0">
                         <asp:Repeater ID="rpt_support_links" runat="server">
@@ -102,7 +47,7 @@
                     </ul>
                 </div>
 
-                <div class="col-12 col-md-3">
+                <div class="col-12 col-md-4">
                     <div class="fw-bold mb-3">Về AhaSale</div>
                     <ul class="list-unstyled mb-0">
                         <asp:Repeater ID="rpt_about_links" runat="server">
@@ -115,7 +60,7 @@
                     </ul>
                 </div>
 
-                <div class="col-12 col-md-3">
+                <div class="col-12 col-md-4">
                     <div class="fw-bold mb-3">Liên kết</div>
 
                     <div class="d-flex gap-2 mb-3">
@@ -157,25 +102,4 @@
         </div>
     </div>
 
-    <script>
-        (function () {
-            const ROOT = document.documentElement;
-            const STORAGE_KEY = 'theme-preference';
-            const buttons = document.querySelectorAll('[data-theme]');
-
-            function applyTheme(theme) {
-                localStorage.setItem(STORAGE_KEY, theme);
-                ROOT.setAttribute('data-bs-theme', theme);
-                buttons.forEach(function (b) { b.classList.toggle('active', b.dataset.theme === theme); });
-            }
-
-            const saved = localStorage.getItem(STORAGE_KEY);
-            const theme = (saved === 'dark' || saved === 'light') ? saved : 'light';
-            applyTheme(theme);
-
-            buttons.forEach(function (btn) {
-                btn.addEventListener('click', function () { applyTheme(btn.dataset.theme); });
-            });
-        })();
-    </script>
 </footer>

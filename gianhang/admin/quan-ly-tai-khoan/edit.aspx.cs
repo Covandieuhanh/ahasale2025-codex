@@ -54,7 +54,7 @@ public partial class gianhang_taikhoan_edit : System.Web.UI.Page
         #region Check quyen theo nganh
         string qsUser = (Request.QueryString["user"] ?? "").Trim();
         user = qsUser;
-        user_parent = "admin";
+        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
         if (bcorn_class.check_quyen(Session["user"].ToString(), "q2_3") == "" || bcorn_class.check_quyen(Session["user"].ToString(), "n2_3") == "" || user == Session["user"].ToString())
         {
             if (!string.IsNullOrWhiteSpace(qsUser))
@@ -219,6 +219,7 @@ public partial class gianhang_taikhoan_edit : System.Web.UI.Page
                                         return;
                                     }
 
+                                    string _oldPhone = (_ob1.dienthoai ?? "").Trim();
                                     bool _checkloi = false;
                                     string _avt = "";
                                     _avt = _ob1.anhdaidien;
@@ -274,6 +275,8 @@ public partial class gianhang_taikhoan_edit : System.Web.UI.Page
                                     if (_checkloi == false)
                                     {
                                         db.SubmitChanges();
+                                        GianHangAdminPersonHub_cl.SyncSourcePhoneState(db, user_parent, _oldPhone, _sdt, _fullname, user);
+                                        GianHangAdminWorkspace_cl.SyncLegacySourceAccess(db, user_parent, user, DropDownList1.SelectedValue.ToString() == "Đang hoạt động");
                                         Session["notifi"] = thongbao_class.metro_notifi_onload("Thông báo", "Cập nhật thành công.", "4000", "warning");
                                         Response.Redirect("/gianhang/admin/quan-ly-tai-khoan/tai-khoan.aspx?user=" + user);
                                     }

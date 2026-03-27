@@ -1,9 +1,12 @@
 ﻿<%@ Control Language="C#" AutoEventWireup="true" CodeFile="Header_uc.ascx.cs" Inherits="Uc_Home_Header_uc" %>
+<%@ Register Src="~/Uc/Shared/SpaceLauncher_uc.ascx" TagPrefix="uc1" TagName="SpaceLauncher" %>
 <style>
     :root {
         --aha-top-icon-bg: #ffffff;
         --aha-top-icon-border: #d9e2ec;
         --aha-top-icon-text: #111111;
+        --aha-topbar-height: 54px;
+        --aha-logo-available-width: calc(100vw - 148px);
     }
 
     html[data-bs-theme="dark"],
@@ -44,9 +47,66 @@
         color: #d9480f;
     }
 
+    .mode-badge.mode-admin {
+        background: #f3f0ff;
+        border-color: #d0bfff;
+        color: #6741d9;
+    }
+
+    .mode-badge.mode-gianhang-admin {
+        background: #eef2ff;
+        border-color: #c7d2fe;
+        color: #4338ca;
+    }
+
+    .mode-badge.mode-daugia {
+        background: #fdf2f8;
+        border-color: #fbcfe8;
+        color: #be185d;
+    }
+
+    .mode-badge.mode-event {
+        background: #fff7ed;
+        border-color: #fdba74;
+        color: #c2410c;
+    }
+
     .mode-badge.mode-mobile {
         font-size: 10px;
         padding: 4px 8px;
+    }
+
+    .mobile-left-icons .mode-badge.mode-mobile {
+        display: inline-flex !important;
+        max-width: 148px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        line-height: 1.2;
+    }
+
+    .mobile-auth-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 34px;
+        padding: 0 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .mobile-auth-link.login {
+        background: #0f172a;
+        color: #ffffff;
+    }
+
+    .mobile-auth-link.signup {
+        background: #e9f7ef;
+        color: #146c43;
+        border: 1px solid rgba(25,135,84,.45);
     }
 
     .home-top-circle-btn {
@@ -106,8 +166,316 @@
         flex: 0 0 88px;
     }
 
-    .site-header.site-header-shop {
+    .home-space-access-card {
+        margin: 0 8px 16px;
+        border: 0;
+        background: transparent;
+        border-radius: 0;
+        padding: 0;
+        box-shadow: none;
+    }
+
+    .home-space-access-title {
+        margin: 0 0 10px;
+        padding: 0 4px;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        color: #64748b;
+    }
+
+    .home-space-access-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .home-space-access-link {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        text-decoration: none;
+        color: #c2410c;
+        background: #fff7ed;
+        border: 1px solid rgba(249, 115, 22, .28);
+        border-radius: 999px;
+        padding: 12px 16px;
+        box-shadow: none;
+        transition: background-color .2s ease, border-color .2s ease, color .2s ease, transform .2s ease;
+    }
+
+    .home-space-access-link:hover {
+        background: #ffedd5;
+        border-color: rgba(234, 88, 12, .42);
+        color: #9a3412;
+        transform: translateY(-1px);
+    }
+
+    .home-space-access-card.site-header-space-home .home-space-access-link {
+        color: #166534;
+        background: #f0fdf4;
+        border-color: rgba(34, 197, 94, .26);
+    }
+
+    .home-space-access-card.site-header-space-home .home-space-access-link:hover {
+        background: #dcfce7;
+        border-color: rgba(22, 163, 74, .38);
+        color: #14532d;
+    }
+
+    .gianhang-space-menu-card {
+        margin-bottom: 16px;
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid #fed7aa;
+        background: #fff7ed;
+    }
+
+    .gianhang-space-menu-card .list-group-item {
+        border-color: rgba(249, 115, 22, .14) !important;
+    }
+
+    .gianhang-space-menu-title {
+        padding: 14px 16px 10px;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        color: #9a3412;
+        background: rgba(255,255,255,.55);
+    }
+
+    .gianhang-space-link {
+        background: #fff7ed !important;
+        transition: background-color .2s ease, border-color .2s ease, color .2s ease;
+    }
+
+    .gianhang-space-link:hover {
+        background: #ffedd5 !important;
+    }
+
+    .gianhang-space-link.is-active {
+        background: linear-gradient(135deg, #fb923c, #f97316) !important;
+        color: #ffffff !important;
+    }
+
+    .gianhang-space-link.is-active .text-secondary,
+    .gianhang-space-link.is-active .text-muted,
+    .gianhang-space-link.is-active .fw-medium,
+    .gianhang-space-link.is-active .ti {
+        color: #ffffff !important;
+    }
+
+    .home-space-access-copy {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .home-space-access-copy strong {
+        font-size: 14px;
+        color: #9a3412;
+        line-height: 1.3;
+        font-weight: 800;
+    }
+
+    .home-space-access-copy span {
+        font-size: 11px;
+        color: #c2410c;
+        opacity: .82;
+        line-height: 1.4;
+    }
+
+    .home-space-access-card.site-header-space-home .home-space-access-copy strong {
+        color: #166534;
+    }
+
+    .home-space-access-card.site-header-space-home .home-space-access-copy span {
+        color: #15803d;
+    }
+
+    html[data-bs-theme="dark"] .home-space-access-card,
+    body[data-bs-theme="dark"] .home-space-access-card,
+    body.theme-dark .home-space-access-card,
+    body.dark .home-space-access-card,
+    body.dark-mode .home-space-access-card {
+        background: transparent;
+        border-color: transparent;
+    }
+
+    html[data-bs-theme="dark"] .home-space-access-title,
+    body[data-bs-theme="dark"] .home-space-access-title,
+    body.theme-dark .home-space-access-title,
+    body.dark .home-space-access-title,
+    body.dark-mode .home-space-access-title {
+        color: #94a3b8;
+    }
+
+    html[data-bs-theme="dark"] .home-space-access-link,
+    body[data-bs-theme="dark"] .home-space-access-link,
+    body.theme-dark .home-space-access-link,
+    body.dark .home-space-access-link,
+    body.dark-mode .home-space-access-link {
+        background: rgba(249, 115, 22, .14);
+        border-color: rgba(251, 146, 60, .34);
+        color: #fdba74;
+        box-shadow: none;
+    }
+
+    html[data-bs-theme="dark"] .home-space-access-card.site-header-space-home .home-space-access-link,
+    body[data-bs-theme="dark"] .home-space-access-card.site-header-space-home .home-space-access-link,
+    body.theme-dark .home-space-access-card.site-header-space-home .home-space-access-link,
+    body.dark .home-space-access-card.site-header-space-home .home-space-access-link,
+    body.dark-mode .home-space-access-card.site-header-space-home .home-space-access-link {
+        background: rgba(34, 197, 94, .16);
+        border-color: rgba(74, 222, 128, .34);
+        color: #86efac;
+    }
+
+    html[data-bs-theme="dark"] .home-space-access-copy strong,
+    body[data-bs-theme="dark"] .home-space-access-copy strong,
+    body.theme-dark .home-space-access-copy strong,
+    body.dark .home-space-access-copy strong,
+    body.dark-mode .home-space-access-copy strong {
+        color: #fdba74;
+    }
+
+    html[data-bs-theme="dark"] .home-space-access-card.site-header-space-home .home-space-access-copy strong,
+    body[data-bs-theme="dark"] .home-space-access-card.site-header-space-home .home-space-access-copy strong,
+    body.theme-dark .home-space-access-card.site-header-space-home .home-space-access-copy strong,
+    body.dark .home-space-access-card.site-header-space-home .home-space-access-copy strong,
+    body.dark-mode .home-space-access-card.site-header-space-home .home-space-access-copy strong {
+        color: #bbf7d0;
+    }
+
+    html[data-bs-theme="dark"] .home-space-access-copy span,
+    body[data-bs-theme="dark"] .home-space-access-copy span,
+    body.theme-dark .home-space-access-copy span,
+    body.dark .home-space-access-copy span,
+    body.dark-mode .home-space-access-copy span {
+        color: #fed7aa;
+        opacity: .86;
+    }
+
+    html[data-bs-theme="dark"] .home-space-access-card.site-header-space-home .home-space-access-copy span,
+    body[data-bs-theme="dark"] .home-space-access-card.site-header-space-home .home-space-access-copy span,
+    body.theme-dark .home-space-access-card.site-header-space-home .home-space-access-copy span,
+    body.dark .home-space-access-card.site-header-space-home .home-space-access-copy span,
+    body.dark-mode .home-space-access-card.site-header-space-home .home-space-access-copy span {
+        color: #86efac;
+        opacity: .88;
+    }
+
+    .site-header.site-header-space-home {
+        background: linear-gradient(90deg, #176a4a 0%, #1f7a52 56%, #39a86e 100%);
+        box-shadow: 0 10px 28px rgba(12, 46, 30, .18);
+    }
+
+    .site-header.site-header-space-home .mode-badge.mode-home,
+    .site-header.site-header-space-home .mode-badge.mode-mobile {
+        background: #ffffff;
+        border-color: rgba(255,255,255,.35);
+        color: #176a4a;
+        font-weight: 800;
+        box-shadow: 0 8px 18px rgba(12, 46, 30, .12);
+    }
+
+    .site-header.site-header-space-home .home-top-circle-btn {
+        border-color: rgba(15, 23, 42, .08);
+        background: #ffffff;
+        box-shadow: 0 10px 22px rgba(12, 46, 30, .12);
+    }
+
+    .site-header.site-header-space-home .home-top-circle-btn:hover {
+        border-color: rgba(22, 106, 74, .18);
+        background: #f8fffb;
+    }
+
+    .site-header.site-header-space-home .home-account-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 50px;
+        padding: 6px 14px 6px 6px;
+        border-radius: 999px;
+        border: 1px solid rgba(15, 23, 42, .08);
+        background: #ffffff;
+        color: #102a43;
+        text-decoration: none;
+        box-shadow: 0 12px 26px rgba(12, 46, 30, .14);
+    }
+
+    .site-header.site-header-space-home .home-account-toggle:hover {
+        background: #f8fffb;
+        border-color: rgba(22, 106, 74, .16);
+    }
+
+    .site-header.site-header-space-home .home-account-avatar {
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        min-height: 38px;
+        border-radius: 50%;
+        border: 1px solid #dbe6ef;
+        background-color: #f8fafc;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        display: inline-block;
+        flex: 0 0 38px;
+    }
+
+    .site-header.site-header-space-home .home-account-name {
+        font-size: 15px;
+        font-weight: 800;
+        line-height: 1.2;
+        color: #102a43;
+    }
+
+    .site-header.site-header-space-home .home-account-caret {
+        color: #64748b;
+        font-size: 18px;
+    }
+
+    .site-header.site-header-space-home .mobile-auth-link.login {
+        background: #ffffff;
+        color: #176a4a;
+        border: 1px solid rgba(15, 23, 42, .08);
+        box-shadow: 0 10px 22px rgba(12, 46, 30, .12);
+    }
+
+    .site-header.site-header-space-home .mobile-auth-link.signup {
+        background: #e8f8ef;
+        color: #176a4a;
+        border: 1px solid rgba(23, 106, 74, .18);
+        box-shadow: 0 10px 22px rgba(12, 46, 30, .08);
+    }
+
+    .site-header.site-header-shop,
+    .site-header.site-header-space-shop {
         background: linear-gradient(90deg, #ee4d2d 0%, #ff7a45 100%);
+    }
+
+    .site-header.site-header-space-admin {
+        background: linear-gradient(90deg, #b91c1c 0%, #dc2626 60%, #ef4444 100%);
+    }
+
+    .site-header.site-header-space-gianhang {
+        background: linear-gradient(90deg, #f97316 0%, #fb923c 60%, #fdba74 100%);
+    }
+
+    .site-header.site-header-space-gianhang-admin {
+        background: linear-gradient(90deg, #3730a3 0%, #4f46e5 60%, #818cf8 100%);
+    }
+
+    .site-header.site-header-space-daugia {
+        background: linear-gradient(90deg, #be185d 0%, #db2777 55%, #f472b6 100%);
+    }
+
+    .site-header.site-header-space-event {
+        background: linear-gradient(90deg, #0e7490 0%, #0891b2 60%, #22d3ee 100%);
     }
 
     .notif-kebab {
@@ -116,7 +484,24 @@
         bottom: 12px;
     }
 
+    .site-header .container-fluid {
+        min-height: var(--aha-topbar-height);
+    }
+
+    .site-header .mobile-menu-btn {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        margin-right: 8px;
+        z-index: 3;
+    }
+
     @media (min-width: 992px) {
+        .site-header .mobile-menu-btn {
+            display: none !important;
+        }
+
         .site-header .brand-center-mobile {
             display: none !important;
         }
@@ -143,28 +528,27 @@
             justify-self: center;
             display: inline-flex;
             align-items: center;
-            font-weight: 700;
-            color: #ffffff !important;
+            justify-content: center;
+            width: auto;
+            height: var(--aha-topbar-height);
+            min-width: 0;
+            min-height: var(--aha-topbar-height);
             text-decoration: none;
-            white-space: nowrap;
+            line-height: 0;
         }
 
         .site-header .brand-center-desktop img {
-            height: 30px !important;
-            width: auto;
+            height: var(--aha-topbar-height) !important;
+            width: auto !important;
+            max-width: 240px;
+            object-fit: contain;
         }
-    }
-
-    .site-header .brand-center-mobile,
-    .site-header .brand-center-mobile span,
-    .site-header .brand-center-desktop,
-    .site-header .brand-center-desktop span {
-        color: #ffffff !important;
     }
 
     @media (max-width: 991.98px) {
         .site-header .mobile-menu-btn {
-            display: none !important;
+            margin-left: 0;
+            margin-right: 6px;
         }
 
         .site-header .d-lg-none.ms-auto {
@@ -181,9 +565,16 @@
             left: 50%;
             top: 50%;
             transform: translate(-50%, -50%);
-            gap: 6px;
-            white-space: nowrap;
-            max-width: 52%;
+            width: auto;
+            height: var(--aha-topbar-height);
+            min-width: 0;
+            min-height: var(--aha-topbar-height);
+            margin: 0;
+            padding: 0;
+            align-items: center;
+            justify-content: center;
+            max-width: calc(100vw - 160px);
+            line-height: 0;
         }
 
         .mobile-left-icons {
@@ -200,10 +591,13 @@
             margin-left: auto;
             z-index: 2;
             gap: 6px;
+            flex-wrap: nowrap;
         }
 
         .site-header .mode-badge.mode-mobile {
-            display: none !important;
+            display: inline-flex !important;
+            font-size: 10px;
+            padding: 4px 8px;
         }
     }
 
@@ -214,16 +608,12 @@
             min-height: 54px;
         }
 
-        .site-header:not(.site-header-shop) {
+        .site-header.site-header-space-home {
             background: linear-gradient(90deg, #176a4a 0%, #1f7a52 100%) !important;
             border-bottom: 0;
         }
 
-        .site-header:not(.site-header-shop) .brand-center-mobile span {
-            color: #ffffff !important;
-        }
-
-        .site-header:not(.site-header-shop) .home-top-circle-btn {
+        .site-header.site-header-space-home .home-top-circle-btn {
             border-color: rgba(0, 0, 0, .06);
             background: #ffffff;
         }
@@ -234,9 +624,15 @@
             left: 50%;
             top: 50%;
             transform: translate(-50%, -50%);
-            gap: 6px;
-            white-space: nowrap;
-            max-width: 52%;
+            width: auto;
+            height: var(--aha-topbar-height);
+            min-width: 0;
+            min-height: var(--aha-topbar-height);
+            margin: 0;
+            padding: 0;
+            align-items: center;
+            justify-content: center;
+            max-width: calc(100vw - 148px);
         }
 
         .site-header .mobile-hide-ct {
@@ -248,7 +644,9 @@
         }
 
         .site-header .mode-badge.mode-mobile {
-            display: none !important;
+            display: inline-flex !important;
+            font-size: 10px;
+            padding: 4px 8px;
         }
 
         .site-header .d-lg-none.ms-auto {
@@ -269,6 +667,7 @@
             margin-left: auto;
             z-index: 2;
             gap: 6px;
+            flex-wrap: nowrap;
         }
 
         .site-header .d-lg-none .mobile-icon-heart,
@@ -285,18 +684,11 @@
         }
 
         .site-header .brand-center-mobile img {
-            height: 20px !important;
-            width: auto;
-        }
-
-        .site-header .brand-center-mobile span {
-            display: inline-block;
-            max-width: 100%;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            font-size: 1rem;
-            font-weight: 700;
+            height: var(--aha-topbar-height) !important;
+            width: auto !important;
+            max-width: calc(100vw - 148px);
+            object-fit: contain;
+            background: transparent !important;
         }
 
         .site-header .d-lg-none.ms-auto.d-flex {
@@ -323,21 +715,324 @@
     }
 
     @media (max-width: 389.98px) {
-        .site-header .brand-center-mobile span {
-            font-size: .96rem;
+        .mobile-left-icons .mode-badge.mode-mobile {
+            max-width: 108px;
+            font-size: 9px;
+            padding: 4px 6px;
         }
 
-        .mode-badge.mode-mobile {
-            display: none;
+        .mobile-auth-link {
+            min-height: 30px;
+            padding: 0 10px;
+            font-size: 11px;
+        }
+    }
+
+    .site-header .brand-center-logo-link {
+        text-decoration: none !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: auto;
+        height: var(--aha-topbar-height);
+        min-width: 0;
+        min-height: var(--aha-topbar-height);
+        background: transparent;
+        line-height: 0;
+    }
+
+    .site-header .brand-center-logo-link .brand-center-logo-img {
+        width: auto !important;
+        height: var(--aha-topbar-height) !important;
+        max-width: min(240px, var(--aha-logo-available-width));
+        object-fit: contain;
+        object-position: center;
+        display: block;
+        background: transparent !important;
+    }
+
+    .site-header .brand-center-logo-link .brand-center-logo-img.logo-fit-by-width {
+        width: min(100%, var(--aha-logo-available-width)) !important;
+        height: auto !important;
+        max-height: var(--aha-topbar-height) !important;
+    }
+
+    @media (max-width: 991.98px) {
+        .site-header .brand-center-logo-link .brand-center-logo-img {
+            height: var(--aha-topbar-height) !important;
+            width: auto !important;
+            max-width: min(220px, var(--aha-logo-available-width));
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        .site-header .brand-center-logo-link .brand-center-logo-img {
+            height: var(--aha-topbar-height) !important;
+            width: auto !important;
+            max-width: min(200px, var(--aha-logo-available-width));
+        }
+    }
+
+    .site-header {
+        color: #ffffff;
+        backdrop-filter: blur(14px);
+    }
+
+    .site-header .container-fluid {
+        min-height: var(--aha-topbar-height);
+        gap: 10px;
+    }
+
+    .site-header .nav-link,
+    .site-header .navbar-brand,
+    .site-header .navbar-brand:hover,
+    .site-header .fw-semibold,
+    .site-header .text-secondary,
+    .site-header .text-muted {
+        color: #ffffff !important;
+    }
+
+    .site-header .mode-badge {
+        background: rgba(255, 255, 255, 0.16);
+        border-color: rgba(255, 255, 255, 0.28);
+        color: #ffffff;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
+    }
+
+    .site-header .topbar-space-toggle,
+    .site-header .home-top-circle-btn,
+    .site-header .topbar-auth-btn,
+    .site-header .home-account-toggle {
+        border: 1px solid rgba(255, 255, 255, 0.22) !important;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16);
+    }
+
+    .site-header .topbar-space-toggle,
+    .site-header .home-top-circle-btn {
+        background: rgba(255, 255, 255, 0.96) !important;
+        color: #102a43 !important;
+    }
+
+    .site-header .topbar-space-toggle:hover,
+    .site-header .home-top-circle-btn:hover {
+        background: #ffffff !important;
+        border-color: rgba(255, 255, 255, 0.34) !important;
+        transform: translateY(-1px);
+    }
+
+    .site-header .topbar-space-toggle,
+    .site-header .topbar-space-toggle * {
+        color: #102a43 !important;
+    }
+
+    .site-header .home-account-toggle {
+        min-height: 46px;
+        padding: 4px 12px 4px 4px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.96);
+        color: #102a43 !important;
+        gap: 10px;
+        text-decoration: none;
+        transition: transform .2s ease, box-shadow .2s ease, background-color .2s ease;
+    }
+
+    .site-header .home-account-toggle:hover {
+        background: #ffffff;
+        color: #102a43 !important;
+        transform: translateY(-1px);
+    }
+
+    .site-header .home-account-avatar {
+        width: 38px !important;
+        height: 38px !important;
+        min-width: 38px !important;
+        min-height: 38px !important;
+        max-width: 38px !important;
+        max-height: 38px !important;
+        border: 2px solid rgba(255, 255, 255, 0.9);
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.18);
+    }
+
+    .site-header .home-account-name,
+    .site-header .home-account-caret {
+        color: #102a43 !important;
+    }
+
+    .site-header .home-account-name {
+        max-width: 180px;
+        font-weight: 800;
+    }
+
+    .site-header .home-account-caret {
+        opacity: .76;
+    }
+
+    .site-header .topbar-auth-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 0 16px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 800;
+        text-decoration: none;
+        transition: transform .2s ease, opacity .2s ease, background-color .2s ease;
+    }
+
+    .site-header .topbar-auth-btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .site-header .topbar-auth-login {
+        background: #0f172a;
+        color: #ffffff !important;
+    }
+
+    .site-header .topbar-auth-signup {
+        background: rgba(255, 255, 255, 0.94);
+        color: #9f1239 !important;
+    }
+
+    .site-header .aha-header-quick-shell {
+        position: relative;
+    }
+
+    .site-header .aha-header-quick-btn {
+        position: relative;
+    }
+
+    .site-header .aha-header-quick-shell.is-open .aha-header-quick-btn {
+        background: #ffffff !important;
+        border-color: rgba(255, 255, 255, 0.34) !important;
+    }
+
+    .site-header .aha-header-quick-menu {
+        position: absolute;
+        top: calc(100% + 12px);
+        right: 0;
+        width: min(360px, calc(100vw - 24px));
+        display: none;
+        flex-direction: column;
+        gap: 8px;
+        padding: 12px;
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.98);
+        border: 1px solid rgba(226, 232, 240, 0.94);
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22);
+        z-index: 1060;
+    }
+
+    .site-header .aha-header-quick-shell.is-open .aha-header-quick-menu {
+        display: flex;
+    }
+
+    .site-header .aha-header-quick-title {
+        margin: 0 2px 4px;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: #64748b;
+    }
+
+    .site-header .aha-header-quick-links {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .site-header .aha-header-quick-link {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 14px;
+        border-radius: 18px;
+        text-decoration: none;
+        background: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(248,250,252,0.96));
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        color: #0f2940 !important;
+        transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+    }
+
+    .site-header .aha-header-quick-link:hover {
+        transform: translateY(-1px);
+        border-color: rgba(148, 163, 184, 0.3);
+        box-shadow: 0 16px 36px rgba(15, 23, 42, 0.12);
+    }
+
+    .site-header .aha-header-quick-copy {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .site-header .aha-header-quick-copy strong {
+        font-size: 14px;
+        font-weight: 800;
+        color: #102a43;
+        line-height: 1.3;
+    }
+
+    .site-header .aha-header-quick-copy small {
+        margin-top: 2px;
+        font-size: 11px;
+        color: #64748b;
+        line-height: 1.35;
+    }
+
+    .site-header .aha-header-quick-badge {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.08);
+        color: #102a43;
+        font-size: 11px;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .site-header .brand-center-desktop,
+    .site-header .brand-center-mobile {
+        filter: drop-shadow(0 10px 22px rgba(15, 23, 42, 0.14));
+    }
+
+    .site-header .mobile-right-account {
+        gap: 8px;
+    }
+
+    .site-header .mobile-auth-link.login {
+        background: #0f172a;
+        color: #ffffff !important;
+        border: 1px solid rgba(255,255,255,0.18);
+    }
+
+    .site-header .mobile-auth-link.signup {
+        background: rgba(255,255,255,0.94);
+        color: #9f1239 !important;
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    @media (max-width: 991.98px) {
+        .site-header .container-fluid {
+            min-height: 56px;
+        }
+
+        .site-header .aha-header-quick-menu {
+            display: none !important;
         }
     }
 </style>
-<header class="navbar navbar-expand-lg fixed-top d-print-none site-header <%= PortalRequest_cl.IsShopPortalRequest() ? "site-header-shop" : "" %>"
-    style="<%= PortalRequest_cl.IsShopPortalRequest() ? "background: linear-gradient(90deg, #ee4d2d 0%, #ff7a45 100%) !important;" : "" %>">
+<header class="navbar navbar-expand-lg fixed-top d-print-none site-header <%= ResolveHeaderSpaceCssClass() %>"
+    style="<%= ResolveHeaderInlineStyle() %>">
     <div class="container-fluid position-relative">
 
-        <!-- MOBILE: Hamburger -->
-        <button class="btn btn-icon home-top-circle-btn bg-white d-lg-none mobile-menu-btn" type="button"
+        <!-- Hamburger menu -->
+        <button class="btn btn-icon home-top-circle-btn bg-white mobile-menu-btn d-lg-none" type="button"
             data-bs-toggle="offcanvas" data-bs-target="#mobileMenu"
             aria-controls="mobileMenu" aria-label="Menu">
             <i class="ti ti-menu-2"></i>
@@ -347,61 +1042,35 @@
             <asp:PlaceHolder ID="phModeBadgeMobile" runat="server" Visible="false">
                 <asp:Label ID="lb_mode_badge_mobile" runat="server" CssClass="mode-badge mode-mobile mode-home"></asp:Label>
             </asp:PlaceHolder>
-            <asp:PlaceHolder ID="phTopMobileHomeUtilities" runat="server" Visible="true">
-                <asp:UpdatePanel ID="UpdatePanel8" runat="server" UpdateMode="Conditional">
-                    <ContentTemplate>
-                        <a class="btn btn-icon home-top-circle-btn bg-white position-relative mobile-icon-cart"
-                            href="/home/gio-hang.aspx"
-                            title="Giỏ hàng">
-                            <i class="ti ti-shopping-cart text-success"></i>
-                            <span id="badgeGioHangMobile" runat="server" class="position-absolute top-0 start-100 translate-middle badge rounded-pill"
-                                style="background: #FFF3CD; color: #856404; font-size: 11px; min-width: 18px; height: 18px; line-height: 18px; padding: 0 4px;">
-                                <asp:Label ID="lb_sl_giohang_mobile" runat="server" Text="0"></asp:Label>
-                            </span>
-                        </a>
-                    </ContentTemplate>
-                </asp:UpdatePanel>
-            </asp:PlaceHolder>
-            <asp:PlaceHolder ID="phTopMobileFavorite" runat="server" Visible="true">
-                <a href="/home/quan-ly-tin/tin-da-luu.aspx"
-                    class="btn btn-icon home-top-circle-btn bg-white mobile-icon-heart"
-                    title="Tin đã lưu">
-                    <i class="ti ti-heart text-success"></i>
-                </a>
-            </asp:PlaceHolder>
         </div>
 
         <div id="homeMobileSearchHost" class="d-lg-none home-mobile-search-host" data-use-search-host="0"></div>
 
         <!-- BRAND MOBILE -->
-        <a class="navbar-brand fw-bold d-flex align-items-center brand-center-mobile d-lg-none"
+        <a class="navbar-brand fw-bold d-flex align-items-center brand-center-mobile d-lg-none brand-center-logo-link"
             href="<%= ((ViewState["portal_scope"] ?? "").ToString() == PortalScope_cl.ScopeShop) ? "/shop/default.aspx" : "/" %>">
-            <img src="/uploads/images/logo-aha-trang.png" class="me-2" style="height: 28px" alt="AhaSale" />
-            <span>AhaSale</span>
+            <img src="<%= ResolveHeaderCenterLogoUrl() %>" class="brand-center-logo-img" alt="AhaSale" />
         </a>
 
         <!-- DESKTOP NAV -->
         <div class="collapse navbar-collapse d-none d-lg-flex" id="navbar-menu">
             <ul class="navbar-nav align-items-lg-center gap-lg-2 header-left-nav">
-                <% if (PortalRequest_cl.IsShopPortalRequest()) { %>
-                <li class="nav-item"><a class="nav-link fw-semibold" href="/dang-nhap?switch=home">Chuyển sang home (cá nhân)</a></li>
-                <% } else { %>
-                <%=show_danhmuc_nav %>
-                <% if (PortalActiveMode_cl.IsShopActive()) { %>
-                <li class="nav-item"><a class="nav-link fw-semibold" href="/dang-nhap?switch=home">Chuyển sang home (cá nhân)</a></li>
-                <% } else { %>
-                <li class="nav-item"><a class="nav-link fw-semibold" href="/shop/login.aspx?switch=shop">Chuyển sang gian hàng đối tác</a></li>
-                <% } %>
-                <% } %>
+                <li class="nav-item d-none d-lg-flex align-items-center">
+                    <uc1:SpaceLauncher runat="server" ID="spaceLauncher" ButtonCssClass="home-top-circle-btn topbar-space-toggle" />
+                </li>
+                <asp:PlaceHolder ID="phDesktopSpaceBadge" runat="server" Visible="true">
+                    <li class="nav-item">
+                        <asp:Label ID="lb_desktop_space_badge" runat="server" CssClass="mode-badge mode-home"></asp:Label>
+                    </li>
+                </asp:PlaceHolder>
                 <asp:PlaceHolder ID="phDonBan" runat="server" Visible="false"></asp:PlaceHolder>
                <%-- <li class="nav-item"><a class="nav-link fw-semibold" href="#">Bất động sản</a></li>
                 <li class="nav-item"><a class="nav-link fw-semibold" href="#">Việc làm</a></li>--%>
             </ul>
 
-            <a class="brand-center-desktop"
+            <a class="brand-center-desktop brand-center-logo-link"
                 href="<%= ((ViewState["portal_scope"] ?? "").ToString() == PortalScope_cl.ScopeShop) ? "/shop/default.aspx" : "/" %>">
-                <img src="/uploads/images/logo-aha-trang.png" class="me-2" alt="AhaSale" />
-                <span>AhaSale</span>
+                <img src="<%= ResolveHeaderCenterLogoUrl() %>" class="brand-center-logo-img" alt="AhaSale" />
             </a>
 
             <!-- DESKTOP RIGHT -->
@@ -409,6 +1078,19 @@
                 <asp:PlaceHolder ID="phModeBadge" runat="server" Visible="false">
                     <asp:Label ID="lb_mode_badge" runat="server" CssClass="mode-badge mode-home"></asp:Label>
                 </asp:PlaceHolder>
+                <% if (ShowHeaderQuickActions()) { %>
+                <div class="position-relative d-none d-lg-block aha-header-quick-shell" id="headerQuickShell">
+                    <button type="button" class="home-top-circle-btn aha-header-quick-btn" id="headerQuickToggle" aria-haspopup="true" aria-expanded="false" title="<%: ResolveHeaderQuickActionsTitle() %>">
+                        <i class="ti ti-plus"></i>
+                    </button>
+                    <div class="aha-header-quick-menu" id="headerQuickMenu">
+                        <div class="aha-header-quick-title"><%: ResolveHeaderQuickActionsTitle() %></div>
+                        <div class="aha-header-quick-links">
+                            <%= RenderHeaderQuickActionsHtml() %>
+                        </div>
+                    </div>
+                </div>
+                <% } %>
                 <asp:PlaceHolder ID="phTopDesktopHomeUtilities" runat="server" Visible="false">
                     <div class="position-relative d-none d-lg-block">
                         <a href="/home/quan-ly-tin/tin-da-luu.aspx"
@@ -477,10 +1159,9 @@
                 </asp:PlaceHolder>
                 <asp:PlaceHolder ID="PlaceHolder1" runat="server">
                     <% if (!PortalRequest_cl.IsShopPortalRequest() && string.IsNullOrEmpty(PortalRequest_cl.GetCurrentAccountEncrypted())) { %>
-                    <a href="/dang-nhap" class="btn btn-dark rounded-pill  px-3">Đăng nhập</a>
+                    <a href="/dang-nhap" class="topbar-auth-btn topbar-auth-login">Đăng nhập</a>
                     <a href="/home/dangky.aspx"
-                        class="btn flex-fill"
-                        style="border-radius: 999px; background: #e9f7ef; color: #146c43; border: 1px solid rgba(25,135,84,.45);">Đăng ký
+                        class="topbar-auth-btn topbar-auth-signup">Đăng ký
                     </a>
                     <% } %>
                 </asp:PlaceHolder>
@@ -492,7 +1173,7 @@
                         <a id="userMenuToggle" href="#" class="home-account-toggle"
                             aria-expanded="false">
                             <span class="home-account-avatar" style="background-image: url('<%= ViewState["anhdaidien"] %>')"></span>
-                            <span class="home-account-name"><%: (ViewState["hoten"] ?? "Tài khoản").ToString() %></span>
+                            <span class="home-account-name"><%: ResolveTopAccountLabel() %></span>
                             <i class="ti ti-chevron-down home-account-caret"></i>
                         </a>
 
@@ -508,6 +1189,32 @@
 
         <!-- MOBILE RIGHT: account only -->
         <div class="d-lg-none mobile-right-account">
+            <asp:PlaceHolder ID="phTopMobileGuestAuth" runat="server" Visible="false">
+                <a href="/dang-nhap" class="mobile-auth-link login">Đăng nhập</a>
+                <a href="/home/dangky.aspx" class="mobile-auth-link signup">Đăng ký</a>
+            </asp:PlaceHolder>
+            <asp:PlaceHolder ID="phTopMobileFavorite" runat="server" Visible="true">
+                <a href="/home/quan-ly-tin/tin-da-luu.aspx"
+                    class="btn btn-icon home-top-circle-btn bg-white mobile-icon-heart"
+                    title="Tin đã lưu">
+                    <i class="ti ti-heart text-success"></i>
+                </a>
+            </asp:PlaceHolder>
+            <asp:PlaceHolder ID="phTopMobileHomeUtilities" runat="server" Visible="true">
+                <asp:UpdatePanel ID="UpdatePanel8" runat="server" UpdateMode="Conditional">
+                    <ContentTemplate>
+                        <a class="btn btn-icon home-top-circle-btn bg-white position-relative mobile-icon-cart"
+                            href="/home/gio-hang.aspx"
+                            title="Giỏ hàng">
+                            <i class="ti ti-shopping-cart text-success"></i>
+                            <span id="badgeGioHangMobile" runat="server" class="position-absolute top-0 start-100 translate-middle badge rounded-pill"
+                                style="background: #FFF3CD; color: #856404; font-size: 11px; min-width: 18px; height: 18px; line-height: 18px; padding: 0 4px;">
+                                <asp:Label ID="lb_sl_giohang_mobile" runat="server" Text="0"></asp:Label>
+                            </span>
+                        </a>
+                    </ContentTemplate>
+                </asp:UpdatePanel>
+            </asp:PlaceHolder>
             <asp:PlaceHolder ID="phTopNotificationMobile" runat="server" Visible="true">
                 <asp:UpdatePanel ID="UpdatePanel7" runat="server" UpdateMode="Conditional">
                     <ContentTemplate>
@@ -524,6 +1231,16 @@
                     </ContentTemplate>
                 </asp:UpdatePanel>
             </asp:PlaceHolder>
+            <% if (ShowHeaderQuickActions()) { %>
+            <button type="button"
+                class="btn btn-icon home-top-circle-btn bg-white mobile-icon-quick"
+                data-bs-toggle="offcanvas"
+                data-bs-target="#quickActionsCanvas"
+                aria-controls="quickActionsCanvas"
+                aria-label="<%: ResolveHeaderQuickActionsTitle() %>">
+                <i class="ti ti-plus"></i>
+            </button>
+            <% } %>
             <asp:PlaceHolder ID="phTopMobileAccount" runat="server" Visible="true">
                 <button type="button"
                     class="btn btn-icon home-top-circle-btn bg-white position-relative p-0 mobile-icon-account"
@@ -549,6 +1266,15 @@
     </div>
 
     <div class="offcanvas-body">
+        <asp:PlaceHolder ID="phHomeSpaceAccessSummaryMobile" runat="server" Visible="false">
+            <div class="home-space-access-card <%= ResolveHeaderSpaceCssClass() %> mt-1 mb-3">
+                <div class="home-space-access-title">Không gian hoạt động:</div>
+                <div class="home-space-access-list">
+                    <asp:Literal ID="litHomeSpaceAccessSummaryMobile" runat="server" />
+                </div>
+            </div>
+        </asp:PlaceHolder>
+
         <div class="list-group list-group-flush">
             <%= show_danhmuc_mobile %>
            <%-- <a href="#" class="list-group-item list-group-item-action fw-semibold">Bất động sản</a>
@@ -576,6 +1302,20 @@
         <div id="accountMenuHostMobile" class="account-dropdown"></div>
     </div>
 </div>
+
+<% if (ShowHeaderQuickActions()) { %>
+<div class="offcanvas offcanvas-end" tabindex="-1" id="quickActionsCanvas" aria-labelledby="quickActionsCanvasLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title fw-bold" id="quickActionsCanvasLabel"><%: ResolveHeaderQuickActionsTitle() %></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-3">
+        <div class="aha-header-quick-links">
+            <%= RenderHeaderQuickActionsHtml() %>
+        </div>
+    </div>
+</div>
+<% } %>
 
 
 
@@ -761,7 +1501,7 @@
 
                             <div class="flex-fill">
                                 <div class="fw-bold" style="font-size: 1.05rem;">
-                                    <%= ViewState["hoten"] %>
+                                    <%= ResolveDropdownProfileName() %>
                                 </div>
                                 <div class="text-secondary small">
                                     <%= ViewState["taikhoan"] %>
@@ -826,6 +1566,82 @@
 
                     </div>
 
+                    <asp:PlaceHolder ID="phHomeSpaceAccessSummary" runat="server" Visible="false">
+                        <div class="home-space-access-card <%= ResolveHeaderSpaceCssClass() %>">
+                            <div class="home-space-access-title">Không gian hoạt động:</div>
+                            <div class="home-space-access-list">
+                                <asp:Literal ID="litHomeSpaceAccessSummary" runat="server" />
+                            </div>
+                        </div>
+                    </asp:PlaceHolder>
+
+                    <asp:PlaceHolder ID="phGianHangCompactMenu" runat="server" Visible="false">
+                        <div class="gianhang-space-menu-card">
+                            <div class="gianhang-space-menu-title">Không gian gian hàng</div>
+                            <div class="list-group list-group-flush bg-white">
+                                <a class='list-group-item d-flex align-items-center justify-content-between py-3 gianhang-space-link <%= ResolveGianHangMenuItemClass("trang-cong-khai") %>' href="/gianhang/">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="ti ti-world text-secondary"></i>
+                                        <span class="fw-medium">Trang công khai</span>
+                                    </div>
+                                    <i class="ti ti-chevron-right text-secondary"></i>
+                                </a>
+                                <a class='list-group-item d-flex align-items-center justify-content-between py-3 gianhang-space-link <%= ResolveGianHangMenuItemClass("quan-ly-tin") %>' href="/gianhang/quan-ly-tin/Default.aspx">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="ti ti-news text-secondary"></i>
+                                        <span class="fw-medium">Quản lý tin</span>
+                                    </div>
+                                    <i class="ti ti-chevron-right text-secondary"></i>
+                                </a>
+                                <a class='list-group-item d-flex align-items-center justify-content-between py-3 gianhang-space-link <%= ResolveGianHangMenuItemClass("don-ban") %>' href="/gianhang/don-ban.aspx">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="ti ti-receipt text-secondary"></i>
+                                        <span class="fw-medium">Đơn bán</span>
+                                    </div>
+                                    <i class="ti ti-chevron-right text-secondary"></i>
+                                </a>
+                                <a class='list-group-item d-flex align-items-center justify-content-between py-3 gianhang-space-link <%= ResolveGianHangMenuItemClass("lich-hen") %>' href="/gianhang/quan-ly-lich-hen.aspx">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="ti ti-calendar-event text-secondary"></i>
+                                        <span class="fw-medium">Lịch hẹn</span>
+                                    </div>
+                                    <i class="ti ti-chevron-right text-secondary"></i>
+                                </a>
+                                <a class='list-group-item d-flex align-items-center justify-content-between py-3 gianhang-space-link <%= ResolveGianHangMenuItemClass("khach-hang") %>' href="/gianhang/khach-hang.aspx">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="ti ti-users text-secondary"></i>
+                                        <span class="fw-medium">Khách hàng</span>
+                                    </div>
+                                    <i class="ti ti-chevron-right text-secondary"></i>
+                                </a>
+                                <a class='list-group-item d-flex align-items-center justify-content-between py-3 gianhang-space-link <%= ResolveGianHangMenuItemClass("bao-cao") %>' href="/gianhang/bao-cao.aspx">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="ti ti-chart-bar text-secondary"></i>
+                                        <span class="fw-medium">Báo cáo</span>
+                                    </div>
+                                    <i class="ti ti-chevron-right text-secondary"></i>
+                                </a>
+                                <a class='list-group-item d-flex align-items-center justify-content-between py-3 gianhang-space-link <%= ResolveGianHangMenuItemClass("nang-cap-level2") %>' href="/gianhang/nang-cap-level2.aspx">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="ti ti-rocket text-secondary"></i>
+                                        <span class="fw-medium">Nâng cấp Level 2</span>
+                                    </div>
+                                    <i class="ti ti-chevron-right text-secondary"></i>
+                                </a>
+                                <asp:PlaceHolder ID="phGianHangCompactAdmin" runat="server" Visible="false">
+                                    <a class='list-group-item d-flex align-items-center justify-content-between py-3 gianhang-space-link <%= ResolveGianHangMenuItemClass("quan-tri") %>' href="/gianhang/admin/">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="ti ti-settings text-secondary"></i>
+                                            <span class="fw-medium">Quản trị gian hàng</span>
+                                        </div>
+                                        <i class="ti ti-chevron-right text-secondary"></i>
+                                    </a>
+                                </asp:PlaceHolder>
+                            </div>
+                        </div>
+                    </asp:PlaceHolder>
+
+                    <asp:PlaceHolder ID="phDefaultAccountMenu" runat="server" Visible="true">
                     <!-- Menu list (giống vùng khoanh đỏ) -->
                     <div class="list-group list-group-flush bg-white" style="border-top: 1px solid rgba(0,0,0,.06);">
 
@@ -988,7 +1804,7 @@
 
                             <div class="px-3 pt-2 pb-1 text-secondary small">Bộ công cụ nâng cao</div>
                             <asp:PlaceHolder ID="phShopLevel2Tools" runat="server" Visible="false">
-                                <a class="list-group-item d-flex align-items-center justify-content-between py-3" href="/gianhang/admin/login.aspx">
+                                <a class="list-group-item d-flex align-items-center justify-content-between py-3" href="/gianhang/admin">
                                     <div class="d-flex align-items-center gap-2">
                                         <i class="ti ti-settings text-secondary"></i>
                                         <span class="fw-medium">Vào /gianhang/admin</span>
@@ -1043,8 +1859,8 @@
                             </a>
                         </asp:PlaceHolder>
 
-
                     </div>
+                    </asp:PlaceHolder>
                 </div>
             </asp:PlaceHolder>
         </ContentTemplate>
@@ -1106,12 +1922,12 @@
                 <i class="ti ti-chevron-right text-secondary"></i>
             </a>
 
-            <a class="list-group-item d-flex align-items-center justify-content-between py-3" href="/home/dang-ky-gian-hang-doi-tac.aspx">
+            <a class="list-group-item d-flex align-items-center justify-content-between py-3" href="/home/dang-ky-gian-hang-doi-tac.aspx?return_url=%2Fgianhang%2F">
                 <div class="d-flex align-items-center gap-2">
                     <span class="avatar avatar-xs rounded-circle bg-orange-lt text-orange d-flex align-items-center justify-content-center">
                         <i class="ti ti-check"></i>
                     </span>
-                    <span class="fw-medium">Tạo cửa hàng</span>
+                    <span class="fw-medium">Mở gian hàng đối tác</span>
                 </div>
                 <i class="ti ti-chevron-right text-secondary"></i>
             </a>
@@ -1402,6 +2218,62 @@
 </script>
 
 <script>
+    function refreshCenterLogoLayout() {
+        var header = document.querySelector('.site-header');
+        if (!header) return;
+
+        var left = header.querySelector('.mobile-left-icons');
+        var right = header.querySelector('.mobile-right-account');
+        var logos = header.querySelectorAll('.brand-center-logo-img');
+        if (!logos || logos.length === 0) return;
+
+        var viewportWidth = Math.max(document.documentElement ? document.documentElement.clientWidth : 0, window.innerWidth || 0);
+        var leftWidth = left ? Math.ceil(left.getBoundingClientRect().width) : 0;
+        var rightWidth = right ? Math.ceil(right.getBoundingClientRect().width) : 0;
+        var sideMax = Math.max(leftWidth, rightWidth);
+        var availableWidth = Math.max(92, viewportWidth - (sideMax * 2) - 18);
+        document.documentElement.style.setProperty('--aha-logo-available-width', availableWidth + 'px');
+
+        var topbarHeight = Math.max(40, Math.ceil(header.getBoundingClientRect().height));
+        for (var i = 0; i < logos.length; i++) {
+            var logo = logos[i];
+            if (!logo) continue;
+
+            logo.classList.remove('logo-fit-by-width');
+            var naturalWidth = parseFloat(logo.naturalWidth || 0);
+            var naturalHeight = parseFloat(logo.naturalHeight || 0);
+            if (naturalWidth <= 0 || naturalHeight <= 0) continue;
+
+            var projectedWidth = (naturalWidth / naturalHeight) * topbarHeight;
+            if (projectedWidth > availableWidth) {
+                logo.classList.add('logo-fit-by-width');
+            }
+        }
+    }
+
+    function syncCenterLogoFromHead() {
+        var iconUrl = "";
+        var apple = document.querySelector("link[rel='apple-touch-icon'][sizes='180x180']")
+            || document.querySelector("link[rel='apple-touch-icon']");
+        if (apple) iconUrl = (apple.getAttribute('href') || "").trim();
+        if (!iconUrl) {
+            var tile = document.querySelector("meta[name='msapplication-TileImage']");
+            if (tile) iconUrl = (tile.getAttribute('content') || "").trim();
+        }
+        if (!iconUrl) return;
+
+        var logos = document.querySelectorAll('.brand-center-logo-img');
+        if (!logos || logos.length === 0) return;
+        for (var i = 0; i < logos.length; i++) {
+            if (!logos[i]) continue;
+            logos[i].setAttribute('src', iconUrl);
+            if (!logos[i].complete) {
+                logos[i].addEventListener('load', refreshCenterLogoLayout, { once: true });
+            }
+        }
+        refreshCenterLogoLayout();
+    }
+
     function cloneAccountNode(source) {
         if (!source) return null;
         var node = source.cloneNode(true);
@@ -1472,15 +2344,73 @@
         });
     }
 
+    function setupQuickDropdown() {
+        var shell = document.getElementById('headerQuickShell');
+        var toggle = document.getElementById('headerQuickToggle');
+        var menu = document.getElementById('headerQuickMenu');
+        if (!shell || !toggle || !menu) return;
+        if (toggle.getAttribute('data-quick-bound') === '1') return;
+        toggle.setAttribute('data-quick-bound', '1');
+        shell.classList.remove('is-open');
+        toggle.setAttribute('aria-expanded', 'false');
+
+        function closeMenu() {
+            shell.classList.remove('is-open');
+            toggle.setAttribute('aria-expanded', 'false');
+        }
+
+        function openMenu() {
+            shell.classList.add('is-open');
+            toggle.setAttribute('aria-expanded', 'true');
+        }
+
+        toggle.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (shell.classList.contains('is-open')) {
+                closeMenu();
+            } else {
+                openMenu();
+            }
+        });
+
+        menu.addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!shell.contains(e.target)) {
+                closeMenu();
+            }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closeMenu();
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
+        syncCenterLogoFromHead();
+        refreshCenterLogoLayout();
         mountAccountMenuOnce();
         setupAccountDropdown();
+        setupQuickDropdown();
     });
+
+    window.addEventListener('load', function () {
+        syncCenterLogoFromHead();
+        refreshCenterLogoLayout();
+    });
+
+    window.addEventListener('resize', refreshCenterLogoLayout);
 
     if (window.Sys && window.Sys.WebForms && Sys.WebForms.PageRequestManager) {
         Sys.WebForms.PageRequestManager.getInstance().add_endRequest(function () {
+            syncCenterLogoFromHead();
+            refreshCenterLogoLayout();
             mountAccountMenuOnce();
             setupAccountDropdown();
+            setupQuickDropdown();
         });
     }
 

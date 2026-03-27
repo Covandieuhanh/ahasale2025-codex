@@ -60,12 +60,12 @@
                             <ItemTemplate>
                                 <div class="row mt-9">
                                     <div class="cell-lg-4">
-                                        <a href="/gianhang/page/chi-tiet-dich-vu.aspx?idbv=<%#Eval("id") %>">
+                                        <a href="<%# BuildRelatedDetailUrl(Eval("id")) %>">
                                             <img src="<%#Eval("image") %>" class="radius-bc-4" /></a>
                                     </div>
                                     <div class="cell-lg-8 pl-3-lg">
                                         <div class="fw-600 ellipsis-2 mt-0-lg mt-2">
-                                            <a class="fg-black fg-emerald-hover" href="/gianhang/page/chi-tiet-dich-vu.aspx?idbv=<%#Eval("id") %>"><%#Eval("name") %></a>
+                                            <a class="fg-black fg-emerald-hover" href="<%# BuildRelatedDetailUrl(Eval("id")) %>"><%#Eval("name") %></a>
                                         </div>
                                         <div style="color: #808080" class="mt-1">
                                             <%#Eval("description") %>

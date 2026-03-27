@@ -7,6 +7,30 @@ using System.Web.UI.WebControls;
 public partial class shop_login : System.Web.UI.Page
 {
     private string _cachedReturnUrl;
+
+    protected string ResolveShopBrandLogoUrl()
+    {
+        string contextLogo = PortalBranding_cl.NormalizeIconPath(
+            Convert.ToString(Context == null ? null : Context.Items["AhaHeaderCenterLogoUrl"]),
+            PortalBranding_cl.DefaultShopIconPath);
+
+        if (!string.IsNullOrWhiteSpace(contextLogo))
+            return contextLogo;
+
+        try
+        {
+            using (dbDataContext db = new dbDataContext())
+            {
+                PortalBranding_cl.ScopeBrandingSnapshot branding = PortalBranding_cl.LoadScopeBranding(db, PortalBranding_cl.ScopeShop, true);
+                return PortalBranding_cl.ResolveHeaderLogoPath(branding, PortalBranding_cl.ScopeShop);
+            }
+        }
+        catch
+        {
+            return PortalBranding_cl.DefaultShopIconPath;
+        }
+    }
+
     private void DisablePageCaching()
     {
         Response.Cache.SetCacheability(HttpCacheability.NoCache);
@@ -89,23 +113,70 @@ public partial class shop_login : System.Web.UI.Page
             return false;
 
         ShopStatus_cl.EnsureSchemaSafe(db);
-        acc = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == tk && p.matkhau == mk);
+        acc = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == tk);
         if (acc == null)
             return false;
 
-        if (!ShopStatus_cl.IsShopApproved(acc))
+        if (!AccountAuth_cl.IsPasswordValid(mk, acc.matkhau))
             return false;
 
         DateTime now = AhaTime_cl.Now;
         if (acc.hansudung != null && now > acc.hansudung.Value)
             return false;
 
-        return PortalScope_cl.CanLoginShop(acc.taikhoan, acc.phanloai, acc.permission);
+        bool hasShopSpaceAccess = SpaceAccess_cl.CanAccessShop(db, acc);
+        if (!ShopStatus_cl.IsShopApproved(db, acc) && !hasShopSpaceAccess)
+            return false;
+
+        return CanUseShopPortal(db, acc);
+    }
+
+    private bool CanUseShopPortal(dbDataContext db, taikhoan_tb account)
+    {
+        if (account == null)
+            return false;
+
+        if (PortalScope_cl.CanLoginShop(account.taikhoan, account.phanloai, account.permission))
+            return true;
+
+        return SpaceAccess_cl.CanAccessShop(db, account);
+    }
+
+    private AccountLoginInfo FindShopPortalAccountByEmail(dbDataContext db, string emailRaw)
+    {
+        if (db == null)
+            return null;
+
+        string normalizedEmail = AccountAuth_cl.NormalizeLoginId(emailRaw);
+        if (string.IsNullOrWhiteSpace(normalizedEmail))
+            return null;
+
+        var matched = db.taikhoan_tbs
+            .Where(p => (p.email ?? "").Trim().ToLower() == normalizedEmail)
+            .ToList()
+            .Where(p => CanUseShopPortal(db, p))
+            .ToList();
+
+        if (matched.Count > 1)
+            return new AccountLoginInfo { IsAmbiguous = true };
+        if (matched.Count == 0)
+            return null;
+
+        taikhoan_tb account = matched[0];
+        return new AccountLoginInfo
+        {
+            TaiKhoan = (account.taikhoan ?? "").Trim().ToLowerInvariant(),
+            MatKhau = account.matkhau ?? "",
+            PhanLoai = account.phanloai ?? "",
+            Block = account.block == true,
+            HanSuDung = account.hansudung
+        };
     }
 
     protected void Page_Load(object sender, EventArgs e)
     {
         DisablePageCaching();
+        EnsureCompanyShopBootstrapSafe();
 
         bool switchShopRequested = string.Equals((Request.QueryString["switch"] ?? "").Trim(), "shop", StringComparison.OrdinalIgnoreCase);
         if (switchShopRequested)
@@ -153,7 +224,22 @@ public partial class shop_login : System.Web.UI.Page
                 }
             }
 
+    }
+
+    private void EnsureCompanyShopBootstrapSafe()
+    {
+        try
+        {
+            using (dbDataContext db = new dbDataContext())
+            {
+                CompanyShopBootstrap_cl.EnsureSpecialShopReady(db);
+            }
         }
+        catch
+        {
+            // Không chặn luồng đăng nhập nếu bootstrap tạm lỗi DB.
+        }
+    }
     }
 
     protected void but_login_Click(object sender, EventArgs e)
@@ -185,7 +271,7 @@ public partial class shop_login : System.Web.UI.Page
                     return;
                 }
 
-                AccountLoginInfo account = AccountAuth_cl.FindShopAccountByEmail(db, loginEmail);
+                AccountLoginInfo account = FindShopPortalAccountByEmail(db, loginEmail);
                 if (account != null && account.IsAmbiguous)
                 {
                     lb_msg.Text = "Email đang trùng nhiều tài khoản gian hàng đối tác. Vui lòng liên hệ admin.";
@@ -212,7 +298,8 @@ public partial class shop_login : System.Web.UI.Page
                 }
 
                 ShopStatus_cl.EnsureSchemaSafe(db);
-                if (!ShopStatus_cl.IsShopApproved(full))
+                bool hasShopSpaceAccess = SpaceAccess_cl.CanAccessShop(db, full);
+                if (!ShopStatus_cl.IsShopApproved(db, full) && !hasShopSpaceAccess)
                 {
                     lb_msg.Text = (full.TrangThai_Shop == ShopStatus_cl.StatusPending)
                         ? "Tài khoản gian hàng đối tác chưa được duyệt."
@@ -220,13 +307,14 @@ public partial class shop_login : System.Web.UI.Page
                     return;
                 }
 
-                if (!PortalScope_cl.CanLoginShop(full.taikhoan, full.phanloai, full.permission))
+                bool isNativeShopScope = PortalScope_cl.CanLoginShop(full.taikhoan, full.phanloai, full.permission);
+                if (!isNativeShopScope && !hasShopSpaceAccess)
                 {
-                    lb_msg.Text = "Tài khoản này không thuộc hệ gian hàng đối tác.";
+                    lb_msg.Text = "Tài khoản này chưa được mở quyền vào không gian shop.";
                     return;
                 }
 
-                if (PortalScope_cl.EnsureScope(full, PortalScope_cl.ScopeShop))
+                if (isNativeShopScope && PortalScope_cl.EnsureScope(full, PortalScope_cl.ScopeShop))
                     db.SubmitChanges();
 
                 PortalActiveMode_cl.SetMode(PortalActiveMode_cl.ModeShop);
@@ -298,7 +386,7 @@ public partial class shop_login : System.Web.UI.Page
                 return;
             }
 
-            AccountLoginInfo account = AccountAuth_cl.FindShopAccountByEmail(db, email);
+            AccountLoginInfo account = FindShopPortalAccountByEmail(db, email);
             if (account != null && account.IsAmbiguous)
             {
                 Helper_Tabler_cl.ShowModal(this.Page, "Email đang trùng nhiều tài khoản gian hàng đối tác. Vui lòng liên hệ admin.", "Thông báo", true, "warning");
@@ -312,14 +400,14 @@ public partial class shop_login : System.Web.UI.Page
             }
 
             taikhoan_tb q = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == account.TaiKhoan);
-            if (q == null || !PortalScope_cl.CanLoginShop(q.taikhoan, q.phanloai, q.permission))
+            if (q == null || !CanUseShopPortal(db, q))
             {
-                Helper_Tabler_cl.ShowModal(this.Page, "Tài khoản này không thuộc hệ gian hàng đối tác.", "Thông báo", true, "warning");
+                Helper_Tabler_cl.ShowModal(this.Page, "Tài khoản này chưa được mở quyền vào không gian shop.", "Thông báo", true, "warning");
                 return;
             }
 
             ShopStatus_cl.EnsureSchemaSafe(db);
-            if (!ShopStatus_cl.IsShopApproved(q))
+            if (!ShopStatus_cl.IsShopApproved(db, q) && !SpaceAccess_cl.CanAccessShop(db, q))
             {
                 string msg = (q.TrangThai_Shop == ShopStatus_cl.StatusPending)
                     ? "Tài khoản gian hàng đối tác chưa được duyệt."

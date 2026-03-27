@@ -1,0 +1,43 @@
+[
+  {
+    "id": "pricing",
+    "keywords": [
+      "giá",
+      "bảng giá",
+      "chi phí"
+    ],
+    "answer": "Bên mình có nhiều gói theo dịch vụ. Bạn để lại nhu cầu cụ thể, mình sẽ tư vấn gói phù hợp và báo giá chi tiết.",
+    "quickReplies": [
+      "Tư vấn ngay",
+      "Đặt lịch"
+    ]
+  },
+  {
+    "id": "promo",
+    "keywords": [
+      "khuyến mãi",
+      "ưu đãi",
+      "giảm giá"
+    ],
+    "answer": "Hiện tại bên mình đang có ưu đãi theo từng dịch vụ và thời điểm. Bạn muốn xem ưu đãi cho dịch vụ nào?",
+    "quickReplies": [
+      "Chăm sóc da",
+      "Triệt lông",
+      "Khác"
+    ]
+  },
+  {
+    "id": "booking",
+    "keywords": [
+      "đặt lịch",
+      "hẹn lịch",
+      "booking"
+    ],
+    "answer": "Bạn vui lòng để lại số điện thoại và khung giờ mong muốn, bên mình sẽ xác nhận lịch ngay.",
+    "quickReplies": [
+      "Sáng",
+      "Chiều",
+      "Tối"
+    ]
+  }
+]

@@ -120,9 +120,10 @@
                         </asp:UpdatePanel>
                         <asp:UpdateProgress ID="UpdateProgress1" runat="server" AssociatedUpdatePanelID="UpdatePanel1">
                             <ProgressTemplate>
-                                <div class="admin-inline-progress" role="status" aria-live="polite">
-                                    <span class="admin-inline-progress-spinner"></span>
-                                    <span class="admin-inline-progress-text">Đang xử lý...</span>
+                                <div class="bg-dark fixed-top h-100 w-100" style="opacity: 0.9; z-index: 99999!important">
+                                    <div style="padding-top: 50vh;">
+                                        <div class="mx-auto color-style activity-atom" data-role="activity" data-type="atom" data-style="color" data-role-activity="true"><span class="electron"></span><span class="electron"></span><span class="electron"></span></div>
+                                    </div>
                                 </div>
                             </ProgressTemplate>
                         </asp:UpdateProgress>

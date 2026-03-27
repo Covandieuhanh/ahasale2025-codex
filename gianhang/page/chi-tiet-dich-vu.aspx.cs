@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.UI;
@@ -10,91 +9,124 @@ public partial class danh_sach_bai_viet : System.Web.UI.Page
     public string notifi = "", idbv = "", noidung = "", name_mn, name_mn_en, phanloai_menu, url_menu;
     public string title_web = "", des = "", image = "", gia = "";
 
-    menu_homeaka_class mn_cl = new menu_homeaka_class();
-    poss_class_homeaka po_cl = new poss_class_homeaka();
     dbDataContext db = new dbDataContext();
 
-    #region opengraph
     public string meta = "";
-    public void opengraph(string _idbv)
+    public void opengraph(GH_SanPham_tb service)
     {
-        var q = po_cl.return_object(_idbv);
-        title_web = q.name; des = q.description; this.Title = title_web; image = q.image;
+        title_web = service == null ? string.Empty : (service.ten ?? string.Empty);
+        des = service == null ? string.Empty : (service.mo_ta ?? string.Empty);
+        image = GianHangStorefront_cl.ResolveImageUrl(service == null ? string.Empty : service.hinh_anh);
+        this.Title = title_web;
         string _title_op = "<meta property=\"og:title\" content=\"" + title_web + "\" />";
         string _image = "<meta property=\"og:image\" content=\"" + image + "\" />";
         string _description = "<meta name=\"description\" content=\"" + des + "\" />";
         string _description_op = "<meta property=\"og:description\" content=\"" + des + "\" />";
         meta = _title_op + _image + _description + _description_op;
     }
-    #endregion  
+
     public string _idmenu;
     protected void Page_Load(object sender, EventArgs e)
     {
-       
         if (string.IsNullOrWhiteSpace(Request.QueryString["idbv"]))
         {
             Session["notifi_home"] = thongbao_class.metro_dialog_onload("Thông báo", "Trang bạn yêu cầu không hợp lệ.", "false", "false", "OK", "alert", "");
-            Response.Redirect(AhaShineHomeRoutes_cl.HomeUrl);
+            Response.Redirect(GianHangRoutes_cl.BuildStorefrontUrl(string.Empty));
         }
         else
         {
             idbv = Request.QueryString["idbv"].ToString().Trim();
-            if (!po_cl.exist_id(idbv) || po_cl.check_id_in_bin(idbv))
+            int parsedId = 0;
+            int.TryParse(idbv, out parsedId);
+            GH_SanPham_tb service = GianHangPublicOrder_cl.ResolvePublicProductByAnyId(db, null, parsedId);
+            if (service == null || GianHangProduct_cl.NormalizeLoai(service.loai) != GianHangProduct_cl.LoaiDichVu)
             {
                 Session["notifi_home"] = thongbao_class.metro_dialog_onload("Thông báo", "Trang bạn yêu cầu không hợp lệ.", "false", "false", "OK", "alert", "");
-                Response.Redirect(AhaShineHomeRoutes_cl.HomeUrl);
+                Response.Redirect(GianHangRoutes_cl.BuildStorefrontUrl(string.Empty));
             }
             else
             {
-                if (po_cl.return_object(idbv).hienthi != true)
+                taikhoan_tb account = RootAccount_cl.GetByAccountKey(db, service.shop_taikhoan);
+                if (account == null || !SpaceAccess_cl.CanAccessGianHang(db, account))
                 {
                     Session["notifi_home"] = thongbao_class.metro_dialog_onload("Thông báo", "Trang bạn yêu cầu không hợp lệ.", "false", "false", "OK", "alert", "");
-                    Response.Redirect(AhaShineHomeRoutes_cl.HomeUrl);
+                    Response.Redirect(GianHangRoutes_cl.BuildStorefrontUrl((service.shop_taikhoan ?? string.Empty).Trim().ToLowerInvariant()));
                 }
                 else
                 {
-                    _idmenu = po_cl.return_object(idbv).id_category;
-                    name_mn = mn_cl.return_object(_idmenu).name;
-                    name_mn_en = mn_cl.return_object(_idmenu).name_en;
-                    phanloai_menu = mn_cl.return_object(_idmenu).phanloai;
-                    url_menu = "/gianhang/page/danh-sach-bai-viet.aspx?idmn=" + _idmenu;
-                    if (phanloai_menu == "dsdv")
-                    {
-                        url_menu = "/gianhang/page/danh-sach-dich-vu.aspx?idmn=" + _idmenu;
-                    }
-                    else if (phanloai_menu == "dssp")
-                    {
-                        url_menu = "/gianhang/page/danh-sach-san-pham.aspx?idmn=" + _idmenu;
-                    }
+                    service.luot_truy_cap = (service.luot_truy_cap ?? 0) + 1;
+                    service.ngay_cap_nhat = AhaTime_cl.Now;
+                    db.SubmitChanges();
 
-                    if (po_cl.return_object(idbv).phanloai != "ctdv")
-                    {
-                        Session["notifi_home"] = thongbao_class.metro_dialog_onload("Thông báo", "Trang bạn yêu cầu không hợp lệ.", "false", "false", "OK", "alert", "");
-                        Response.Redirect(AhaShineHomeRoutes_cl.HomeUrl);
-                    }
+                    _idmenu = (service.id_danhmuc ?? string.Empty).Trim();
+                    string chiNhanhId = GianHangPublic_cl.ResolveCurrentChiNhanhId(db, Request);
+                    if (_idmenu == string.Empty || !GianHangMenu_cl.Exists(db, chiNhanhId, _idmenu))
+                        _idmenu = GianHangStorefront_cl.ResolveDefaultMenuId(db, chiNhanhId, GianHangStorefront_cl.MenuTypeService);
 
-                    opengraph(idbv);
+                    web_menu_table menu = GianHangMenu_cl.FindById(db, chiNhanhId, _idmenu);
+                    name_mn = menu == null ? string.Empty : (menu.name ?? string.Empty);
+                    name_mn_en = menu == null ? string.Empty : (menu.name_en ?? string.Empty);
+                    phanloai_menu = menu == null ? GianHangStorefront_cl.MenuTypeService : (menu.phanloai ?? GianHangStorefront_cl.MenuTypeService);
+                    url_menu = GianHangPublic_cl.AppendUserToUrl("/gianhang/page/danh-sach-dich-vu.aspx?idmn=" + HttpUtility.UrlEncode(_idmenu), (service.shop_taikhoan ?? string.Empty).Trim().ToLowerInvariant());
 
-                    noidung = po_cl.return_object(idbv).content_post;
-                    gia = (po_cl.return_object(idbv).giaban_dichvu ?? 0).ToString("#,##0");
+                    opengraph(service);
 
+                    noidung = service.noi_dung ?? string.Empty;
+                    gia = (service.gia_ban ?? 0m).ToString("#,##0");
 
-                    var q2 = db.web_post_tables.Where(p => p.id_category == _idmenu && p.bin == false && p.id.ToString() != idbv && p.id_chinhanh == AhaShineContext_cl.ResolveChiNhanhId()).OrderByDescending(p => p.ngaytao);
-                    Repeater2.DataSource = q2.Take(9);
+                    var q2 = GianHangProduct_cl.QueryPublicByStorefront(db, (service.shop_taikhoan ?? string.Empty).Trim().ToLowerInvariant())
+                        .Where(p => p.id != service.id
+                                    && p.loai == GianHangProduct_cl.LoaiDichVu
+                                    && ((_idmenu == string.Empty) || ((p.id_danhmuc ?? string.Empty).Trim() == _idmenu)))
+                        .OrderByDescending(p => p.ngay_tao)
+                        .Select(p => new
+                        {
+                            id = p.id,
+                            image = p.hinh_anh,
+                            name = p.ten ?? string.Empty,
+                            description = p.mo_ta ?? string.Empty
+                        })
+                        .Take(9)
+                        .ToList()
+                        .Select(p => new
+                        {
+                            id = p.id,
+                            image = GianHangStorefront_cl.ResolveImageUrl(p.image),
+                            name = p.name,
+                            description = p.description
+                        })
+                        .ToList();
+
+                    Repeater2.DataSource = q2;
                     Repeater2.DataBind();
-                    if (q2.Count() == 0)
-                    {
+                    if (q2.Count == 0)
                         Panel1.Visible = false;
-                    }
                 }
             }
         }
     }
 
+    protected string BuildRelatedDetailUrl(object rawId)
+    {
+        int parsedId;
+        if (!int.TryParse(Convert.ToString(rawId), out parsedId) || parsedId <= 0)
+            return "/gianhang/default.aspx";
 
+        return "/gianhang/xem-dich-vu.aspx?id=" + parsedId.ToString();
+    }
 
     protected void but_dathang_Click(object sender, EventArgs e)
     {
-        Response.Redirect("/gianhang/datlich.aspx?id=" + idbv);
+        string returnUrl = "/gianhang/page/chi-tiet-dich-vu.aspx?idbv=" + HttpUtility.UrlEncode(idbv);
+        int parsedId = 0;
+        int.TryParse((idbv ?? string.Empty).Trim(), out parsedId);
+        GH_SanPham_tb service = GianHangPublicOrder_cl.ResolvePublicProductByAnyId(db, null, parsedId);
+        int routeId = service != null ? service.id : parsedId;
+        string gianHangTaiKhoan = service == null ? string.Empty : ((service.shop_taikhoan ?? string.Empty).Trim().ToLowerInvariant());
+
+        string url = "/gianhang/datlich.aspx?id=" + routeId.ToString();
+        url = GianHangRoutes_cl.AppendUserToUrl(url, gianHangTaiKhoan);
+        url = GianHangRoutes_cl.AppendReturnUrl(url, returnUrl);
+        Response.Redirect(url);
     }
 }

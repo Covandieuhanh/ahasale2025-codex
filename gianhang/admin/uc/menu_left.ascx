@@ -111,7 +111,7 @@
         <% } %>
 
         <% if (ShowLeftGroupShop()) { %>
-        <li class="item-header">QUẢN LÝ SHOP</li>
+        <li class="item-header">QUẢN LÝ GIAN HÀNG ĐỐI TÁC</li>
         <% if (ShowLeftShopAccount()) { %>
         <li class="<%=MenuActiveTaiKhoanScope("shop") %>">
             <a href="/gianhang/admin/quan-ly-tai-khoan/Default.aspx?scope=shop">

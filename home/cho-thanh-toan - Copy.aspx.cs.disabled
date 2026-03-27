@@ -1,0 +1,856 @@
+﻿using System;
+using System.Linq;
+using System.Web.UI;
+
+public partial class home_cho_thanh_toan : System.Web.UI.Page
+{
+    private const decimal VND_PER_QUYEN = 1000m;
+
+    // Quy đổi VNĐ -> Quyền (làm tròn lên 2 chữ số)
+    private static decimal QuyDoi_VND_To_Quyen(decimal vnd)
+    {
+        if (vnd <= 0m) return 0m;
+        decimal q = vnd / VND_PER_QUYEN;
+        return Math.Ceiling(q * 100m) / 100m;
+    }
+
+    // Helper cho aspx binding
+    protected string FormatQuyen(object vndObj)
+    {
+        if (vndObj == null) return "0";
+        decimal vnd = 0m;
+        try { vnd = Convert.ToDecimal(vndObj); } catch { vnd = 0m; }
+        decimal q = QuyDoi_VND_To_Quyen(vnd);
+        return q.ToString("#,##0.##");
+    }
+
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        if (!IsPostBack)
+        {
+            check_login_cl.check_login_home("none", "none", true);
+            using (dbDataContext db = new dbDataContext())
+            {
+                check(db);
+            }
+        }
+    }
+
+    public void check(dbDataContext db)
+    {
+        check_login_cl.check_login_home("none", "none", true);
+
+        string _tk = Session["taikhoan_home"] as string;
+        if (string.IsNullOrEmpty(_tk))
+        {
+            Response.Redirect("/home/don-ban.aspx");
+            return;
+        }
+
+        _tk = mahoa_cl.giaima_Bcorn(_tk);
+
+        var q1 = db.DonHang_tbs.FirstOrDefault(p => p.trangthai == "Chờ Trao đổi" && p.nguoiban == _tk);
+        if (q1 == null)
+        {
+            Response.Redirect("/home/don-ban.aspx");
+            return;
+        }
+
+        ViewState["id_donhang"] = q1.id.ToString();
+        Label4.Text = q1.id.ToString();
+
+        // Bind chi tiết
+        var q_ct =
+            from ob1 in db.DonHang_ChiTiet_tbs.Where(p => p.id_donhang == q1.id.ToString())
+            join ob2 in db.BaiViet_tbs on ob1.idsp equals ob2.id.ToString() into SanPhamGroup
+            from ob2 in SanPhamGroup.DefaultIfEmpty()
+            select new
+            {
+                ob1.id,
+                ob1.id_donhang,
+                name = ob2 != null ? ob2.name : "",
+                image = ob2 != null ? ob2.image : "",
+                ob1.giaban,
+                ob1.soluong,
+                ob1.thanhtien,
+                PhanTramUuDai = (ob1.PhanTram_GiamGia_ThanhToan_BangEvoucher ?? 0)
+            };
+
+        Repeater2.DataSource = q_ct;
+        Repeater2.DataBind();
+
+        decimal tongTienVND = q1.tongtien ?? 0m;
+        decimal tongQuyen = QuyDoi_VND_To_Quyen(tongTienVND);
+
+        // ===== CASE 1: chưa có payer =====
+        if (Session["taikhoan_thanhtoan_home"] == null)
+        {
+            PlaceHolder2.Visible = true;
+            PlaceHolder1.Visible = false;
+
+            Label1.Text = tongQuyen.ToString("#,##0.##") + " Quyền";
+
+            txt_mapin.Enabled = true;
+            Button3.Enabled = true;
+            lb_thongbao_the.Visible = false;
+            lb_thongbao_the.Text = "";
+
+            Timer1.Enabled = true;
+            return;
+        }
+
+        // ===== CASE 2: đã có payer =====
+        var q_tk_mua = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == Session["taikhoan_thanhtoan_home"].ToString());
+        if (q_tk_mua == null)
+        {
+            Session["taikhoan_thanhtoan_home"] = null;
+            Response.Redirect("/home/cho-thanh-toan.aspx");
+            return;
+        }
+
+        PlaceHolder2.Visible = false;
+        PlaceHolder1.Visible = true;
+
+        lb_tenshop.Text = db.taikhoan_tbs.First(p => p.taikhoan == _tk).ten_shop;
+
+        string tenThe = (Session["tenthe_thanhtoan_home"] ?? "").ToString();
+
+        int loaiThe = 0;
+        try { loaiThe = Convert.ToInt32(Session["loaithanhtoan_home"]); } catch { loaiThe = 0; }
+
+        bool trangThaiThe = true;
+        try
+        {
+            if (Session["trangthai_the_home"] != null)
+                trangThaiThe = Convert.ToBoolean(Session["trangthai_the_home"]);
+        }
+        catch { trangThaiThe = true; }
+
+        if (!string.IsNullOrEmpty(tenThe))
+            Label3.Text = q_tk_mua.hoten + " (Đang dùng thẻ: " + tenThe + ")";
+        else
+            Label3.Text = q_tk_mua.hoten;
+
+        // ===== ƯU TIÊN 1: THẺ BỊ KHÓA =====
+        if (!trangThaiThe)
+        {
+            Label2.Text = tongQuyen.ToString("#,##0.##") + " Quyền";
+
+            txt_mapin.Enabled = false;
+            Button3.Enabled = false;
+
+            lb_thongbao_the.Visible = true;
+            lb_thongbao_the.Text = "Thẻ này đã bị khóa. Vui lòng liên hệ quản trị hoặc sử dụng thẻ khác.";
+
+            Timer1.Enabled = false;
+            return;
+        }
+
+        // ===== ƯU TIÊN 2: THẺ CHƯA HỖ TRỢ =====
+        if (loaiThe != 1 && loaiThe != 2)
+        {
+            Label2.Text = tongQuyen.ToString("#,##0.##") + " Quyền";
+
+            txt_mapin.Enabled = false;
+            Button3.Enabled = false;
+
+            lb_thongbao_the.Visible = true;
+            lb_thongbao_the.Text = "Hiện tại chưa Trao đổi được bằng loại thẻ này.";
+
+            Timer1.Enabled = false;
+            return;
+        }
+
+        // ===== TÍNH ƯU ĐÃI THEO ĐƠN =====
+        string id_dh = ViewState["id_donhang"].ToString();
+        var q_ct2 = db.DonHang_ChiTiet_tbs.Where(p => p.id_donhang == id_dh).ToList();
+
+        decimal tienUuDaiVND = 0m;
+        foreach (var ct in q_ct2)
+        {
+            int pt = 0;
+
+            try
+            {
+                pt = (ct.PhanTram_GiamGia_ThanhToan_BangEvoucher ?? 0);
+            }
+            catch
+            {
+                var sp = db.BaiViet_tbs.FirstOrDefault(x => x.id.ToString() == ct.idsp && x.bin == false);
+                if (sp != null) pt = (sp.PhanTram_GiamGia_ThanhToan_BangEvoucher ?? 0);
+            }
+
+            if (pt < 0) pt = 0;
+            if (pt > 50) pt = 50;
+
+            decimal dongThanhTienVND = ct.thanhtien ?? 0m;
+            if (dongThanhTienVND <= 0m) continue;
+
+            if (pt > 0)
+                tienUuDaiVND += dongThanhTienVND * pt / 100m;
+        }
+
+        decimal quyenUuDai = (tienUuDaiVND > 0m) ? QuyDoi_VND_To_Quyen(tienUuDaiVND) : 0m;
+        bool donCoUuDai = (tienUuDaiVND > 0m && quyenUuDai > 0m);
+
+        // ===== UI theo từng loại thẻ =====
+
+        // ------------------ LOẠI 1: THẺ ƯU ĐÃI ------------------
+        if (loaiThe == 1)
+        {
+            if (!donCoUuDai)
+            {
+                Label2.Text = tongQuyen.ToString("#,##0.##") + " Quyền";
+
+                txt_mapin.Enabled = false;
+                Button3.Enabled = false;
+
+                lb_thongbao_the.Visible = true;
+                lb_thongbao_the.Text = "Thẻ ưu đãi chỉ áp dụng cho đơn có ưu đãi. Đơn này không có ưu đãi nên không thể Trao đổi bằng thẻ ưu đãi.";
+
+                Timer1.Enabled = false;
+                return;
+            }
+
+            decimal quyenConLai = tongQuyen - quyenUuDai;
+            if (quyenConLai < 0m) quyenConLai = 0m;
+
+            Label2.Text = quyenUuDai.ToString("#,##0.##") + " Quyền";
+
+            txt_mapin.Enabled = true;
+            Button3.Enabled = true;
+
+            lb_thongbao_the.Visible = true;
+            lb_thongbao_the.Text =
+                "Trao đổi bằng <b>Thẻ ưu đãi</b>: <b>" + quyenUuDai.ToString("#,##0.##") + " Quyền</b>."
+                + "<br/>Phần còn lại: <b>" + quyenConLai.ToString("#,##0.##") + " Quyền</b> (thanh toán tiền mặt theo quy đổi).";
+
+            Timer1.Enabled = false;
+            return;
+        }
+
+        // ------------------ LOẠI 2 ------------------
+        Label2.Text = tongQuyen.ToString("#,##0.##") + " Quyền";
+
+        txt_mapin.Enabled = true;
+        Button3.Enabled = true;
+
+        decimal soDuUuDaiQuyen = q_tk_mua.Vi1That_Evocher_30PhanTram ?? 0m; // ví ưu đãi (mới)
+        decimal soDuQuyen = q_tk_mua.DongA ?? 0m;                           // ví tiêu dùng
+
+        string html = "";
+        html += "Tổng Trao đổi: <b>" + tongQuyen.ToString("#,##0.##") + " Quyền</b>.";
+
+        if (donCoUuDai)
+        {
+            decimal quyenConLai = tongQuyen - quyenUuDai;
+            if (quyenConLai < 0m) quyenConLai = 0m;
+
+            html += "<br/>Ưu đãi: <b>" + quyenUuDai.ToString("#,##0.##") + " Quyền</b>."
+                  + "<br/>Còn lại: <b>" + quyenConLai.ToString("#,##0.##") + " Quyền</b>.";
+
+            // Quy tắc: nếu ví ưu đãi không đủ -> trừ 100% Quyền tiêu dùng
+            if (soDuUuDaiQuyen >= quyenUuDai)
+            {
+                html += "<br/><b>Sẽ trừ:</b> "
+                      + "<br/><b>-" + quyenUuDai.ToString("#,##0.##") + " Quyền ưu đãi</b>"
+                      + "<br/><b>-" + quyenConLai.ToString("#,##0.##") + " Quyền tiêu dùng</b>";
+            }
+            else
+            {
+                html += "<br/><b>Hồ sơ ưu đãi không đủ</b> → sẽ trừ 100% vào <b>Hồ sơ tiêu dùng</b>: <b>-" + tongQuyen.ToString("#,##0.##") + " Quyền tiêu dùng</b>.";
+            }
+        }
+        else
+        {
+            html += "<br/><b>Sẽ trừ:</b> <b>-" + tongQuyen.ToString("#,##0.##") + " Quyền tiêu dùng</b>.";
+        }
+
+        lb_thongbao_the.Visible = true;
+        lb_thongbao_the.Text = html;
+
+        Timer1.Enabled = false;
+    }
+
+    protected void Timer1_Tick(object sender, EventArgs e)
+    {
+        using (dbDataContext db = new dbDataContext())
+        {
+            check(db);
+        }
+    }
+
+    protected void Button1_Click(object sender, EventArgs e)
+    {
+        using (dbDataContext db = new dbDataContext())
+        {
+            var q = db.DonHang_tbs.FirstOrDefault(p => p.id.ToString() == ViewState["id_donhang"].ToString());
+            if (q != null)
+            {
+                if (q.trangthai == "Đã Trao đổi")
+                {
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), "redirectScript",
+                        "window.location.href='/home/don-ban.aspx';", true);
+                }
+
+                q.trangthai = "Chưa Trao đổi";
+                db.SubmitChanges();
+
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), "redirectScript",
+                    "window.location.href='/home/don-ban.aspx';", true);
+            }
+        }
+    }
+
+    protected void Button2_Click(object sender, EventArgs e)
+    {
+        Session["taikhoan_thanhtoan_home"] = null;
+        Session["loaithanhtoan_home"] = null;
+        Session["tenthe_thanhtoan_home"] = null;
+        Session["key_thanhtoan_home"] = null;
+
+        Response.Redirect("/home/cho-thanh-toan.aspx");
+    }
+
+    protected void Button3_Click(object sender, EventArgs e)
+    {
+        check_login_cl.check_login_home("none", "none", true);
+
+        int loaiThe = 0;
+        try { loaiThe = Convert.ToInt32(Session["loaithanhtoan_home"] ?? 0); } catch { loaiThe = 0; }
+
+        if (loaiThe != 1 && loaiThe != 2)
+        {
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                thongbao_class.metro_dialog("Thông báo", "Thẻ này không hợp lệ để Trao đổi.", "false", "false", "OK", "alert", ""),
+                true);
+            return;
+        }
+
+        string _tk = Session["taikhoan_home"] as string;
+        if (!string.IsNullOrEmpty(_tk))
+        {
+            _tk = mahoa_cl.giaima_Bcorn(_tk);
+        }
+        else
+        {
+            Session["thongbao_home"] = thongbao_class.metro_dialog_onload("Thông báo",
+                "Phiên của bạn đã hết hạn. Vui lòng đăng nhập lại.",
+                "false", "false", "OK", "alert", "");
+
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), "redirectScript",
+                "window.location.href='/dang-nhap';", true);
+            return;
+        }
+
+        // khóa theo số lần nhập sai
+        if (Session["thoigian_nhappin"] != null)
+        {
+            DateTime _thoigian_nhappin = DateTime.Parse(Session["thoigian_nhappin"].ToString());
+            if (DateTime.Now < _thoigian_nhappin)
+            {
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                    thongbao_class.metro_dialog("Thông báo",
+                        "Chức năng đang bị tạm khóa, vui lòng thử lại vào lúc " + _thoigian_nhappin.ToString("dd/MM/yyyy HH:mm"),
+                        "false", "false", "OK", "alert", ""),
+                    true);
+                return;
+            }
+        }
+
+        using (dbDataContext db = new dbDataContext())
+        {
+            if (Session["taikhoan_thanhtoan_home"] == null)
+            {
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), "redirectScript",
+                    "window.location.href='/home/cho-thanh-toan.aspx';", true);
+                return;
+            }
+
+            string payer = Session["taikhoan_thanhtoan_home"].ToString();
+
+            var q_tk_mua = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == payer);
+            if (q_tk_mua == null)
+            {
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), "redirectScript",
+                    "window.location.href='/home/cho-thanh-toan.aspx';", true);
+                return;
+            }
+
+            string _pinDaCai = (q_tk_mua.mapin_thanhtoan ?? "").Trim();
+            if (string.IsNullOrEmpty(_pinDaCai))
+            {
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                    thongbao_class.metro_dialog("Thông báo", "Vui lòng cài đặt mã pin Trao đổi trước khi Trao đổi", "false", "false", "OK", "alert", ""),
+                    true);
+                return;
+            }
+
+            string _mapin = txt_mapin.Text.Trim();
+            if (_mapin == "")
+            {
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                    thongbao_class.metro_dialog("Mã pin không đúng", "Vui lòng nhập mã PIN.", "false", "false", "OK", "alert", ""),
+                    true);
+                return;
+            }
+
+            if (_mapin != _pinDaCai)
+            {
+                if (Session["solan_nhapsai"] == null) Session["solan_nhapsai"] = 1;
+                else Session["solan_nhapsai"] = int.Parse(Session["solan_nhapsai"].ToString()) + 1;
+
+                int _solan_nhapsai = int.Parse(Session["solan_nhapsai"].ToString());
+
+                if (_solan_nhapsai == 3)
+                {
+                    DateTime _thoigian_mokhoa = DateTime.Now.AddMinutes(5);
+                    Session["thoigian_nhappin"] = _thoigian_mokhoa;
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                        thongbao_class.metro_dialog("Mã pin không đúng",
+                            "Bạn đã nhập sai " + _solan_nhapsai + " lần. Chức năng sẽ bị khóa đến " + _thoigian_mokhoa.ToString("dd/MM/yyyy HH:mm"),
+                            "false", "false", "OK", "alert", ""),
+                        true);
+                }
+                else if (_solan_nhapsai == 5)
+                {
+                    DateTime _thoigian_mokhoa = DateTime.Now.AddMinutes(15);
+                    Session["thoigian_nhappin"] = _thoigian_mokhoa;
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                        thongbao_class.metro_dialog("Mã pin không đúng",
+                            "Bạn đã nhập sai " + _solan_nhapsai + " lần. Chức năng sẽ bị khóa đến " + _thoigian_mokhoa.ToString("dd/MM/yyyy HH:mm"),
+                            "false", "false", "OK", "alert", ""),
+                        true);
+                }
+                else if (_solan_nhapsai == 10)
+                {
+                    var q_tk = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == _tk);
+                    if (q_tk != null)
+                    {
+                        q_tk.block = true;
+                        db.SubmitChanges();
+                    }
+
+                    Session["thoigian_nhappin"] = null;
+                    Session["solan_nhapsai"] = null;
+
+                    Session["thongbao_home"] = thongbao_class.metro_dialog_onload("Mã pin không đúng",
+                        "Bạn đã nhập sai " + _solan_nhapsai + " lần. Tài khoản của bạn đã bị khóa. Vui lòng liên hệ với chúng tôi để xác thực.",
+                        "false", "false", "OK", "alert", "");
+
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), "redirectScript",
+                        "window.location.href='/dang-nhap';", true);
+                }
+                else
+                {
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                        thongbao_class.metro_dialog("Mã pin không đúng", "Bạn đã nhập sai " + _solan_nhapsai + " lần.", "false", "false", "OK", "alert", ""),
+                        true);
+                }
+                return;
+            }
+
+            // ================== XỬ LÝ Trao đổi ==================
+            DateTime _now = DateTime.Now;
+
+            var q = db.DonHang_tbs.FirstOrDefault(p => p.id.ToString() == ViewState["id_donhang"].ToString());
+            if (q == null)
+            {
+                Session["thongbao_home"] = thongbao_class.metro_dialog_onload("Thông báo", "Có lỗi xãy ra.", "false", "false", "OK", "alert", "");
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), "redirectScript",
+                    "window.location.href='/';", true);
+                return;
+            }
+
+            string id_dh = ViewState["id_donhang"].ToString();
+
+            if (q.trangthai != "Chờ Trao đổi")
+            {
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                    thongbao_class.metro_dialog("Thông báo", "Đơn hàng không còn ở trạng thái chờ Trao đổi.", "false", "false", "OK", "alert", ""),
+                    true);
+                return;
+            }
+
+            decimal tongTienVND = q.tongtien ?? 0m;
+            decimal tongQuyen = QuyDoi_VND_To_Quyen(tongTienVND);
+
+            var q_ct2 = db.DonHang_ChiTiet_tbs.Where(p => p.id_donhang == id_dh).ToList();
+
+            // ===== tính tổng ưu đãi theo dòng =====
+            decimal tienUuDaiVND = 0m;
+            foreach (var ct in q_ct2)
+            {
+                int pt = 0;
+
+                try
+                {
+                    pt = (ct.PhanTram_GiamGia_ThanhToan_BangEvoucher ?? 0);
+                }
+                catch
+                {
+                    var sp = db.BaiViet_tbs.FirstOrDefault(x => x.id.ToString() == ct.idsp && x.bin == false);
+                    if (sp != null) pt = (sp.PhanTram_GiamGia_ThanhToan_BangEvoucher ?? 0);
+                }
+
+                if (pt < 0) pt = 0;
+                if (pt > 50) pt = 50;
+
+                decimal dongThanhTienVND = ct.thanhtien ?? 0m;
+                if (dongThanhTienVND <= 0m) continue;
+
+                if (pt > 0)
+                    tienUuDaiVND += dongThanhTienVND * pt / 100m;
+            }
+
+            decimal quyenUuDai = (tienUuDaiVND > 0m) ? QuyDoi_VND_To_Quyen(tienUuDaiVND) : 0m;
+            bool donCoUuDai = (tienUuDaiVND > 0m && quyenUuDai > 0m);
+
+            // =========================================================================================
+            // ============================ NHÁNH 1: THẺ ƯU ĐÃI (loaiThe = 1) ===========================
+            // =========================================================================================
+            if (loaiThe == 1)
+            {
+                if (!donCoUuDai)
+                {
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                        thongbao_class.metro_dialog(
+                            "Thông báo",
+                            "Thẻ ưu đãi chỉ áp dụng cho đơn có ưu đãi. Đơn này không có ưu đãi nên không thể Trao đổi bằng thẻ ưu đãi.",
+                            "false", "false", "OK", "alert", ""
+                        ),
+                        true);
+                    return;
+                }
+
+                // ✅ TRỪ: dùng field mới của người mua
+                decimal soDuUuDaiQuyen = q_tk_mua.Vi1That_Evocher_30PhanTram ?? 0m;
+
+                if (soDuUuDaiQuyen < quyenUuDai)
+                {
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                        thongbao_class.metro_dialog(
+                            "Thông báo",
+                            "Ví ưu đãi không đủ để Trao đổi.\nCần: " + quyenUuDai.ToString("#,##0.##") + " Quyền.",
+                            "false", "false", "OK", "alert", ""
+                        ),
+                        true);
+                    return;
+                }
+
+                // 1) Trừ ví ưu đãi người mua + lịch sử
+                q_tk_mua.Vi1That_Evocher_30PhanTram = soDuUuDaiQuyen - quyenUuDai;
+
+                db.LichSu_DongA_tbs.InsertOnSubmit(new LichSu_DongA_tb
+                {
+                    taikhoan = payer,
+                    dongA = quyenUuDai,
+                    ngay = _now,
+                    CongTru = false,
+                    id_donhang = id_dh,
+                    LoaiHoSo_Vi = 2,
+                    ghichu = "Ưu đãi đơn hàng số " + id_dh + " (Thẻ ưu đãi)"
+                });
+
+                // 2) Cập nhật đơn
+                q.trangthai = "Đã Trao đổi";
+                q.nguoimua = payer;
+                q.hoten_nguoinhan = q_tk_mua.hoten;
+                q.sdt_nguoinhan = q_tk_mua.dienthoai;
+                q.diahchi_nguoinhan = q_tk_mua.diachi;
+                q.chothanhtoan = false;
+
+                // 3) tăng số lượng đã bán
+                foreach (var item in q_ct2)
+                {
+                    var q_bv = db.BaiViet_tbs.FirstOrDefault(p => p.id.ToString() == item.idsp);
+                    if (q_bv != null)
+                        q_bv.soluong_daban = (q_bv.soluong_daban ?? 0) + item.soluong;
+                }
+
+                // 4) ✅ CỘNG: ĐỔI SANG FIELD MỚI CHO NGƯỜI BÁN + TAG GHI CHÚ
+                var q_tk_ban = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == q.nguoiban);
+                if (q_tk_ban != null)
+                {
+                    q_tk_ban.HoSo_UuDai_ShopOnly = (q_tk_ban.HoSo_UuDai_ShopOnly ?? 0m) + quyenUuDai;
+
+                    db.LichSu_DongA_tbs.InsertOnSubmit(new LichSu_DongA_tb
+                    {
+                        taikhoan = q.nguoiban,
+                        dongA = quyenUuDai,
+                        ngay = _now,
+                        CongTru = true,
+                        id_donhang = id_dh,
+                        LoaiHoSo_Vi = 2,
+                        ghichu = "|SHOPONLY|CREDIT_SELLER| Bán đơn hàng số " + id_dh + " (Thẻ ưu đãi - Hồ sơ ưu đãi ShopOnly)"
+                    });
+                }
+
+                // 5) Thông báo 2 chiều
+                db.ThongBao_tbs.InsertOnSubmit(new ThongBao_tb
+                {
+                    id = Guid.NewGuid(),
+                    daxem = false,
+                    nguoithongbao = payer,
+                    nguoinhan = q.nguoiban,
+                    link = "/home/don-ban.aspx",
+                    noidung = db.taikhoan_tbs.First(p => p.taikhoan == payer).hoten
+                            + " đã Trao đổi thành công (Thẻ ưu đãi). ID đơn hàng: " + id_dh,
+                    thoigian = _now,
+                    bin = false
+                });
+
+                db.ThongBao_tbs.InsertOnSubmit(new ThongBao_tb
+                {
+                    id = Guid.NewGuid(),
+                    daxem = false,
+                    nguoithongbao = q.nguoiban,
+                    nguoinhan = payer,
+                    link = "/home/don-mua.aspx",
+                    noidung = "Trao đổi thành công (Thẻ ưu đãi). ID đơn hàng: " + id_dh,
+                    thoigian = _now,
+                    bin = false
+                });
+
+                db.SubmitChanges();
+
+                Session["thongbao_home"] = thongbao_class.metro_dialog_onload(
+                    "Thông báo",
+                    "Trao đổi thành công (Thẻ ưu đãi). Phần còn lại thanh toán tiền mặt theo quy đổi.",
+                    "false", "false", "OK", "alert", ""
+                );
+
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), "redirectScript",
+                    "window.location.href='/home/don-ban.aspx';", true);
+
+                return;
+            }
+
+            // =========================================================================================
+            // ============================ NHÁNH 2: LOẠI THẺ = 2 ======================================
+            // =========================================================================================
+            if (loaiThe == 2)
+            {
+                decimal soDuQuyen = q_tk_mua.DongA ?? 0m;
+
+                // ✅ TRỪ: dùng field mới của người mua
+                decimal soDuUuDaiQuyen = q_tk_mua.Vi1That_Evocher_30PhanTram ?? 0m;
+
+                bool apDungUuDai = false;
+                decimal quyenUuDai_2 = 0m;
+                decimal quyenConLai = 0m;
+
+                if (donCoUuDai)
+                {
+                    quyenUuDai_2 = quyenUuDai;
+
+
+//                    string debug =
+//    "tongQuyen=" + tongQuyen.ToString("0.##") +
+//    "\nquyenUuDai=" + quyenUuDai_2.ToString("0.##") +
+//    "\nsoDuUuDai=" + soDuUuDaiQuyen.ToString("0.##") +
+//    "\nsoDuTieuDung=" + soDuQuyen.ToString("0.##") +
+//    "\ntienUuDaiVND=" + tienUuDaiVND.ToString("0") +
+//    "\ndonCoUuDai=" + donCoUuDai;
+
+//ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+//    thongbao_class.metro_dialog("DEBUG", debug.Replace("\n", "<br/>"), "false", "false", "OK", "alert", ""),
+//    true);
+//return;
+
+
+                    apDungUuDai = (soDuUuDaiQuyen >= quyenUuDai_2);
+
+                    if (apDungUuDai)
+                    {
+                        quyenConLai = tongQuyen - quyenUuDai_2;
+                        if (quyenConLai < 0m) quyenConLai = 0m;
+
+                        if (soDuQuyen < quyenConLai)
+                        {
+                            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                                thongbao_class.metro_dialog("Thông báo", "Ví Quyền tiêu dùng không đủ cho phần còn lại.", "false", "false", "OK", "alert", ""),
+                                true);
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        if (soDuQuyen < tongQuyen)
+                        {
+                            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                                thongbao_class.metro_dialog("Thông báo", "Quyền tiêu dùng của bạn không đủ để Trao đổi.", "false", "false", "OK", "alert", ""),
+                                true);
+                            return;
+                        }
+                    }
+                }
+                else
+                {
+                    if (soDuQuyen < tongQuyen)
+                    {
+                        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                            thongbao_class.metro_dialog("Thông báo", "Quyền tiêu dùng của bạn không đủ để Trao đổi.", "false", "false", "OK", "alert", ""),
+                            true);
+                        return;
+                    }
+                }
+
+                // ===== TRỪ VÍ NGƯỜI MUA + LỊCH SỬ =====
+                if (apDungUuDai)
+                {
+                    // ✅ TRỪ: field mới
+                    q_tk_mua.Vi1That_Evocher_30PhanTram = soDuUuDaiQuyen - quyenUuDai_2;
+
+                    db.LichSu_DongA_tbs.InsertOnSubmit(new LichSu_DongA_tb
+                    {
+                        taikhoan = payer,
+                        dongA = quyenUuDai_2,
+                        ngay = _now,
+                        CongTru = false,
+                        id_donhang = id_dh,
+                        LoaiHoSo_Vi = 2,
+                        ghichu = "Ưu đãi đơn hàng số " + id_dh
+                    });
+
+                    q_tk_mua.DongA = soDuQuyen - quyenConLai;
+
+                    db.LichSu_DongA_tbs.InsertOnSubmit(new LichSu_DongA_tb
+                    {
+                        taikhoan = payer,
+                        dongA = quyenConLai,
+                        ngay = _now,
+                        CongTru = false,
+                        id_donhang = id_dh,
+                        LoaiHoSo_Vi = 1,
+                        ghichu = "Trao đổi đơn hàng số " + id_dh + " (phần còn lại)"
+                    });
+                }
+                else
+                {
+                    q_tk_mua.DongA = soDuQuyen - tongQuyen;
+
+                    db.LichSu_DongA_tbs.InsertOnSubmit(new LichSu_DongA_tb
+                    {
+                        taikhoan = payer,
+                        dongA = tongQuyen,
+                        ngay = _now,
+                        CongTru = false,
+                        id_donhang = id_dh,
+                        LoaiHoSo_Vi = 1,
+                        ghichu = "Trao đổi đơn hàng số " + id_dh
+                    });
+                }
+
+                // ===== UPDATE ĐƠN =====
+                q.trangthai = "Đã Trao đổi";
+                q.nguoimua = payer;
+                q.hoten_nguoinhan = q_tk_mua.hoten;
+                q.sdt_nguoinhan = q_tk_mua.dienthoai;
+                q.diahchi_nguoinhan = q_tk_mua.diachi;
+                q.chothanhtoan = false;
+
+                foreach (var item in q_ct2)
+                {
+                    var q_bv = db.BaiViet_tbs.FirstOrDefault(p => p.id.ToString() == item.idsp);
+                    if (q_bv != null)
+                        q_bv.soluong_daban = (q_bv.soluong_daban ?? 0) + item.soluong;
+                }
+
+                // ===== CỘNG CHO NGƯỜI BÁN + LỊCH SỬ (ĐỔI FIELD + TAG GHI CHÚ) =====
+                var q_tk_ban2 = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == q.nguoiban);
+                if (q_tk_ban2 != null)
+                {
+                    if (apDungUuDai)
+                    {
+                        // Ưu đãi -> ShopOnly ưu đãi
+                        q_tk_ban2.HoSo_UuDai_ShopOnly = (q_tk_ban2.HoSo_UuDai_ShopOnly ?? 0m) + quyenUuDai_2;
+
+                        db.LichSu_DongA_tbs.InsertOnSubmit(new LichSu_DongA_tb
+                        {
+                            taikhoan = q.nguoiban,
+                            dongA = quyenUuDai_2,
+                            ngay = _now,
+                            CongTru = true,
+                            id_donhang = id_dh,
+                            LoaiHoSo_Vi = 2,
+                            ghichu = "|SHOPONLY|CREDIT_SELLER| Bán đơn hàng số " + id_dh + " (ưu đãi - Hồ sơ ưu đãi ShopOnly)"
+                        });
+
+                        // Còn lại -> ShopOnly tiêu dùng
+                        q_tk_ban2.HoSo_TieuDung_ShopOnly = (q_tk_ban2.HoSo_TieuDung_ShopOnly ?? 0m) + quyenConLai;
+
+                        db.LichSu_DongA_tbs.InsertOnSubmit(new LichSu_DongA_tb
+                        {
+                            taikhoan = q.nguoiban,
+                            dongA = quyenConLai,
+                            ngay = _now,
+                            CongTru = true,
+                            id_donhang = id_dh,
+                            LoaiHoSo_Vi = 1,
+                            ghichu = "|SHOPONLY|CREDIT_SELLER| Bán đơn hàng số " + id_dh + " (phần còn lại - Hồ sơ tiêu dùng ShopOnly)"
+                        });
+                    }
+                    else
+                    {
+                        q_tk_ban2.HoSo_TieuDung_ShopOnly = (q_tk_ban2.HoSo_TieuDung_ShopOnly ?? 0m) + tongQuyen;
+
+                        db.LichSu_DongA_tbs.InsertOnSubmit(new LichSu_DongA_tb
+                        {
+                            taikhoan = q.nguoiban,
+                            dongA = tongQuyen,
+                            ngay = _now,
+                            CongTru = true,
+                            id_donhang = id_dh,
+                            LoaiHoSo_Vi = 1,
+                            ghichu = "|SHOPONLY|CREDIT_SELLER| Bán đơn hàng số " + id_dh + " (Hồ sơ tiêu dùng ShopOnly)"
+                        });
+                    }
+                }
+
+                // ===== THÔNG BÁO 2 CHIỀU =====
+                db.ThongBao_tbs.InsertOnSubmit(new ThongBao_tb
+                {
+                    id = Guid.NewGuid(),
+                    daxem = false,
+                    nguoithongbao = payer,
+                    nguoinhan = q.nguoiban,
+                    link = "/home/don-ban.aspx",
+                    noidung = db.taikhoan_tbs.First(p => p.taikhoan == payer).hoten
+                            + " đã Trao đổi thành công. ID đơn hàng: " + id_dh,
+                    thoigian = _now,
+                    bin = false
+                });
+
+                db.ThongBao_tbs.InsertOnSubmit(new ThongBao_tb
+                {
+                    id = Guid.NewGuid(),
+                    daxem = false,
+                    nguoithongbao = q.nguoiban,
+                    nguoinhan = payer,
+                    link = "/home/don-mua.aspx",
+                    noidung = "Trao đổi thành công. ID đơn hàng: " + id_dh,
+                    thoigian = _now,
+                    bin = false
+                });
+
+                db.SubmitChanges();
+
+                Session["thongbao_home"] = thongbao_class.metro_dialog_onload(
+                    "Thông báo",
+                    "Trao đổi thành công.",
+                    "false", "false", "OK", "alert", ""
+                );
+
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), "redirectScript",
+                    "window.location.href='/home/don-ban.aspx';", true);
+
+                return;
+            }
+
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                thongbao_class.metro_dialog("Thông báo", "Loại thẻ không hợp lệ.", "false", "false", "OK", "alert", ""),
+                true);
+        }
+    }
+}

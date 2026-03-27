@@ -55,7 +55,11 @@ public static class DauGiaService_cl
         public string SettlementMode { get; set; }
         public double GiaNiemYet { get; set; }
         public double TienDatCoc { get; set; }
+        public double TienDatCocUuDai { get; set; }
+        public double TienDatCocTieuDung { get; set; }
         public double ViDauGia { get; set; }
+        public double ThanhToanUuDai { get; set; }
+        public double ThanhToanTieuDung { get; set; }
         public DateTime? WinnerReservedAt { get; set; }
         public DateTime? BuyerConfirmedAt { get; set; }
         public DateTime? SellerConfirmedAt { get; set; }
@@ -103,6 +107,10 @@ public static class DauGiaService_cl
         public string TrangThai { get; set; }
         public double GiaHienTai { get; set; }
         public double TienDatCoc { get; set; }
+        public double TienDatCocUuDai { get; set; }
+        public double TienDatCocTieuDung { get; set; }
+        public double ThanhToanUuDai { get; set; }
+        public double ThanhToanTieuDung { get; set; }
         public DateTime? WinnerReservedAt { get; set; }
         public DateTime? BuyerConfirmedAt { get; set; }
         public bool DaHoanCoc { get; set; }
@@ -117,6 +125,26 @@ public static class DauGiaService_cl
         public int NeedSettleCount { get; set; }
         public int CompletedCount { get; set; }
         public int FailedCount { get; set; }
+    }
+
+    private sealed class RightsSplit
+    {
+        public double UuDai { get; set; }
+        public double TieuDung { get; set; }
+        public double Total
+        {
+            get
+            {
+                return Math.Round(Math.Max(0, UuDai) + Math.Max(0, TieuDung), 2);
+            }
+        }
+    }
+
+    private sealed class RightsBalanceInfo
+    {
+        public string Account { get; set; }
+        public double UuDai { get; set; }
+        public double TieuDung { get; set; }
     }
 
     public static void EnsureReady(dbDataContext db)
@@ -353,12 +381,16 @@ SELECT TOP 1
     ISNULL(gia_hien_tai, 0) AS GiaHienTai,
     ISNULL(phi_luot, 0) AS PhiLuot,
     ISNULL(tien_dat_coc, 0) AS TienDatCoc,
+    ISNULL(tien_dat_coc_uudai, 0) AS TienDatCocUuDai,
+    ISNULL(tien_dat_coc_tieudung, 0) AS TienDatCocTieuDung,
     ISNULL(vi_dau_gia, 0) AS ViDauGia,
     ISNULL(so_luot_bid, 0) AS SoLuotBid,
     phien_bat_dau AS PhienBatDau,
     phien_ket_thuc AS PhienKetThuc,
     winner_reserved_at AS WinnerReservedAt,
     buyer_confirmed_at AS BuyerConfirmedAt,
+    ISNULL(thanh_toan_uudai, 0) AS ThanhToanUuDai,
+    ISNULL(thanh_toan_tieudung, 0) AS ThanhToanTieuDung,
     seller_confirmed_at AS SellerConfirmedAt,
     admin_settled_at AS AdminSettledAt,
     settlement_mode AS SettlementMode,
@@ -431,7 +463,7 @@ ORDER BY created_at DESC, id DESC
 
         DateTime now = AhaTime_cl.Now;
         int startBufferMinutes = GetConfigInt(db, "start_buffer_minutes", 5);
-        if (request.StartAt < now.AddMinutes(startBufferMinutes))
+        if (startBufferMinutes > 0 && request.StartAt < now.AddMinutes(startBufferMinutes))
         {
             message = DauGiaNotify_cl.BuildWarningMessage("Thời gian bắt đầu phải cách hiện tại tối thiểu " + startBufferMinutes + " phút.");
             return false;
@@ -443,14 +475,37 @@ ORDER BY created_at DESC, id DESC
             return false;
         }
 
+        string sourceType = DauGiaPolicy_cl.NormalizeSourceType(request.SourceType);
+        string sourceId = NormalizeText(request.SourceID, "");
+        if (DauGiaPolicy_cl.RequiresSourceId(sourceType) && sourceId == "")
+        {
+            message = DauGiaNotify_cl.BuildWarningMessage("Bạn cần chọn tài sản nguồn hợp lệ cho loại phiên này.");
+            return false;
+        }
+
+        ReleaseAssetLocksForTerminalAuctions(db, "Giải phóng khóa tài sản tồn khi tạo phiên mới.");
+        if (IsSourceAssetLockedByOtherAuction(db, sourceType, sourceId, 0))
+        {
+            message = DauGiaNotify_cl.BuildWarningMessage("Tài sản nguồn đang được dùng ở phiên đấu giá khác.");
+            return false;
+        }
+
         double depositPercent = GetConfigDouble(db, "deposit_percent", 20d);
         double deposit = Math.Round(request.GiaNiemYet * depositPercent / 100d, 2);
-        bool walletDebited = false;
+        bool rightsDebited = false;
+        RightsSplit depositSplit = new RightsSplit();
         try
         {
-            if (!TryDebitWallet(db, seller, deposit, "Đối ứng đấu giá mới.", out message))
+            if (!TryDebitRights(
+                db,
+                seller,
+                deposit,
+                "Đối ứng đấu giá mới.",
+                BuildLedgerRef("deposit_hold", 0),
+                out message,
+                out depositSplit))
                 return false;
-            walletDebited = deposit > 0;
+            rightsDebited = depositSplit.Total > 0;
 
             string slug = BuildUniqueSlug(db, title);
             string settlementMode = DauGiaPolicy_cl.NormalizeSettlementMode(request.SettlementMode);
@@ -463,22 +518,24 @@ INSERT INTO dbo.DG_Auction_tb
 (
     slug, source_type, source_id, seller_account, seller_scope,
     snapshot_title, snapshot_desc, snapshot_image, snapshot_meta,
-    gia_niemyet, gia_hien_tai, phi_luot, tien_dat_coc, vi_dau_gia, so_luot_bid,
+    gia_niemyet, gia_hien_tai, phi_luot, tien_dat_coc, tien_dat_coc_uudai, tien_dat_coc_tieudung, vi_dau_gia, so_luot_bid,
     trang_thai, phien_bat_dau, phien_ket_thuc, settlement_mode, da_hoan_coc, is_deleted,
+    thanh_toan_uudai, thanh_toan_tieudung,
     created_at, updated_at, created_by, updated_by
 )
 VALUES
 (
     {0}, {1}, {2}, {3}, {4},
     {5}, {6}, {7}, {8},
-    {9}, {9}, {10}, {11}, 0, 0,
-    {12}, {13}, {14}, {15}, 0, 0,
-    {16}, {16}, {17}, {17}
+    {9}, {9}, {10}, {11}, {12}, {13}, 0, 0,
+    {14}, {15}, {16}, {17}, 0, 0,
+    0, 0,
+    {18}, {18}, {19}, {19}
 );
 SELECT CAST(SCOPE_IDENTITY() AS BIGINT);
 ", slug,
-   NormalizeText(request.SourceType, "shop_post"),
-   NormalizeText(request.SourceID, ""),
+   sourceType,
+   sourceId,
    seller,
    sellerScope,
    title,
@@ -488,6 +545,8 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT);
    request.GiaNiemYet,
    request.PhiLuot,
    deposit,
+   depositSplit.UuDai,
+   depositSplit.TieuDung,
    DauGiaPolicy_cl.StatusPendingApproval,
    request.StartAt,
    request.EndAt,
@@ -495,15 +554,26 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT);
    now,
    NormalizeText(request.CreatedBy, seller)).FirstOrDefault();
 
+            EnsureSourceAssetLock(db, auctionId, sourceType, sourceId, seller);
             InsertLedger(db, auctionId, seller, "admin", "deposit_hold", deposit, "Giữ cọc tạo phiên đấu giá.", "");
             message = DauGiaNotify_cl.BuildSuccessMessage("Đã tạo phiên đấu giá, đang chờ admin duyệt.");
             return true;
         }
         catch (Exception ex)
         {
-            if (walletDebited)
+            if (auctionId > 0)
+                ReleaseSourceAssetLock(db, auctionId, "Giải phóng khóa nguồn do tạo phiên thất bại.");
+
+            if (rightsDebited)
             {
-                TryCreditWallet(seller, deposit, "Hoàn cọc do lỗi tạo phiên đấu giá.");
+                string refundMessage;
+                TryCreditRights(db,
+                    seller,
+                    depositSplit.UuDai,
+                    depositSplit.TieuDung,
+                    "Hoàn cọc do lỗi tạo phiên đấu giá.",
+                    BuildLedgerRef("deposit_refund_create_error", auctionId),
+                    out refundMessage);
             }
 
             message = DauGiaNotify_cl.BuildErrorMessage("Tạo phiên đấu giá thất bại: " + ex.Message);
@@ -536,7 +606,7 @@ SELECT CAST(SCOPE_IDENTITY() AS BIGINT);
         else if (row.PhienBatDau.HasValue && row.PhienBatDau.Value <= now && (!row.PhienKetThuc.HasValue || row.PhienKetThuc.Value > now))
             nextStatus = DauGiaPolicy_cl.StatusLive;
 
-        db.ExecuteCommand(@"
+        int updated = db.ExecuteCommand(@"
 UPDATE dbo.DG_Auction_tb
 SET trang_thai = {0},
     approved_by = {1},
@@ -545,7 +615,20 @@ SET trang_thai = {0},
     updated_at = {2},
     updated_by = {1}
 WHERE id = {3}
-", nextStatus, NormalizeText(adminUser, "admin"), now, auctionId);
+  AND trang_thai IN ({4}, {5})
+  AND ISNULL(is_deleted, 0) = 0
+", nextStatus,
+   NormalizeText(adminUser, "admin"),
+   now,
+   auctionId,
+   DauGiaPolicy_cl.StatusPendingApproval,
+   DauGiaPolicy_cl.StatusScheduled);
+
+        if (updated <= 0)
+        {
+            message = DauGiaNotify_cl.BuildWarningMessage("Phiên vừa đổi trạng thái, không thể duyệt ở thao tác hiện tại.");
+            return false;
+        }
 
         DauGiaNotify_cl.PushInAppNotice(
             db,
@@ -578,21 +661,54 @@ WHERE id = {3}
 
         string rejectReason = string.IsNullOrWhiteSpace(reason) ? "Admin từ chối duyệt phiên đấu giá." : reason.Trim();
         DateTime now = AhaTime_cl.Now;
-        db.ExecuteCommand(@"
+        int updated = db.ExecuteCommand(@"
 UPDATE dbo.DG_Auction_tb
 SET trang_thai = {0},
     rejected_reason = {1},
     updated_at = {2},
     updated_by = {3}
 WHERE id = {4}
-", DauGiaPolicy_cl.StatusCancelled, rejectReason, now, NormalizeText(adminUser, "admin"), auctionId);
+  AND trang_thai IN ({5}, {6})
+  AND ISNULL(is_deleted, 0) = 0
+", DauGiaPolicy_cl.StatusCancelled,
+   rejectReason,
+   now,
+   NormalizeText(adminUser, "admin"),
+   auctionId,
+   DauGiaPolicy_cl.StatusPendingApproval,
+   DauGiaPolicy_cl.StatusScheduled);
 
+        if (updated <= 0)
+        {
+            message = DauGiaNotify_cl.BuildWarningMessage("Phiên vừa đổi trạng thái, không thể từ chối ở thao tác hiện tại.");
+            return false;
+        }
+
+        bool refundDepositOk = true;
         if (!row.DaHoanCoc && row.TienDatCoc > 0)
         {
-            TryCreditWallet(row.SellerAccount, row.TienDatCoc, "Hoàn cọc do phiên đấu giá bị từ chối.");
-            db.ExecuteCommand("UPDATE dbo.DG_Auction_tb SET da_hoan_coc = 1 WHERE id = {0}", auctionId);
-            InsertLedger(db, auctionId, "admin", row.SellerAccount, "deposit_refund", row.TienDatCoc, "Hoàn cọc do từ chối duyệt.", "");
+            double refundUuDai = row.TienDatCocUuDai;
+            double refundTieuDung = row.TienDatCocTieuDung;
+            if (refundUuDai <= 0 && refundTieuDung <= 0)
+                refundTieuDung = row.TienDatCoc;
+
+            string refundMessage;
+            refundDepositOk = TryCreditRights(
+                db,
+                row.SellerAccount,
+                refundUuDai,
+                refundTieuDung,
+                "Hoàn cọc do phiên đấu giá bị từ chối.",
+                BuildLedgerRef("deposit_refund_reject", row.ID),
+                out refundMessage);
+            if (refundDepositOk)
+            {
+                db.ExecuteCommand("UPDATE dbo.DG_Auction_tb SET da_hoan_coc = 1 WHERE id = {0}", auctionId);
+                InsertLedger(db, auctionId, "admin", row.SellerAccount, "deposit_refund", row.TienDatCoc, "Hoàn cọc do từ chối duyệt.", "");
+            }
         }
+
+        ReleaseSourceAssetLock(db, row.ID, "Giải phóng khóa nguồn do phiên bị từ chối.");
 
         DauGiaNotify_cl.PushInAppNotice(
             db,
@@ -601,7 +717,110 @@ WHERE id = {4}
             BuildAuctionUrl(row.Slug, row.ID),
             "Phiên đấu giá #" + row.ID + " đã bị từ chối. Lý do: " + rejectReason);
 
-        message = DauGiaNotify_cl.BuildSuccessMessage("Đã từ chối phiên đấu giá #" + row.ID + ".");
+        if (refundDepositOk)
+            message = DauGiaNotify_cl.BuildSuccessMessage("Đã từ chối phiên đấu giá #" + row.ID + ".");
+        else
+            message = DauGiaNotify_cl.BuildWarningMessage("Đã từ chối phiên đấu giá #" + row.ID + " nhưng hoàn cọc thất bại, cần xử lý thủ công.");
+        return true;
+    }
+
+    public static bool SellerCancelAuction(dbDataContext db, long auctionId, string sellerAccount, string reason, out string message)
+    {
+        message = "";
+        EnsureReady(db);
+        string seller = NormalizeAccount(sellerAccount);
+        if (seller == "")
+        {
+            message = DauGiaNotify_cl.BuildWarningMessage("Bạn cần đăng nhập để hủy phiên.");
+            return false;
+        }
+
+        AuctionDetailInfo row = GetAuctionById(db, auctionId);
+        if (row == null)
+        {
+            message = DauGiaNotify_cl.BuildWarningMessage("Không tìm thấy phiên đấu giá.");
+            return false;
+        }
+
+        if (!string.Equals(NormalizeAccount(row.SellerAccount), seller, StringComparison.OrdinalIgnoreCase))
+        {
+            message = DauGiaNotify_cl.BuildWarningMessage("Bạn không phải chủ phiên đấu giá này.");
+            return false;
+        }
+
+        string status = DauGiaPolicy_cl.NormalizeStatus(row.TrangThai);
+        if (!(status == DauGiaPolicy_cl.StatusPendingApproval || status == DauGiaPolicy_cl.StatusScheduled))
+        {
+            message = DauGiaNotify_cl.BuildWarningMessage("Chỉ có thể hủy phiên ở trạng thái chờ duyệt hoặc đã lịch.");
+            return false;
+        }
+
+        DateTime now = AhaTime_cl.Now;
+        string cancelReason = string.IsNullOrWhiteSpace(reason)
+            ? "Chủ phiên tự hủy đấu giá."
+            : reason.Trim();
+
+        int updated = db.ExecuteCommand(@"
+UPDATE dbo.DG_Auction_tb
+SET trang_thai = {0},
+    rejected_reason = {1},
+    updated_at = {2},
+    updated_by = {3}
+WHERE id = {4}
+  AND seller_account = {3}
+  AND trang_thai IN ({5}, {6})
+  AND ISNULL(is_deleted, 0) = 0
+", DauGiaPolicy_cl.StatusCancelled,
+   cancelReason,
+   now,
+   seller,
+   row.ID,
+   DauGiaPolicy_cl.StatusPendingApproval,
+   DauGiaPolicy_cl.StatusScheduled);
+
+        if (updated <= 0)
+        {
+            message = DauGiaNotify_cl.BuildWarningMessage("Phiên vừa đổi trạng thái, không thể hủy ở thao tác hiện tại.");
+            return false;
+        }
+
+        bool refundDepositOk = true;
+        if (!row.DaHoanCoc && row.TienDatCoc > 0)
+        {
+            double refundUuDai = row.TienDatCocUuDai;
+            double refundTieuDung = row.TienDatCocTieuDung;
+            if (refundUuDai <= 0 && refundTieuDung <= 0)
+                refundTieuDung = row.TienDatCoc;
+
+            string refundMessage;
+            refundDepositOk = TryCreditRights(
+                db,
+                row.SellerAccount,
+                refundUuDai,
+                refundTieuDung,
+                "Hoàn cọc do chủ phiên hủy đấu giá.",
+                BuildLedgerRef("deposit_refund_seller_cancel", row.ID),
+                out refundMessage);
+            if (refundDepositOk)
+            {
+                db.ExecuteCommand("UPDATE dbo.DG_Auction_tb SET da_hoan_coc = 1 WHERE id = {0}", row.ID);
+                InsertLedger(db, row.ID, "admin", row.SellerAccount, "deposit_refund_seller_cancel", row.TienDatCoc, "Hoàn cọc do chủ phiên hủy.", "");
+            }
+        }
+
+        ReleaseSourceAssetLock(db, row.ID, "Giải phóng khóa nguồn do chủ phiên hủy.");
+
+        DauGiaNotify_cl.PushInAppNotice(
+            db,
+            seller,
+            "admin",
+            "/admin/quan-ly-dau-gia",
+            "Chủ phiên đã hủy phiên đấu giá #" + row.ID + ".");
+
+        if (refundDepositOk)
+            message = DauGiaNotify_cl.BuildSuccessMessage("Đã hủy phiên đấu giá #" + row.ID + ".");
+        else
+            message = DauGiaNotify_cl.BuildWarningMessage("Đã hủy phiên đấu giá #" + row.ID + " nhưng hoàn cọc thất bại, cần xử lý thủ công.");
         return true;
     }
 
@@ -652,6 +871,10 @@ SELECT
     trang_thai AS TrangThai,
     ISNULL(gia_hien_tai, 0) AS GiaHienTai,
     ISNULL(tien_dat_coc, 0) AS TienDatCoc,
+    ISNULL(tien_dat_coc_uudai, 0) AS TienDatCocUuDai,
+    ISNULL(tien_dat_coc_tieudung, 0) AS TienDatCocTieuDung,
+    ISNULL(thanh_toan_uudai, 0) AS ThanhToanUuDai,
+    ISNULL(thanh_toan_tieudung, 0) AS ThanhToanTieuDung,
     winner_reserved_at AS WinnerReservedAt,
     buyer_confirmed_at AS BuyerConfirmedAt,
     CAST(ISNULL(da_hoan_coc, 0) AS BIT) AS DaHoanCoc
@@ -662,6 +885,7 @@ WHERE trang_thai IN ({0}, {1}, {2})
 ", DauGiaPolicy_cl.StatusReserved, DauGiaPolicy_cl.StatusBuyerConfirmed, DauGiaPolicy_cl.StatusSellerConfirmed).ToList();
 
         int settlementFailedCount = 0;
+        int refundFailedCount = 0;
         foreach (TimeoutAuctionInfo row in timeoutRows)
         {
             DateTime reserveAt = row.WinnerReservedAt.HasValue ? row.WinnerReservedAt.Value : now;
@@ -671,29 +895,64 @@ WHERE trang_thai IN ({0}, {1}, {2})
 
             if (row.BuyerConfirmedAt.HasValue && row.GiaHienTai > 0 && !string.IsNullOrWhiteSpace(row.WinnerAccount))
             {
-                TryCreditWallet(row.WinnerAccount, row.GiaHienTai, "Hoàn tiền do phiên đấu giá quá hạn xác nhận.");
-                InsertLedger(db, row.ID, "admin", row.WinnerAccount, "buyer_refund_timeout", row.GiaHienTai, "Hoàn tiền cho người mua khi quá hạn.", "");
+                double refundBuyerUuDai = row.ThanhToanUuDai;
+                double refundBuyerTieuDung = row.ThanhToanTieuDung;
+                if (refundBuyerUuDai <= 0 && refundBuyerTieuDung <= 0)
+                    refundBuyerTieuDung = row.GiaHienTai;
+
+                string buyerRefundMessage;
+                bool buyerRefundOk = TryCreditRights(
+                    db,
+                    row.WinnerAccount,
+                    refundBuyerUuDai,
+                    refundBuyerTieuDung,
+                    "Hoàn tiền do phiên đấu giá quá hạn xác nhận.",
+                    BuildLedgerRef("buyer_refund_timeout", row.ID),
+                    out buyerRefundMessage);
+                if (buyerRefundOk)
+                    InsertLedger(db, row.ID, "admin", row.WinnerAccount, "buyer_refund_timeout", row.GiaHienTai, "Hoàn tiền cho người mua khi quá hạn.", "");
+                else
+                    refundFailedCount++;
             }
 
+            bool depositRefunded = row.DaHoanCoc;
             if (!row.DaHoanCoc && row.TienDatCoc > 0 && !string.IsNullOrWhiteSpace(row.SellerAccount))
             {
-                TryCreditWallet(row.SellerAccount, row.TienDatCoc, "Hoàn cọc do phiên đấu giá quá hạn xử lý.");
-                InsertLedger(db, row.ID, "admin", row.SellerAccount, "deposit_refund_timeout", row.TienDatCoc, "Hoàn cọc cho chủ phiên khi quá hạn.", "");
+                double refundDepositUuDai = row.TienDatCocUuDai;
+                double refundDepositTieuDung = row.TienDatCocTieuDung;
+                if (refundDepositUuDai <= 0 && refundDepositTieuDung <= 0)
+                    refundDepositTieuDung = row.TienDatCoc;
+
+                string depositRefundMessage;
+                depositRefunded = TryCreditRights(
+                    db,
+                    row.SellerAccount,
+                    refundDepositUuDai,
+                    refundDepositTieuDung,
+                    "Hoàn cọc do phiên đấu giá quá hạn xử lý.",
+                    BuildLedgerRef("deposit_refund_timeout", row.ID),
+                    out depositRefundMessage);
+                if (depositRefunded)
+                    InsertLedger(db, row.ID, "admin", row.SellerAccount, "deposit_refund_timeout", row.TienDatCoc, "Hoàn cọc cho chủ phiên khi quá hạn.", "");
+                else
+                    refundFailedCount++;
             }
 
             db.ExecuteCommand(@"
 UPDATE dbo.DG_Auction_tb
 SET trang_thai = {0},
-    da_hoan_coc = 1,
-    updated_at = {1},
+    da_hoan_coc = {1},
+    updated_at = {2},
     updated_by = 'system'
-WHERE id = {2}
-", DauGiaPolicy_cl.StatusSettlementFailed, now, row.ID);
+WHERE id = {3}
+", DauGiaPolicy_cl.StatusSettlementFailed, depositRefunded ? 1 : 0, now, row.ID);
 
             settlementFailedCount++;
         }
 
-        message = "Tự động xử lý: mở " + activated + ", hết hạn live " + expired + ", quá hạn xác nhận " + settlementFailedCount + ".";
+        ReleaseAssetLocksForTerminalAuctions(db, "Giải phóng khóa tài sản theo tác vụ auto-close.");
+
+        message = "Tự động xử lý: mở " + activated + ", hết hạn live " + expired + ", quá hạn xác nhận " + settlementFailedCount + ", hoàn tiền lỗi " + refundFailedCount + ".";
         return activated + expired + settlementFailedCount;
     }
 
@@ -743,13 +1002,21 @@ WHERE id = {2}
             return false;
         }
 
-        if (!TryDebitWallet(db, bidder, fee, "Thanh toán phí lượt đấu giá #" + row.ID + ".", out message))
+        RightsSplit feeSplit;
+        if (!TryDebitRights(
+            db,
+            bidder,
+            fee,
+            "Thanh toán phí lượt đấu giá #" + row.ID + ".",
+            BuildLedgerRef("bid_fee_debit", row.ID),
+            out message,
+            out feeSplit))
             return false;
 
         double before = row.GiaHienTai;
         double after = Math.Round(Math.Max(0, before - fee), 2);
 
-        db.ExecuteCommand(@"
+        int updated = db.ExecuteCommand(@"
 UPDATE dbo.DG_Auction_tb
 SET gia_hien_tai = {0},
     vi_dau_gia = ISNULL(vi_dau_gia, 0) + {1},
@@ -757,7 +1024,25 @@ SET gia_hien_tai = {0},
     updated_at = {2},
     updated_by = {3}
 WHERE id = {4}
-", after, fee, now, bidder, row.ID);
+  AND trang_thai = {5}
+  AND (phien_ket_thuc IS NULL OR phien_ket_thuc > {2})
+  AND ISNULL(is_deleted, 0) = 0
+", after, fee, now, bidder, row.ID, DauGiaPolicy_cl.StatusLive);
+
+        if (updated <= 0)
+        {
+            string refundMessage;
+            TryCreditRights(
+                db,
+                bidder,
+                feeSplit.UuDai,
+                feeSplit.TieuDung,
+                "Hoàn phí bid do trạng thái phiên vừa thay đổi.",
+                BuildLedgerRef("bid_fee_refund_state_changed", row.ID),
+                out refundMessage);
+            message = DauGiaNotify_cl.BuildWarningMessage("Phiên đấu giá vừa đổi trạng thái, hệ thống đã hoàn lại phí bid.");
+            return false;
+        }
 
         db.ExecuteCommand(@"
 INSERT INTO dbo.DG_Bid_tb
@@ -781,7 +1066,7 @@ VALUES
             "Phiên đấu giá #" + row.ID + " vừa có lượt đấu giá mới.");
 
         newPrice = after;
-        message = DauGiaNotify_cl.BuildSuccessMessage("Đấu giá thành công. Giá hiện tại còn " + after.ToString("#,##0.00") + " E-AHA.");
+        message = DauGiaNotify_cl.BuildSuccessMessage("Đấu giá thành công. Giá hiện tại còn " + after.ToString("#,##0.00") + " Quyền.");
         return true;
     }
 
@@ -822,7 +1107,19 @@ VALUES
             return false;
         }
 
-        db.ExecuteCommand(@"
+        int ownBidCount = db.ExecuteQuery<int>(@"
+SELECT COUNT(1)
+FROM dbo.DG_Bid_tb
+WHERE auction_id = {0}
+  AND bidder_account = {1}
+", row.ID, buyer).FirstOrDefault();
+        if (ownBidCount <= 0)
+        {
+            message = DauGiaNotify_cl.BuildWarningMessage("Bạn cần có ít nhất 1 lượt đấu giá trước khi giữ mua.");
+            return false;
+        }
+
+        int updated = db.ExecuteCommand(@"
 UPDATE dbo.DG_Auction_tb
 SET winner_account = {0},
     winner_reserved_at = {1},
@@ -830,8 +1127,16 @@ SET winner_account = {0},
     updated_at = {1},
     updated_by = {0}
 WHERE id = {3}
+  AND trang_thai = {4}
   AND (winner_account IS NULL OR winner_account = '')
-", buyer, now, DauGiaPolicy_cl.StatusReserved, row.ID);
+  AND ISNULL(is_deleted, 0) = 0
+", buyer, now, DauGiaPolicy_cl.StatusReserved, row.ID, DauGiaPolicy_cl.StatusLive);
+
+        if (updated <= 0)
+        {
+            message = DauGiaNotify_cl.BuildWarningMessage("Phiên vừa được người khác chốt hoặc trạng thái đã thay đổi.");
+            return false;
+        }
 
         db.ExecuteCommand(@"
 UPDATE dbo.DG_Bid_tb
@@ -887,18 +1192,46 @@ WHERE id = (
         }
 
         double payAmount = row.GiaHienTai;
-        if (!TryDebitWallet(db, buyer, payAmount, "Thanh toán giá chốt đấu giá #" + row.ID + ".", out message))
+        RightsSplit paymentSplit;
+        if (!TryDebitRights(
+            db,
+            buyer,
+            payAmount,
+            "Thanh toán giá chốt đấu giá #" + row.ID + ".",
+            BuildLedgerRef("buyer_payment_debit", row.ID),
+            out message,
+            out paymentSplit))
             return false;
 
         DateTime now = AhaTime_cl.Now;
-        db.ExecuteCommand(@"
+        int updated = db.ExecuteCommand(@"
 UPDATE dbo.DG_Auction_tb
 SET trang_thai = {0},
     buyer_confirmed_at = {1},
+    thanh_toan_uudai = ISNULL(thanh_toan_uudai, 0) + {2},
+    thanh_toan_tieudung = ISNULL(thanh_toan_tieudung, 0) + {3},
     updated_at = {1},
-    updated_by = {2}
-WHERE id = {3}
-", DauGiaPolicy_cl.StatusBuyerConfirmed, now, buyer, row.ID);
+    updated_by = {4}
+WHERE id = {5}
+  AND trang_thai = {6}
+  AND winner_account = {4}
+  AND ISNULL(is_deleted, 0) = 0
+", DauGiaPolicy_cl.StatusBuyerConfirmed, now, paymentSplit.UuDai, paymentSplit.TieuDung, buyer, row.ID, DauGiaPolicy_cl.StatusReserved);
+
+        if (updated <= 0)
+        {
+            string refundMessage;
+            TryCreditRights(
+                db,
+                buyer,
+                paymentSplit.UuDai,
+                paymentSplit.TieuDung,
+                "Hoàn tiền do trạng thái phiên vừa thay đổi.",
+                BuildLedgerRef("buyer_payment_refund_state_changed", row.ID),
+                out refundMessage);
+            message = DauGiaNotify_cl.BuildWarningMessage("Phiên vừa đổi trạng thái, hệ thống đã hoàn lại số tiền thanh toán.");
+            return false;
+        }
 
         InsertLedger(db, row.ID, buyer, "admin", "buyer_payment_debit", payAmount, "Thanh toán giá mua đấu giá.", "");
 
@@ -944,14 +1277,23 @@ WHERE id = {3}
         }
 
         DateTime now = AhaTime_cl.Now;
-        db.ExecuteCommand(@"
+        int updated = db.ExecuteCommand(@"
 UPDATE dbo.DG_Auction_tb
 SET trang_thai = {0},
     seller_confirmed_at = {1},
     updated_at = {1},
     updated_by = {2}
 WHERE id = {3}
-", DauGiaPolicy_cl.StatusSellerConfirmed, now, seller, row.ID);
+  AND seller_account = {2}
+  AND trang_thai = {4}
+  AND ISNULL(is_deleted, 0) = 0
+", DauGiaPolicy_cl.StatusSellerConfirmed, now, seller, row.ID, DauGiaPolicy_cl.StatusBuyerConfirmed);
+
+        if (updated <= 0)
+        {
+            message = DauGiaNotify_cl.BuildWarningMessage("Phiên vừa đổi trạng thái, không thể xác nhận lại.");
+            return false;
+        }
 
         DauGiaNotify_cl.PushInAppNotice(
             db,
@@ -981,23 +1323,60 @@ WHERE id = {3}
             return false;
         }
 
-        // Giữ nguyên công thức bản cũ: payout cố định cho shop = giá niêm yết - cọc.
-        double sellerPayout = Math.Round(Math.Max(0, row.GiaNiemYet - row.TienDatCoc), 2);
-        if (!TryCreditWallet(row.SellerAccount, sellerPayout, "Tất toán đấu giá #" + row.ID + "."))
+        DateTime now = AhaTime_cl.Now;
+        string admin = NormalizeText(adminUser, "admin");
+        int claimed = db.ExecuteCommand(@"
+UPDATE dbo.DG_Auction_tb
+SET admin_settled_at = {0},
+    updated_at = {0},
+    updated_by = {1}
+WHERE id = {2}
+  AND trang_thai = {3}
+  AND admin_settled_at IS NULL
+  AND ISNULL(is_deleted, 0) = 0
+", now, admin, row.ID, DauGiaPolicy_cl.StatusSellerConfirmed);
+
+        if (claimed <= 0)
         {
-            message = DauGiaNotify_cl.BuildErrorMessage("Không thể cộng ví cho chủ phiên.");
+            message = DauGiaNotify_cl.BuildWarningMessage("Phiên vừa được xử lý bởi tác vụ khác.");
             return false;
         }
 
-        DateTime now = AhaTime_cl.Now;
-        db.ExecuteCommand(@"
+        // Giữ nguyên công thức bản cũ: payout cố định cho shop = giá niêm yết - cọc.
+        double sellerPayout = Math.Round(Math.Max(0, row.GiaNiemYet - row.TienDatCoc), 2);
+        string payoutMessage;
+        if (!TryCreditRights(
+            db,
+            row.SellerAccount,
+            0,
+            sellerPayout,
+            "Tất toán đấu giá #" + row.ID + ".",
+            BuildLedgerRef("seller_payout_credit", row.ID),
+            out payoutMessage))
+        {
+            db.ExecuteCommand(@"
 UPDATE dbo.DG_Auction_tb
 SET trang_thai = {0},
-    admin_settled_at = {1},
     updated_at = {1},
     updated_by = {2}
 WHERE id = {3}
-", DauGiaPolicy_cl.StatusCompleted, now, NormalizeText(adminUser, "admin"), row.ID);
+", DauGiaPolicy_cl.StatusSettlementFailed, now, admin, row.ID);
+
+            ReleaseSourceAssetLock(db, row.ID, "Giải phóng khóa nguồn do lỗi tất toán.");
+
+            message = DauGiaNotify_cl.BuildErrorMessage("Không thể cộng ví cho chủ phiên. Phiên đã chuyển sang lỗi tất toán.");
+            return false;
+        }
+
+        db.ExecuteCommand(@"
+UPDATE dbo.DG_Auction_tb
+SET trang_thai = {0},
+    updated_at = {1},
+    updated_by = {2}
+WHERE id = {3}
+", DauGiaPolicy_cl.StatusCompleted, now, admin, row.ID);
+
+        ReleaseSourceAssetLock(db, row.ID, "Giải phóng khóa nguồn do tất toán hoàn tất.");
 
         InsertLedger(db, row.ID, "admin", row.SellerAccount, "seller_payout_credit", sellerPayout, "Tất toán hoàn thành cho chủ phiên.", "");
 
@@ -1005,7 +1384,7 @@ WHERE id = {3}
         {
             DauGiaNotify_cl.PushInAppNotice(
                 db,
-                NormalizeText(adminUser, "admin"),
+                admin,
                 row.WinnerAccount,
                 BuildAuctionUrl(row.Slug, row.ID),
                 "Admin đã xác nhận hoàn tất phiên đấu giá #" + row.ID + ".");
@@ -1013,7 +1392,7 @@ WHERE id = {3}
 
         DauGiaNotify_cl.PushInAppNotice(
             db,
-            NormalizeText(adminUser, "admin"),
+            admin,
             row.SellerAccount,
             BuildAuctionUrl(row.Slug, row.ID),
             "Admin đã tất toán thành công phiên đấu giá #" + row.ID + ".");
@@ -1093,72 +1472,346 @@ WHERE id = {3}
         return value.Trim();
     }
 
-    private static bool HasWalletAccount(dbDataContext db, string account)
+    private static bool IsSourceAssetLockedByOtherAuction(dbDataContext db, string sourceType, string sourceId, long ignoreAuctionId)
     {
-        if (db == null || string.IsNullOrWhiteSpace(account))
+        if (db == null)
             return false;
 
-        int count = db.ExecuteQuery<int>(
-            "SELECT COUNT(1) FROM dbo.bspa_data_khachhang_table WHERE sdt = {0}",
-            NormalizeAccount(account)).FirstOrDefault();
-        return count > 0;
+        string type = DauGiaPolicy_cl.NormalizeSourceType(sourceType);
+        string id = NormalizeText(sourceId, "");
+        if (id == "")
+            return false;
+
+        int lockCount = db.ExecuteQuery<int>(@"
+SELECT COUNT(1)
+FROM dbo.DG_AssetLock_tb l
+INNER JOIN dbo.DG_Auction_tb a ON a.id = l.auction_id
+WHERE l.source_type = {0}
+  AND l.source_id = {1}
+  AND ISNULL(l.trang_thai, '') = 'locked'
+  AND l.auction_id <> {2}
+  AND ISNULL(a.is_deleted, 0) = 0
+  AND a.trang_thai IN ({3}, {4}, {5}, {6}, {7}, {8})
+", type,
+   id,
+   ignoreAuctionId,
+   DauGiaPolicy_cl.StatusPendingApproval,
+   DauGiaPolicy_cl.StatusScheduled,
+   DauGiaPolicy_cl.StatusLive,
+   DauGiaPolicy_cl.StatusReserved,
+   DauGiaPolicy_cl.StatusBuyerConfirmed,
+   DauGiaPolicy_cl.StatusSellerConfirmed).FirstOrDefault();
+        return lockCount > 0;
     }
 
-    private static double GetWalletBalance(dbDataContext db, string account)
+    private static void EnsureSourceAssetLock(dbDataContext db, long auctionId, string sourceType, string sourceId, string ownerAccount)
     {
-        if (!HasWalletAccount(db, account))
+        if (db == null || auctionId <= 0)
+            return;
+
+        string type = DauGiaPolicy_cl.NormalizeSourceType(sourceType);
+        string id = NormalizeText(sourceId, "");
+        if (id == "")
+            return;
+
+        int exists = db.ExecuteQuery<int>(@"
+SELECT COUNT(1)
+FROM dbo.DG_AssetLock_tb
+WHERE auction_id = {0}
+  AND source_type = {1}
+  AND source_id = {2}
+", auctionId, type, id).FirstOrDefault();
+        if (exists > 0)
+            return;
+
+        db.ExecuteCommand(@"
+INSERT INTO dbo.DG_AssetLock_tb
+(
+    auction_id, source_type, source_id, owner_account, so_luong_khoa, trang_thai, created_at
+)
+VALUES
+(
+    {0}, {1}, {2}, {3}, 1, 'locked', {4}
+)
+", auctionId, type, id, NormalizeText(ownerAccount, ""), AhaTime_cl.Now);
+    }
+
+    private static void ReleaseSourceAssetLock(dbDataContext db, long auctionId, string reason)
+    {
+        if (db == null || auctionId <= 0)
+            return;
+
+        db.ExecuteCommand(@"
+UPDATE dbo.DG_AssetLock_tb
+SET trang_thai = 'released',
+    released_at = {0},
+    released_reason = CASE
+        WHEN ISNULL(released_reason, '') = '' THEN {1}
+        ELSE released_reason
+    END
+WHERE auction_id = {2}
+  AND ISNULL(trang_thai, '') = 'locked'
+", AhaTime_cl.Now, NormalizeText(reason, "Giải phóng khóa tài sản nguồn."), auctionId);
+    }
+
+    private static int ReleaseAssetLocksForTerminalAuctions(dbDataContext db, string reason)
+    {
+        if (db == null)
             return 0;
 
-        double? balance = db.ExecuteQuery<double?>(
-            "SELECT TOP 1 sodiem_e_aha FROM dbo.bspa_data_khachhang_table WHERE sdt = {0}",
-            NormalizeAccount(account)).FirstOrDefault();
-
-        return balance.HasValue ? balance.Value : 0;
+        return db.ExecuteCommand(@"
+UPDATE l
+SET l.trang_thai = 'released',
+    l.released_at = {0},
+    l.released_reason = CASE
+        WHEN ISNULL(l.released_reason, '') = '' THEN {1}
+        ELSE l.released_reason
+    END
+FROM dbo.DG_AssetLock_tb l
+INNER JOIN dbo.DG_Auction_tb a ON a.id = l.auction_id
+WHERE ISNULL(l.trang_thai, '') = 'locked'
+  AND ISNULL(a.is_deleted, 0) = 0
+  AND a.trang_thai IN ({2}, {3}, {4}, {5})
+", AhaTime_cl.Now,
+   NormalizeText(reason, "Giải phóng khóa tài sản theo trạng thái kết thúc."),
+   DauGiaPolicy_cl.StatusCompleted,
+   DauGiaPolicy_cl.StatusExpired,
+   DauGiaPolicy_cl.StatusCancelled,
+   DauGiaPolicy_cl.StatusSettlementFailed);
     }
 
-    private static bool TryDebitWallet(dbDataContext db, string account, double amount, string note, out string message)
+    private static string BuildLedgerRef(string action, long auctionId)
+    {
+        string safeAction = NormalizeText(action, "unknown");
+        string safeAuction = auctionId <= 0 ? "0" : auctionId.ToString();
+        return "DG|" + safeAction + "|" + safeAuction + "|" + Guid.NewGuid().ToString("N");
+    }
+
+    private static RightsBalanceInfo GetRightsAccount(dbDataContext db, string account)
+    {
+        if (db == null)
+            return null;
+
+        string holder = NormalizeAccount(account);
+        if (holder == "")
+            return null;
+
+        return db.ExecuteQuery<RightsBalanceInfo>(@"
+SELECT TOP 1
+    taikhoan AS Account,
+    ISNULL(CAST(Vi1That_Evocher_30PhanTram AS FLOAT), 0) AS UuDai,
+    ISNULL(CAST(DongA AS FLOAT), 0) AS TieuDung
+FROM dbo.taikhoan_tb
+WHERE taikhoan = {0}
+", holder).FirstOrDefault();
+    }
+
+    private static string BuildRightsInsufficientMessage(double need, double uuDai, double tieuDung)
+    {
+        return "Quyền ưu đãi + quyền tiêu dùng không đủ, cần tối thiểu "
+            + need.ToString("#,##0.00")
+            + " Quyền. Hiện có: ưu đãi "
+            + uuDai.ToString("#,##0.00")
+            + ", tiêu dùng "
+            + tieuDung.ToString("#,##0.00")
+            + ".";
+    }
+
+    private static bool PersistRightsMutation(
+        dbDataContext db,
+        string account,
+        double nextUuDaiBalance,
+        double nextTieuDungBalance,
+        double uuDaiJournalAmount,
+        double tieuDungJournalAmount,
+        bool congTru,
+        string note,
+        string refId,
+        out string message)
     {
         message = "";
+        if (db == null)
+        {
+            message = "Thiếu kết nối dữ liệu để cập nhật quyền.";
+            return false;
+        }
+
+        string holder = NormalizeAccount(account);
+        if (holder == "")
+        {
+            message = "Không xác định được tài khoản để cập nhật quyền.";
+            return false;
+        }
+
+        double nextUuDai = Math.Round(Math.Max(0, nextUuDaiBalance), 2);
+        double nextTieuDung = Math.Round(Math.Max(0, nextTieuDungBalance), 2);
+        double uuDaiAmount = Math.Round(Math.Max(0, uuDaiJournalAmount), 2);
+        double tieuDungAmount = Math.Round(Math.Max(0, tieuDungJournalAmount), 2);
+        DateTime now = AhaTime_cl.Now;
+
+        int updated = db.ExecuteQuery<int>(@"
+DECLARE @updated INT;
+
+UPDATE dbo.taikhoan_tb
+SET Vi1That_Evocher_30PhanTram = {0},
+    DongA = {1}
+WHERE taikhoan = {2};
+
+SET @updated = @@ROWCOUNT;
+
+IF @updated > 0 AND {3} > 0
+BEGIN
+    INSERT INTO dbo.LichSu_DongA_tb
+    (
+        taikhoan, dongA, ngay, CongTru, id_donhang,
+        ghichu, id_rutdiem, LoaiHoSo_Vi, KyHieu9ViCon_1_9
+    )
+    VALUES
+    (
+        {2}, {3}, {4}, {5}, '',
+        {6}, {7}, 2, NULL
+    );
+END
+
+IF @updated > 0 AND {8} > 0
+BEGIN
+    INSERT INTO dbo.LichSu_DongA_tb
+    (
+        taikhoan, dongA, ngay, CongTru, id_donhang,
+        ghichu, id_rutdiem, LoaiHoSo_Vi, KyHieu9ViCon_1_9
+    )
+    VALUES
+    (
+        {2}, {8}, {4}, {5}, '',
+        {9}, {7}, 1, NULL
+    );
+END
+
+SELECT @updated;
+", nextUuDai,
+   nextTieuDung,
+   holder,
+   uuDaiAmount,
+   now,
+   congTru ? 1 : 0,
+   NormalizeText(note, "Đấu giá") + " (Quyền ưu đãi)",
+   NormalizeText(refId, ""),
+   tieuDungAmount,
+   NormalizeText(note, "Đấu giá") + " (Quyền tiêu dùng)").FirstOrDefault();
+
+        if (updated <= 0)
+        {
+            message = "Không tìm thấy tài khoản để cập nhật số dư.";
+            return false;
+        }
+
+        return true;
+    }
+
+    private static bool TryDebitRights(
+        dbDataContext db,
+        string account,
+        double amount,
+        string note,
+        string refId,
+        out string message,
+        out RightsSplit split)
+    {
+        message = "";
+        split = new RightsSplit();
+
         double value = Math.Round(Math.Max(0, amount), 2);
         if (value <= 0)
             return true;
 
-        string holder = NormalizeAccount(account);
-        if (!HasWalletAccount(db, holder))
+        RightsBalanceInfo holder = GetRightsAccount(db, account);
+        if (holder == null)
         {
-            message = DauGiaNotify_cl.BuildWarningMessage("Tài khoản ví không tồn tại trong hệ thống.");
+            message = DauGiaNotify_cl.BuildWarningMessage("Tài khoản không tồn tại để trừ quyền tham gia đấu giá.");
             return false;
         }
 
-        double balance = GetWalletBalance(db, holder);
-        if (balance < value)
+        double uuDaiBalance = Math.Round(holder.UuDai, 2);
+        double tieuDungBalance = Math.Round(holder.TieuDung, 2);
+        double total = Math.Round(uuDaiBalance + tieuDungBalance, 2);
+        if (total < value)
         {
-            message = DauGiaNotify_cl.BuildWarningMessage("Ví E-AHA không đủ, cần tối thiểu " + value.ToString("#,##0.00") + " E-AHA.");
+            message = DauGiaNotify_cl.BuildWarningMessage(
+                BuildRightsInsufficientMessage(value, uuDaiBalance, tieuDungBalance));
             return false;
         }
 
-        data_khachhang_class wallet = new data_khachhang_class();
-        wallet.giamdiem_eaha(holder, "admin", value, note ?? "Trừ ví đấu giá.");
+        double uuDaiDebit = Math.Round(Math.Min(uuDaiBalance, value), 2);
+        double tieuDungDebit = Math.Round(value - uuDaiDebit, 2);
+        double nextUuDaiBalance = Math.Round(Math.Max(0, uuDaiBalance - uuDaiDebit), 2);
+        double nextTieuDungBalance = Math.Round(Math.Max(0, tieuDungBalance - tieuDungDebit), 2);
+
+        split.UuDai = uuDaiDebit;
+        split.TieuDung = tieuDungDebit;
+
+        string persistMessage;
+        if (!PersistRightsMutation(
+            db,
+            holder.Account,
+            nextUuDaiBalance,
+            nextTieuDungBalance,
+            uuDaiDebit,
+            tieuDungDebit,
+            false,
+            NormalizeText(note, "Trừ quyền đấu giá"),
+            refId,
+            out persistMessage))
+        {
+            message = DauGiaNotify_cl.BuildErrorMessage("Không thể cập nhật số dư quyền tham gia đấu giá: " + persistMessage);
+            return false;
+        }
+
         return true;
     }
 
-    private static bool TryCreditWallet(string account, double amount, string note)
+    private static bool TryCreditRights(
+        dbDataContext db,
+        string account,
+        double uuDaiAmount,
+        double tieuDungAmount,
+        string note,
+        string refId,
+        out string message)
     {
-        string holder = NormalizeAccount(account);
-        double value = Math.Round(Math.Max(0, amount), 2);
-        if (holder == "" || value <= 0)
+        message = "";
+        double uuDai = Math.Round(Math.Max(0, uuDaiAmount), 2);
+        double tieuDung = Math.Round(Math.Max(0, tieuDungAmount), 2);
+        if (uuDai <= 0 && tieuDung <= 0)
             return true;
 
-        try
+        RightsBalanceInfo holder = GetRightsAccount(db, account);
+        if (holder == null)
         {
-            data_khachhang_class wallet = new data_khachhang_class();
-            wallet.tangdiem_eaha(holder, "admin", value, note ?? "Cộng ví đấu giá.");
-            return true;
-        }
-        catch
-        {
+            message = DauGiaNotify_cl.BuildWarningMessage("Tài khoản không tồn tại để hoàn/cộng quyền.");
             return false;
         }
+
+        double nextUuDaiBalance = Math.Round(holder.UuDai + uuDai, 2);
+        double nextTieuDungBalance = Math.Round(holder.TieuDung + tieuDung, 2);
+
+        string persistMessage;
+        if (!PersistRightsMutation(
+            db,
+            holder.Account,
+            nextUuDaiBalance,
+            nextTieuDungBalance,
+            uuDai,
+            tieuDung,
+            true,
+            NormalizeText(note, "Cộng quyền đấu giá"),
+            refId,
+            out persistMessage))
+        {
+            message = DauGiaNotify_cl.BuildErrorMessage("Không thể cập nhật số dư quyền hoàn/cộng: " + persistMessage);
+            return false;
+        }
+
+        return true;
     }
 
     private static void InsertLedger(

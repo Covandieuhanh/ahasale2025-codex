@@ -6,6 +6,7 @@ public static class PortalRequest_cl
     private const string CurrentAccountEncryptedKey = "__aha_current_account_enc";
     private const string CurrentAccountKey = "__aha_current_account";
     private const string IsShopPortalKey = "__aha_is_shop_portal";
+    private const string IsGianHangPortalKey = "__aha_is_gianhang_portal";
 
     private static HttpRequest CurrentRequest()
     {
@@ -61,6 +62,35 @@ public static class PortalRequest_cl
         if (HttpContext.Current != null && HttpContext.Current.Items != null)
             HttpContext.Current.Items[IsShopPortalKey] = isShop;
         return isShop;
+    }
+
+    public static bool IsGianHangPortalRequest()
+    {
+        HttpRequest req = CurrentRequest();
+        if (req == null)
+            return false;
+
+        if (HttpContext.Current != null && HttpContext.Current.Items != null)
+        {
+            object cached = HttpContext.Current.Items[IsGianHangPortalKey];
+            if (cached is bool)
+                return (bool)cached;
+        }
+
+        string marker = (req.QueryString["gianhang_portal"] ?? "").Trim();
+        if (string.Equals(marker, "1", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(marker, "true", StringComparison.OrdinalIgnoreCase))
+        {
+            if (HttpContext.Current != null && HttpContext.Current.Items != null)
+                HttpContext.Current.Items[IsGianHangPortalKey] = true;
+            return true;
+        }
+
+        string path = (req.Url == null ? "" : (req.Url.AbsolutePath ?? "")).Trim();
+        bool isGianHang = path.StartsWith("/gianhang/", StringComparison.OrdinalIgnoreCase);
+        if (HttpContext.Current != null && HttpContext.Current.Items != null)
+            HttpContext.Current.Items[IsGianHangPortalKey] = isGianHang;
+        return isGianHang;
     }
 
     public static string GetCurrentAccountEncrypted()

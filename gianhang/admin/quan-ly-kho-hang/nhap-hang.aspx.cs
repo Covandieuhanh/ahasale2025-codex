@@ -83,7 +83,7 @@ public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
         }
         #endregion
         user = Session["user"].ToString();
-        user_parent = "admin";
+        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
 
         main();
 
@@ -223,8 +223,16 @@ public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
     #region autopostback
     protected void txt_search_TextChanged(object sender, EventArgs e)
     {
-        Session["search_nhaphang"] = txt_search.Text.Trim();
+        ApplySearchState();
+    }
+    protected void but_search_Click(object sender, EventArgs e)
+    {
+        ApplySearchState();
+    }
+    private void ApplySearchState()
+    {
         Session["current_page_nhaphang"] = "1";
+
         main();
     }
 
@@ -478,7 +486,7 @@ public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
             _ob.sl_dichvu = sl_dv;
             _ob.sl_sanpham = sl_sp;
             _ob.album = "";
-            _ob.user_parent = "admin";
+            _ob.user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
 
 
             if (sl_dv == 0)
@@ -537,7 +545,7 @@ public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
                 _ob2.phantram_lamdichvu = 0;
                 _ob2.tongtien_lamdichvu = 0;
 
-                _ob2.user_parent = "admin";
+                _ob2.user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
                 _ob2.nguoitao = Session["user"].ToString();
                 _ob2.danhgia_nhanvien_lamdichvu = "";
 

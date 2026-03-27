@@ -83,12 +83,12 @@ public partial class daugia_default : Page
     {
         string status = DauGiaPolicy_cl.NormalizeStatus(statusObj == null ? "" : statusObj.ToString());
         if (status == DauGiaPolicy_cl.StatusLive)
-            return "daugia-badge daugia-badge--live";
+            return "badge bg-green-lt text-green";
         if (status == DauGiaPolicy_cl.StatusScheduled)
-            return "daugia-badge daugia-badge--scheduled";
+            return "badge bg-blue-lt text-blue";
         if (status == DauGiaPolicy_cl.StatusPendingApproval)
-            return "daugia-badge daugia-badge--pending";
-        return "daugia-badge daugia-badge--done";
+            return "badge bg-yellow-lt text-yellow";
+        return "badge bg-secondary-lt text-secondary";
     }
 
     protected string FormatPoint(object amountObj)

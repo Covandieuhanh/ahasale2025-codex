@@ -72,7 +72,7 @@ public partial class admin_quan_ly_khach_hang_danh_sach_lich_hen : System.Web.UI
         }
         #endregion
         user = Session["user"].ToString();
-        user_parent = "admin";
+        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
 
         if (!IsPostBack)
         {
@@ -564,7 +564,8 @@ public partial class admin_quan_ly_khach_hang_danh_sach_lich_hen : System.Web.UI
         if (co_quyen_tao_hoadon_nhanh() == false)
             return "";
 
-        return "/gianhang/admin/quan-ly-hoa-don/Default.aspx?q=add"
+        return "/gianhang/admin/gianhang/tao-giao-dich.aspx?return_url="
+            + HttpUtility.UrlEncode(Request.RawUrl ?? "/gianhang/admin/quan-ly-khach-hang/danh-sach-lich-hen.aspx")
             + "&sdt=" + HttpUtility.UrlEncode(_item.sdt)
             + "&tenkh=" + HttpUtility.UrlEncode(_item.tenkhachhang)
             + "&idnganh=" + HttpUtility.UrlEncode(_item.id_nganh_goiy)
@@ -573,7 +574,7 @@ public partial class admin_quan_ly_khach_hang_danh_sach_lich_hen : System.Web.UI
 
     public string return_nhan_hoa_don_nhanh(string _id_lich)
     {
-        return return_so_hoadon_lienket_tu_lich(_id_lich) > 0 ? "Mở HĐ" : "Tạo HĐ";
+        return return_so_hoadon_lienket_tu_lich(_id_lich) > 0 ? "Mở HĐ" : "Tạo GD";
     }
 
     public bool hien_hanhdong_hoa_don_nhanh(string _id_lich)
@@ -678,10 +679,11 @@ public partial class admin_quan_ly_khach_hang_danh_sach_lich_hen : System.Web.UI
 
     protected void txt_search_TextChanged(object sender, EventArgs e)
     {
-        Session["search_lichhen"] = txt_search.Text.Trim();
-        Session["current_page_lichhen"] = "1";
-        main();
-
+        ApplySearchState();
+    }
+    protected void but_search_Click(object sender, EventArgs e)
+    {
+        ApplySearchState();
     }
     protected void but_quaylai_Click(object sender, EventArgs e)
     {
@@ -742,6 +744,13 @@ public partial class admin_quan_ly_khach_hang_danh_sach_lich_hen : System.Web.UI
             }
 
         }
+    }
+
+    private void ApplySearchState()
+    {
+        Session["search_lichhen"] = txt_search.Text.Trim();
+        Session["current_page_lichhen"] = "1";
+        main();
     }
 
     #region chọn ngày nhanh

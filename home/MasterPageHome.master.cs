@@ -8,26 +8,9 @@ using System.Web.UI.WebControls;
 
 public partial class MasterPageHome : System.Web.UI.MasterPage
 {
-    private static string NormalizeIconPath(string rawPath, string fallbackPath)
-    {
-        string path = (rawPath ?? "").Trim();
-        if (path == "")
-            path = (fallbackPath ?? "").Trim();
-        if (path == "")
-            path = "/uploads/images/icon-mobile.jpg";
-        return path;
-    }
-
     private string BuildAbsoluteUrl(string rawPath, string fallbackPath)
     {
-        string path = NormalizeIconPath(rawPath, fallbackPath);
-        if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-            path.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-            return path;
-
-        if (!path.StartsWith("/"))
-            path = "/" + path;
-        return string.Format("{0}://{1}{2}", Request.Url.Scheme, Request.Url.Authority, path);
+        return PortalBranding_cl.BuildAbsoluteUrl(Request, rawPath, fallbackPath);
     }
 
     protected void Page_Load(object sender, EventArgs e)
@@ -40,20 +23,19 @@ public partial class MasterPageHome : System.Web.UI.MasterPage
                 {
 
                     #region Favicon & icon mobile
-                    var q = (from tk in db.CaiDatChung_tbs
-                             where tk.phanloai_trang == "home"
-                             select new { tk.thongtin_icon, tk.thongtin_apple_touch_icon }).FirstOrDefault();
+                    string scopeKey = PortalBranding_cl.ResolveScopeKeyFromRequest(Request);
+                    PortalBranding_cl.ScopeBrandingSnapshot branding = PortalBranding_cl.LoadScopeBranding(db, scopeKey, true);
+                    string iconUrl = BuildAbsoluteUrl(PortalBranding_cl.ResolveFaviconPath(branding, scopeKey), PortalBranding_cl.DefaultHomeIconPath);
+                    string appleTouchIconUrl = BuildAbsoluteUrl(PortalBranding_cl.ResolveHeaderLogoPath(branding, scopeKey), PortalBranding_cl.ResolveDefaultIconPath(scopeKey));
+                    string pwaIcon192Url = appleTouchIconUrl;
+                    string pwaIcon512Url = appleTouchIconUrl;
+                    string manifestUrl = string.Format("{0}://{1}/manifest.ashx?v=20260324", Request.Url.Scheme, Request.Url.Authority);
+                    string startupImageUrl = appleTouchIconUrl;
 
-                    if (q != null)
-                    {
-                        string iconUrl = BuildAbsoluteUrl(q.thongtin_icon, "/uploads/images/favicon.png");
-                        string appleTouchIconUrl = BuildAbsoluteUrl(q.thongtin_apple_touch_icon, "/uploads/images/icon-mobile.jpg");
-                        string pwaIcon192Url = BuildAbsoluteUrl("/uploads/images/icon-mobile.jpg", "/uploads/images/icon-mobile.jpg");
-                        string pwaIcon512Url = BuildAbsoluteUrl("/uploads/images/icon-mobile.jpg", "/uploads/images/icon-mobile.jpg");
-                        string manifestUrl = string.Format("{0}://{1}/manifest.json?v=20260309", Request.Url.Scheme, Request.Url.Authority);
-                        string startupImageUrl = appleTouchIconUrl;
+                    if (Context != null)
+                        Context.Items["AhaHeaderCenterLogoUrl"] = appleTouchIconUrl;
 
-                        string iconsHtml = string.Format(@"
+                    string iconsHtml = string.Format(@"
                 <!-- Favicon -->
                 <link rel='icon' href='{0}' sizes='16x16' type='image/x-icon'>
                 <link rel='icon' href='{1}' sizes='32x32' type='image/x-icon'>
@@ -84,8 +66,7 @@ public partial class MasterPageHome : System.Web.UI.MasterPage
                 <link rel='apple-touch-startup-image' href='{10}'>
                 ", iconUrl, iconUrl, iconUrl, appleTouchIconUrl, appleTouchIconUrl, appleTouchIconUrl, appleTouchIconUrl, pwaIcon192Url, pwaIcon512Url, manifestUrl, startupImageUrl);
 
-                        literal_fav_icon.Text = iconsHtml;
-                    }
+                    literal_fav_icon.Text = iconsHtml;
                     #endregion
                     #region lưu nội dung thông báo nếu có
                     if (Session["thongbao_home"] != null)

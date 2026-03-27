@@ -43,6 +43,13 @@ public static class AdminRolePolicy_cl
     public const string RoleShopPartner = PermissionProfile_cl.HoSoShopOnly;
     public const string RoleHomeContent = HomeTextContent_cl.PermissionCode;
     public const string RoleLegacyConsumerAsset = PermissionProfile_cl.HoSoTieuDung;
+    public const string RoleAdminOtp = "admin_otp";
+    public const string RoleAdminTokenWallet = "admin_token_wallet";
+    public const string RoleAdminFeedback = "admin_feedback";
+    public const string RoleAdminNotification = "admin_notification";
+    public const string RoleAdminConsulting = "admin_consulting";
+    public const string RoleAdminCompanyShopSync = "admin_company_shop_sync";
+    public const string RoleAdminReindexBaiViet = "admin_reindex_baiviet";
     public const string PresetHomeCustomer = "home_customer";
     public const string PresetHomeDevelopment = "home_development";
     public const string PresetHomeEcosystem = "home_ecosystem";
@@ -86,16 +93,56 @@ public static class AdminRolePolicy_cl
 
     public static string GetCurrentAdminUser()
     {
-        if (HttpContext.Current == null || HttpContext.Current.Session == null)
+        if (HttpContext.Current == null)
             return "";
 
-        string tkEnc = HttpContext.Current.Session["taikhoan"] as string;
+        HttpContext ctx = HttpContext.Current;
+        string tkEnc = "";
+        if (ctx.Session != null)
+            tkEnc = ctx.Session["taikhoan"] as string;
+
+        if (string.IsNullOrWhiteSpace(tkEnc) && ctx.Request != null && ctx.Request.Cookies != null)
+        {
+            HttpCookie ck = ctx.Request.Cookies["cookie_userinfo_admin_bcorn"];
+            if (ck != null)
+            {
+                tkEnc = (ck["taikhoan"] ?? "").Trim();
+                if (string.IsNullOrWhiteSpace(tkEnc))
+                {
+                    string raw = (ck.Value ?? "").Trim();
+                    if (raw != "")
+                    {
+                        foreach (string segment in raw.Split('&'))
+                        {
+                            if (string.IsNullOrWhiteSpace(segment))
+                                continue;
+
+                            int idx = segment.IndexOf('=');
+                            if (idx <= 0)
+                                continue;
+
+                            string key = (HttpUtility.UrlDecode(segment.Substring(0, idx)) ?? "").Trim();
+                            if (!string.Equals(key, "taikhoan", StringComparison.OrdinalIgnoreCase))
+                                continue;
+
+                            tkEnc = (segment.Substring(idx + 1) ?? "").Trim();
+                            tkEnc = HttpUtility.UrlDecode(tkEnc);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
         if (string.IsNullOrEmpty(tkEnc))
             return "";
 
         try
         {
-            return mahoa_cl.giaima_Bcorn(tkEnc);
+            string decoded = mahoa_cl.giaima_Bcorn(tkEnc);
+            if (!string.IsNullOrWhiteSpace(decoded) && ctx.Session != null)
+                ctx.Session["taikhoan"] = tkEnc;
+            return decoded;
         }
         catch
         {
@@ -114,6 +161,24 @@ public static class AdminRolePolicy_cl
             return true;
 
         return PermissionProfile_cl.HasPermission(db, taikhoan, permissionCode);
+    }
+
+    public static bool CanAccessAdminWorkspace(dbDataContext db, string taikhoan)
+    {
+        if (string.IsNullOrWhiteSpace(taikhoan))
+            return false;
+
+        if (IsSuperAdmin(taikhoan))
+            return true;
+
+        return CanManageAdminAccounts(db, taikhoan)
+            || CanManageAdminOtp(db, taikhoan)
+            || CanManageAdminTokenWallet(db, taikhoan)
+            || CanManageAdminFeedback(db, taikhoan)
+            || CanManageAdminNotification(db, taikhoan)
+            || CanManageAdminConsulting(db, taikhoan)
+            || CanManageAdminCompanyShopSync(db, taikhoan)
+            || CanManageAdminReindexBaiViet(db, taikhoan);
     }
 
     public static IList<ScopedAdminPresetInfo> GetScopedAdminPresets()
@@ -328,6 +393,48 @@ public static class AdminRolePolicy_cl
         return IsSuperAdmin(taikhoan);
     }
 
+    public static bool CanManageAdminOtp(dbDataContext db, string taikhoan)
+    {
+        return IsSuperAdmin(taikhoan)
+            || PermissionProfile_cl.HasPermission(db, taikhoan, RoleAdminOtp);
+    }
+
+    public static bool CanManageAdminTokenWallet(dbDataContext db, string taikhoan)
+    {
+        return IsSuperAdmin(taikhoan)
+            || PermissionProfile_cl.HasPermission(db, taikhoan, RoleAdminTokenWallet);
+    }
+
+    public static bool CanManageAdminFeedback(dbDataContext db, string taikhoan)
+    {
+        return IsSuperAdmin(taikhoan)
+            || PermissionProfile_cl.HasPermission(db, taikhoan, RoleAdminFeedback);
+    }
+
+    public static bool CanManageAdminNotification(dbDataContext db, string taikhoan)
+    {
+        return IsSuperAdmin(taikhoan)
+            || PermissionProfile_cl.HasPermission(db, taikhoan, RoleAdminNotification);
+    }
+
+    public static bool CanManageAdminConsulting(dbDataContext db, string taikhoan)
+    {
+        return IsSuperAdmin(taikhoan)
+            || PermissionProfile_cl.HasPermission(db, taikhoan, RoleAdminConsulting);
+    }
+
+    public static bool CanManageAdminCompanyShopSync(dbDataContext db, string taikhoan)
+    {
+        return IsSuperAdmin(taikhoan)
+            || PermissionProfile_cl.HasPermission(db, taikhoan, RoleAdminCompanyShopSync);
+    }
+
+    public static bool CanManageAdminReindexBaiViet(dbDataContext db, string taikhoan)
+    {
+        return IsSuperAdmin(taikhoan)
+            || PermissionProfile_cl.HasPermission(db, taikhoan, RoleAdminReindexBaiViet);
+    }
+
     public static bool CanManageHomeAccounts(dbDataContext db, string taikhoan)
     {
         if (IsSuperAdmin(taikhoan))
@@ -416,7 +523,10 @@ public static class AdminRolePolicy_cl
 
     public static bool CanApproveShopPartnerRegistration(dbDataContext db, string taikhoan)
     {
-        return CanAdjustCoreAssets(db, taikhoan);
+        if (IsSuperAdmin(taikhoan))
+            return true;
+
+        return HasRole(db, taikhoan, RoleShopPartner);
     }
 
     public static bool CanApproveShopLevel2(dbDataContext db, string taikhoan)
@@ -433,23 +543,44 @@ public static class AdminRolePolicy_cl
     {
         switch ((key ?? "").Trim().ToLowerInvariant())
         {
+            case "admin_dashboard":
+                return "Đi vào landing tổng của khối admin để xem đúng các tab nội bộ đang được cấp theo không gian quản trị admin.";
             case "admin_accounts":
                 return "Tạo tài khoản admin, gán preset 5 vai trò và rà đúng scope làm việc.";
+            case "admin_otp":
+                return "Theo dõi cấu hình OTP, lịch sử gửi mã và hỗ trợ reset xác thực theo đúng phạm vi admin.";
+            case "admin_feedback":
+                return "Xem, lọc và xử lý toàn bộ góp ý gửi về hệ quản trị.";
+            case "admin_company_shop_sync":
+                return "Đồng bộ dữ liệu shop công ty, rà luồng seed và làm sạch dữ liệu vận hành liên quan.";
+            case "admin_reindex_baiviet":
+                return "Chạy lại chỉ mục bài viết để đồng bộ kết quả tìm kiếm và feed hiển thị.";
             case "home_accounts":
                 return "Xem hồ sơ, tìm kiếm, hỗ trợ truy cập cơ bản và rà dữ liệu người dùng Home.";
+            case "home_point_approval":
             case "home_points_customer":
             case "home_points_development":
             case "home_points_ecosystem":
             case "shop_points":
                 return "Mở phiếu chờ duyệt, duyệt hoặc từ chối theo đúng rule và phạm vi được cấp.";
+            case "tier_reference":
+                return "Rà mô tả cấp bậc, tiêu chí hành vi và nội dung tham chiếu để đối chiếu đúng khi xử lý nghiệp vụ Home.";
             case "shop_accounts":
                 return "Rà hồ sơ shop, trạng thái vận hành, level 1/level 2 và thông tin gian hàng.";
+            case "shop_workspace":
+                return "Đi vào trung tâm quản trị gian hàng để thao tác đúng các công cụ vận hành của không gian gian hàng đối tác.";
             case "shop_level2":
                 return "Xem danh sách yêu cầu, thẩm định và duyệt quyền dùng bộ công cụ level 2.";
+            case "home_gianhang_space":
+                return "Duyệt hoặc từ chối yêu cầu mở không gian /gianhang do tài khoản Home gửi lên.";
             case "shop_partner":
-                return "Duyệt trạng thái gian hàng đối tác và theo dõi readiness vận hành shop.";
+                return "Duyệt đăng ký gian hàng đối tác của shop và duyệt mở không gian /gianhang cho tài khoản Home.";
             case "shop_email":
                 return "Cập nhật mẫu email vận hành và nội dung hệ thống gửi tới shop.";
+            case "daugia_workspace":
+                return "Đi vào trung tâm quản trị đấu giá để thao tác đúng các tab và công cụ đã được cấp cho không gian đấu giá.";
+            case "event_workspace":
+                return "Đi vào trung tâm quản trị sự kiện để thao tác đúng các tab và công cụ đã được cấp cho không gian sự kiện.";
             case "home_content":
                 return "Sửa toàn bộ nội dung văn bản hiển thị trên Ahasale.vn và sẵn sàng mở rộng cho /home, /shop, /gianhang/admin, /daugia.";
             case "home_posts":
@@ -481,23 +612,42 @@ public static class AdminRolePolicy_cl
     {
         switch ((key ?? "").Trim().ToLowerInvariant())
         {
+            case "admin_dashboard":
+                return "Landing của khối admin chỉ hiển thị các tab nội bộ của admin; không trộn tab Home, gian hàng, đấu giá hay sự kiện.";
             case "admin_accounts":
                 return isSuperAdmin
                     ? "Có thể gán vai trò, nhưng mọi thay đổi cấu trúc quyền cần được kiểm soát như nghiệp vụ lõi."
                     : "Chỉ Super Admin mới được thay đổi cấu trúc vai trò hoặc cấp quyền admin.";
+            case "admin_otp":
+            case "admin_feedback":
+            case "admin_company_shop_sync":
+            case "admin_reindex_baiviet":
+                return isSuperAdmin
+                    ? "Khối này thuộc vận hành nội bộ admin. Chỉ thao tác trong phạm vi cấu hình, theo dõi và đồng bộ hệ thống."
+                    : "Chỉ Super Admin mới được truy cập khối vận hành nội bộ của admin.";
             case "home_accounts":
                 return "Chỉ thao tác trên dữ liệu Home thuộc scope phụ trách. Tiền, quyền và điểm chỉ được xem.";
+            case "home_point_approval":
             case "home_points_customer":
             case "home_points_development":
             case "home_points_ecosystem":
             case "shop_points":
                 return "Được duyệt/từ chối theo phiếu. Không nhập tay điểm và không cộng trừ trực tiếp tài sản lõi.";
+            case "tier_reference":
+                return "Đây là tab tham chiếu nghiệp vụ Home. Được xem mô tả cấp bậc nhưng không tự thay đổi điểm, quyền hay tài sản lõi.";
             case "shop_accounts":
             case "shop_level2":
             case "shop_partner":
-                return "Chỉ xử lý trạng thái nghiệp vụ shop. Không can thiệp trực tiếp tiền, quyền hoặc điểm của shop.";
+            case "shop_workspace":
+                return "Chỉ xử lý trạng thái nghiệp vụ shop và quyền mở /gianhang của Home. Không can thiệp trực tiếp tiền, quyền hoặc điểm của shop.";
+            case "home_gianhang_space":
+                return "Khối này cấp quyền vào không gian /gianhang của tài khoản Home. Chỉ Super Admin mới được thao tác.";
             case "shop_email":
                 return "Chỉ thay đổi nội dung vận hành hiển thị hoặc mẫu email; không đụng tài sản lõi.";
+            case "daugia_workspace":
+                return "Chỉ được dùng bộ công cụ đấu giá thuộc đúng không gian đấu giá; không can thiệp vào các khối admin khác.";
+            case "event_workspace":
+                return "Chỉ được dùng bộ công cụ sự kiện thuộc đúng không gian sự kiện; không can thiệp vào các khối admin khác.";
             case "home_content":
                 return "Chỉ chỉnh sửa nội dung văn bản hiển thị; không quản lý menu, bài viết, banner tổng quan và không đụng tài sản lõi.";
             case "home_posts":
@@ -550,58 +700,116 @@ public static class AdminRolePolicy_cl
             });
         };
 
+        bool showLegacySystemProductTabs = !CompanyShop_cl.HideLegacyAdminSystemProduct();
+
         if (isSuperAdmin)
         {
-            add("admin_accounts", "Quản lý tài khoản Admin", "Tạo tài khoản admin, gán 5 vai trò và kiểm soát đúng cổng vận hành.", "Cổng Admin", "Toàn bộ tài khoản admin và cấu trúc phân quyền nội bộ.", "/admin/quan-ly-tai-khoan/Default.aspx?scope=admin&fscope=admin", 10);
-            add("home_accounts", "Quản lý tài khoản Home", "Rà soát hồ sơ Home, tìm kiếm và xử lý dữ liệu người dùng cá nhân.", "Hệ Home", "Toàn bộ tài khoản Home trên các tầng khách hàng, cộng tác phát triển và đồng hành hệ sinh thái.", "/admin/quan-ly-tai-khoan/Default.aspx?scope=home&fscope=home", 20);
-            add("home_points_customer", "Duyệt điểm khách hàng", "Duyệt các yêu cầu điểm phát sinh từ tầng khách hàng Home.", "Hệ Home", "Chỉ các hồ sơ điểm thuộc tầng khách hàng.", "/admin/lich-su-chuyen-diem/default.aspx?tab=uu-dai", 30);
-            add("home_points_development", "Duyệt điểm cộng tác phát triển", "Xử lý các yêu cầu điểm của hồ sơ hành vi lao động và cộng tác phát triển.", "Hệ Home", "Chỉ các hồ sơ điểm thuộc tầng cộng tác phát triển.", "/admin/lich-su-chuyen-diem/default.aspx?tab=lao-dong", 40);
-            add("home_points_ecosystem", "Duyệt điểm đồng hành hệ sinh thái", "Xử lý các yêu cầu điểm của hồ sơ gắn kết hệ sinh thái.", "Hệ Home", "Chỉ các hồ sơ điểm thuộc tầng đồng hành hệ sinh thái.", "/admin/lich-su-chuyen-diem/default.aspx?tab=gan-ket", 50);
-            add("shop_accounts", "Quản lý tài khoản Shop", "Theo dõi hồ sơ shop, cấp vận hành và trạng thái gian hàng đối tác.", "Hệ Shop", "Toàn bộ tài khoản shop và thông tin vận hành shop.", "/admin/quan-ly-tai-khoan/Default.aspx?scope=shop&fscope=shop", 60);
-            add("shop_points", "Duyệt nghiệp vụ / điểm Shop", "Duyệt các yêu cầu điểm hoặc nghiệp vụ gắn với gian hàng đối tác.", "Hệ Shop", "Chỉ các hồ sơ điểm và nghiệp vụ thuộc gian hàng đối tác.", "/admin/lich-su-chuyen-diem/default.aspx?tab=shop-only", 70);
+            add("admin_dashboard", "Trang chủ admin", "Landing tổng của khối quản trị admin.", "Cổng Admin", "Điểm vào chính của không gian quản trị admin.", "/admin/default.aspx", 5);
+            add("admin_accounts", "Quản lý tài khoản admin", "Tạo tài khoản admin, gán 5 vai trò và kiểm soát đúng cổng vận hành.", "Cổng Admin", "Toàn bộ tài khoản admin và cấu trúc phân quyền nội bộ.", "/admin/quan-ly-tai-khoan/Default.aspx?scope=admin&fscope=admin", 10);
+            add("admin_otp", "Quản lý OTP", "Quản trị cấu hình OTP, nhật ký gửi mã và hỗ trợ xác thực cho các tài khoản trong hệ.", "Cổng Admin", "Khối OTP nội bộ của hệ quản trị.", "/admin/otp/default.aspx", 15);
+            add("admin_feedback", "Quản lý góp ý", "Theo dõi, lọc và xử lý các góp ý phát sinh gửi vào hệ quản trị.", "Cổng Admin", "Toàn bộ luồng góp ý của nền tảng.", "/admin/quan-ly-gop-y/default.aspx", 18);
+            add("admin_company_shop_sync", "Đồng bộ shop công ty", "Đồng bộ, làm sạch và rà soát dữ liệu shop công ty dùng cho các tác vụ nội bộ.", "Cổng Admin", "Công cụ nội bộ dành cho vận hành admin.", "/admin/tools/company-shop-sync.aspx", 19);
+            add("admin_reindex_baiviet", "Reindex bài viết", "Chạy lại chỉ mục nội dung để đồng bộ tìm kiếm và các feed bài viết trên website.", "Cổng Admin", "Công cụ vận hành chỉ mục nội dung.", "/admin/tools/reindex-baiviet.aspx", 19);
+            add("home_accounts", "Quản lý tài khoản home", "Rà soát hồ sơ Home, tìm kiếm và xử lý dữ liệu người dùng cá nhân.", "Hệ Home", "Toàn bộ tài khoản Home trên các tầng khách hàng, cộng tác phát triển và đồng hành hệ sinh thái.", "/admin/quan-ly-tai-khoan/Default.aspx?scope=home&fscope=home", 20);
+            add("home_point_approval", "Duyệt yêu cầu xác nhận hành vi", "Mở đúng tab duyệt hành vi/điểm của hệ Home theo vai trò hiện tại.", "Hệ Home", "Khối duyệt yêu cầu hành vi và các hồ sơ điểm liên quan của hệ Home.", ResolveHomePointApprovalUrl(db, taikhoan), 30);
+            add("tier_reference", "Mô tả cấp bậc", "Tra cứu mô tả cấp bậc, tiêu chí hành vi và nội dung tham chiếu của hệ Home.", "Hệ Home", "Khối tham chiếu cấp bậc và nội dung hành vi của hệ Home.", "/admin/MoTaCapBac.aspx", 52);
+            add("shop_workspace", "Trung tâm quản trị gian hàng", "Đi vào portal quản trị của không gian gian hàng đối tác.", "Hệ Gian hàng", "Điểm vào chính của không gian quản trị gian hàng đối tác.", "/gianhang/admin/default.aspx?system=1", 55);
+            add("shop_accounts", "Quản lý tài khoản gian hàng đối tác", "Theo dõi hồ sơ shop, cấp vận hành và trạng thái gian hàng đối tác.", "Hệ Shop", "Toàn bộ tài khoản shop và thông tin vận hành shop.", "/admin/quan-ly-tai-khoan/Default.aspx?scope=shop&fscope=shop", 60);
+            add("shop_points", "Duyệt điểm / nghiệp vụ shop", "Duyệt các yêu cầu điểm hoặc nghiệp vụ gắn với gian hàng đối tác.", "Hệ Shop", "Chỉ các hồ sơ điểm và nghiệp vụ thuộc gian hàng đối tác.", "/admin/lich-su-chuyen-diem/default.aspx?tab=shop-only", 70);
             add("shop_level2", "Duyệt nâng cấp Level 2", "Duyệt yêu cầu mở quyền dùng /gianhang/admin cho shop.", "Hệ Shop", "Các shop yêu cầu nâng cấp lên bộ công cụ quản trị Level 2.", "/admin/duyet-nang-cap-level2.aspx", 80);
-            add("shop_partner", "Duyệt gian hàng đối tác", "Mở quyền hoạt động cho tài khoản shop theo chuẩn gian hàng đối tác.", "Hệ Shop", "Các hồ sơ shop cần xét duyệt trạng thái gian hàng đối tác.", "/admin/duyet-gian-hang-doi-tac.aspx", 90);
-            add("shop_email", "Quản lý email Shop", "Sửa nội dung email hệ thống gửi tới shop trong luồng vận hành.", "Hệ Shop", "Các mẫu email nội bộ liên quan đến shop và gian hàng.", "/admin/quan-ly-email-shop/default.aspx", 100);
-            add("home_content", "Quản lý nội dung web", "Sửa nội dung văn bản hiển thị trên Ahasale.vn.", "Nội dung văn bản", "Các text, nhãn, CTA, mô tả và nội dung văn bản hiển thị trên Ahasale.vn; về sau có thể mở rộng cho /home, /shop, /gianhang/admin và /daugia.", "/admin/quan-ly-noi-dung-home/default.aspx", 110);
-            add("home_posts", "Quản lý bài viết", "Quản trị bài viết tổng quan cấp website.", "Tổng quan website", "Kho bài viết, tin tức và nội dung công khai tổng quan của website.", "/admin/quan-ly-bai-viet/default.aspx", 120);
-            add("home_menu", "Quản lý menu", "Cấu hình menu và điều hướng tổng quan của website.", "Tổng quan website", "Các menu, danh mục và nhóm điều hướng tổng quan của website.", "/admin/quan-ly-menu/default.aspx", 130);
-            add("home_banner", "Quản lý banner", "Quản lý banner và khối chiến dịch tổng quan của website.", "Tổng quan website", "Các banner và vùng hiển thị chiến dịch tổng quan của website.", "/admin/quan-ly-banner/default.aspx", 140);
-            add("home_config", "Cài đặt trang chủ", "Cấu hình tổng cho Home như liên kết, bảo trì và khối hiển thị lõi.", "Cổng Admin", "Cấu hình hệ thống của trang Home và các thiết lập lõi.", "/admin/cai-dat-trang-chu/default.aspx", 150);
-            add("notifications", "Quản lý thông báo", "Điều phối thông báo hệ thống và trạng thái gửi nhận.", "Cổng Admin", "Thông báo hệ thống toàn nền tảng.", "/admin/quan-ly-thong-bao/default.aspx", 160);
-            add("consulting", "Yêu cầu tư vấn", "Tổng hợp và xử lý luồng liên hệ, yêu cầu tư vấn từ người dùng.", "Cổng Admin", "Các yêu cầu tư vấn phát sinh trên toàn nền tảng.", "/admin/yeu-cau-tu-van/default.aspx", 170);
-            add("system_products", "Bán sản phẩm hệ thống", "Thao tác bán các sản phẩm/thẻ của hệ thống từ cổng admin.", "Tài sản lõi", "Các nghiệp vụ bán sản phẩm hệ thống có ảnh hưởng tới tài sản lõi.", "/admin/he-thong-san-pham/ban-the.aspx", 180);
-            add("issue_cards", "Phát hành thẻ", "Phát hành thẻ theo đúng quy trình tài sản lõi của hệ thống.", "Tài sản lõi", "Các giao dịch phát hành thẻ từ cổng admin.", "/admin/phat-hanh-the/them-moi.aspx", 190);
-            add("core_assets", "Lịch sử chuyển điểm", "Rà soát chuyển điểm, tài sản lõi và các giao dịch nội bộ toàn hệ thống.", "Tài sản lõi", "Tiền, quyền, điểm và toàn bộ giao dịch tài sản lõi.", "/admin/lich-su-chuyen-diem/default.aspx?tab=tieu-dung", 200);
-            add("token_wallet", "Ví token điểm", "Theo dõi số dư blockchain, đối chiếu điểm A nội bộ và mở cấu hình bridge tài sản lõi.", "Tài sản lõi", "Khối ví/token bridge chỉ dành cho Super Admin.", "/admin/vi-token-diem/default.aspx", 210);
+            add("home_gianhang_space", "Duyệt không gian gian hàng", "Duyệt yêu cầu mở không gian /gianhang của tài khoản Home.", "Hệ Gian hàng", "Các tài khoản Home gửi yêu cầu mở không gian /gianhang để tự sở hữu gian hàng của mình.", "/admin/duyet-gian-hang-doi-tac.aspx", 90);
+            add("shop_partner", "Duyệt gian hàng đối tác (Shop)", "Duyệt yêu cầu mở không gian /shop và áp dụng % chiết khấu mặc định cho shop.", "Hệ Shop", "Các tài khoản Home gửi yêu cầu mở /shop kèm % chiết khấu để chạy chính sách chia % của nền tảng.", "/admin/duyet-shop-doi-tac.aspx", 100);
+            add("shop_email", "Nội dung email gian hàng đối tác", "Sửa nội dung email hệ thống gửi tới shop trong luồng vận hành.", "Hệ Shop", "Các mẫu email nội bộ liên quan đến shop và gian hàng.", "/admin/quan-ly-email-shop/default.aspx", 110);
+            add("daugia_workspace", "Trung tâm quản trị đấu giá", "Đi vào portal quản trị của không gian đấu giá.", "Hệ Đấu giá", "Điểm vào chính của không gian quản trị đấu giá.", "/daugia/admin/default.aspx?system=1", 112);
+            add("event_workspace", "Trung tâm quản trị sự kiện", "Đi vào portal quản trị của không gian sự kiện.", "Hệ Sự kiện", "Điểm vào chính của không gian quản trị sự kiện.", "/event/admin/default.aspx?system=1", 114);
+            add("home_content", "Nội dung trang chủ Home", "Sửa nội dung văn bản hiển thị trên Ahasale.vn.", "Nội dung văn bản", "Các text, nhãn, CTA, mô tả và nội dung văn bản hiển thị trên Ahasale.vn; về sau có thể mở rộng cho /home, /shop, /gianhang/admin và /daugia.", "/admin/quan-ly-noi-dung-home/default.aspx", 120);
+            add("home_posts", "Quản lý bài viết", "Quản trị bài viết tổng quan cấp website.", "Tổng quan website", "Kho bài viết, tin tức và nội dung công khai tổng quan của website.", "/admin/quan-ly-bai-viet/default.aspx", 130);
+            add("home_menu", "Quản lý menu", "Cấu hình menu và điều hướng tổng quan của website.", "Tổng quan website", "Các menu, danh mục và nhóm điều hướng tổng quan của website.", "/admin/quan-ly-menu/default.aspx", 140);
+            add("home_banner", "Quản lý banner", "Quản lý banner và khối chiến dịch tổng quan của website.", "Tổng quan website", "Các banner và vùng hiển thị chiến dịch tổng quan của website.", "/admin/quan-ly-banner/default.aspx", 150);
+            add("home_config", "Cài đặt trang chủ", "Cấu hình tổng cho Home như liên kết, bảo trì và khối hiển thị lõi.", "Cổng Admin", "Cấu hình hệ thống của trang Home và các thiết lập lõi.", "/admin/cai-dat-trang-chu/default.aspx", 160);
+            add("notifications", "Quản lý thông báo", "Điều phối thông báo hệ thống và trạng thái gửi nhận.", "Cổng Admin", "Thông báo hệ thống toàn nền tảng.", "/admin/quan-ly-thong-bao/default.aspx", 170);
+            add("consulting", "Yêu cầu tư vấn", "Tổng hợp và xử lý luồng liên hệ, yêu cầu tư vấn từ người dùng.", "Cổng Admin", "Các yêu cầu tư vấn phát sinh trên toàn nền tảng.", "/admin/yeu-cau-tu-van/default.aspx", 180);
+            if (showLegacySystemProductTabs)
+            {
+                add("system_products", "Bán sản phẩm", "Thao tác bán các sản phẩm/thẻ của hệ thống từ cổng admin.", "Tài sản lõi", "Các nghiệp vụ bán sản phẩm hệ thống có ảnh hưởng tới tài sản lõi.", "/admin/he-thong-san-pham/ban-the.aspx", 190);
+                add("issue_cards", "Phát hành thẻ", "Phát hành thẻ theo đúng quy trình tài sản lõi của hệ thống.", "Tài sản lõi", "Các giao dịch phát hành thẻ từ cổng admin.", "/admin/phat-hanh-the/them-moi.aspx", 200);
+            }
+            add("core_assets", "Lịch sử chuyển điểm", "Rà soát chuyển điểm, tài sản lõi và các giao dịch nội bộ toàn hệ thống.", "Tài sản lõi", "Tiền, quyền, điểm và toàn bộ giao dịch tài sản lõi.", "/admin/lich-su-chuyen-diem/default.aspx?tab=tieu-dung", 210);
+            add("token_wallet", "Ví token điểm", "Theo dõi số dư blockchain, đối chiếu điểm A nội bộ và mở cấu hình bridge tài sản lõi.", "Tài sản lõi", "Khối ví/token bridge chỉ dành cho Super Admin.", "/admin/vi-token-diem/default.aspx", 220);
             return items.OrderBy(item => item.SortOrder).ToList();
         }
 
+        if (CanAccessAdminWorkspace(db, taikhoan))
+            add("admin_dashboard", "Trang chủ admin", "Landing tổng của khối quản trị admin.", "Cổng Admin", "Điểm vào chính của không gian quản trị admin.", "/admin/default.aspx", 5);
+
         if (CanManageAdminAccounts(db, taikhoan))
-            add("admin_accounts", "Quản lý tài khoản Admin", "Tạo tài khoản admin, gán 5 vai trò và kiểm soát đúng cổng vận hành.", "Cổng Admin", "Toàn bộ tài khoản admin và cấu trúc phân quyền nội bộ.", ResolveAdminAccountManagementUrl(db, taikhoan), 10);
+            add("admin_accounts", "Quản lý tài khoản admin", "Tạo tài khoản admin, gán 5 vai trò và kiểm soát đúng cổng vận hành.", "Cổng Admin", "Toàn bộ tài khoản admin và cấu trúc phân quyền nội bộ.", ResolveAdminAccountManagementUrl(db, taikhoan), 10);
+
+        if (CanManageAdminOtp(db, taikhoan))
+            add("admin_otp", "Quản lý OTP", "Quản trị cấu hình OTP, nhật ký gửi mã và hỗ trợ xác thực cho các tài khoản trong hệ.", "Cổng Admin", "Khối OTP nội bộ của hệ quản trị.", "/admin/otp/default.aspx", 15);
+
+        if (CanManageAdminFeedback(db, taikhoan))
+            add("admin_feedback", "Quản lý góp ý", "Theo dõi, lọc và xử lý các góp ý phát sinh gửi vào hệ quản trị.", "Cổng Admin", "Toàn bộ luồng góp ý của nền tảng.", "/admin/quan-ly-gop-y/default.aspx", 18);
+
+        if (CanManageAdminCompanyShopSync(db, taikhoan))
+            add("admin_company_shop_sync", "Đồng bộ shop công ty", "Đồng bộ, làm sạch và rà soát dữ liệu shop công ty dùng cho các tác vụ nội bộ.", "Cổng Admin", "Công cụ nội bộ dành cho vận hành admin.", "/admin/tools/company-shop-sync.aspx", 19);
+
+        if (CanManageAdminReindexBaiViet(db, taikhoan))
+            add("admin_reindex_baiviet", "Reindex bài viết", "Chạy lại chỉ mục nội dung để đồng bộ tìm kiếm và các feed bài viết trên website.", "Cổng Admin", "Công cụ vận hành chỉ mục nội dung.", "/admin/tools/reindex-baiviet.aspx", 19);
+
+        if (CanManageAdminNotification(db, taikhoan))
+            add("notifications", "Quản lý thông báo", "Điều phối thông báo hệ thống và trạng thái gửi nhận.", "Cổng Admin", "Thông báo hệ thống toàn nền tảng.", "/admin/quan-ly-thong-bao/default.aspx", 170);
+
+        if (CanManageAdminConsulting(db, taikhoan))
+            add("consulting", "Yêu cầu tư vấn", "Tổng hợp và xử lý luồng liên hệ, yêu cầu tư vấn từ người dùng.", "Cổng Admin", "Các yêu cầu tư vấn phát sinh trên toàn nền tảng.", "/admin/yeu-cau-tu-van/default.aspx", 180);
+
+        if (CanManageAdminTokenWallet(db, taikhoan))
+            add("token_wallet", "Ví token điểm", "Theo dõi số dư blockchain, đối chiếu điểm A nội bộ và mở cấu hình bridge tài sản lõi.", "Tài sản lõi", "Khối ví/token bridge chỉ dành cho Super Admin.", "/admin/vi-token-diem/default.aspx", 220);
 
         if (CanManageHomeAccounts(db, taikhoan))
-            add("home_accounts", "Quản lý tài khoản Home", "Rà soát hồ sơ Home, tìm kiếm và xử lý dữ liệu người dùng cá nhân.", "Hệ Home", "Các tài khoản Home nằm trong phạm vi vai trò bạn đang phụ trách.", ResolveHomeAccountManagementUrl(db, taikhoan), 20);
+            add("home_accounts", "Quản lý tài khoản home", "Rà soát hồ sơ Home, tìm kiếm và xử lý dữ liệu người dùng cá nhân.", "Hệ Home", "Các tài khoản Home nằm trong phạm vi vai trò bạn đang phụ trách.", ResolveHomeAccountManagementUrl(db, taikhoan), 20);
 
-        if (CanReviewCustomerPointRequests(db, taikhoan))
-            add("home_points_customer", "Duyệt điểm khách hàng", "Duyệt các yêu cầu điểm phát sinh từ tầng khách hàng Home.", "Hệ Home", "Chỉ các hồ sơ điểm thuộc tầng khách hàng.", "/admin/lich-su-chuyen-diem/default.aspx?tab=uu-dai", 30);
+        if (CanReviewHomePointRequests(db, taikhoan))
+            add("home_point_approval", "Duyệt yêu cầu xác nhận hành vi", "Mở đúng tab duyệt hành vi/điểm của hệ Home theo vai trò hiện tại.", "Hệ Home", "Khối duyệt yêu cầu hành vi và các hồ sơ điểm liên quan của hệ Home.", ResolveHomePointApprovalUrl(db, taikhoan), 30);
 
-        if (CanReviewDevelopmentPointRequests(db, taikhoan))
-            add("home_points_development", "Duyệt điểm cộng tác phát triển", "Xử lý các yêu cầu điểm của hồ sơ hành vi lao động và cộng tác phát triển.", "Hệ Home", "Chỉ các hồ sơ điểm thuộc tầng cộng tác phát triển.", "/admin/lich-su-chuyen-diem/default.aspx?tab=lao-dong", 40);
-
-        if (CanReviewEcosystemPointRequests(db, taikhoan))
-            add("home_points_ecosystem", "Duyệt điểm đồng hành hệ sinh thái", "Xử lý các yêu cầu điểm của hồ sơ gắn kết hệ sinh thái.", "Hệ Home", "Chỉ các hồ sơ điểm thuộc tầng đồng hành hệ sinh thái.", "/admin/lich-su-chuyen-diem/default.aspx?tab=gan-ket", 50);
+        if (CanViewTierReference(db, taikhoan))
+            add("tier_reference", "Mô tả cấp bậc", "Tra cứu mô tả cấp bậc, tiêu chí hành vi và nội dung tham chiếu của hệ Home.", "Hệ Home", "Khối tham chiếu cấp bậc và nội dung hành vi của hệ Home.", "/admin/MoTaCapBac.aspx", 52);
 
         if (CanManageShopAccounts(db, taikhoan))
-            add("shop_accounts", "Quản lý tài khoản Shop", "Theo dõi hồ sơ shop, cấp vận hành và trạng thái gian hàng đối tác.", "Hệ Shop", "Các tài khoản shop nằm trong phạm vi quản trị gian hàng đối tác.", ResolveShopAccountManagementUrl(db, taikhoan), 60);
+            add("shop_accounts", "Quản lý tài khoản gian hàng đối tác", "Theo dõi hồ sơ shop, cấp vận hành và trạng thái gian hàng đối tác.", "Hệ Shop", "Các tài khoản shop nằm trong phạm vi quản trị gian hàng đối tác.", ResolveShopAccountManagementUrl(db, taikhoan), 60);
+
+        if (CanManageShopAccounts(db, taikhoan)
+            || CanReviewShopPointRequests(db, taikhoan)
+            || CanApproveShopPartnerRegistration(db, taikhoan)
+            || CanManageShopOperations(db, taikhoan))
+            add("shop_workspace", "Trung tâm quản trị gian hàng", "Đi vào portal quản trị của không gian gian hàng đối tác.", "Hệ Gian hàng", "Điểm vào chính của không gian quản trị gian hàng đối tác.", "/gianhang/admin/default.aspx?system=1", 55);
 
         if (CanReviewShopPointRequests(db, taikhoan))
-            add("shop_points", "Duyệt nghiệp vụ / điểm Shop", "Duyệt các yêu cầu điểm hoặc nghiệp vụ gắn với gian hàng đối tác.", "Hệ Shop", "Chỉ các hồ sơ điểm và nghiệp vụ thuộc gian hàng đối tác.", "/admin/lich-su-chuyen-diem/default.aspx?tab=shop-only", 70);
+            add("shop_points", "Duyệt điểm / nghiệp vụ shop", "Duyệt các yêu cầu điểm hoặc nghiệp vụ gắn với gian hàng đối tác.", "Hệ Shop", "Chỉ các hồ sơ điểm và nghiệp vụ thuộc gian hàng đối tác.", "/admin/lich-su-chuyen-diem/default.aspx?tab=shop-only", 70);
+
+        if (CanApproveShopPartnerRegistration(db, taikhoan))
+        {
+            add("home_gianhang_space", "Duyệt không gian gian hàng", "Duyệt yêu cầu mở không gian /gianhang của tài khoản Home.", "Hệ Gian hàng", "Các tài khoản Home gửi yêu cầu mở không gian /gianhang để tự sở hữu gian hàng của mình.", "/admin/duyet-gian-hang-doi-tac.aspx", 80);
+            add("shop_partner", "Duyệt gian hàng đối tác (Shop)", "Duyệt yêu cầu mở không gian /shop và áp dụng % chiết khấu mặc định cho shop.", "Hệ Shop", "Các tài khoản Home gửi yêu cầu mở /shop kèm % chiết khấu để chạy chính sách chia % của nền tảng.", "/admin/duyet-shop-doi-tac.aspx", 85);
+        }
+
+        if (CanApproveShopLevel2(db, taikhoan))
+            add("shop_level2", "Duyệt nâng cấp Level 2", "Duyệt yêu cầu mở quyền dùng /gianhang/admin cho shop.", "Hệ Shop", "Các shop yêu cầu nâng cấp lên bộ công cụ quản trị Level 2.", "/admin/duyet-nang-cap-level2.aspx", 87);
 
         if (CanManageShopOperations(db, taikhoan))
-            add("shop_email", "Quản lý email Shop", "Sửa nội dung email hệ thống gửi tới shop trong luồng vận hành.", "Hệ Shop", "Các mẫu email nội bộ liên quan đến shop và gian hàng.", "/admin/quan-ly-email-shop/default.aspx", 80);
+            add("shop_email", "Nội dung email gian hàng đối tác", "Sửa nội dung email hệ thống gửi tới shop trong luồng vận hành.", "Hệ Shop", "Các mẫu email nội bộ liên quan đến shop và gian hàng.", "/admin/quan-ly-email-shop/default.aspx", 80);
 
         if (CanManageHomeContent(db, taikhoan))
-            add("home_content", "Quản lý nội dung web", "Sửa nội dung văn bản hiển thị trên Ahasale.vn.", "Nội dung văn bản", "Các text, nhãn, CTA, mô tả và nội dung văn bản hiển thị trên Ahasale.vn; về sau có thể mở rộng cho /home, /shop, /gianhang/admin và /daugia.", "/admin/quan-ly-noi-dung-home/default.aspx", 90);
+        {
+            add("home_config", "Cài đặt trang chủ", "Cấu hình tổng cho Home như liên kết, bảo trì và khối hiển thị lõi.", "Nội dung website", "Cấu hình hệ thống và các thiết lập lõi của khu vực Home.", "/admin/cai-dat-trang-chu/default.aspx", 88);
+            add("home_content", "Nội dung trang chủ Home", "Sửa nội dung văn bản hiển thị trên Ahasale.vn.", "Nội dung văn bản", "Các text, nhãn, CTA, mô tả và nội dung văn bản hiển thị trên Ahasale.vn; về sau có thể mở rộng cho /home, /shop, /gianhang/admin và /daugia.", "/admin/quan-ly-noi-dung-home/default.aspx", 90);
+        }
+
+        if (DauGiaPolicy_cl.CanAccessAdmin(db, taikhoan, permissionRaw))
+            add("daugia_workspace", "Trung tâm quản trị đấu giá", "Đi vào portal quản trị của không gian đấu giá.", "Hệ Đấu giá", "Điểm vào chính của không gian quản trị đấu giá.", "/daugia/admin/default.aspx?system=1", 112);
+
+        if (EventPolicy_cl.CanViewAdminWorkspace(db, taikhoan))
+            add("event_workspace", "Trung tâm quản trị sự kiện", "Đi vào portal quản trị của không gian sự kiện.", "Hệ Sự kiện", "Điểm vào chính của không gian quản trị sự kiện.", "/event/admin/default.aspx?system=1", 114);
 
         return items.OrderBy(item => item.SortOrder).ToList();
     }
@@ -804,7 +1012,15 @@ public static class AdminRolePolicy_cl
         if (string.IsNullOrWhiteSpace(taikhoan))
             return "/admin/login.aspx";
 
-        return "/admin/default.aspx";
+        taikhoan_tb account = db != null ? db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == taikhoan) : null;
+        if (account == null)
+            return "/admin/default.aspx";
+
+        HttpRequest request = HttpContext.Current != null ? HttpContext.Current.Request : null;
+        string landing = AdminManagementSpace_cl.ResolveCurrentLandingUrl(db, account, request);
+        if (string.IsNullOrWhiteSpace(landing))
+            return "/admin/default.aspx";
+        return landing;
     }
 
     private static void RedirectDenied(string message, string fallbackUrl)
@@ -922,6 +1138,55 @@ public static class AdminRolePolicy_cl
                     return true;
                 denialMessage = BuildAccountManagementDeniedMessage(request);
             }
+            else if (IsAdminOtpRoute(path))
+            {
+                if (CanManageAdminOtp(db, tk))
+                    return true;
+
+                denialMessage = "Bạn không có quyền quản lý OTP trong không gian Quản trị admin.";
+            }
+            else if (IsAdminTokenWalletRoute(path))
+            {
+                if (CanManageAdminTokenWallet(db, tk))
+                    return true;
+
+                denialMessage = "Bạn không có quyền truy cập Ví token điểm trong không gian Quản trị admin.";
+            }
+            else if (IsAdminFeedbackRoute(path))
+            {
+                if (CanManageAdminFeedback(db, tk))
+                    return true;
+
+                denialMessage = "Bạn không có quyền quản lý góp ý trong không gian Quản trị admin.";
+            }
+            else if (IsAdminNotificationRoute(path))
+            {
+                if (CanManageAdminNotification(db, tk))
+                    return true;
+
+                denialMessage = "Bạn không có quyền quản lý thông báo trong không gian Quản trị admin.";
+            }
+            else if (IsAdminConsultingRoute(path))
+            {
+                if (CanManageAdminConsulting(db, tk))
+                    return true;
+
+                denialMessage = "Bạn không có quyền quản lý yêu cầu tư vấn trong không gian Quản trị admin.";
+            }
+            else if (IsAdminCompanyShopSyncRoute(path))
+            {
+                if (CanManageAdminCompanyShopSync(db, tk))
+                    return true;
+
+                denialMessage = "Bạn không có quyền dùng công cụ Đồng bộ shop công ty trong không gian Quản trị admin.";
+            }
+            else if (IsAdminReindexBaiVietRoute(path))
+            {
+                if (CanManageAdminReindexBaiViet(db, tk))
+                    return true;
+
+                denialMessage = "Bạn không có quyền chạy Reindex bài viết trong không gian Quản trị admin.";
+            }
             else if (IsRootOnlyRoute(path))
             {
                 denialMessage = "Chỉ Super Admin mới được thao tác chức năng này.";
@@ -985,6 +1250,42 @@ public static class AdminRolePolicy_cl
     private static bool IsShopOperationRoute(string path)
     {
         return path.StartsWith("~/admin/quan-ly-email-shop/", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsAdminOtpRoute(string path)
+    {
+        return path.StartsWith("~/admin/otp/", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsAdminTokenWalletRoute(string path)
+    {
+        return path.StartsWith("~/admin/vi-token-diem/", StringComparison.OrdinalIgnoreCase)
+            || path.StartsWith("~/admin/api/usdt-bridge-credit.aspx", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsAdminFeedbackRoute(string path)
+    {
+        return path.StartsWith("~/admin/quan-ly-gop-y/", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsAdminNotificationRoute(string path)
+    {
+        return path.StartsWith("~/admin/quan-ly-thong-bao/", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsAdminConsultingRoute(string path)
+    {
+        return path.StartsWith("~/admin/yeu-cau-tu-van/", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsAdminCompanyShopSyncRoute(string path)
+    {
+        return path.StartsWith("~/admin/tools/company-shop-sync.aspx", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsAdminReindexBaiVietRoute(string path)
+    {
+        return path.StartsWith("~/admin/tools/reindex-baiviet.aspx", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsAccountManagementRoute(string path)
@@ -1120,7 +1421,6 @@ public static class AdminRolePolicy_cl
             || path.StartsWith("~/admin/quan-ly-banner/", StringComparison.OrdinalIgnoreCase)
             || path.StartsWith("~/admin/tools/", StringComparison.OrdinalIgnoreCase)
             || string.Equals(path, "~/admin/phat-hanh-the.aspx", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(path, "~/admin/duyet-gian-hang-doi-tac.aspx", StringComparison.OrdinalIgnoreCase)
             || string.Equals(path, "~/admin/duyet-nang-cap-level2.aspx", StringComparison.OrdinalIgnoreCase);
     }
 }

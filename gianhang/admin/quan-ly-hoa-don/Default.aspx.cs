@@ -11,6 +11,45 @@ using System.Web.UI.WebControls;
 
 public partial class badmin_Default : System.Web.UI.Page
 {
+    private sealed class InvoiceDetailAggregate
+    {
+        public Int64 tongtien_dichvu { get; set; }
+        public Int64 tongtien_sanpham { get; set; }
+    }
+
+    private sealed class InvoiceListRow
+    {
+        public Int64 id { get; set; }
+        public Guid? id_guide { get; set; }
+        public DateTime? ngaytao { get; set; }
+        public string tenkhachhang { get; set; }
+        public string sdt { get; set; }
+        public Int64 ck_hoadon { get; set; }
+        public Int64 tongtien_ck { get; set; }
+        public Int64 tongtien { get; set; }
+        public Int64 tongsauchietkhau { get; set; }
+        public Int64 sotien_dathanhtoan { get; set; }
+        public Int64 sotien_conlai { get; set; }
+        public string phanloai_hoadon { get; set; }
+        public Int64 sl_dv { get; set; }
+        public Int64 sl_sp { get; set; }
+        public Int64 ds_dv { get; set; }
+        public Int64 ds_sp { get; set; }
+        public Int64 sauck_dv { get; set; }
+        public Int64 sauck_sp { get; set; }
+        public Int64 tongtien_dichvu { get; set; }
+        public Int64 tongtien_sanpham { get; set; }
+        public string nguongoc { get; set; }
+        public string id_nganh { get; set; }
+        public string tennganh { get; set; }
+        public string source_display { get; set; }
+        public string source_badge_css { get; set; }
+        public string source_hint { get; set; }
+        public bool is_workspace_mirror { get; set; }
+        public long source_invoice_id { get; set; }
+        public string native_order_url { get; set; }
+    }
+
     taikhoan_class tk_cl = new taikhoan_class();
     dbDataContext db = new dbDataContext();
     hoadon_class hd_cl = new hoadon_class();
@@ -63,7 +102,7 @@ public partial class badmin_Default : System.Web.UI.Page
 
         #region Check quyen theo nganh
         user = Session["user"].ToString();
-        user_parent = "admin";
+        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
         if (bcorn_class.check_quyen(user, "q7_1") == "" || bcorn_class.check_quyen(user, "n7_1") == "")
         {
             if (!IsPostBack)
@@ -236,183 +275,236 @@ public partial class badmin_Default : System.Web.UI.Page
             datlich_class.try_select_dropdown_value(DropDownList1, _kh.nhomkhachhang);
     }
 
-    public void main()
+    private static Int64 SafeToInt64(object value)
     {
-        //lấy dữ liệu_old
-        //var list_all = (from ob1 in db.bspa_hoadon_tables.Where(p => p.user_parent == user_parent && p.ngaytao.Value.Date >= DateTime.Parse(Session["tungay_hoadon"].ToString()).Date && p.ngaytao.Value.Date <= DateTime.Parse(Session["denngay_hoadon"].ToString()).Date).ToList()
-        //                    //join ob2 in db.bspa_hoadon_chitiet_tables.ToList() on ob1.id.ToString() equals ob2.id_hoadon
-        //                select new
-        //                {
-        //                    id = ob1.id,
-        //                    ngaytao = ob1.ngaytao,
-        //                    tenkhachhang = ob1.tenkhachhang,
-        //                    sdt = ob1.sdt,
-        //                    ck_hoadon = ob1.chietkhau,
-        //                    tongtien_ck = ob1.tongtien_ck_hoadon,
-        //                    tongtien = ob1.tongtien,
-        //                    tongsauchietkhau = ob1.tongsauchietkhau,
-        //                    sotien_dathanhtoan = ob1.sotien_dathanhtoan,
-        //                    sotien_conlai = ob1.sotien_conlai,
-        //                    tienmat = ob1.thanhtoan_tienmat,
-        //                    chuyenkhoan = ob1.thanhtoan_chuyenkhoan,
-        //                    quetthe = ob1.thanhtoan_quetthe,
-        //                    phanloai_hoadon = ob1.dichvu_hay_sanpham,//"dichvu" "sanpham" "dichvusanpham"
-        //                    sl_dv = ob1.sl_dichvu,
-        //                    sl_sp = ob1.sl_sanpham,
-        //                    ds_dv = ob1.ds_dichvu,
-        //                    ds_sp = ob1.ds_sanpham,
-        //                    sauck_dv = ob1.sauck_dichvu,
-        //                    sauck_sp = ob1.sauck_sanpham,
-        //                });
-
-        //lấy dữ liệu
-        var list_all = (from ob1 in db.bspa_hoadon_tables.Where(p => p.id_chinhanh == Session["chinhanh"].ToString() && p.ngaytao.Value.Date >= DateTime.Parse(Session["tungay_hoadon"].ToString()).Date && p.ngaytao.Value.Date <= DateTime.Parse(Session["denngay_hoadon"].ToString()).Date).ToList()
-                        join ob2 in db.bspa_hoadon_chitiet_tables.Where(p => p.id_chinhanh == Session["chinhanh"].ToString()).ToList() on ob1.id.ToString() equals ob2.id_hoadon
-                        //join ob3 in db.bspa_lichsu_thanhtoan_tables.ToList() on ob1.id.ToString() equals ob3.id_hoadon  --> k đc, k có thanh toán là k hiện đơn
-                        group ob2 by new
-                        {
-                            ob1.id,
-                            ob1.id_guide,
-                            ob1.ngaytao,
-                            ob1.tenkhachhang,
-                            ob1.sdt,
-                            ob1.chietkhau,
-                            ob1.tongtien_ck_hoadon,
-                            ob1.tongtien,
-                            ob1.tongsauchietkhau,
-                            ob1.sotien_dathanhtoan,
-                            ob1.sotien_conlai,
-                            //ob1.thanhtoan_tienmat,
-                            //ob1.thanhtoan_chuyenkhoan,
-                            //ob1.thanhtoan_quetthe,
-                            ob1.dichvu_hay_sanpham,//"dichvu" "sanpham" "dichvusanpham"
-                            ob1.sl_dichvu,
-                            ob1.sl_sanpham,
-                            ob1.ds_dichvu,
-                            ob1.ds_sanpham,
-                            ob1.sauck_dichvu,
-                            ob1.sauck_sanpham,
-                            ob1.nguongoc,
-                            ob1.id_nganh,
-                        } into g
-                        select new
-                        {
-                            id = g.Key.id,
-                            id_guide = g.Key.id_guide,
-                            ngaytao = g.Key.ngaytao,
-                            tenkhachhang = g.Key.tenkhachhang,
-                            sdt = g.Key.sdt,
-                            ck_hoadon = g.Key.chietkhau,
-                            tongtien_ck = g.Key.tongtien_ck_hoadon,
-                            tongtien = g.Key.tongtien,
-                            tongsauchietkhau = g.Key.tongsauchietkhau,
-                            sotien_dathanhtoan = g.Key.sotien_dathanhtoan,
-                            sotien_conlai = g.Key.sotien_conlai,
-                            //tienmat = g.Key.thanhtoan_tienmat,
-                            //chuyenkhoan = g.Key.thanhtoan_chuyenkhoan,
-                            //quetthe = g.Key.thanhtoan_quetthe,
-                            phanloai_hoadon = g.Key.dichvu_hay_sanpham,//"dichvu" "sanpham" "dichvusanpham"
-                            sl_dv = g.Key.sl_dichvu,
-                            sl_sp = g.Key.sl_sanpham,
-                            ds_dv = g.Key.ds_dichvu,
-                            ds_sp = g.Key.ds_sanpham,
-                            sauck_dv = g.Key.sauck_dichvu,
-                            sauck_sp = g.Key.sauck_sanpham,
-                            tongtien_dichvu = g.Where(p => p.kyhieu == "dichvu").Sum(ob2 => ob2.tongsauchietkhau).Value,
-                            tongtien_sanpham = g.Where(p => p.kyhieu == "sanpham").Sum(ob2 => ob2.tongsauchietkhau).Value,
-                            nguongoc = g.Key.nguongoc,
-                            id_nganh = g.Key.id_nganh,
-                            tennganh=ng_cl.return_name(g.Key.id_nganh),
-                        });
-        //list_new: là các đơn vừa tạo xong, chưa có chi tiết nên nó k hiện đơn ở ql hóa đơn
-        //var list_new = (from ob1 in db.bspa_hoadon_tables.Where(p => p.user_parent == user_parent && p.ngaytao.Value.Date >= DateTime.Parse(Session["tungay_hoadon"].ToString()).Date && p.ngaytao.Value.Date <= DateTime.Parse(Session["denngay_hoadon"].ToString()).Date).ToList()
-
-        //                select new
-        //                {
-        //                    id = ob1.id,
-        //                    id_guide = ob1.id_guide,
-        //                    ngaytao = ob1.ngaytao,
-        //                    tenkhachhang = ob1.tenkhachhang,
-        //                    sdt = ob1.sdt,
-        //                    ck_hoadon = ob1.chietkhau,
-        //                    tongtien_ck = ob1.tongtien_ck_hoadon,
-        //                    tongtien = ob1.tongtien,
-        //                    tongsauchietkhau = ob1.tongsauchietkhau,
-        //                    sotien_dathanhtoan = ob1.sotien_dathanhtoan,
-        //                    sotien_conlai = ob1.sotien_conlai,
-        //                    tienmat = ob1.thanhtoan_tienmat,
-        //                    chuyenkhoan = ob1.thanhtoan_chuyenkhoan,
-        //                    quetthe = ob1.thanhtoan_quetthe,
-        //                    phanloai_hoadon = ob1.dichvu_hay_sanpham,//"dichvu" "sanpham" "dichvusanpham"
-        //                    sl_dv = ob1.sl_dichvu,
-        //                    sl_sp = ob1.sl_sanpham,
-        //                    ds_dv = ob1.ds_dichvu,
-        //                    ds_sp = ob1.ds_sanpham,
-        //                    sauck_dv = ob1.sauck_dichvu,
-        //                    sauck_sp = ob1.sauck_sanpham,
-        //                    tongtien_dichvu = Int64.Parse("0"),
-        //                    tongtien_sanpham = Int64.Parse("0"),
-        //                });
-        //list_all = list_all.Union(list_new);
-
-        //xử lý từ khóa
-        string _key = txt_search.Text.ToLower();
-        if (_key != "")
+        if (value == null)
+            return 0;
+        try
         {
-            var list_search = list_all.Where(p => p.tenkhachhang.ToLower().Contains(_key) || p.sdt == _key).ToList();
-            list_all = list_all.Intersect(list_search).ToList();
+            return Convert.ToInt64(value);
+        }
+        catch
+        {
+            return 0;
+        }
+    }
+
+    private List<InvoiceListRow> LoadInvoiceRows()
+    {
+        string branchId = Session["chinhanh"].ToString();
+        DateTime fromDate = DateTime.Parse(Session["tungay_hoadon"].ToString()).Date;
+        DateTime toDate = DateTime.Parse(Session["denngay_hoadon"].ToString()).Date.AddDays(1);
+
+        string searchRaw = txt_search.Text.Trim();
+        string searchLower = searchRaw.ToLowerInvariant();
+        string paymentFilter = ddl_locdulieu.SelectedValue.ToString();
+        string kindFilter = ddl_loc2.SelectedValue.ToString();
+        string industryFilter = DropDownList5.SelectedValue.ToString();
+        string workspaceFilter = ((Request.QueryString["workspace"] ?? "") + "").Trim().ToLowerInvariant();
+
+        var nganhMap = db.nganh_tables
+            .Where(p => p.id_chinhanh == branchId)
+            .ToDictionary(p => p.id.ToString(), p => p.ten);
+
+        var headerQuery = db.bspa_hoadon_tables.Where(p =>
+            p.id_chinhanh == branchId &&
+            p.ngaytao != null &&
+            p.ngaytao.Value >= fromDate &&
+            p.ngaytao.Value < toDate);
+
+        if (paymentFilter == "1")
+            headerQuery = headerQuery.Where(p => p.sotien_conlai != 0);
+        else if (paymentFilter == "2")
+            headerQuery = headerQuery.Where(p => p.sotien_conlai == 0);
+
+        switch (kindFilter)
+        {
+            case "1":
+                headerQuery = headerQuery.Where(p => p.dichvu_hay_sanpham == "dichvu");
+                break;
+            case "2":
+                headerQuery = headerQuery.Where(p => p.dichvu_hay_sanpham == "dichvu" || p.dichvu_hay_sanpham == "dichvusanpham");
+                break;
+            case "3":
+                headerQuery = headerQuery.Where(p => p.dichvu_hay_sanpham == "sanpham");
+                break;
+            case "4":
+                headerQuery = headerQuery.Where(p => p.dichvu_hay_sanpham == "sanpham" || p.dichvu_hay_sanpham == "dichvusanpham");
+                break;
         }
 
-        //xử lý lọc dữ liệu
-        if (ddl_locdulieu.SelectedValue.ToString() != "0")
-        {
-            switch (ddl_locdulieu.SelectedValue.ToString())
+        if (industryFilter != "")
+            headerQuery = headerQuery.Where(p => p.id_nganh == industryFilter);
+
+        var headerItems = headerQuery
+            .Select(ob1 => new
             {
-                case ("1"): var list_1 = list_all.Where(p => p.sotien_conlai != 0).ToList(); list_all = list_all.Intersect(list_1).ToList(); break;
-                case ("2"): var list_2 = list_all.Where(p => p.sotien_conlai == 0).ToList(); list_all = list_all.Intersect(list_2).ToList(); break;
-                default: break;
+                ob1.id,
+                ob1.id_guide,
+                ob1.ngaytao,
+                ob1.tenkhachhang,
+                ob1.sdt,
+                ob1.chietkhau,
+                ob1.tongtien_ck_hoadon,
+                ob1.tongtien,
+                ob1.tongsauchietkhau,
+                ob1.sotien_dathanhtoan,
+                ob1.sotien_conlai,
+                ob1.dichvu_hay_sanpham,
+                ob1.sl_dichvu,
+                ob1.sl_sanpham,
+                ob1.ds_dichvu,
+                ob1.ds_sanpham,
+                ob1.sauck_dichvu,
+                ob1.sauck_sanpham,
+                ob1.nguongoc,
+                ob1.id_nganh
+            })
+            .ToList();
+
+        if (searchLower != "")
+        {
+            headerItems = headerItems
+                .Where(p =>
+                    (((p.tenkhachhang ?? "") + "").ToLowerInvariant().Contains(searchLower))
+                    || string.Equals(((p.sdt ?? "") + "").Trim(), searchRaw, StringComparison.OrdinalIgnoreCase)
+                    || p.id.ToString().Contains(searchRaw))
+                .ToList();
+        }
+
+        if (workspaceFilter == "gianhang")
+        {
+            headerItems = headerItems
+                .Where(p => GianHangWorkspaceLink_cl.IsWorkspaceMirrorSource((p.nguongoc ?? "") + ""))
+                .ToList();
+        }
+
+        List<string> invoiceIds = headerItems.Select(p => p.id.ToString()).ToList();
+        Dictionary<string, InvoiceDetailAggregate> detailMap = new Dictionary<string, InvoiceDetailAggregate>();
+        if (invoiceIds.Count != 0)
+        {
+            detailMap = db.bspa_hoadon_chitiet_tables
+                .Where(p => p.id_chinhanh == branchId && invoiceIds.Contains(p.id_hoadon))
+                .GroupBy(p => p.id_hoadon)
+                .Select(g => new
+                {
+                    id_hoadon = g.Key,
+                    tongtien_dichvu = g.Where(p => p.kyhieu == "dichvu").Sum(p => (long?)p.tongsauchietkhau) ?? 0,
+                    tongtien_sanpham = g.Where(p => p.kyhieu == "sanpham").Sum(p => (long?)p.tongsauchietkhau) ?? 0
+                })
+                .ToDictionary(
+                    p => p.id_hoadon,
+                    p => new InvoiceDetailAggregate
+                    {
+                        tongtien_dichvu = p.tongtien_dichvu,
+                        tongtien_sanpham = p.tongtien_sanpham
+                    });
+        }
+
+        List<InvoiceListRow> rows = headerItems
+            .Select(p =>
+            {
+                InvoiceDetailAggregate aggregate;
+                if (!detailMap.TryGetValue(p.id.ToString(), out aggregate))
+                    aggregate = new InvoiceDetailAggregate();
+
+                return new InvoiceListRow
+                {
+                    id = p.id,
+                    id_guide = p.id_guide,
+                    ngaytao = p.ngaytao,
+                    tenkhachhang = ((p.tenkhachhang ?? "") + "").Trim(),
+                    sdt = ((p.sdt ?? "") + "").Trim(),
+                    ck_hoadon = SafeToInt64(p.chietkhau),
+                    tongtien_ck = SafeToInt64(p.tongtien_ck_hoadon),
+                    tongtien = SafeToInt64(p.tongtien),
+                    tongsauchietkhau = SafeToInt64(p.tongsauchietkhau),
+                    sotien_dathanhtoan = SafeToInt64(p.sotien_dathanhtoan),
+                    sotien_conlai = SafeToInt64(p.sotien_conlai),
+                    phanloai_hoadon = ((p.dichvu_hay_sanpham ?? "") + "").Trim(),
+                    sl_dv = SafeToInt64(p.sl_dichvu),
+                    sl_sp = SafeToInt64(p.sl_sanpham),
+                    ds_dv = SafeToInt64(p.ds_dichvu),
+                    ds_sp = SafeToInt64(p.ds_sanpham),
+                    sauck_dv = SafeToInt64(p.sauck_dichvu),
+                    sauck_sp = SafeToInt64(p.sauck_sanpham),
+                    tongtien_dichvu = aggregate.tongtien_dichvu,
+                    tongtien_sanpham = aggregate.tongtien_sanpham,
+                    nguongoc = ((p.nguongoc ?? "") + "").Trim(),
+                    id_nganh = ((p.id_nganh ?? "") + "").Trim(),
+                    tennganh = nganhMap.ContainsKey(((p.id_nganh ?? "") + "").Trim()) ? nganhMap[((p.id_nganh ?? "") + "").Trim()] : ""
+                };
+            })
+            .ToList();
+
+        for (int i = 0; i < rows.Count; i++)
+        {
+            InvoiceListRow row = rows[i];
+            bool isWorkspaceMirror = GianHangWorkspaceLink_cl.IsWorkspaceMirrorSource(row.nguongoc);
+            long sourceInvoiceId = isWorkspaceMirror
+                ? GianHangWorkspaceLink_cl.ResolveSourceInvoiceId(db, user_parent, row.id)
+                : 0L;
+
+            row.is_workspace_mirror = isWorkspaceMirror;
+            row.source_invoice_id = sourceInvoiceId;
+            row.native_order_url = sourceInvoiceId > 0
+                ? (GianHangRoutes_cl.BuildAdminWorkspaceOrdersUrl() + "?keyword=" + HttpUtility.UrlEncode(sourceInvoiceId.ToString()))
+                : GianHangRoutes_cl.BuildAdminWorkspaceOrdersUrl();
+
+            if (isWorkspaceMirror)
+            {
+                row.source_display = "Không gian /gianhang";
+                row.source_badge_css = "bg-orange fg-white";
+                row.source_hint = sourceInvoiceId > 0
+                    ? ("Đơn native #" + sourceInvoiceId.ToString())
+                    : "Đơn native từ không gian /gianhang";
+            }
+            else if (string.Equals(row.nguongoc, "Web", StringComparison.OrdinalIgnoreCase))
+            {
+                row.source_display = "Web";
+                row.source_badge_css = "bg-emerald fg-white";
+                row.source_hint = "Nguồn web/website";
+            }
+            else
+            {
+                row.source_display = "App";
+                row.source_badge_css = "bg-cobalt fg-white";
+                row.source_hint = "Nguồn tạo từ công cụ admin/app";
             }
         }
-        if (ddl_loc2.SelectedValue.ToString() != "0")
-        {
-            switch (ddl_loc2.SelectedValue.ToString())
-            {
-                case ("1"): var list_1 = list_all.Where(p => p.phanloai_hoadon == "dichvu").ToList(); list_all = list_all.Intersect(list_1).ToList(); break;
-                case ("2"): var list_2 = list_all.Where(p => p.phanloai_hoadon == "dichvu" || p.phanloai_hoadon == "dichvusanpham").ToList(); list_all = list_all.Intersect(list_2).ToList(); break;
-                case ("3"): var list_3 = list_all.Where(p => p.phanloai_hoadon == "sanpham").ToList(); list_all = list_all.Intersect(list_3).ToList(); break;
-                case ("4"): var list_4 = list_all.Where(p => p.phanloai_hoadon == "sanpham" || p.phanloai_hoadon == "dichvusanpham").ToList(); list_all = list_all.Intersect(list_4).ToList(); break;
-                default: break;
-            }
-        }
 
-        if (DropDownList5.SelectedValue.ToString() != "")//ngành
-        {
-            var list_1 = list_all.Where(p => p.id_nganh == DropDownList5.SelectedValue.ToString()).ToList(); list_all = list_all.Intersect(list_1).ToList();
-        }
-
-        //sắp xếp
         switch (Session["index_sapxep_hoadon"].ToString())
         {
-            case ("0"): list_all = list_all.OrderBy(p => p.ngaytao).ToList(); break;
-            case ("1"): list_all = list_all.OrderByDescending(p => p.ngaytao).ToList(); break;
-            default: list_all = list_all.OrderByDescending(p => p.ngaytao).ToList(); break;
+            case "0":
+                rows = rows.OrderBy(p => p.ngaytao).ToList();
+                break;
+            case "1":
+                rows = rows.OrderByDescending(p => p.ngaytao).ToList();
+                break;
+            default:
+                rows = rows.OrderByDescending(p => p.ngaytao).ToList();
+                break;
         }
 
+        return rows;
+    }
+
+    public void main()
+    {
+        var list_all = LoadInvoiceRows();
+
         //TÍNH HÓA ĐƠN
-        hoadon_sl = list_all.Count();
-        doanhso_hoadon = list_all.Sum(p => p.tongtien).Value;
-        doanhso_hoadon_sauck = list_all.Sum(p => p.tongsauchietkhau).Value;
-        dichvu_soluong = list_all.Sum(p => p.sl_dv).Value;
-        sanpham_soluong = list_all.Sum(p => p.sl_sp).Value;
-        tongtien_dathanhtoan = list_all.Sum(p => p.sotien_dathanhtoan).Value;
-        //tong_tienmat = list_all.Sum(p => p.tienmat).Value;
-        //tong_chuyenkhoan = list_all.Sum(p => p.chuyenkhoan).Value;
-        //tong_quetthe = list_all.Sum(p => p.quetthe).Value;
-        tong_congno = list_all.Sum(p => p.sotien_conlai).Value;
-        doanhso_dichvu = list_all.Sum(p => p.ds_dv).Value;
-        doanhso_sanpham = list_all.Sum(p => p.ds_sp).Value;
-        dichvu_sauck = list_all.Sum(p => p.sauck_dv).Value;
-        sanpham_sauck = list_all.Sum(p => p.sauck_sp).Value;
+        hoadon_sl = list_all.Count;
+        doanhso_hoadon = list_all.Sum(p => p.tongtien);
+        doanhso_hoadon_sauck = list_all.Sum(p => p.tongsauchietkhau);
+        dichvu_soluong = list_all.Sum(p => p.sl_dv);
+        sanpham_soluong = list_all.Sum(p => p.sl_sp);
+        tongtien_dathanhtoan = list_all.Sum(p => p.sotien_dathanhtoan);
+        tong_congno = list_all.Sum(p => p.sotien_conlai);
+        doanhso_dichvu = list_all.Sum(p => p.ds_dv);
+        doanhso_sanpham = list_all.Sum(p => p.ds_sp);
+        dichvu_sauck = list_all.Sum(p => p.sauck_dv);
+        sanpham_sauck = list_all.Sum(p => p.sauck_sp);
         tongrieng_dichvu = list_all.Sum(p => p.tongtien_dichvu);
         tongrieng_sanpham = list_all.Sum(p => p.tongtien_sanpham);
 
@@ -442,7 +534,7 @@ public partial class badmin_Default : System.Web.UI.Page
             show = 30;
         txt_show.Text = show.ToString();
 
-        total_page = number_of_page_class.return_total_page(list_all.Count(), show);
+        total_page = number_of_page_class.return_total_page(list_all.Count, show);
 
         //xử lý số trang        
         current_page = int.Parse(Session["current_page_hoadon"].ToString());
@@ -466,19 +558,27 @@ public partial class badmin_Default : System.Web.UI.Page
             list_id_split.Add("check_" + t.id);
         }
         int _s1 = stt + list_split.Count - 1;
-        if (list_all.Count() != 0)
-            lb_show.Text = "Hiển thị " + stt + "-" + _s1 + " trong số " + list_all.Count().ToString("#,##0") + " mục";
+        if (list_all.Count != 0)
+            lb_show.Text = "Hiển thị " + stt + "-" + _s1 + " trong số " + list_all.Count.ToString("#,##0") + " mục";
         else
             lb_show.Text = "Hiển thị 0-0 trong số 0";
         Repeater1.DataSource = list_split;
         Repeater1.DataBind();
     }
-    protected void txt_search_TextChanged(object sender, EventArgs e)
+    private void ApplySearchState()
     {
         Session["search_hoadon"] = txt_search.Text.Trim();
         Session["current_page_hoadon"] = "1";
         main();
+    }
 
+    protected void txt_search_TextChanged(object sender, EventArgs e)
+    {
+        ApplySearchState();
+    }
+    protected void but_search_Click(object sender, EventArgs e)
+    {
+        ApplySearchState();
     }
     protected void but_quaylai_Click(object sender, EventArgs e)
     {

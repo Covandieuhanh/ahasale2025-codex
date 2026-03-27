@@ -73,7 +73,7 @@
                         <ContentTemplate>
                             <div class="mt-3">
                                 <label class=" fw-600">Phân loại bài viết</label>
-                                <asp:DropDownList ID="DropDownList1" CssClass="select-input select" runat="server" AutoPostBack="true" OnSelectedIndexChanged="DropDownList1_SelectedIndexChanged">
+                                <asp:DropDownList ID="DropDownList1" CssClass="select-input select" runat="server">
                                     <asp:ListItem Text="Tin tức" Value="ctbv"></asp:ListItem>
                                     <asp:ListItem Text="Sản phẩm" Value="ctsp"></asp:ListItem>
                                     <asp:ListItem Text="Dịch vụ" Value="ctdv"></asp:ListItem>
@@ -217,5 +217,29 @@
 </asp:Content>
 <asp:Content ID="Content3" ContentPlaceHolderID="foot" runat="Server">
     <%=notifi %>
+    <script>
+        (function () {
+            function syncPostTypePanels() {
+                var select = document.getElementById("<%=DropDownList1.ClientID %>");
+                var servicePanel = document.getElementById("<%=Panel_dichvu.ClientID %>");
+                var productPanel = document.getElementById("<%=Panel_sanpham.ClientID %>");
+                if (!select || !servicePanel || !productPanel) return;
+                if (select.value === "ctdv") {
+                    servicePanel.style.display = "";
+                    productPanel.style.display = "none";
+                } else if (select.value === "ctsp") {
+                    servicePanel.style.display = "none";
+                    productPanel.style.display = "";
+                } else {
+                    servicePanel.style.display = "none";
+                    productPanel.style.display = "none";
+                }
+            }
+            syncPostTypePanels();
+            var select = document.getElementById("<%=DropDownList1.ClientID %>");
+            if (select) {
+                select.addEventListener("change", syncPostTypePanels);
+            }
+        })();
+    </script>
 </asp:Content>
-

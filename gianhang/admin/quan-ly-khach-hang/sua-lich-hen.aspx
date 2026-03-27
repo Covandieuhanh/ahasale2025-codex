@@ -220,11 +220,11 @@
                             </div>
                             <div class="mt-3">
                                 <label class="fw-600">Tên khách hàng</label>
-                                <asp:TextBox ID="txt_tenkhachhang" runat="server" data-role="input" OnTextChanged="txt_tenkhachhang_TextChanged" AutoPostBack="true"></asp:TextBox></div>
+                                <asp:TextBox ID="txt_tenkhachhang" runat="server" data-role="input"></asp:TextBox></div>
                             <div class="mt-3">
                                 <label class="fw-600">Điện thoại</label>
                                 <%--<asp:TextBox ID="txt_sdt" runat="server" data-role="input" OnTextChanged="txt_sdt_TextChanged" AutoPostBack="true"></asp:TextBox>--%>
-                                <asp:TextBox ID="txt_sdt" runat="server" data-role="input" OnTextChanged="txt_sdt_TextChanged" AutoPostBack="true"></asp:TextBox></div>
+                                <asp:TextBox ID="txt_sdt" runat="server" data-role="input"></asp:TextBox></div>
                             <div class="mt-3">
                                 <label class="fw-600">Ghi chú</label>
                                 <asp:TextBox ID="txt_ghichu" runat="server" data-role="textarea" TextMode="MultiLine"></asp:TextBox>
@@ -272,7 +272,7 @@
                                 <% if (url_sudung_thedv != "" && tongquan_vanhanh.so_thedv_phuhop_dichvu > 0) { %>
                                 <a class="button secondary mr-1" href="<%=url_sudung_thedv %>">Vào dùng thẻ</a>
                                 <% } %>
-                                <a class="button success mr-1" href="<%=url_tao_hoa_don %>">Tạo hóa đơn</a>
+                                <a class="button success mr-1" href="<%=url_tao_hoa_don %>">Tạo giao dịch</a>
                                 <a class="button warning" href="<%=url_ban_thedv %>">Bán thẻ dịch vụ</a>
                             </div>
                         </div>
@@ -473,5 +473,21 @@
     </div>
 </asp:Content>
 <asp:Content ID="Content3" ContentPlaceHolderID="foot" runat="Server">
+    <script src="/js/gianhang-invoice-fast.js?v=2026-03-26.2"></script>
+    <script>
+        (function () {
+            function bindFastUi() {
+                if (!window.ahaInvoiceFast) return;
+                window.ahaInvoiceFast.initCustomerLookup({
+                    endpoint: "/gianhang/admin/quan-ly-hoa-don/lookup-data.ashx",
+                    phoneId: "<%=txt_sdt.ClientID %>",
+                    nameId: "<%=txt_tenkhachhang.ClientID %>"
+                });
+            }
+            bindFastUi();
+            if (window.Sys && Sys.Application) {
+                Sys.Application.add_load(bindFastUi);
+            }
+        })();
+    </script>
 </asp:Content>
-

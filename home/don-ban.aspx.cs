@@ -586,18 +586,19 @@ public partial class home_don_ban : System.Web.UI.Page
     {
         return SqlTransientGuard_cl.Execute(() =>
         {
-            string _tk = PortalRequest_cl.GetCurrentAccountEncrypted();
-            if (string.IsNullOrEmpty(_tk)) return false;
-
-            string tk = mahoa_cl.giaima_Bcorn(_tk);
+            string tk = (PortalRequest_cl.GetCurrentAccount() ?? "").Trim().ToLowerInvariant();
+            if (string.IsNullOrEmpty(tk))
+            {
+                string tkEnc = PortalRequest_cl.GetCurrentAccountEncrypted();
+                if (string.IsNullOrEmpty(tkEnc)) return false;
+                tk = mahoa_cl.giaima_Bcorn(tkEnc);
+            }
+            if (string.IsNullOrEmpty(tk)) return false;
 
             using (dbDataContext db = new dbDataContext())
             {
                 taikhoan_tb acc = db.taikhoan_tbs.FirstOrDefault(x => x.taikhoan == tk);
-                if (acc != null && PortalScope_cl.CanLoginShop(acc.taikhoan, acc.phanloai, acc.permission))
-                    return true;
-
-                return db.DangKy_GianHangDoiTac_tbs.Any(x => x.taikhoan == tk && x.TrangThai == 1);
+                return acc != null && SpaceAccess_cl.CanAccessShop(db, acc);
             }
         });
     }

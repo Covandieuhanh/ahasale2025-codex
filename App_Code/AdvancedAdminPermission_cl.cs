@@ -18,6 +18,7 @@ public static class AdvancedAdminPermission_cl
     public const string ModuleSupplies = "supplies";
     public const string ModuleTraining = "training";
     public const string ModuleSystem = "system";
+    public const string ModulePeopleHub = "people_hub";
 
     public sealed class PresetInfo
     {
@@ -47,7 +48,8 @@ public static class AdvancedAdminPermission_cl
         { ModuleServiceCards, new[] { "q12_1", "q12_2", "q12_3", "q12_4", "q12_5", "n12_1", "n12_2", "n12_3", "n12_4", "n12_5" } },
         { ModuleSupplies, new[] { "q13_1", "q13_2", "q13_3", "q13_4", "q13_5", "q13_6", "q13_7", "q13_8", "q13_9" } },
         { ModuleTraining, new[] { "q14_1", "q14_2", "q14_3", "q14_4", "q14_5", "n14_1", "n14_2", "n14_3", "n14_4", "n14_5", "q15_1", "q15_2", "q15_3", "q15_4", "n15_1", "n15_2", "n15_3", "n15_4" } },
-        { ModuleSystem, new[] { "q16_0", "q16_1", "q16_2" } }
+        { ModuleSystem, new[] { "q16_0", "q16_1", "q16_2" } },
+        { ModulePeopleHub, new[] { "q2_1", "q2_2", "q2_3", "q2_4", "q2_5", "q2_6", "q2_7", "q2_8", "q2_9", "q2_10", "n2_1", "n2_2", "n2_3", "n2_4", "n2_5", "n2_6", "n2_7", "n2_8", "n2_9", "n2_10", "q8_1", "q8_2", "q8_3", "q8_4", "q8_5", "n8_1", "n8_2", "n8_3", "n8_4", "n8_5", "q14_1", "q14_2", "q14_3", "q14_4", "q14_5", "n14_1", "n14_2", "n14_3", "n14_4", "n14_5", "q15_1", "q15_2", "q15_3", "q15_4", "n15_1", "n15_2", "n15_3", "n15_4" } }
     };
 
     private static readonly List<PresetInfo> Presets = new List<PresetInfo>
@@ -168,6 +170,11 @@ public static class AdvancedAdminPermission_cl
         return HasAnyPermission(user, permissions);
     }
 
+    public static bool CanAccessPeopleHub(string user)
+    {
+        return CanAccessModule(user, ModulePeopleHub);
+    }
+
     public static bool HasAnyPermission(string user, IEnumerable<string> permissions)
     {
         if (string.IsNullOrWhiteSpace(user))
@@ -237,6 +244,12 @@ public static class AdvancedAdminPermission_cl
         {
             deniedLabel = "Khách hàng";
             return HasAnyPermission(user, ModulePermissions[ModuleCustomers]);
+        }
+
+        if (path.StartsWith("/gianhang/admin/quan-ly-con-nguoi/"))
+        {
+            deniedLabel = "Hồ sơ người";
+            return CanAccessPeopleHub(user);
         }
 
         foreach (RoutePermissionRule rule in RouteRules)

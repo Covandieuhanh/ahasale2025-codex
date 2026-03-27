@@ -16,6 +16,7 @@ public partial class home_don_mua : System.Web.UI.Page
     private const decimal TY_GIA_A_VND = 1000m;
     private const string STATUS_FILTER_KEY = "status_filter_donmua_home";
     private const string CANCEL_NOTICE_SESSION = "donmua_cancel_notice";
+    private const string STATUS_COUNT_MAP_KEY = "status_count_map_donmua_home";
 
     private class DonMuaRowVm
     {
@@ -418,6 +419,58 @@ public partial class home_don_mua : System.Web.UI.Page
             : "mobile-tab";
     }
 
+    protected string GetDesktopTabClass(string statusKey)
+    {
+        string current = GetCurrentStatusFilter();
+        string key = NormalizeStatusKey(statusKey);
+        if (string.IsNullOrEmpty(key))
+            key = "all";
+        return string.Equals(current, key, StringComparison.OrdinalIgnoreCase)
+            ? "status-tab active"
+            : "status-tab";
+    }
+
+    private void SaveStatusCounts(List<DonMuaRowVm> rows)
+    {
+        var counts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "all", 0 },
+            { "da-dat", 0 },
+            { "cho-trao-doi", 0 },
+            { "da-trao-doi", 0 },
+            { "da-giao", 0 },
+            { "da-nhan", 0 },
+            { "da-huy", 0 }
+        };
+
+        if (rows != null)
+        {
+            counts["all"] = rows.Count;
+            foreach (var row in rows)
+            {
+                string group = (row.status_group ?? "").Trim().ToLowerInvariant();
+                if (!string.IsNullOrEmpty(group) && counts.ContainsKey(group))
+                    counts[group] = counts[group] + 1;
+            }
+        }
+
+        ViewState[STATUS_COUNT_MAP_KEY] = counts;
+    }
+
+    protected int GetStatusTabCount(string statusKey)
+    {
+        string key = NormalizeStatusKey(statusKey);
+        if (string.IsNullOrEmpty(key))
+            key = "all";
+
+        var counts = ViewState[STATUS_COUNT_MAP_KEY] as Dictionary<string, int>;
+        if (counts == null)
+            return 0;
+
+        int value;
+        return counts.TryGetValue(key, out value) ? value : 0;
+    }
+
     #region main - phân trang - tìm kiếm
     public void show_main()
     {
@@ -524,6 +577,8 @@ public partial class home_don_mua : System.Web.UI.Page
                     };
                 })
                 .ToList();
+
+            SaveStatusCounts(list_all);
 
             string statusFilter = GetCurrentStatusFilter();
             if (statusFilter != "all")

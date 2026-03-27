@@ -9,6 +9,10 @@ public static class CompanyShop_cl
 
     private const string AppSettingSpecialAccount = "CompanyShop.SpecialAccount";
     private const string DefaultSpecialAccount = "shop_cong_ty";
+    private const string AppSettingSpecialPassword = "CompanyShop.SpecialPassword";
+    private const string DefaultSpecialPassword = "123123";
+    private const string AppSettingSpecialCommission = "CompanyShop.DefaultCommissionPercent";
+    private const string AppSettingHideLegacyAdminSystemProduct = "CompanyShop.HideLegacyAdminSystemProduct";
 
     public static string GetSpecialAccount()
     {
@@ -27,6 +31,60 @@ public static class CompanyShop_cl
             configured = DefaultSpecialAccount;
 
         return configured;
+    }
+
+    public static string GetSpecialPassword()
+    {
+        string configured = "";
+        try
+        {
+            configured = ConfigurationManager.AppSettings[AppSettingSpecialPassword];
+        }
+        catch
+        {
+            configured = "";
+        }
+
+        configured = (configured ?? "").Trim();
+        if (configured == "")
+            configured = DefaultSpecialPassword;
+        return configured;
+    }
+
+    public static int GetDefaultCommissionPercent()
+    {
+        string configured = "";
+        try
+        {
+            configured = ConfigurationManager.AppSettings[AppSettingSpecialCommission];
+        }
+        catch
+        {
+            configured = "";
+        }
+
+        int value;
+        if (!int.TryParse((configured ?? "").Trim(), out value))
+            value = 0;
+        return ClampPlatformSharePercent(value);
+    }
+
+    public static bool HideLegacyAdminSystemProduct()
+    {
+        string raw = "";
+        try
+        {
+            raw = ConfigurationManager.AppSettings[AppSettingHideLegacyAdminSystemProduct];
+        }
+        catch
+        {
+            raw = "";
+        }
+
+        raw = (raw ?? "").Trim().ToLowerInvariant();
+        if (raw == "")
+            return true;
+        return raw == "1" || raw == "true" || raw == "yes" || raw == "on";
     }
 
     public static bool IsSpecialAccount(string taiKhoan)
@@ -49,14 +107,16 @@ public static class CompanyShop_cl
         if (!IsSpecialAccount(tk))
             return false;
 
+        CompanyShopBootstrap_cl.EnsureSpecialShopReady(db);
+
         taikhoan_tb acc = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == tk);
         if (acc == null)
             return false;
         ShopStatus_cl.EnsureSchemaSafe(db);
-        if (!ShopStatus_cl.IsShopApproved(acc))
+        if (!ShopStatus_cl.IsShopApproved(db, acc))
             return false;
 
-        return PortalScope_cl.CanLoginShop(acc.taikhoan, acc.phanloai, acc.permission);
+        return SpaceAccess_cl.CanAccessShop(db, acc);
     }
 
     public static bool IsCurrentPortalCompanyShop(dbDataContext db)

@@ -10,88 +10,142 @@ public partial class danh_sach_bai_viet : System.Web.UI.Page
     public string notifi = "", idmn = "", tenmn, mota;
     public string title_web = "", des = "";
     public string key = "";
-    dbDataContext db = new dbDataContext();
-    menu_homeaka_class mn_cl = new menu_homeaka_class();
-    poss_class_homeaka po_cl = new poss_class_homeaka();
+    public string meta = "";
 
-    List<web_post_table> list_all;
-    #region phân trang
+    dbDataContext db = new dbDataContext();
     public int stt = 1, current_page = 1, total_page = 1, show = 21;
     List<string> list_id_split;
-    #endregion
 
-    #region opengraph
-    public string meta = "";
+    private sealed class NativeServiceListItem
+    {
+        public int id { get; set; }
+        public string name { get; set; }
+        public string image { get; set; }
+        public string description { get; set; }
+        public decimal? giaban { get; set; }
+        public DateTime? ngaytao { get; set; }
+        public string loai { get; set; }
+    }
+
     public void opengraph(string _idmn)
     {
-        var q = mn_cl.return_object(_idmn);
-        title_web = q.name; des = q.description; this.Title = title_web;
+        web_menu_table q = GianHangMenu_cl.FindById(db, ResolveCurrentChiNhanhId(), _idmn);
+        if (q == null)
+            return;
+
+        title_web = q.name;
+        des = q.description;
+        this.Title = title_web;
         string _title_op = "<meta property=\"og:title\" content=\"" + title_web + "\" />";
-        string _image = "<meta property=\"og:image\" content=\"" + q.image + "\" />";
+        string _image = "<meta property=\"og:image\" content=\"" + (q.image ?? "") + "\" />";
         string _description = "<meta name=\"description\" content=\"" + des + "\" />";
         string _description_op = "<meta property=\"og:description\" content=\"" + des + "\" />";
         meta = _title_op + _image + _description + _description_op;
     }
-    #endregion
 
-    //#region lấy danh sách
-    //public void show_listpost(string _idmn)
-    //{
-    //    list_all = po_cl.return_list_of_idmn(_idmn).Where(p => p.bin == false).ToList();
-    //    if (mn_cl.exist_sub_category(_idmn)) //nếu có menucon
-    //    {
-    //        foreach (var t in mn_cl.return_list_sub(_idmn).Where(p => p.bin == false).ToList())//thì duyệt hết menu con
-    //        {
-    //            get_listpost(t.id.ToString()); //thì gọi lại hàm, nếu có id con thì cứ gọi lại                
-    //        }
-    //    }
-    //}
-
-    //public void get_listpost(string _idmn)//đưa 1 id vào
-    //{
-    //    var q = po_cl.return_list_of_idmn(_idmn).Where(p => p.bin == false).ToList();
-    //    list_all = list_all.Union(q).ToList();
-    //    if (mn_cl.exist_sub_category(_idmn)) //nếu có menucon
-    //    {
-    //        foreach (var t in mn_cl.return_list_sub(_idmn).Where(p => p.bin == false).ToList())//thì duyệt hết menu con
-    //        {
-    //            get_listpost(t.id.ToString()); //thì gọi lại hàm, nếu có id con thì cứ gọi lại
-    //        }
-    //    }
-    //}
-    //#endregion
     public string return_name_category(string _idmn)
     {
-        var q = mn_cl.return_object(_idmn);
-        return q.name.ToString();
+        web_menu_table q = GianHangMenu_cl.FindById(db, ResolveCurrentChiNhanhId(), _idmn);
+        return q == null ? string.Empty : (q.name ?? string.Empty);
     }
+
+    private string ResolveCurrentChiNhanhId()
+    {
+        return GianHangPublic_cl.ResolveCurrentChiNhanhId(db, Request);
+    }
+
     private string ResolveRequestedMenuId()
     {
         string requestedId = (Request.QueryString["idmn"] ?? string.Empty).Trim();
         if (requestedId != string.Empty)
             return requestedId;
 
-        return GianHangStorefront_cl.ResolveDefaultMenuId("dsdv");
+        string chiNhanhId = ResolveCurrentChiNhanhId();
+        return GianHangStorefront_cl.ResolveDefaultMenuId(db, chiNhanhId, GianHangStorefront_cl.MenuTypeService);
+    }
+
+    private string ResolveStoreAccountKey()
+    {
+        return GianHangPublic_cl.ResolveCurrentStoreAccountKey(db, Request);
+    }
+
+    private web_menu_table ResolveValidMenu(string storeAccountKey)
+    {
+        web_menu_table menu = ResolveMenuById(ResolveRequestedMenuId(), GianHangStorefront_cl.MenuTypeService);
+        if (menu != null)
+            return menu;
+
+        string chiNhanhId = ResolveCurrentChiNhanhId();
+        menu = ResolveMenuById(GianHangStorefront_cl.ResolveDefaultMenuId(db, chiNhanhId, GianHangStorefront_cl.MenuTypeService), GianHangStorefront_cl.MenuTypeService);
+        if (menu != null)
+            return menu;
+
+        if (!string.IsNullOrWhiteSpace(storeAccountKey))
+        {
+            string firstMenuId = GianHangProduct_cl.QueryPublicByStorefront(db, storeAccountKey)
+                .Select(p => new
+                {
+                    loai = p.loai,
+                    id_danhmuc = p.id_danhmuc
+                })
+                .ToList()
+                .Where(p => (p.loai ?? string.Empty) == GianHangProduct_cl.LoaiDichVu
+                            && (p.id_danhmuc ?? string.Empty).Trim() != string.Empty)
+                .Select(p => (p.id_danhmuc ?? string.Empty).Trim())
+                .FirstOrDefault();
+
+            menu = ResolveMenuById(firstMenuId, GianHangStorefront_cl.MenuTypeService);
+            if (menu != null)
+                return menu;
+        }
+
+        return null;
+    }
+
+    private web_menu_table ResolveMenuById(string rawMenuId, string expectedType)
+    {
+        string menuId = (rawMenuId ?? string.Empty).Trim();
+        web_menu_table menu = GianHangMenu_cl.FindById(db, ResolveCurrentChiNhanhId(), menuId);
+        if (menu == null)
+            return null;
+
+        string menuType = (menu.phanloai ?? string.Empty).Trim().ToLowerInvariant();
+        string normalizedExpected = (expectedType ?? string.Empty).Trim().ToLowerInvariant();
+        if (menuType != normalizedExpected)
+            return null;
+
+        return menu;
+    }
+
+    private void RedirectToStorefront(string message, string storeAccountKey)
+    {
+        if (!string.IsNullOrWhiteSpace(message))
+            Session["notifi_home"] = thongbao_class.metro_dialog_onload("Thông báo", message, "false", "false", "OK", "alert", "");
+
+        string targetUrl = GianHangRoutes_cl.BuildStorefrontUrl(storeAccountKey);
+
+        Response.Redirect(targetUrl, false);
+        if (Context != null && Context.ApplicationInstance != null)
+            Context.ApplicationInstance.CompleteRequest();
     }
 
     protected void Page_Load(object sender, EventArgs e)
     {
-        idmn = ResolveRequestedMenuId();
-        if (idmn == string.Empty || !mn_cl.exist_id(idmn))
+        string storeAccountKey = ResolveStoreAccountKey();
+        if (storeAccountKey == string.Empty)
         {
-            Session["notifi_home"] = thongbao_class.metro_dialog_onload("Thong bao", "Danh muc dich vu khong hop le.", "false", "false", "OK", "alert", "");
-            Response.Redirect(AhaShineHomeRoutes_cl.HomeUrl);
+            RedirectToStorefront("Khong xac dinh duoc gian hang dang hoat dong.", storeAccountKey);
             return;
         }
 
-        var menu = mn_cl.return_object(idmn);
-        if (menu.phanloai != "dsdv")
+        web_menu_table menu = ResolveValidMenu(storeAccountKey);
+        if (menu == null)
         {
-            Session["notifi_home"] = thongbao_class.metro_dialog_onload("Thong bao", "Danh muc dich vu khong hop le.", "false", "false", "OK", "alert", "");
-            Response.Redirect(AhaShineHomeRoutes_cl.HomeUrl);
+            RedirectToStorefront("Danh muc dich vu khong hop le.", storeAccountKey);
             return;
         }
 
+        idmn = menu.id.ToString();
         tenmn = menu.name;
         mota = menu.description;
         if (!IsPostBack)
@@ -100,82 +154,94 @@ public partial class danh_sach_bai_viet : System.Web.UI.Page
         main();
     }
 
+    protected string BuildDetailUrl(object rawId)
+    {
+        int parsedId;
+        if (!int.TryParse(Convert.ToString(rawId), out parsedId) || parsedId <= 0)
+            return "/gianhang/default.aspx";
+
+        return "/gianhang/xem-dich-vu.aspx?id=" + parsedId.ToString();
+    }
+
+    protected string BuildBookingUrl(object rawId)
+    {
+        int parsedId;
+        if (!int.TryParse(Convert.ToString(rawId), out parsedId) || parsedId <= 0)
+            return "/gianhang/default.aspx";
+
+        GH_SanPham_tb service = GianHangPublicOrder_cl.ResolvePublicProductByAnyId(db, null, parsedId);
+        int routeId = service != null ? service.id : parsedId;
+        string gianHangTaiKhoan = service == null ? ResolveStoreAccountKey() : ((service.shop_taikhoan ?? string.Empty).Trim().ToLowerInvariant());
+        string returnUrl = Request.RawUrl ?? GianHangRoutes_cl.BuildServicesUrl(gianHangTaiKhoan);
+
+        string url = "/gianhang/datlich.aspx?id=" + routeId.ToString();
+        url = GianHangRoutes_cl.AppendUserToUrl(url, gianHangTaiKhoan);
+        url = GianHangRoutes_cl.AppendReturnUrl(url, returnUrl);
+        return url;
+    }
+
     public void main()
     {
-        //Intersect: lấy ra các phần tử mà cả 2 bên đều có (phần chung)
-        #region lấy dữ liệu
         opengraph(idmn);
-        //show_listpost(idmn);
-        string id_chinhanh = AhaShineContext_cl.ResolveChiNhanhId();
-        var list_all = (from bv in db.web_post_tables.Where(p => p.id_category == idmn && p.bin == false && p.hienthi == true && p.id_chinhanh == id_chinhanh).ToList()
-                        join mn in db.web_menu_tables.Where(p => p.id_chinhanh == id_chinhanh).ToList() on bv.id_category equals mn.id.ToString()
-                        select new
-                        {
-                            id = bv.id,
-                            name = bv.name,
-                            name_en = bv.name_en,
-                            tenmn = mn.name,
-                            noibat = bv.noibat,
-                            ngaytao = bv.ngaytao,
-                            giaban = bv.giaban_dichvu,
-                            image = bv.image,
-                            description = bv.description,
-                            phanloai=bv.phanloai,
-                        }).ToList();
+        string storeAccountKey = ResolveStoreAccountKey();
+        List<NativeServiceListItem> list_all = GianHangProduct_cl.QueryPublicByStorefront(db, storeAccountKey)
+            .Where(p => (p.id_danhmuc ?? string.Empty).Trim() == idmn
+                        && (p.id_danhmuc ?? string.Empty).Trim() != string.Empty)
+            .Select(p => new NativeServiceListItem
+            {
+                id = p.id,
+                name = p.ten ?? string.Empty,
+                image = p.hinh_anh,
+                description = p.mo_ta ?? string.Empty,
+                giaban = p.gia_ban,
+                ngaytao = p.ngay_tao,
+                loai = p.loai
+            })
+            .ToList()
+            .Where(p => (p.loai ?? string.Empty) == GianHangProduct_cl.LoaiDichVu)
+            .OrderByDescending(p => p.ngaytao)
+            .ToList();
 
-        //xử lý từ khóa
-        string _key = txt_search.Text.ToLower();
-        if (_key != "")
+        for (int i = 0; i < list_all.Count; i++)
+            list_all[i].image = GianHangStorefront_cl.ResolveImageUrl(list_all[i].image);
+
+        string _key = (txt_search.Text ?? string.Empty).Trim().ToLowerInvariant();
+        if (_key != string.Empty)
         {
-            var list_search = list_all.Where(p => p.name.ToLower().Contains(_key) || p.id.ToString() == _key).ToList();
-            list_all = list_all.Intersect(list_search).ToList();
+            list_all = list_all.Where(p =>
+                    (p.name ?? string.Empty).ToLowerInvariant().Contains(_key)
+                    || p.id.ToString() == _key
+                    || (p.description ?? string.Empty).ToLowerInvariant().Contains(_key))
+                .ToList();
         }
-        //xử lý trạng thái
 
-        //sắp xếp
-        list_all = list_all.OrderByDescending(p=>p.ngaytao).ToList();
-        #endregion
-
-        //xử lý số lượng hiển thị
-        total_page = number_of_page_class.return_total_page(list_all.Count(), show);
-
-        //xử lý số trang        
+        total_page = number_of_page_class.return_total_page(list_all.Count, show);
         current_page = int.Parse(Session["current_page_home_dichvu"].ToString());
         if (current_page > total_page)
             current_page = total_page;
-        if (current_page >= total_page)
-            but_xemtiep.Visible = false;
-        else
-            but_xemtiep.Visible = true;
-        if (current_page == 1)
-            but_quaylai.Visible = false;
-        else
-            but_quaylai.Visible = true;
+        if (current_page < 1)
+            current_page = 1;
 
-        //main
+        but_xemtiep.Visible = current_page < total_page;
+        but_quaylai.Visible = current_page > 1;
+
         stt = (show * current_page) - show + 1;
-        var list_split = list_all.Skip(current_page * show - show).Take(show).ToList();
-        list_id_split = new List<string>();
-        foreach (var t in list_split)
-        {
+        List<NativeServiceListItem> list_split = list_all.Skip(current_page * show - show).Take(show).ToList();
+        list_id_split = new List<string>(list_split.Count);
+        foreach (NativeServiceListItem t in list_split)
             list_id_split.Add("check_" + t.id);
-        }
-        int _s1 = stt + list_split.Count - 1;
-        //if (list_all.Count() != 0)
-        //    lb_show.Text = "Hiển thị " + stt + "-" + _s1 + " trong số " + list_all.Count().ToString("#,##0") + " mục";
-        //else
-        //    lb_show.Text = "Hiển thị 0-0 trong số 0";
+
         Repeater1.DataSource = list_split;
         Repeater1.DataBind();
     }
 
-    #region autopostback
     protected void txt_search_TextChanged(object sender, EventArgs e)
     {
         Session["search_baiviet_home"] = txt_search.Text.Trim();
         Session["current_page_home_dichvu"] = "1";
         main();
     }
+
     protected void but_quaylai_Click(object sender, EventArgs e)
     {
         Session["current_page_home_dichvu"] = int.Parse(Session["current_page_home_dichvu"].ToString()) - 1;
@@ -183,6 +249,7 @@ public partial class danh_sach_bai_viet : System.Web.UI.Page
             Session["current_page_home_dichvu"] = 1;
         main();
     }
+
     protected void but_xemtiep_Click(object sender, EventArgs e)
     {
         Session["current_page_home_dichvu"] = int.Parse(Session["current_page_home_dichvu"].ToString()) + 1;
@@ -190,5 +257,4 @@ public partial class danh_sach_bai_viet : System.Web.UI.Page
             Session["current_page_home_dichvu"] = total_page;
         main();
     }
-    #endregion
 }

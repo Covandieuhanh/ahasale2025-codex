@@ -8,6 +8,108 @@
             </a>
         </li>
         <li class="item-header">VẬN HÀNH NHANH</li>
+        <li class="<%=atv_gh_space %>">
+            <a href="/gianhang/admin/gianhang/default.aspx">
+                <span class="icon"><span class="mif-apps"></span></span>
+                <span class="caption">Không gian /gianhang</span>
+            </a>
+        </li>
+        <li class="<%=atv_gh_center %>">
+            <a href="/gianhang/admin/gianhang/trung-tam.aspx">
+                <span class="icon"><span class="mif-user"></span></span>
+                <span class="caption">Trung tâm /gianhang</span>
+            </a>
+        </li>
+        <li class="<%=atv_gh_present %>">
+            <a href="/gianhang/admin/gianhang/trinh-bay.aspx">
+                <span class="icon"><span class="mif-palette"></span></span>
+                <span class="caption">Trình bày storefront</span>
+            </a>
+        </li>
+        <li class="<%=atv_gh_public %>">
+            <a href="/gianhang/admin/gianhang/trang-cong-khai.aspx">
+                <span class="icon"><span class="mif-earth"></span></span>
+                <span class="caption">Trang công khai</span>
+            </a>
+        </li>
+        <li class="<%=atv_gh_content %>">
+            <a href="/gianhang/admin/gianhang/quan-ly-noi-dung.aspx">
+                <span class="icon"><span class="mif-news"></span></span>
+                <span class="caption">Nội dung /gianhang</span>
+            </a>
+        </li>
+        <li class="<%=atv_gh_products %>">
+            <a href="/gianhang/admin/gianhang/san-pham.aspx">
+                <span class="icon"><span class="mif-tag"></span></span>
+                <span class="caption">Sản phẩm /gianhang</span>
+            </a>
+        </li>
+        <li class="<%=atv_gh_services %>">
+            <a href="/gianhang/admin/gianhang/dich-vu.aspx">
+                <span class="icon"><span class="mif-clipboard"></span></span>
+                <span class="caption">Dịch vụ /gianhang</span>
+            </a>
+        </li>
+        <li class="<%=atv_gh_articles %>">
+            <a href="/gianhang/admin/gianhang/bai-viet.aspx">
+                <span class="icon"><span class="mif-file-text"></span></span>
+                <span class="caption">Bài viết /gianhang</span>
+            </a>
+        </li>
+        <li class="<%=atv_gh_customers %>">
+            <a href="/gianhang/admin/gianhang/khach-hang.aspx">
+                <span class="icon"><span class="mif-database"></span></span>
+                <span class="caption">Khách hàng /gianhang</span>
+            </a>
+        </li>
+        <li class="<%=atv_gh_bookings %>">
+            <a href="/gianhang/admin/gianhang/lich-hen.aspx">
+                <span class="icon"><span class="mif-calendar"></span></span>
+                <span class="caption">Lịch hẹn /gianhang</span>
+            </a>
+        </li>
+        <li class="<%=atv_gh_create %>">
+            <a href="/gianhang/admin/gianhang/tao-giao-dich.aspx">
+                <span class="icon"><span class="mif-plus"></span></span>
+                <span class="caption">Tạo giao dịch</span>
+            </a>
+        </li>
+        <li class="<%=atv_gh_orders %>">
+            <a href="/gianhang/admin/gianhang/don-ban.aspx">
+                <span class="icon"><span class="mif-cart"></span></span>
+                <span class="caption">Đơn gian hàng</span>
+            </a>
+        </li>
+        <li class="<%=atv_gh_wait %>">
+            <a href="/gianhang/admin/gianhang/cho-thanh-toan.aspx">
+                <span class="icon"><span class="mif-loop2"></span></span>
+                <span class="caption">Chờ thanh toán</span>
+            </a>
+        </li>
+        <li class="<%=atv_gh_buyer %>">
+            <a href="/gianhang/admin/gianhang/don-mua.aspx">
+                <span class="icon"><span class="mif-users"></span></span>
+                <span class="caption">Buyer-flow / Đơn mua</span>
+            </a>
+        </li>
+        <li class="<%=atv_gh_cart %>">
+            <a href="/gianhang/admin/gianhang/gio-hang.aspx">
+                <span class="icon"><span class="mif-basket"></span></span>
+                <span class="caption">Giỏ hàng /gianhang</span>
+            </a>
+        </li>
+        <li class="<%=atv_gh_einvoice %>">
+            <a href="/gianhang/admin/gianhang/hoa-don-dien-tu.aspx">
+                <span class="icon"><span class="mif-file-text"></span></span>
+                <span class="caption">Hóa đơn điện tử</span>
+            </a>
+        </li>
+        <li class="<%=atv_gh_utils %>">
+            <a href="/gianhang/admin/gianhang/tien-ich.aspx">
+                <span class="icon"><span class="mif-tools"></span></span>
+                <span class="caption">Tiện ích /gianhang</span>
+            </a>
+        </li>
         <li class="<%=atv_ql_hoadon %>">
             <a href="/gianhang/admin/quan-ly-hoa-don/Default.aspx">
                 <span class="icon"><span class="mif-open-book"></span></span>
@@ -18,6 +120,12 @@
             <a href="/gianhang/admin/quan-ly-khach-hang/Default.aspx">
                 <span class="icon"><span class="mif-database"></span></span>
                 <span class="caption">Khách hàng</span>
+            </a>
+        </li>
+        <li class="<%=atv_ql_connguoi %>">
+            <a href="/gianhang/admin/quan-ly-con-nguoi/Default.aspx">
+                <span class="icon"><span class="mif-profile"></span></span>
+                <span class="caption">Hồ sơ người</span>
             </a>
         </li>
         <li class="<%=b0 %>">
@@ -38,10 +146,10 @@
                 <span class="caption">Thu chi</span>
             </a>
         </li>
-        <li class="<%=tk1 %>">
-            <a href="/gianhang/admin/quan-ly-hoa-don/thong-ke-dich-vu.aspx">
+        <li class="<%=atv_gh_report %>">
+            <a href="/gianhang/admin/gianhang/bao-cao.aspx">
                 <span class="icon"><span class="mif-chart-bars2"></span></span>
-                <span class="caption">Báo cáo nhanh</span>
+                <span class="caption">Báo cáo gian hàng</span>
             </a>
         </li>
         <li class="item-header">QUẢN LÝ HỆ THỐNG</li>

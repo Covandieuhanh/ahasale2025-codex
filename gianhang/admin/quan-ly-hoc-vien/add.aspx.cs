@@ -52,7 +52,7 @@ public partial class taikhoan_add : System.Web.UI.Page
 
         #region Check quyen theo nganh
         user = Session["user"].ToString();
-        user_parent = "admin";
+        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
         if (bcorn_class.check_quyen(user, "q14_2") == "" || bcorn_class.check_quyen(user, "n14_2") == "")
         {
             if (!IsPostBack)
@@ -256,6 +256,7 @@ public partial class taikhoan_add : System.Web.UI.Page
                             {
                                 db.hocvien_tables.InsertOnSubmit(_ob1);
                                 db.SubmitChanges();
+                                GianHangAdminPersonHub_cl.SyncSourcePhoneState(db, user_parent, "", _sdt, _fullname, user);
                                 Session["notifi"] = thongbao_class.metro_notifi_onload("Thông báo", "Thêm thành viên thành công.", "4000", "warning");
                                 Response.Redirect("/gianhang/admin/quan-ly-hoc-vien/Default.aspx");
                             }

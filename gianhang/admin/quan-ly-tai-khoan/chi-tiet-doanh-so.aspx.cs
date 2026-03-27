@@ -56,7 +56,7 @@ public partial class admin_quan_ly_hoa_don_lich_su_ban_hang : System.Web.UI.Page
         #endregion
         #region Check quyen theo nganh
         user = Session["user"].ToString();
-        user_parent = "admin";
+        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
         if (bcorn_class.check_quyen(user, "q2_10") == "" || bcorn_class.check_quyen(user, "n2_10") == "")
         {
             if (!string.IsNullOrWhiteSpace(Request.QueryString["user"]))
@@ -293,10 +293,17 @@ public partial class admin_quan_ly_hoa_don_lich_su_ban_hang : System.Web.UI.Page
     }
     protected void txt_search_TextChanged(object sender, EventArgs e)
     {
-        Session["search_ctds"] = txt_search.Text.Trim();
+        ApplySearchState();
+    }
+    protected void but_search_Click(object sender, EventArgs e)
+    {
+        ApplySearchState();
+    }
+    private void ApplySearchState()
+    {
         Session["current_page_ctds"] = "1";
-        main();
 
+        main();
     }
 
     protected void but_quaylai_Click(object sender, EventArgs e)

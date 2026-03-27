@@ -1,200 +1,239 @@
 ﻿using System;
 using System.Linq;
+using System.Collections.Generic;
+using System.Web;
+using System.Web.UI.WebControls;
 
 public partial class admin_duyet_gian_hang_doi_tac : System.Web.UI.Page
 {
-    // Quy ước trạng thái:
-    // 0 = Chờ duyệt
-    // 1 = Đã duyệt
-    // 2 = Từ chối
-    // 3 = Hủy duyệt (đã từng duyệt rồi, giờ bị admin hủy)
-    // Lưu ý: "hủy duyệt từ đầu" (tức record đang CHỜ) => dùng TỪ CHỐI (2),
-    // và user muốn đăng ký lại thì phải tạo YÊU CẦU MỚI (record mới), không reset về 0.
+    private sealed class HomeGianHangAccessView
+    {
+        public long RequestId { get; set; }
+        public string AccountKey { get; set; }
+        public string FullName { get; set; }
+        public string ShopName { get; set; }
+        public string ContactPhone { get; set; }
+        public string ContactEmail { get; set; }
+        public string PickupAddress { get; set; }
+        public string RequestStatusText { get; set; }
+        public string RequestedAtText { get; set; }
+        public string ReviewedAtText { get; set; }
+        public string ReviewNote { get; set; }
+        public bool CanApprove { get; set; }
+        public bool CanReject { get; set; }
+        public bool CanCancel { get; set; }
+    }
 
     protected void Page_Load(object sender, EventArgs e)
     {
-        AdminRolePolicy_cl.RequireSuperAdmin();
-
-        if (!IsPostBack)
-        {
-            LoadDanhSach();
-        }
+        DisablePageCache();
+        EnsureCanAccessPage();
+        LoadHomeRequests();
     }
 
-    void LoadDanhSach()
+    protected void btn_home_reload_Click(object sender, EventArgs e)
     {
+        EnsureCanAccessPage();
+        LoadHomeRequests();
+    }
+
+    protected void btn_home_approve_Click(object sender, EventArgs e)
+    {
+        EnsureCanAccessPage();
+
+        long requestId = ParseRequestId(sender);
+        if (requestId <= 0)
+            return;
+
+        string message;
+        bool ok;
         using (dbDataContext db = new dbDataContext())
         {
-            ShopStatus_cl.EnsureSchemaSafe(db);
-            var list = db.DangKy_GianHangDoiTac_tbs
-                .OrderByDescending(x => x.NgayTao)
-                .Select(x => new
-                {
-                    ID = x.ID, // nếu DBML map là "id" thì đổi lại: ID = x.id
-                    TaiKhoan = x.taikhoan,
-                    x.NgayTao,
-                    x.TrangThai,
-                    x.GhiChuAdmin,
-                    TrangThaiText =
-                        x.TrangThai == 0 ? "Chờ duyệt" :
-                        x.TrangThai == 1 ? "Đã duyệt" :
-                        x.TrangThai == 2 ? "Từ chối" :
-                        x.TrangThai == 3 ? "Hủy duyệt" : "Không xác định"
-                })
-                .ToList();
-
-            rp_dangky.DataSource = list;
-            rp_dangky.DataBind();
+            ok = CoreSpaceRequest_cl.ApproveRequest(db, requestId, GetAdminName(), (txt_home_admin_note.Text ?? "").Trim(), out message);
         }
+
+        Helper_Tabler_cl.ShowToast(this, message, ok ? "success" : "warning");
+        LoadHomeRequests();
+    }
+
+    protected void btn_home_reject_Click(object sender, EventArgs e)
+    {
+        EnsureCanAccessPage();
+
+        long requestId = ParseRequestId(sender);
+        if (requestId <= 0)
+            return;
+
+        string message;
+        bool ok;
+        using (dbDataContext db = new dbDataContext())
+        {
+            ok = CoreSpaceRequest_cl.RejectRequest(db, requestId, GetAdminName(), (txt_home_admin_note.Text ?? "").Trim(), out message);
+        }
+
+        Helper_Tabler_cl.ShowToast(this, message, ok ? "success" : "warning");
+        LoadHomeRequests();
+    }
+
+    protected void btn_home_cancel_Click(object sender, EventArgs e)
+    {
+        EnsureCanAccessPage();
+
+        long requestId = ParseRequestId(sender);
+        if (requestId <= 0)
+            return;
+
+        string message;
+        bool ok;
+        using (dbDataContext db = new dbDataContext())
+        {
+            ok = CoreSpaceRequest_cl.CancelApprovedRequest(db, requestId, GetAdminName(), (txt_home_admin_note.Text ?? "").Trim(), out message);
+        }
+
+        Helper_Tabler_cl.ShowToast(this, message, ok ? "warning" : "warning");
+        LoadHomeRequests();
     }
 
     string GetAdminName()
     {
-        string admin = Session["admin"] as string;
+        string admin = AdminRolePolicy_cl.GetCurrentAdminUser();
+        if (!string.IsNullOrWhiteSpace(admin))
+            return admin.Trim();
 
-        if (string.IsNullOrEmpty(admin))
-            admin = Session["taikhoan_admin"] as string;
+        admin = Session["admin"] as string;
+        if (!string.IsNullOrWhiteSpace(admin))
+            return admin.Trim();
 
-        return admin ?? "";
+        admin = Session["taikhoan_admin"] as string;
+        if (!string.IsNullOrWhiteSpace(admin))
+            return admin.Trim();
+
+        return "";
     }
 
-    // DUYỆT (từ CHỜ -> ĐÃ DUYỆT)
-    protected void btn_duyet_Click(object sender, EventArgs e)
+    private void LoadHomeRequests()
     {
-        AdminRolePolicy_cl.RequireSuperAdmin();
-        int id = int.Parse(((System.Web.UI.WebControls.LinkButton)sender).CommandArgument);
-
         using (dbDataContext db = new dbDataContext())
         {
-            ShopStatus_cl.EnsureSchemaSafe(db);
-            bool canSetShopStatus = ShopStatus_cl.HasTrangThaiColumn(db);
-            var dk = db.DangKy_GianHangDoiTac_tbs
-                .FirstOrDefault(x => x.ID == id && x.TrangThai == 0); // nếu là x.id thì đổi lại
-            if (dk == null) return;
+            CoreSchemaMigration_cl.EnsureSchemaSafe(db);
 
-            // Chỉ cho phép 1 bản ghi ĐÃ DUYỆT cho 1 tài khoản tại cùng thời điểm
-            bool daCoDuyet = db.DangKy_GianHangDoiTac_tbs
-                .Any(x => x.taikhoan == dk.taikhoan && x.TrangThai == 1);
-
-            if (daCoDuyet)
-            {
-                // Không duyệt thêm; chuyển record hiện tại sang TỪ CHỐI
-                dk.TrangThai = 2;
-                dk.GhiChuAdmin = string.IsNullOrEmpty(dk.GhiChuAdmin)
-                    ? "Từ chối vì tài khoản đã có đăng ký được duyệt trước đó."
-                    : dk.GhiChuAdmin;
-
-                dk.NgayDuyet = AhaTime_cl.Now;
-                dk.AdminDuyet = GetAdminName();
-
-                db.SubmitChanges();
-
-                Helper_Tabler_cl.ShowToast(this, "Tài khoản đã có đăng ký được duyệt trước đó. Đã chuyển yêu cầu này sang Từ chối.", "warning");
-                LoadDanhSach();
-                return;
-            }
-
-            dk.TrangThai = 1; // duyệt
-            dk.NgayDuyet = AhaTime_cl.Now;
-            dk.AdminDuyet = GetAdminName();
-
-            var acc = db.taikhoan_tbs.FirstOrDefault(x => x.taikhoan == dk.taikhoan);
-            if (acc != null)
-            {
-                if (canSetShopStatus)
-                    acc.TrangThai_Shop = ShopStatus_cl.StatusApproved;
-                if (acc.block == true && PortalScope_cl.CanLoginShop(acc.taikhoan, acc.phanloai, acc.permission))
-                    acc.block = false;
-                acc.phanloai = "Gian hàng đối tác";
-                acc.permission = PortalScope_cl.NormalizePermissionWithScope(acc.permission, PortalScope_cl.ScopeShop);
-                ShopSlug_cl.EnsureSlugForShop(db, acc);
-            }
-
-            db.SubmitChanges();
-        }
-
-        Helper_Tabler_cl.ShowToast(this, "Đã duyệt đăng ký gian hàng đối tác.", "success");
-        LoadDanhSach();
-    }
-
-    // TỪ CHỐI (từ CHỜ -> TỪ CHỐI). Sau đó muốn đăng ký lại thì phải tạo YÊU CẦU MỚI.
-    protected void btn_tuchoi_Click(object sender, EventArgs e)
-    {
-        AdminRolePolicy_cl.RequireSuperAdmin();
-        int id = int.Parse(((System.Web.UI.WebControls.LinkButton)sender).CommandArgument);
-
-        using (dbDataContext db = new dbDataContext())
-        {
-            ShopStatus_cl.EnsureSchemaSafe(db);
-            bool canSetShopStatus = ShopStatus_cl.HasTrangThaiColumn(db);
-            var dk = db.DangKy_GianHangDoiTac_tbs
-                .FirstOrDefault(x => x.ID == id && x.TrangThai == 0); // nếu là x.id thì đổi lại
-            if (dk == null) return;
-
-            dk.TrangThai = 2; // từ chối
-            dk.NgayDuyet = AhaTime_cl.Now;
-            dk.AdminDuyet = GetAdminName();
-
-            var acc = db.taikhoan_tbs.FirstOrDefault(x => x.taikhoan == dk.taikhoan);
-            if (acc != null && PortalScope_cl.ResolveScope(acc.taikhoan, acc.phanloai, acc.permission) == PortalScope_cl.ScopeShop)
-            {
-                if (canSetShopStatus)
-                    acc.TrangThai_Shop = ShopStatus_cl.StatusRejected;
-                acc.phanloai = "Gian hàng đối tác";
-                acc.permission = PortalScope_cl.NormalizePermissionWithScope(acc.permission, PortalScope_cl.ScopeShop);
-            }
-
-            db.SubmitChanges();
-        }
-
-        Helper_Tabler_cl.ShowToast(this, "Đã từ chối đăng ký. Muốn đăng ký lại phải tạo yêu cầu mới.", "warning");
-        LoadDanhSach();
-    }
-
-    // HỦY DUYỆT (từ ĐÃ DUYỆT -> HỦY DUYỆT). Không reset về CHỜ.
-    protected void btn_huyduyet_Click(object sender, EventArgs e)
-    {
-        AdminRolePolicy_cl.RequireSuperAdmin();
-        int id = int.Parse(((System.Web.UI.WebControls.LinkButton)sender).CommandArgument);
-
-        using (dbDataContext db = new dbDataContext())
-        {
-            ShopStatus_cl.EnsureSchemaSafe(db);
-            bool canSetShopStatus = ShopStatus_cl.HasTrangThaiColumn(db);
-            // Chỉ hủy khi record đang ở trạng thái ĐÃ DUYỆT
-            var dk = db.DangKy_GianHangDoiTac_tbs
-                .FirstOrDefault(x => x.ID == id && x.TrangThai == 1); // nếu là x.id thì đổi lại
-            if (dk == null) return;
-
-            dk.TrangThai = 3; // hủy duyệt
-            dk.NgayDuyet = AhaTime_cl.Now;   // lưu thời điểm thay đổi trạng thái (hoặc bạn có thể dùng cột khác nếu có)
-            dk.AdminDuyet = GetAdminName();
-
-            if (string.IsNullOrEmpty(dk.GhiChuAdmin))
-                dk.GhiChuAdmin = "Admin hủy duyệt.";
-
-            var acc = db.taikhoan_tbs.FirstOrDefault(x => x.taikhoan == dk.taikhoan);
-            if (acc != null)
-            {
-                if (canSetShopStatus)
-                    acc.TrangThai_Shop = ShopStatus_cl.StatusRevoked;
-                acc.phanloai = "Gian hàng đối tác";
-                acc.permission = PortalScope_cl.NormalizePermissionWithScope(acc.permission, PortalScope_cl.ScopeShop);
-            }
-
-            // Ẩn toàn bộ tin của gian hàng trên toàn hệ thống
-            var posts = db.BaiViet_tbs
-                .Where(p => p.nguoitao == dk.taikhoan && p.bin == false)
+            List<CoreSpaceRequest_cl.SpaceRequestInfo> requests = CoreSpaceRequest_cl.LoadRequests(db, "", ModuleSpace_cl.GianHang, "")
+                .Where(p => string.Equals(
+                    ModuleSpace_cl.Normalize(p.SpaceCode),
+                    ModuleSpace_cl.GianHang,
+                    StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(p => p.Id)
                 .ToList();
-            foreach (var p in posts)
+
+            List<string> accountKeys = requests
+                .Select(p => (p.AccountKey ?? "").Trim().ToLowerInvariant())
+                .Where(p => !string.IsNullOrWhiteSpace(p))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(p => p)
+                .ToList();
+
+            Dictionary<string, taikhoan_tb> accountMap = db.taikhoan_tbs
+                .Where(p => accountKeys.Contains(p.taikhoan))
+                .ToList()
+                .ToDictionary(p => (p.taikhoan ?? "").Trim().ToLowerInvariant(), p => p, StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, GianHangOnboarding_cl.AdminShopInfo> shopInfoMap = GianHangOnboarding_cl.LoadAdminSummaryMap(db, accountKeys);
+
+            List<HomeGianHangAccessView> rows = new List<HomeGianHangAccessView>();
+            for (int i = 0; i < requests.Count; i++)
             {
-                p.bin = true;
+                CoreSpaceRequest_cl.SpaceRequestInfo request = requests[i];
+                string accountKey = (request.AccountKey ?? "").Trim().ToLowerInvariant();
+                taikhoan_tb account = accountMap.ContainsKey(accountKey) ? accountMap[accountKey] : null;
+                GianHangOnboarding_cl.AdminShopInfo shopInfo = shopInfoMap.ContainsKey(accountKey) ? shopInfoMap[accountKey] : null;
+
+                string requestStatus = (request.RequestStatus ?? "").Trim().ToLowerInvariant();
+
+                rows.Add(new HomeGianHangAccessView
+                {
+                    RequestId = request.Id,
+                    AccountKey = accountKey,
+                    FullName = account == null
+                        ? ""
+                        : (!string.IsNullOrWhiteSpace(account.hoten) ? account.hoten.Trim() : account.taikhoan),
+                    ShopName = shopInfo == null ? "" : (shopInfo.ShopName ?? ""),
+                    ContactPhone = shopInfo == null ? "" : (shopInfo.ContactPhone ?? ""),
+                    ContactEmail = shopInfo == null ? "" : (shopInfo.ContactEmail ?? ""),
+                    PickupAddress = shopInfo == null ? "" : (shopInfo.PickupAddress ?? ""),
+                    RequestStatusText = GetHomeRequestStatusText(requestStatus),
+                    RequestedAtText = request.RequestedAt.HasValue ? request.RequestedAt.Value.ToString("dd/MM/yyyy HH:mm") : "--",
+                    ReviewedAtText = request.ReviewedAt.HasValue ? request.ReviewedAt.Value.ToString("dd/MM/yyyy HH:mm") : "--",
+                    ReviewNote = (request.ReviewNote ?? "").Trim(),
+                    CanApprove = requestStatus == CoreSpaceRequest_cl.StatusPending,
+                    CanReject = requestStatus == CoreSpaceRequest_cl.StatusPending,
+                    CanCancel = requestStatus == CoreSpaceRequest_cl.StatusApproved
+                });
             }
 
-            db.SubmitChanges();
+            List<HomeGianHangAccessView> finalRows = rows
+                .OrderBy(p => p.CanApprove ? 0 : (p.CanCancel ? 1 : 2))
+                .ThenByDescending(p => p.RequestId)
+                .ToList();
+
+            bool hasRows = finalRows.Count > 0;
+            ph_home_empty.Visible = !hasRows;
+            rp_home_requests.Visible = hasRows;
+
+            if (hasRows)
+            {
+                rp_home_requests.DataSource = finalRows;
+                rp_home_requests.DataBind();
+            }
+            else
+            {
+                rp_home_requests.DataSource = null;
+                rp_home_requests.DataBind();
+            }
+        }
+    }
+
+    private void EnsureCanAccessPage()
+    {
+        check_login_cl.check_login_admin("none", "none");
+
+        using (dbDataContext db = new dbDataContext())
+        {
+            string tk = GetAdminName();
+            if (AdminRolePolicy_cl.CanApproveShopPartnerRegistration(db, tk))
+                return;
         }
 
-        Helper_Tabler_cl.ShowToast(this, "Đã hủy duyệt. Nếu muốn tham gia lại phải tạo yêu cầu đăng ký mới.", "warning");
-        LoadDanhSach();
+        Session["thongbao"] = thongbao_class.metro_notifi_onload(
+            "Thông báo",
+            "Bạn không có quyền duyệt không gian gian hàng.",
+            "1800",
+            "warning");
+        Response.Redirect("/admin/default.aspx", true);
+    }
+
+    private static string GetHomeRequestStatusText(string status)
+    {
+        switch ((status ?? "").Trim().ToLowerInvariant())
+        {
+            case CoreSpaceRequest_cl.StatusPending: return "Chờ duyệt";
+            case CoreSpaceRequest_cl.StatusApproved: return "Đã duyệt";
+            case CoreSpaceRequest_cl.StatusRejected: return "Từ chối";
+            case CoreSpaceRequest_cl.StatusCancelled: return "Đã hủy";
+            default: return "Chưa có yêu cầu";
+        }
+    }
+
+    private static long ParseRequestId(object sender)
+    {
+        LinkButton button = sender as LinkButton;
+        long requestId;
+        return button != null && long.TryParse(button.CommandArgument, out requestId) ? requestId : 0L;
+    }
+
+    private void DisablePageCache()
+    {
+        Response.Cache.SetCacheability(HttpCacheability.NoCache);
+        Response.Cache.SetNoStore();
+        Response.Cache.SetExpires(DateTime.UtcNow.AddDays(-1));
+        Response.Cache.SetRevalidation(HttpCacheRevalidation.AllCaches);
     }
 }

@@ -4,24 +4,27 @@ using System.Linq;
 
 public partial class gianhang_dat_lich : System.Web.UI.Page
 {
-    private string _shop;
+    private string _gianHangTaiKhoan;
 
     protected void Page_Load(object sender, EventArgs e)
     {
+        RootAccount_cl.RootAccountInfo info = GianHangContext_cl.EnsureCurrentAccess(this);
+        if (info == null)
+            return;
+
+        _gianHangTaiKhoan = (info.AccountKey ?? "").Trim().ToLowerInvariant();
+        ViewState["gianhang_taikhoan"] = _gianHangTaiKhoan;
+
         if (!IsPostBack)
         {
-            InitShop();
+            InitGianHang();
             InitDefaults();
         }
     }
 
-    private void InitShop()
+    private void InitGianHang()
     {
-        _shop = (Request.QueryString["user"] ?? "").Trim().ToLowerInvariant();
-        if (string.IsNullOrEmpty(_shop))
-            _shop = GianHangAuth_cl.ResolveShopAccount();
-
-        if (string.IsNullOrEmpty(_shop))
+        if (string.IsNullOrEmpty(_gianHangTaiKhoan))
         {
             pn_not_found.Visible = true;
             pn_form.Visible = false;
@@ -30,7 +33,7 @@ public partial class gianhang_dat_lich : System.Web.UI.Page
 
         using (dbDataContext db = new dbDataContext())
         {
-            taikhoan_tb acc = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == _shop);
+            taikhoan_tb acc = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == _gianHangTaiKhoan);
             if (acc == null)
             {
                 pn_not_found.Visible = true;
@@ -41,10 +44,10 @@ public partial class gianhang_dat_lich : System.Web.UI.Page
             pn_not_found.Visible = false;
             pn_form.Visible = true;
 
-            lb_shop_name.Text = string.IsNullOrWhiteSpace(acc.ten_shop) ? acc.taikhoan : acc.ten_shop;
-            lb_shop_desc.Text = acc.motangan_shop ?? "";
+            lb_gianhang_name.Text = string.IsNullOrWhiteSpace(acc.ten_shop) ? acc.taikhoan : acc.ten_shop;
+            lb_gianhang_desc.Text = acc.motangan_shop ?? "";
 
-            BindServices(db, _shop);
+            BindServices(db, _gianHangTaiKhoan);
         }
     }
 
@@ -56,12 +59,12 @@ public partial class gianhang_dat_lich : System.Web.UI.Page
             txt_gio.Text = DateTime.Now.ToString("HH:mm");
     }
 
-    private void BindServices(dbDataContext db, string shop)
+    private void BindServices(dbDataContext db, string gianHangTaiKhoan)
     {
         if (ddl_dichvu == null || db == null)
             return;
 
-        var list = GianHangProduct_cl.QueryPublicByShop(db, shop)
+        var list = GianHangProduct_cl.QueryPublicByStorefront(db, gianHangTaiKhoan)
             .ToList()
             .Where(p => GianHangProduct_cl.NormalizeLoai(p.loai) == GianHangProduct_cl.LoaiDichVu)
             .OrderBy(p => p.ten)
@@ -88,11 +91,15 @@ public partial class gianhang_dat_lich : System.Web.UI.Page
 
     protected void but_submit_Click(object sender, EventArgs e)
     {
-        string shop = (Request.QueryString["user"] ?? "").Trim().ToLowerInvariant();
-        if (string.IsNullOrEmpty(shop))
-            shop = GianHangAuth_cl.ResolveShopAccount();
+        string gianHangTaiKhoan = ((ViewState["gianhang_taikhoan"] ?? "").ToString() ?? "").Trim().ToLowerInvariant();
+        if (string.IsNullOrEmpty(gianHangTaiKhoan))
+        {
+            RootAccount_cl.RootAccountInfo info = GianHangContext_cl.EnsureCurrentAccess(this);
+            gianHangTaiKhoan = info == null ? "" : (info.AccountKey ?? "").Trim().ToLowerInvariant();
+            ViewState["gianhang_taikhoan"] = gianHangTaiKhoan;
+        }
 
-        if (string.IsNullOrEmpty(shop))
+        if (string.IsNullOrEmpty(gianHangTaiKhoan))
         {
             Helper_Tabler_cl.ShowModal(this.Page, "Không xác định được gian hàng đối tác.", "Thông báo", true, "warning");
             return;
@@ -134,7 +141,12 @@ public partial class gianhang_dat_lich : System.Web.UI.Page
         using (dbDataContext db = new dbDataContext())
         {
             GianHangSchema_cl.EnsureSchemaSafe(db);
-            var booking = GianHangBooking_cl.CreateBooking(db, shop, ten, sdt, dichvu, thoiGianHen, ghichu);
+            GH_SanPham_tb selectedService = GianHangBooking_cl.ResolvePublicService(
+                db,
+                gianHangTaiKhoan,
+                ddl_dichvu == null ? "" : (ddl_dichvu.SelectedValue ?? ""));
+
+            var booking = GianHangBooking_cl.CreateBooking(db, gianHangTaiKhoan, ten, sdt, selectedService, dichvu, thoiGianHen, ghichu);
             if (booking == null)
             {
                 Helper_Tabler_cl.ShowModal(this.Page, "Không thể gửi lịch hẹn. Vui lòng thử lại.", "Thông báo", true, "warning");
@@ -149,8 +161,7 @@ public partial class gianhang_dat_lich : System.Web.UI.Page
             ddl_dichvu.SelectedIndex = 0;
         if (txt_dichvu_khac != null)
             txt_dichvu_khac.Text = "";
-        txt_ngay.Text = "";
-        txt_gio.Text = "";
+        InitDefaults();
         txt_ghichu.Text = "";
     }
 }

@@ -56,7 +56,7 @@ public partial class badmin_Default : System.Web.UI.Page
         #endregion
         #region Check quyen theo nganh
         user = Session["user"].ToString();
-        user_parent = "admin";
+        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
         if (bcorn_class.check_quyen(user, "q2_8") == "" || bcorn_class.check_quyen(user, "n2_8") == "")
         {
             tongsongay_trongthang = dt_cl.return_ngaycuoithang(DateTime.Now.Month.ToString(), DateTime.Now.Year.ToString()).Day;
@@ -96,7 +96,13 @@ public partial class badmin_Default : System.Web.UI.Page
                 else
                     Session["index_loc_nganh_chamcong"] = DropDownList5.SelectedIndex.ToString();
 
-                if (Session["ngay_chamcong"] != null)
+                string ngayQuery = (Request.QueryString["ngay"] ?? "").Trim();
+                if (ngayQuery != "")
+                {
+                    Session["ngay_chamcong"] = ngayQuery;
+                    txt_ngaychamcong.Text = ngayQuery;
+                }
+                else if (Session["ngay_chamcong"] != null)
                     txt_ngaychamcong.Text = Session["ngay_chamcong"].ToString();
                 else
                 {
@@ -204,10 +210,17 @@ public partial class badmin_Default : System.Web.UI.Page
     }
     protected void txt_search_TextChanged(object sender, EventArgs e)
     {
+        ApplySearchState();
+    }
+    protected void but_search_Click(object sender, EventArgs e)
+    {
+        ApplySearchState();
+    }
+    private void ApplySearchState()
+    {
         Session["current_page_chamcong"] = "1";
 
         main();
-
     }
     protected void txt_show_TextChanged(object sender, EventArgs e)
     {

@@ -54,6 +54,9 @@ public class GH_SanPham_tb
 
     [Column]
     public int? luot_truy_cap { get; set; }
+
+    [Column]
+    public int? phan_tram_uu_dai { get; set; }
 }
 
 [Table(Name = "dbo.GH_DatLich_tb")]
@@ -75,6 +78,15 @@ public class GH_DatLich_tb
     public string dich_vu { get; set; }
 
     [Column]
+    public int? id_dichvu { get; set; }
+
+    [Column]
+    public int? home_post_id { get; set; }
+
+    [Column]
+    public string id_danhmuc { get; set; }
+
+    [Column]
     public DateTime? thoi_gian_hen { get; set; }
 
     [Column]
@@ -87,6 +99,58 @@ public class GH_DatLich_tb
     public DateTime? ngay_tao { get; set; }
 }
 
+[Table(Name = "dbo.GH_BaiViet_tb")]
+public class GH_BaiViet_tb
+{
+    [Column(IsPrimaryKey = true, IsDbGenerated = true)]
+    public long id { get; set; }
+
+    [Column]
+    public int? legacy_post_id { get; set; }
+
+    [Column]
+    public string shop_taikhoan { get; set; }
+
+    [Column]
+    public string id_chinhanh { get; set; }
+
+    [Column]
+    public string id_category { get; set; }
+
+    [Column]
+    public string name { get; set; }
+
+    [Column]
+    public string name_en { get; set; }
+
+    [Column]
+    public string description { get; set; }
+
+    [Column]
+    public string content_post { get; set; }
+
+    [Column]
+    public string image { get; set; }
+
+    [Column]
+    public string phanloai { get; set; }
+
+    [Column]
+    public bool? noibat { get; set; }
+
+    [Column]
+    public bool? hienthi { get; set; }
+
+    [Column]
+    public bool? bin { get; set; }
+
+    [Column]
+    public DateTime? ngaytao { get; set; }
+
+    [Column]
+    public DateTime? ngay_cap_nhat { get; set; }
+}
+
 [Table(Name = "dbo.GH_HoaDon_tb")]
 public class GH_HoaDon_tb
 {
@@ -94,7 +158,16 @@ public class GH_HoaDon_tb
     public long id { get; set; }
 
     [Column]
+    public Guid? id_guide { get; set; }
+
+    [Column]
     public string shop_taikhoan { get; set; }
+
+    [Column]
+    public string id_donhang { get; set; }
+
+    [Column]
+    public string buyer_account { get; set; }
 
     [Column]
     public string ten_khach { get; set; }
@@ -113,6 +186,15 @@ public class GH_HoaDon_tb
 
     [Column]
     public string trang_thai { get; set; }
+
+    [Column]
+    public string order_status { get; set; }
+
+    [Column]
+    public string exchange_status { get; set; }
+
+    [Column]
+    public bool? is_offline { get; set; }
 
     [Column]
     public DateTime? ngay_tao { get; set; }
@@ -134,6 +216,12 @@ public class GH_HoaDon_ChiTiet_tb
     public string ten_sanpham { get; set; }
 
     [Column]
+    public string hinh_anh { get; set; }
+
+    [Column]
+    public string loai { get; set; }
+
+    [Column]
     public int? so_luong { get; set; }
 
     [Column]
@@ -141,4 +229,7 @@ public class GH_HoaDon_ChiTiet_tb
 
     [Column]
     public decimal? thanh_tien { get; set; }
+
+    [Column]
+    public int? phan_tram_uu_dai { get; set; }
 }

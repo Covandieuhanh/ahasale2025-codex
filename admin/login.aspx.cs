@@ -33,6 +33,26 @@ public partial class admin_Default2 : System.Web.UI.Page
         return AdminFullPageRoute_cl.SanitizeAdminReturnUrl(rawUrl, fallbackUrl);
     }
 
+    private void RememberRequestedReturnUrl()
+    {
+        string requested = ResolveSafeAdminReturnUrl(Request.QueryString["return_url"], "");
+        if (!string.IsNullOrWhiteSpace(requested))
+        {
+            Session["url_back"] = requested;
+            app_cookie_policy_class.persist_cookie(Context, app_cookie_policy_class.admin_return_url_cookie, requested, 1);
+            app_cookie_policy_class.expire_cookie(Context, app_cookie_policy_class.home_return_url_cookie);
+            return;
+        }
+
+        if (Session["url_back"] != null)
+            return;
+
+        string cookieBack = app_cookie_policy_class.read_cookie(Context, app_cookie_policy_class.admin_return_url_cookie);
+        cookieBack = ResolveSafeAdminReturnUrl(cookieBack, "");
+        if (!string.IsNullOrWhiteSpace(cookieBack))
+            Session["url_back"] = cookieBack;
+    }
+
     private void RedirectTo(string url)
     {
         Response.Redirect(url, false);
@@ -135,6 +155,7 @@ public partial class admin_Default2 : System.Web.UI.Page
     protected void Page_Load(object sender, EventArgs e)
     {
         DisablePageCaching();
+        RememberRequestedReturnUrl();
 
         string legacyView = (Request.QueryString["view"] ?? "").Trim().ToLowerInvariant();
         if (legacyView == ViewRecover)

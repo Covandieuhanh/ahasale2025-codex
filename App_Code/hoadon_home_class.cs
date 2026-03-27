@@ -10,21 +10,30 @@ public class hoadon_home_class
 {
     dbDataContext db = new dbDataContext();
     post_class po_cl = new post_class();
+
+    private static string ResolveCurrentChiNhanhId()
+    {
+        HttpContext context = HttpContext.Current;
+        return GianHangContext_cl.ResolveSessionChiNhanhId(context == null ? null : context.Session);
+    }
+
     public bool exist_id(string _id, string _user_parent)
     {
-        var q = db.bspa_hoadon_tables.Where(p => p.id.ToString() == _id && p.user_parent == _user_parent && p.id_chinhanh == System.Web.HttpContext.Current.Session["id_chinhanh_webcon"].ToString());
+        string chiNhanhId = ResolveCurrentChiNhanhId();
+        var q = db.bspa_hoadon_tables.Where(p => p.id.ToString() == _id && p.user_parent == _user_parent && p.id_chinhanh == chiNhanhId);
         if (q.Count() != 0)
             return true;
         return false;
     }
     public bspa_hoadon_table return_object(string _id)
     {
-        var q = db.bspa_hoadon_tables.Single(p => p.id.ToString() == _id && p.id_chinhanh == System.Web.HttpContext.Current.Session["id_chinhanh_webcon"].ToString());
+        string chiNhanhId = ResolveCurrentChiNhanhId();
+        var q = db.bspa_hoadon_tables.Single(p => p.id.ToString() == _id && p.id_chinhanh == chiNhanhId);
         return q;
     }
     public void del(string _id)
     {
-        string _id_chinhanh = System.Web.HttpContext.Current.Session["id_chinhanh_webcon"].ToString();
+        string _id_chinhanh = ResolveCurrentChiNhanhId();
         var q = db.bspa_hoadon_chitiet_tables.Where(p => p.id_hoadon == _id && p.id_chinhanh == _id_chinhanh);
         foreach (var t in q)//xóa chi tiết hóa đơn
         {
@@ -70,16 +79,19 @@ public class hoadon_home_class
     }
     public string return_maxid(string _user_parent)
     {
-        return db.bspa_hoadon_tables.Where(p => p.user_parent == _user_parent && p.id_chinhanh == System.Web.HttpContext.Current.Session["id_chinhanh_webcon"].ToString()).Max(p => p.id).ToString();
+        string chiNhanhId = ResolveCurrentChiNhanhId();
+        return db.bspa_hoadon_tables.Where(p => p.user_parent == _user_parent && p.id_chinhanh == chiNhanhId).Max(p => p.id).ToString();
     }
     public static string return_soluong_hoadon(string _user_parent)
     {
         dbDataContext db = new dbDataContext();
-        return db.bspa_hoadon_tables.Where(p => p.user_parent == _user_parent && p.id_chinhanh == System.Web.HttpContext.Current.Session["id_chinhanh_webcon"].ToString()).Count().ToString("#,##0");
+        string chiNhanhId = ResolveCurrentChiNhanhId();
+        return db.bspa_hoadon_tables.Where(p => p.user_parent == _user_parent && p.id_chinhanh == chiNhanhId).Count().ToString("#,##0");
     }
     public string return_id_bang_idguide(string _idguide)
     {
-        var q = db.bspa_hoadon_tables.Where(p => p.id_guide.ToString() == _idguide.Trim() && p.id_chinhanh == System.Web.HttpContext.Current.Session["id_chinhanh_webcon"].ToString());
+        string chiNhanhId = ResolveCurrentChiNhanhId();
+        var q = db.bspa_hoadon_tables.Where(p => p.id_guide.ToString() == _idguide.Trim() && p.id_chinhanh == chiNhanhId);
         if (q.Count() != 0)
             return q.First().id.ToString();
         return "";

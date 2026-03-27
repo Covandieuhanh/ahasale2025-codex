@@ -6,15 +6,49 @@ using System.Web;
 public static class GianHangCart_cl
 {
     private const string SessionPrefix = "gh_cart_";
+    private const string ActiveShopSessionKey = "__gh_cart_active_shop";
 
-    private static string NormalizeShop(string shop)
+    private static string NormalizeStorefrontAccount(string accountKey)
     {
-        return (shop ?? "").Trim().ToLowerInvariant();
+        return (accountKey ?? "").Trim().ToLowerInvariant();
     }
 
-    private static string SessionKey(string shop)
+    private static string SessionKey(string accountKey)
     {
-        return SessionPrefix + NormalizeShop(shop);
+        return SessionPrefix + NormalizeStorefrontAccount(accountKey);
+    }
+
+    public static string GetActiveStorefrontAccount()
+    {
+        var ctx = HttpContext.Current;
+        if (ctx == null || ctx.Session == null)
+            return "";
+
+        return NormalizeStorefrontAccount((ctx.Session[ActiveShopSessionKey] ?? "").ToString());
+    }
+
+    public static void RememberActiveStorefrontAccount(string accountKey)
+    {
+        var ctx = HttpContext.Current;
+        if (ctx == null || ctx.Session == null)
+            return;
+
+        string normalized = NormalizeStorefrontAccount(accountKey);
+        if (normalized == "")
+            return;
+
+        ctx.Session[ActiveShopSessionKey] = normalized;
+    }
+
+    // Compatibility aliases for older call sites during migration.
+    public static string GetActiveShop()
+    {
+        return GetActiveStorefrontAccount();
+    }
+
+    public static void RememberActiveShop(string shop)
+    {
+        RememberActiveStorefrontAccount(shop);
     }
 
     private static DataTable CreateSchema()
@@ -32,7 +66,14 @@ public static class GianHangCart_cl
 
     public static DataTable GetCart(string shopTaiKhoan, bool createIfMissing = true)
     {
-        string key = SessionKey(shopTaiKhoan);
+        string normalizedShop = NormalizeStorefrontAccount(shopTaiKhoan);
+        if (normalizedShop == "")
+            normalizedShop = GetActiveStorefrontAccount();
+
+        if (normalizedShop == "")
+            return null;
+
+        string key = SessionKey(normalizedShop);
         var ctx = HttpContext.Current;
         if (ctx == null)
             return null;
@@ -44,6 +85,9 @@ public static class GianHangCart_cl
             ctx.Session[key] = cart;
         }
 
+        if (cart != null)
+            RememberActiveStorefrontAccount(normalizedShop);
+
         return cart;
     }
 
@@ -52,7 +96,14 @@ public static class GianHangCart_cl
         var ctx = HttpContext.Current;
         if (ctx == null)
             return;
-        ctx.Session[SessionKey(shopTaiKhoan)] = null;
+
+        string normalizedShop = NormalizeStorefrontAccount(shopTaiKhoan);
+        if (normalizedShop == "")
+            normalizedShop = GetActiveStorefrontAccount();
+        if (normalizedShop == "")
+            return;
+
+        ctx.Session[SessionKey(normalizedShop)] = null;
     }
 
     public static bool AddItem(dbDataContext db, string shopTaiKhoan, int idSanPham, int soLuong, out string error)
@@ -64,7 +115,7 @@ public static class GianHangCart_cl
             return false;
         }
 
-        string tk = NormalizeShop(shopTaiKhoan);
+        string tk = NormalizeStorefrontAccount(shopTaiKhoan);
         if (string.IsNullOrEmpty(tk))
         {
             error = "Không xác định gian hàng đối tác.";
@@ -77,8 +128,22 @@ public static class GianHangCart_cl
             soLuong = 9999;
 
         GianHangSchema_cl.EnsureSchemaSafe(db);
-        GH_SanPham_tb sp = db.GetTable<GH_SanPham_tb>()
-            .FirstOrDefault(p => p.id == idSanPham && (p.shop_taikhoan ?? "").Trim().ToLower() == tk && p.bin != true);
+        IQueryable<GH_SanPham_tb> productQuery = db.GetTable<GH_SanPham_tb>()
+            .Where(p => p.shop_taikhoan == tk && p.bin != true);
+        GH_SanPham_tb sp = productQuery.FirstOrDefault(p => p.id == idSanPham || (p.id_baiviet ?? 0) == idSanPham);
+        if (sp == null)
+        {
+            string referenceKey = idSanPham.ToString();
+            var nativeMap = GianHangLegacyPost_cl.ResolveNativeIdByReferenceIds(db, new System.Collections.Generic.List<string> { referenceKey });
+            int nativeId;
+            if (nativeMap != null
+                && nativeMap.TryGetValue(referenceKey, out nativeId)
+                && nativeId > 0)
+            {
+                sp = productQuery.FirstOrDefault(p => p.id == nativeId);
+            }
+        }
+
         if (sp == null)
         {
             error = "Sản phẩm không tồn tại.";
@@ -105,6 +170,8 @@ public static class GianHangCart_cl
             error = "Không thể khởi tạo giỏ hàng.";
             return false;
         }
+
+        RememberActiveStorefrontAccount(tk);
 
         foreach (DataRow row in cart.Rows)
         {
@@ -192,6 +259,25 @@ public static class GianHangCart_cl
         {
             total += Convert.ToDecimal(row["thanhtien"]);
         }
+        return total;
+    }
+
+    public static int CalculateTotalQuantity(string shopTaiKhoan)
+    {
+        DataTable cart = GetCart(shopTaiKhoan, false);
+        if (cart == null)
+            return 0;
+
+        int total = 0;
+        foreach (DataRow row in cart.Rows)
+        {
+            int quantity;
+            if (!int.TryParse((row["soluong"] ?? "0").ToString(), out quantity))
+                quantity = 0;
+            if (quantity > 0)
+                total += quantity;
+        }
+
         return total;
     }
 }

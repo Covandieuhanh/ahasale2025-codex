@@ -52,7 +52,7 @@ public partial class badmin_Default : System.Web.UI.Page
         }
         #endregion 
         user = Session["user"].ToString();
-        user_parent = "admin";
+        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
         if (!IsPostBack)
         {
             Session["index_sapxep_nhomkhachhang"] = "0";
@@ -125,11 +125,19 @@ public partial class badmin_Default : System.Web.UI.Page
     }
     protected void txt_search_TextChanged(object sender, EventArgs e)
     {
-        Session["current_page_nhomkhachhang"] = "1";
-
-        main();
-
+        ApplySearchState();
     }
+    protected void but_search_Click(object sender, EventArgs e)
+    {
+        ApplySearchState();
+    }
+    private void ApplySearchState()
+    {
+        Session["search_nhomkhachhang"] = txt_search.Text.Trim();
+        Session["current_page_nhomkhachhang"] = "1";
+        main();
+    }
+
     protected void txt_show_TextChanged(object sender, EventArgs e)
     {
         Session["current_page_nhomkhachhang"] = "1";

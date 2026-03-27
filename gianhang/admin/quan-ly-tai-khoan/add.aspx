@@ -1,4 +1,4 @@
-﻿<%@ Page Title="Tạo tài khoản" Language="C#" MasterPageFile="~/gianhang/admin/mp-admin.master" AutoEventWireup="true" CodeFile="add.aspx.cs" Inherits="taikhoan_add" %>
+﻿<%@ Page Title="Thêm nhân sự / chuyên gia" Language="C#" MasterPageFile="~/gianhang/admin/mp-admin.master" AutoEventWireup="true" CodeFile="add.aspx.cs" Inherits="taikhoan_add" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="Server">
 </asp:Content>
@@ -69,9 +69,12 @@
 
                     <div class="row">
                         <div class="cell-lg-4 p-3-lg mt-0-lg mt-5">
-                            <h5>Thông tin cơ bản</h5>
+                            <h5>Hồ sơ vận hành cơ bản</h5>
+                            <div class="fg-gray mt-2">
+                                Đây là hồ sơ nội bộ để vận hành trong <strong>/gianhang/admin</strong>. Sau khi tạo xong, bạn có thể liên kết hoặc tạo lời mời cho tài khoản Home tương ứng ngay trong màn chi tiết.
+                            </div>
                             <div class="mt-3">
-                                <label class="fw-600 fg-red">Tài khoản</label>
+                                <label class="fw-600 fg-red">Mã hồ sơ nội bộ</label>
                                 <div>
                                     <asp:TextBox ID="txt_taikhoan" runat="server" data-role="input"></asp:TextBox>
                                 </div>
@@ -128,6 +131,12 @@
                                 <label class="fw-600">Điện thoại</label>
                                 <div>
                                     <asp:TextBox ID="txt_dienthoai" runat="server" data-role="input"></asp:TextBox>
+                                </div>
+                                <div class="mt-2 p-3 border bd-cyan bg-light" style="border-radius: 14px;">
+                                    <div class="fw-700">Tự đưa vào Hồ sơ người</div>
+                                    <div class="mt-1 fg-gray">
+                                        Nếu hồ sơ này có số điện thoại, sau khi lưu hệ thống sẽ tự nhận diện trong module <strong>Hồ sơ người</strong>. Việc liên kết tài khoản Home được thực hiện tập trung ở đó, không gắn trực tiếp tại màn tạo mới này.
+                                    </div>
                                 </div>
                             </div>
                             <div class="mt-3">
@@ -187,4 +196,3 @@
 <asp:Content ID="Content3" ContentPlaceHolderID="foot" runat="Server">
     <%=notifi %>
 </asp:Content>
-

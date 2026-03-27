@@ -1,5 +1,6 @@
 <%@ Control Language="C#" AutoEventWireup="true" CodeFile="menu_top.ascx.cs" Inherits="admin_uc_menu_top_uc" %>
 <%@ Register Src="~/gianhang/admin/uc/menu_dropdown.ascx" TagPrefix="uc1" TagName="menudropdown" %>
+<%@ Register Src="~/Uc/Shared/SpaceLauncher_uc.ascx" TagPrefix="uc2" TagName="SpaceLauncher" %>
 
 <div data-role="charms" data-position="right" id="thongbao-charms" style="width: 320px; background-color: #fff; overflow: auto;" class="p-0 m-0 shadow-1 charms right-side">
     <div style="height: 52px; line-height: 55px" class="bg-orange fg-white">
@@ -147,10 +148,11 @@
 
 <div data-role="appbar" class="fg-white bg-nmenutop-bc admin-topbar" data-expand-point="lg" style="position: fixed; top: 0; z-index: 3">
 
+    <uc2:SpaceLauncher runat="server" ID="spaceLauncher" ButtonCssClass="app-bar-item fg-white" />
     <a href="#" class="app-bar-item d-block d-none-lg" id="paneToggle"><span class="mif-menu"></span></a>
 
-    <a class="app-bar-item fg-white admin-topbar-home" href="<%=GetAdminHomeUrl() %>"><span class="mif mif-home"></span></a>
-    <a class="app-bar-item fg-white d-block-lg d-none fw-600 admin-topbar-title" style="z-index: 10!important" href="<%=GetAdminHomeUrl() %>"><%=ViewState["title"] %></a>
+    <a class="app-bar-item fg-white admin-topbar-home" href="/gianhang/admin/default.aspx"><span class="mif mif-home"></span></a>
+    <a class="app-bar-item fg-white d-block-lg d-none fw-600 admin-topbar-title" style="z-index: 10!important" href="/gianhang/admin/default.aspx"><%=ViewState["title"] %></a>
     <a class="app-bar-item d-block-lg d-none" href="#" id="admin-ui-density-toggle" title="Thu gọn menu">
         <span class="mif mif-list"></span>
     </a>
@@ -173,6 +175,25 @@
             </button>
             <div class="admin-quick-menu" id="admin-quick-dropdown">
                 <ul class="admin-quick-list">
+                    <li><a href="/gianhang/admin/gianhang/default.aspx">Không gian /gianhang</a></li>
+                    <li><a href="/gianhang/admin/gianhang/trung-tam.aspx">Trung tâm /gianhang</a></li>
+                    <li><a href="/gianhang/admin/gianhang/trinh-bay.aspx">Trình bày storefront</a></li>
+                    <li><a href="/gianhang/admin/gianhang/trang-cong-khai.aspx">Trang công khai</a></li>
+                    <li><a href="/gianhang/admin/gianhang/quan-ly-noi-dung.aspx">Nội dung /gianhang</a></li>
+                    <li><a href="/gianhang/admin/gianhang/san-pham.aspx">Sản phẩm /gianhang</a></li>
+                    <li><a href="/gianhang/admin/gianhang/dich-vu.aspx">Dịch vụ /gianhang</a></li>
+                    <li><a href="/gianhang/admin/gianhang/bai-viet.aspx">Bài viết /gianhang</a></li>
+                    <li><a href="/gianhang/admin/gianhang/khach-hang.aspx">Khách hàng /gianhang</a></li>
+                    <li><a href="/gianhang/admin/gianhang/lich-hen.aspx">Lịch hẹn /gianhang</a></li>
+                    <li><a href="/gianhang/admin/gianhang/tao-giao-dich.aspx">Tạo giao dịch</a></li>
+                    <li><a href="/gianhang/admin/gianhang/don-ban.aspx">Đơn gian hàng</a></li>
+                    <li><a href="/gianhang/admin/gianhang/cho-thanh-toan.aspx">Chờ thanh toán</a></li>
+                    <li><a href="/gianhang/admin/gianhang/don-mua.aspx">Buyer-flow / Đơn mua</a></li>
+                    <li><a href="/gianhang/admin/gianhang/gio-hang.aspx">Giỏ hàng /gianhang</a></li>
+                    <li><a href="/gianhang/admin/gianhang/hoa-don-dien-tu.aspx">Hóa đơn điện tử</a></li>
+                    <li><a href="/gianhang/admin/gianhang/tien-ich.aspx">Tiện ích /gianhang</a></li>
+                    <li><a href="/gianhang/admin/gianhang/bao-cao.aspx">Báo cáo gian hàng</a></li>
+                    <li class="admin-quick-divider"></li>
                     <li><a href="/gianhang/admin/quan-ly-hoa-don/Default.aspx?q=add">Tạo hóa đơn</a></li>
                     <li><a href="/gianhang/admin/quan-ly-khach-hang/Default.aspx?q=add">Tạo khách hàng</a></li>
                     <li><a href="/gianhang/admin/quan-ly-khach-hang/danh-sach-lich-hen.aspx?q=add">Đặt lịch hẹn</a></li>
@@ -184,30 +205,54 @@
                     <li><a href="/gianhang/admin/quan-ly-thu-chi/add.aspx">Tạo thu chi</a></li>
                     <li class="admin-quick-divider"></li>
                     <li><a href="/gianhang/admin/quan-ly-bai-viet/add.aspx">Đăng bài viết</a></li>
-                    <li><a href="/gianhang/admin/quan-ly-tai-khoan/add.aspx">Tạo tài khoản nhân viên</a></li>
+                    <li><a href="/gianhang/admin/quan-ly-tai-khoan/add.aspx">Thêm nhân sự / chuyên gia</a></li>
                 </ul>
             </div>
         </div>
 
-        <div class="app-bar-container admin-avatar-wrap admin-shop-dd" id="admin-avatar-shell" style="visibility:hidden; opacity:0;">
-            <button type="button" class="app-bar-item admin-shop-avatar-btn" id="admin-avatar-toggle" aria-haspopup="true" aria-expanded="false">
-                <img src="<%=ViewState["anhdaidien"] %>" class="admin-shop-avatar-image" alt="avatar" />
-                <span class="app-bar-name admin-shop-avatar-name"><%=ViewState["taikhoan"] %></span>
-                <span class="admin-shop-avatar-caret">&#9660;</span>
-            </button>
-            <div class="admin-shop-menu" id="admin-avatar-dropdown">
-                <div class="admin-shop-menu-head">
-                    <p class="admin-shop-menu-title"><%=ViewState["hoten"] %></p>
-                    <div class="admin-shop-menu-sub"><%=ViewState["phanloai"] %> • <%=ViewState["taikhoan"] %></div>
+        <details class="storefront-account admin-storefront-account" id="admin-avatar-shell">
+            <summary class="storefront-account__summary admin-storefront-account__summary">
+                <span class="storefront-account__avatar<%=HasAdminDropdownAvatar() ? "" : " storefront-account__avatar--empty" %>">
+                    <% if (HasAdminDropdownAvatar()) { %>
+                    <img src="<%=GetAdminDropdownAvatarUrl() %>" alt="<%=GetAdminDropdownDisplayName() %>" />
+                    <% } else { %>
+                    <span><%=GetAdminDropdownInitial() %></span>
+                    <% } %>
+                </span>
+                <span class="storefront-account__meta admin-storefront-account__meta">
+                    <strong><%=GetAdminDropdownAccountKey() %></strong>
+                    <small><%=GetAdminDropdownStatusText() %></small>
+                </span>
+            </summary>
+            <div class="storefront-account__menu admin-storefront-account__menu">
+                <div class="storefront-account__profile admin-storefront-account__profile">
+                    <span class="storefront-account__profile-avatar<%=HasAdminDropdownAvatar() ? "" : " storefront-account__profile-avatar--empty" %>">
+                        <% if (HasAdminDropdownAvatar()) { %>
+                        <img src="<%=GetAdminDropdownAvatarUrl() %>" alt="<%=GetAdminDropdownDisplayName() %>" />
+                        <% } else { %>
+                        <span><%=GetAdminDropdownInitial() %></span>
+                        <% } %>
+                    </span>
+                    <div class="storefront-account__profile-copy admin-storefront-account__profile-copy">
+                        <strong><%=GetAdminDropdownDisplayName() %></strong>
+                        <small><%=GetAdminDropdownAccountKey() %></small>
+                        <span class="storefront-account__profile-status admin-storefront-account__profile-status"><%=GetAdminDropdownStatusText() %></span>
+                    </div>
                 </div>
-                <div class="admin-shop-menu-body">
+                <div class="storefront-account__space-list admin-storefront-account__space-list">
+                    <asp:PlaceHolder ID="ph_workspace_switcher" runat="server" Visible="false">
+                        <asp:Literal ID="lit_workspace_switcher" runat="server" />
+                    </asp:PlaceHolder>
                     <uc1:menudropdown runat="server" ID="menudropdown" />
+                    <asp:LinkButton ID="but_show_form_doimatkhau" runat="server" CssClass="storefront-account-space__link admin-storefront-account__link admin-storefront-account__link-secondary" CausesValidation="false" OnClick="but_show_form_doimatkhau_Click">Đổi mật khẩu</asp:LinkButton>
                 </div>
-                <div class="admin-shop-menu-footer">
-                    <asp:LinkButton ID="but_show_form_doimatkhau" runat="server" CssClass="admin-shop-btn admin-shop-btn-light" CausesValidation="false" OnClick="but_show_form_doimatkhau_Click">Đổi mật khẩu</asp:LinkButton>
-                    <asp:LinkButton ID="but_dangxuat" runat="server" CssClass="admin-shop-btn admin-shop-btn-danger" OnClick="but_dangxuat_Click">Đăng xuất</asp:LinkButton>
+                <div class="storefront-account__footer admin-storefront-account__footer">
+                    <asp:LinkButton ID="but_dangxuat" runat="server" CssClass="storefront-account__logout admin-storefront-account__logout" OnClick="but_dangxuat_Click">
+                        <span class="mif-exit"></span>
+                        <span>Đăng xuất</span>
+                    </asp:LinkButton>
                 </div>
             </div>
-        </div>
+        </details>
     </div>
 </div>

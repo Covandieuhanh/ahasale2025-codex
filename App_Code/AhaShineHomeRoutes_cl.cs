@@ -47,7 +47,7 @@ public static class AhaShineHomeRoutes_cl
         if (lower.StartsWith("/xoa_chitiet_giohang.aspx"))
             return CartUrl;
 
-        if (lower.StartsWith("/tai-khoan/") || lower.StartsWith("/webcon/"))
+        if (lower.StartsWith("/tai-khoan/"))
             return BasePath + url;
 
         if (lower.StartsWith(BasePath + "/xoa_chitiet_giohang.aspx"))

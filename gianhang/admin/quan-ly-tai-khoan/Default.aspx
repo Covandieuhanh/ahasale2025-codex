@@ -40,6 +40,15 @@
                                 <label class="fw-600">Ngành</label>
                                 <asp:DropDownList ID="DropDownList5" data-role="select" data-filter="true" runat="server"></asp:DropDownList>
                             </div>
+                            <div class="mt-3">
+                                <label class="fw-600">Liên kết Home</label>
+                                <asp:DropDownList ID="DropDownList6" runat="server" data-role="select" data-filter="false">
+                                    <asp:ListItem Text="Tất cả" Value="all"></asp:ListItem>
+                                    <asp:ListItem Text="Đã liên kết" Value="active"></asp:ListItem>
+                                    <asp:ListItem Text="Chờ liên kết" Value="pending"></asp:ListItem>
+                                    <asp:ListItem Text="Chưa liên kết" Value="none"></asp:ListItem>
+                                </asp:DropDownList>
+                            </div>
                         </div>
                         <div id="_time">
                             <asp:UpdatePanel ID="UpdatePanel3" runat="server" UpdateMode="Conditional">
@@ -184,14 +193,19 @@
             <ContentTemplate>
                 <div class="row mt-1-minus <%--mt-0-lg-minus mt-12-minus--%>">
                     <div class="cell-md-6 order-2 order-md-1 mt-0">
-                        <asp:TextBox ID="txt_search" runat="server" data-role="input" data-prepend="<span class='mif mif-search'></span>" placeholder="Tìm kiếm" OnTextChanged="txt_search_TextChanged" AutoPostBack="true"></asp:TextBox>
+                        <div class="d-flex flex-align-center gap-2">
+                            <asp:TextBox ID="txt_search" runat="server" data-role="input" data-prepend="<span class='mif mif-search'></span>" placeholder="Tìm kiếm"></asp:TextBox>
+                            <asp:LinkButton ID="but_search" runat="server" CssClass="button" OnClick="but_search_Click" CausesValidation="false">
+                                <span class="mif mif-search"></span>
+                            </asp:LinkButton>
+                        </div>
                     </div>
                     <div class="cell-md-6 order-1 order-md-2 mt-0">
 
                         <div class="place-right">
                             <ul class="h-menu">
                                
-                                <li data-role="hint" data-hint-position="top" data-hint-text="Tạo tài khoản">
+                                <li data-role="hint" data-hint-position="top" data-hint-text="Thêm nhân sự / chuyên gia">
                                     <a class="button" href="/gianhang/admin/quan-ly-tai-khoan/add.aspx"><span class="mif mif-plus"></span></a></li>
                                 <li class="bd-gray border bd-default mt-1" style="height: 28px"></li>
                               
@@ -217,6 +231,15 @@
 
                     </div>
                 </div>
+                <div class="mt-3 mb-3">
+                    <div class="mb-2"><small><%=HomeFilterSummaryLabel()%></small></div>
+                    <div class="d-flex flex-wrap">
+                        <a class='<%=HomeFilterButtonCss("all")%>' href="/gianhang/admin/quan-ly-tai-khoan/Default.aspx?home_link=all" style="margin-right: 8px; margin-bottom: 8px;">Toàn bộ</a>
+                        <a class='<%=HomeFilterButtonCss("active")%>' href="/gianhang/admin/quan-ly-tai-khoan/Default.aspx?home_link=active" style="margin-right: 8px; margin-bottom: 8px;">Đã liên kết Home</a>
+                        <a class='<%=HomeFilterButtonCss("pending")%>' href="/gianhang/admin/quan-ly-tai-khoan/Default.aspx?home_link=pending" style="margin-right: 8px; margin-bottom: 8px;">Danh sách chờ liên kết</a>
+                        <a class='<%=HomeFilterButtonCss("none")%>' href="/gianhang/admin/quan-ly-tai-khoan/Default.aspx?home_link=none" style="margin-right: 8px; margin-bottom: 8px;">Chưa liên kết</a>
+                    </div>
+                </div>
                 <div id="table-main">
                     <div style="overflow: auto" class=" mt-3">
                         <table class="table row-hover table-border cell-border compact normal-lg <%--striped--%> <%--compact normal-lg--%>">
@@ -229,6 +252,7 @@
                                     <td class=" text-bold " style="min-width: 120px;">Tài khoản</td>
                                     <td class=" text-bold " style="min-width: 120px;">Ngành</td>
                                     <td class=" text-bold " style="width: 1px;">Liên hệ</td>
+                                    <td class=" text-bold " style="min-width: 220px;">Liên kết Home</td>
                                     <td class=" text-bold " style="width: 1px;">Trạng thái</td>
                                     <td class=" text-bold " style="width: 1px;">Ngày tạo</td>
                                     
@@ -278,6 +302,16 @@
                                                 <div><%#Eval("email") %></div>
                                             </td>
                                             <td>
+                                                <span class="data-wrapper"><code class="<%# HttpUtility.HtmlEncode(Eval("lienket_home_css")) %>"><%# HttpUtility.HtmlEncode(Eval("lienket_home_label")) %></code></span>
+                                                <div class="mt-1">
+                                                    <span class="data-wrapper"><code class="<%# HttpUtility.HtmlEncode(Eval("gianhang_admin_access_css")) %>"><%# HttpUtility.HtmlEncode(Eval("gianhang_admin_access_label")) %></code></span>
+                                                </div>
+                                                <div class="mt-1"><small><%# HttpUtility.HtmlEncode(Eval("lienket_home_note")) %></small></div>
+                                                <div class="mt-1">
+                                                    <a class="fg-blue fg-darkBlue-hover" href="<%# HttpUtility.HtmlAttributeEncode(Eval("lienket_home_url").ToString()) %>"><%# HttpUtility.HtmlEncode(Eval("lienket_home_action")) %></a>
+                                                </div>
+                                            </td>
+                                            <td>
                                                 <asp:PlaceHolder ID="PlaceHolder2" runat="server" Visible='<%#Eval("trangthai").ToString()=="Đang hoạt động" %>'>
                                                     <span class="data-wrapper"><code class="bg-cyan fg-white">Đang hoạt động</code></span>
                                                 </asp:PlaceHolder>
@@ -320,5 +354,21 @@
 
 </asp:Content>
 <asp:Content ID="Content3" ContentPlaceHolderID="foot" runat="Server">
-</asp:Content>
 
+    <script src="/js/gianhang-invoice-fast.js?v=20260326a"></script>
+    <script>
+        (function () {
+            function bindFastUi() {
+                if (!window.ahaInvoiceFast) return;
+                window.ahaInvoiceFast.initSearchSubmit({
+                    inputId: "<%=txt_search.ClientID %>",
+                    buttonId: "<%=but_search.ClientID %>"
+                });
+            }
+            bindFastUi();
+            if (window.Sys && Sys.Application) {
+                Sys.Application.add_load(bindFastUi);
+            }
+        })();
+    </script>
+</asp:Content>

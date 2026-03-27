@@ -15,7 +15,7 @@ public class tinhtoan_class
     {
         dbDataContext db = new dbDataContext();
         Int64 thu = 0;
-        var q_thu = (from ob1 in db.bspa_thuchi_tables.Where(p => p.thuchi == "Thu" && p.user_parent == _user_parent && (p.tudong_tu_hoadon ?? false) == false && p.ngay.Value.Date >= _tungay && p.ngay.Value.Date <= _denngay).ToList()
+        var q_thu = (from ob1 in db.bspa_thuchi_tables.Where(p => p.thuchi == "Thu" && p.user_parent == _user_parent && p.tudong_tu_hoadon != true && p.ngay.Value.Date >= _tungay && p.ngay.Value.Date <= _denngay).ToList()
                      select new
                      {
                          sotien = ob1.sotien,
@@ -45,7 +45,7 @@ public class tinhtoan_class
     {
         dbDataContext db = new dbDataContext();
         Int64 thu = 0;
-        var q_thu = (from ob1 in db.bspa_thuchi_tables.Where(p => p.thuchi == "Thu" && p.user_parent == _user_parent && (p.tudong_tu_hoadon ?? false) == false && p.ngay.Value.Month == _thang && p.ngay.Value.Year == _nam).ToList()
+        var q_thu = (from ob1 in db.bspa_thuchi_tables.Where(p => p.thuchi == "Thu" && p.user_parent == _user_parent && p.tudong_tu_hoadon != true && p.ngay.Value.Month == _thang && p.ngay.Value.Year == _nam).ToList()
                      select new
                      {
                          sotien = ob1.sotien,

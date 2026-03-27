@@ -69,7 +69,7 @@ public partial class admin_quan_ly_khach_hang_danh_sach_lich_hen : System.Web.UI
         }
         #endregion
         user = Session["user"].ToString();
-        user_parent = "admin";
+        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
 
         if (!string.IsNullOrWhiteSpace(Request.QueryString["id"]))
         {
@@ -426,7 +426,8 @@ public partial class admin_quan_ly_khach_hang_danh_sach_lich_hen : System.Web.UI
         if (tongquan_vanhanh.co_hoso_khachhang)
             url_ho_so_khach = "/gianhang/admin/quan-ly-khach-hang/chi-tiet.aspx?id=" + HttpUtility.UrlEncode(tongquan_vanhanh.id_khachhang) + "&id_datlich=" + _id_lich_url;
 
-        url_tao_hoa_don = "/gianhang/admin/quan-ly-hoa-don/Default.aspx?q=add"
+        url_tao_hoa_don = "/gianhang/admin/gianhang/tao-giao-dich.aspx?"
+            + "return_url=" + HttpUtility.UrlEncode(Request.RawUrl ?? "/gianhang/admin/quan-ly-khach-hang/sua-lich-hen.aspx")
             + "&tenkh=" + _ten_url
             + "&sdt=" + _sdt_url
             + "&idnganh=" + _id_nganh_url

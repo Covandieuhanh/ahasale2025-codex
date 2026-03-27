@@ -31,16 +31,16 @@ public partial class home_dangky : System.Web.UI.Page
                 {
                     string targetUrl = Request.RawUrl ?? "/home/dangky.aspx";
                     string logoutUrl = "/home/logout.aspx?return_url=" + HttpUtility.UrlEncode(targetUrl);
-                    string redirectUrl = "/?need_logout=1&return_url=" + HttpUtility.UrlEncode(targetUrl);
+                    string redirectUrl = "/home/default.aspx?need_logout=1&return_url=" + HttpUtility.UrlEncode(targetUrl);
 
                     Session["home_logout_return"] = targetUrl;
-                    Session["home_modal2_msg"] = "Bạn phải đăng xuất tài khoản để được phép thực hiện Đăng ký tài khoản";
+                    Session["home_modal2_msg"] = "Bạn phải đăng xuất tài khoản Home hiện tại để được phép thực hiện Đăng ký tài khoản.";
                     Session["home_modal2_title"] = "Thông báo";
                     Session["home_modal2_type"] = "warning";
                     Session["home_modal2_primary_text"] = "Đăng xuất";
                     Session["home_modal2_primary_href"] = logoutUrl;
-                    Session["home_modal2_secondary_text"] = "Để sau";
-                    Session["home_modal2_secondary_href"] = "/";
+                    Session["home_modal2_secondary_text"] = "Về trang chủ";
+                    Session["home_modal2_secondary_href"] = "/home/default.aspx";
 
                     Response.Redirect(redirectUrl, false);
                     Context.ApplicationInstance.CompleteRequest();
@@ -153,16 +153,16 @@ public partial class home_dangky : System.Web.UI.Page
             {
                 string targetUrl = Request.RawUrl ?? "/home/dangky.aspx";
                 string logoutUrl = "/home/logout.aspx?return_url=" + HttpUtility.UrlEncode(targetUrl);
-                string redirectUrl = "/?need_logout=1&return_url=" + HttpUtility.UrlEncode(targetUrl);
+                string redirectUrl = "/home/default.aspx?need_logout=1&return_url=" + HttpUtility.UrlEncode(targetUrl);
 
                 Session["home_logout_return"] = targetUrl;
-                Session["home_modal2_msg"] = "Bạn phải đăng xuất tài khoản để được phép thực hiện Đăng ký tài khoản";
+                Session["home_modal2_msg"] = "Bạn phải đăng xuất tài khoản Home hiện tại để được phép thực hiện Đăng ký tài khoản.";
                 Session["home_modal2_title"] = "Thông báo";
                 Session["home_modal2_type"] = "warning";
                 Session["home_modal2_primary_text"] = "Đăng xuất";
                 Session["home_modal2_primary_href"] = logoutUrl;
-                Session["home_modal2_secondary_text"] = "Để sau";
-                Session["home_modal2_secondary_href"] = "/";
+                Session["home_modal2_secondary_text"] = "Về trang chủ";
+                Session["home_modal2_secondary_href"] = "/home/default.aspx";
 
                 Response.Redirect(redirectUrl, false);
                 Context.ApplicationInstance.CompleteRequest();
@@ -394,9 +394,6 @@ public partial class home_dangky : System.Web.UI.Page
     {
         try
         {
-            if (!PortalActiveMode_cl.IsHomeActive())
-                return "";
-
             string encoded = Session["taikhoan_home"] as string;
             if (!string.IsNullOrEmpty(encoded))
                 return mahoa_cl.giaima_Bcorn(encoded);

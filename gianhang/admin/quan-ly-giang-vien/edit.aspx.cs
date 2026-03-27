@@ -9,6 +9,19 @@ using System.IO;
 public partial class taikhoan_add : System.Web.UI.Page
 {
     public string notifi, id,user, user_parent;
+    public string personHubUrl = "/gianhang/admin/quan-ly-con-nguoi/Default.aspx";
+    public string personHubStatusLabel = "Chưa liên kết";
+    public string personHubStatusCss = "bg-gray fg-white";
+    public string personHubNote = "Mở hồ sơ người để liên kết hoặc tạo chờ liên kết theo số điện thoại này.";
+    public string personHubRelatedRolesHtml = "";
+    public string personHubAdminAccessLabel = "Không mở quyền /gianhang/admin ở vai trò chuyên gia đào tạo";
+    public string personHubAdminAccessCss = "bg-gray fg-white";
+    public string personHubAdminAccessNote = "Vai trò chuyên gia đào tạo chỉ là dữ liệu nghiệp vụ. Nếu cùng người này còn là nhân sự nội bộ thì quyền vào /gianhang/admin sẽ được quyết định ở hồ sơ nhân sự nội bộ đó.";
+    public string personHubImpactTitle = "Tác động khi xóa vai trò chuyên gia đào tạo";
+    public string personHubImpactNote = "Xóa vai trò chuyên gia đào tạo này sẽ không tự gỡ liên kết Home ở Hồ sơ người. Nếu cùng số điện thoại còn vai trò khác trong gian hàng thì hồ sơ trung tâm vẫn tiếp tục gom đúng người đó.";
+    public bool showQuickDeactivateButton = false;
+    public bool showQuickReactivateButton = false;
+    public string lifecycleQuickHint = "Nếu chỉ muốn tạm ngừng dùng vai trò nguồn này, hãy chuyển sang trạng thái ngừng giảng dạy thay vì xóa hẳn.";
     dbDataContext db = new dbDataContext();
     string_class str_cl = new string_class();
     giangvien_class gv_cl = new giangvien_class();
@@ -18,6 +31,13 @@ public partial class taikhoan_add : System.Web.UI.Page
     public void main()
     {
         giangvien_table _ob = db.giangvien_tables.Where(p => p.id.ToString() == id && p.id_chinhanh == Session["chinhanh"].ToString()).First();
+        BindPersonHub(_ob.hoten, _ob.dienthoai);
+        string currentStatus = (_ob.trangthai ?? "").Trim();
+        showQuickDeactivateButton = string.Equals(currentStatus, "Đang giảng dạy", StringComparison.OrdinalIgnoreCase);
+        showQuickReactivateButton = !showQuickDeactivateButton;
+        lifecycleQuickHint = showQuickDeactivateButton
+            ? "Nếu chỉ muốn tạm dừng vai trò nguồn này, hãy dùng nút Ngừng giảng dạy. Chuyên gia sẽ vẫn còn trong hệ thống và Hồ sơ người không bị đứt liên kết."
+            : "Chuyên gia này đang ở trạng thái ngừng giảng dạy. Bạn có thể mở lại mà không cần tạo mới hồ sơ và không làm mất liên kết trong Hồ sơ người.";
         if (!IsPostBack)
         {
             var list_nganh = (from ob1 in db.nganh_tables.Where(p => p.id_chinhanh == Session["chinhanh"].ToString()).ToList()
@@ -78,6 +98,84 @@ public partial class taikhoan_add : System.Web.UI.Page
         }
     }
 
+    private void BindPersonHub(string displayName, string phone)
+    {
+        string normalizedPhone = AccountAuth_cl.NormalizePhone(phone);
+        if (string.IsNullOrWhiteSpace(normalizedPhone))
+        {
+            personHubUrl = "/gianhang/admin/quan-ly-con-nguoi/Default.aspx";
+            personHubStatusLabel = "Thiếu số điện thoại";
+            personHubStatusCss = "bg-gray fg-white";
+            personHubNote = "Cập nhật số điện thoại để chuyên gia này được gom vào hồ sơ người chung.";
+            return;
+        }
+
+        personHubUrl = GianHangAdminPersonHub_cl.BuildDetailUrl(normalizedPhone);
+        BindSourceAdminAccess(normalizedPhone);
+        personHubRelatedRolesHtml = BuildRelatedRolesHtml(normalizedPhone);
+        personHubImpactNote = BuildImpactNote(normalizedPhone);
+        GianHangAdminPersonHub_cl.PersonLinkInfo linkInfo = GianHangAdminPersonHub_cl.GetLinkInfo(db, user_parent, normalizedPhone, displayName);
+        if (linkInfo == null)
+            return;
+
+        personHubStatusLabel = linkInfo.StatusLabel;
+        personHubStatusCss = linkInfo.LinkCss;
+        if (linkInfo.LinkedHomeAccount != null)
+        {
+            string linkedName = string.IsNullOrWhiteSpace(linkInfo.LinkedHomeAccount.hoten)
+                ? (linkInfo.LinkedHomeAccount.taikhoan ?? "")
+                : linkInfo.LinkedHomeAccount.hoten;
+            personHubNote = "Đã liên kết với tài khoản Home " + linkedName + " • " + (linkInfo.LinkedHomeAccount.taikhoan ?? "");
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(linkInfo.PendingPhone))
+        {
+            personHubNote = "Đang chờ số " + linkInfo.PendingPhone + " đăng ký hoặc đăng nhập AhaSale để tự gắn.";
+            return;
+        }
+
+        personHubNote = "Mở hồ sơ người để liên kết hoặc tạo chờ liên kết theo số điện thoại này.";
+    }
+
+    private string BuildRelatedRolesHtml(string normalizedPhone)
+    {
+        IList<GianHangAdminPersonHub_cl.PersonSourceRef> sources = GianHangAdminPersonHub_cl.GetOtherSourcesForPhone(db, user_parent, normalizedPhone, "lecturer", id);
+        if (sources == null || sources.Count == 0)
+            return "";
+
+        return string.Join("", sources.Select(p =>
+            "<div class='mt-2'>" +
+            "<a class='fg-cobalt' href='" + HttpUtility.HtmlAttributeEncode(p.DetailUrl ?? "#") + "'>" + HttpUtility.HtmlEncode((p.SourceLabel ?? "").Trim() == "" ? "Hồ sơ liên quan" : p.SourceLabel) + "</a>" +
+            "<span class='fg-gray'> • " + HttpUtility.HtmlEncode((p.Name ?? "").Trim() == "" ? (p.Phone ?? "") : p.Name) + "</span>" +
+            "<div class='fg-gray'><small>Vai trò: <strong>" + HttpUtility.HtmlEncode(p.RoleLabel ?? "") + "</strong></small></div>" +
+            "<div class='fg-gray'><small>Quyền /gianhang/admin: <span class='data-wrapper'><code class='" + HttpUtility.HtmlAttributeEncode(string.IsNullOrWhiteSpace(p.AdminAccessCss) ? "bg-gray fg-white" : p.AdminAccessCss) + "'>" + HttpUtility.HtmlEncode(string.IsNullOrWhiteSpace(p.AdminAccessLabel) ? "Không mở quyền /gianhang/admin ở nguồn này" : p.AdminAccessLabel) + "</code></span></small></div>" +
+            "</div>"));
+    }
+
+    private void BindSourceAdminAccess(string normalizedPhone)
+    {
+        GianHangAdminPersonHub_cl.PersonSourceRef sourceInfo = GianHangAdminPersonHub_cl.GetSourceInfo(db, user_parent, normalizedPhone, "lecturer", id);
+        if (sourceInfo == null)
+            return;
+
+        personHubAdminAccessLabel = string.IsNullOrWhiteSpace(sourceInfo.AdminAccessLabel)
+            ? "Không mở quyền /gianhang/admin ở vai trò chuyên gia đào tạo"
+            : sourceInfo.AdminAccessLabel;
+        personHubAdminAccessCss = string.IsNullOrWhiteSpace(sourceInfo.AdminAccessCss)
+            ? "bg-gray fg-white"
+            : sourceInfo.AdminAccessCss;
+        personHubAdminAccessNote = "Vai trò chuyên gia đào tạo chỉ là dữ liệu nghiệp vụ. Nếu cùng người này còn là nhân sự nội bộ thì quyền vào /gianhang/admin sẽ được quyết định ở hồ sơ nhân sự nội bộ đó.";
+    }
+
+    private string BuildImpactNote(string normalizedPhone)
+    {
+        bool hasOtherRoles = !string.IsNullOrWhiteSpace(BuildRelatedRolesHtml(normalizedPhone));
+        return hasOtherRoles
+            ? "Xóa vai trò chuyên gia đào tạo này sẽ không tự gỡ liên kết Home ở Hồ sơ người. Các vai trò khác cùng số điện thoại trong gian hàng vẫn tiếp tục được gom chung và giữ trạng thái liên kết hiện có."
+            : "Xóa vai trò chuyên gia đào tạo này sẽ không tự gỡ liên kết Home ở Hồ sơ người. Nếu đây là vai trò nguồn cuối cùng thì hồ sơ trung tâm vẫn được giữ, chỉ chuyển sang trạng thái chưa còn vai trò nguồn.";
+    }
+
 
     protected void Page_Load(object sender, EventArgs e)
     {
@@ -117,7 +215,7 @@ public partial class taikhoan_add : System.Web.UI.Page
 
         #region Check quyen theo nganh
         user = Session["user"].ToString();
-        user_parent = "admin";
+        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
         if (bcorn_class.check_quyen(user, "q15_3") == "" || bcorn_class.check_quyen(user, "n15_3") == "")
         {
                 if (!string.IsNullOrWhiteSpace(Request.QueryString["id"]))
@@ -181,6 +279,7 @@ public partial class taikhoan_add : System.Web.UI.Page
                     else
                     {
                         giangvien_table _ob1 = db.giangvien_tables.Where(p => p.id.ToString() == id && p.id_chinhanh == Session["chinhanh"].ToString()).First();
+                        string _oldPhone = (_ob1.dienthoai ?? "").Trim();
 
                         bool _checkloi = false;
                         string _avt = _ob1.anhdaidien;
@@ -231,6 +330,7 @@ public partial class taikhoan_add : System.Web.UI.Page
                         if (_checkloi == false)
                         {
                             db.SubmitChanges();
+                            GianHangAdminPersonHub_cl.SyncSourcePhoneState(db, user_parent, _oldPhone, _sdt, _fullname, user);
                             Session["notifi"] = thongbao_class.metro_notifi_onload("Thông báo", "Cập nhật thành công.", "4000", "warning");
                             Response.Redirect("/gianhang/admin/quan-ly-giang-vien/Default.aspx");
                         }
@@ -251,5 +351,31 @@ public partial class taikhoan_add : System.Web.UI.Page
         db.SubmitChanges();
         main();
         ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Xóa ảnh đại diện thành công.", "4000", "warning"), true);
+    }
+
+    protected void but_ngung_giangday_Click(object sender, EventArgs e)
+    {
+        UpdateLecturerStatusQuick("Ngưng giảng dạy", "Đã chuyển chuyên gia sang trạng thái ngừng giảng dạy.");
+    }
+
+    protected void but_molai_giangday_Click(object sender, EventArgs e)
+    {
+        UpdateLecturerStatusQuick("Đang giảng dạy", "Đã mở lại chuyên gia để tiếp tục sử dụng.");
+    }
+
+    private void UpdateLecturerStatusQuick(string targetStatus, string successMessage)
+    {
+        giangvien_table lecturer = db.giangvien_tables.FirstOrDefault(p => p.id.ToString() == id && p.id_chinhanh == Session["chinhanh"].ToString());
+        if (lecturer == null)
+        {
+            Session["notifi"] = thongbao_class.metro_notifi_onload("Thông báo", "Không tìm thấy chuyên gia cần cập nhật.", "4000", "warning");
+            Response.Redirect("/gianhang/admin/quan-ly-giang-vien/Default.aspx");
+            return;
+        }
+
+        lecturer.trangthai = targetStatus;
+        db.SubmitChanges();
+        Session["notifi"] = thongbao_class.metro_notifi_onload("Thông báo", successMessage, "3000", targetStatus == "Đang giảng dạy" ? "success" : "warning");
+        Response.Redirect("/gianhang/admin/quan-ly-giang-vien/edit.aspx?id=" + HttpUtility.UrlEncode(id));
     }
 }

@@ -8,65 +8,6 @@ using System.Web;
 /// </summary>
 public class bcorn_class
 {
-    private static void ensure_owner_admin_permission(dbDataContext db, taikhoan_table_2023 acc)
-    {
-        if (db == null || acc == null)
-            return;
-
-        string username = (acc.taikhoan ?? "").Trim().ToLowerInvariant();
-        string ownerAccount = AhaShineContext_cl.ResolveUserParent();
-        bool isOwnerAdmin = username != "" && username == ownerAccount;
-        if (!isOwnerAdmin)
-            return;
-
-        bool changed = false;
-        if ((acc.permission ?? "").Trim().ToLowerInvariant() != "all")
-        {
-            acc.permission = "all";
-            changed = true;
-        }
-
-        if ((acc.trangthai ?? "").Trim() == "")
-        {
-            acc.trangthai = "Đang hoạt động";
-            changed = true;
-        }
-
-        if (string.IsNullOrWhiteSpace(acc.user_parent))
-        {
-            acc.user_parent = ownerAccount;
-            changed = true;
-        }
-
-        string chiNhanh = "";
-        string nganh = "";
-        try
-        {
-            chiNhanh = (HttpContext.Current != null && HttpContext.Current.Session != null && HttpContext.Current.Session["chinhanh"] != null)
-                ? HttpContext.Current.Session["chinhanh"].ToString()
-                : "";
-            nganh = (HttpContext.Current != null && HttpContext.Current.Session != null && HttpContext.Current.Session["nganh"] != null)
-                ? HttpContext.Current.Session["nganh"].ToString()
-                : "";
-        }
-        catch { }
-
-        if (string.IsNullOrWhiteSpace(acc.id_chinhanh) && chiNhanh != "")
-        {
-            acc.id_chinhanh = chiNhanh;
-            changed = true;
-        }
-
-        if (string.IsNullOrWhiteSpace(acc.id_nganh) && nganh != "")
-        {
-            acc.id_nganh = nganh;
-            changed = true;
-        }
-
-        if (changed)
-            db.SubmitChanges();
-    }
-
     #region check quyền và đăng nhập trang admin
     public static string check_quyen(string _user, string _quyen)
     {
@@ -75,7 +16,6 @@ public class bcorn_class
         if (q.Count() != 0)
         {
             taikhoan_table_2023 _acc = q.First();
-            ensure_owner_admin_permission(db, _acc);
             string _permission_of_user = _acc.permission ?? "";
             if ((_permission_of_user ?? "").Trim().ToLower() == "all")
                 return "";
@@ -125,21 +65,8 @@ public class bcorn_class
                             return thongbao_class.metro_dialog_onload("Thông báo", "Mật khẩu đã được thay đổi. <br/>Vui lòng đăng nhập lại.", "false", "false", "OK", "alert", "");
                         else//nếu mk k thay đổi thì kiểm tra HSD nếu có
                         {
-                            if (_ob.hansudung != null)//nếu có hạn sử dụng
-                            {
-                                if (DateTime.Now.Date > _ob.hansudung.Value.Date)//nếu hết hạn
-                                    return thongbao_class.metro_dialog_onload("Thông báo", "Tài khoản của bạn đã hết hạn sử dụng.", "false", "false", "OK", "alert", "");
-                                else//nếu còn hạn
-                                {
-                                    string _user_parent = string.IsNullOrWhiteSpace(_ob.user_parent) ? AhaShineContext_cl.UserParent : _ob.user_parent;
-                                    System.Web.HttpContext.Current.Session["user"] = _user;System.Web.HttpContext.Current.Session["user_parent"] = _user_parent;
-                                }
-                            }
-                            else//nếu tk này k có hạn thì gán ss và hoạt động bt
-                            {
-                                string _user_parent = string.IsNullOrWhiteSpace(_ob.user_parent) ? AhaShineContext_cl.UserParent : _ob.user_parent;
-                                System.Web.HttpContext.Current.Session["user"] = _user;System.Web.HttpContext.Current.Session["user_parent"] = _user_parent;
-                            }
+                            string _user_parent = string.IsNullOrWhiteSpace(_ob.user_parent) ? AhaShineContext_cl.UserParent : _ob.user_parent;
+                            System.Web.HttpContext.Current.Session["user"] = _user;System.Web.HttpContext.Current.Session["user_parent"] = _user_parent;
                         }
                     }
                 }
@@ -161,19 +88,8 @@ public class bcorn_class
                         return thongbao_class.metro_dialog_onload("Thông báo", "Mật khẩu đã được thay đổi. <br/>Vui lòng đăng nhập lại.", "false", "false", "OK", "alert", "");
                     else//nếu mk k thay đổi thì kiểm tra HSD nếu có
                     {
-                        if (_ob.hansudung != null)//nếu có hạn sử dụng
-                        {
-                            if (DateTime.Now.Date > _ob.hansudung.Value.Date)//nếu hết hạn
-                                return thongbao_class.metro_dialog_onload("Thông báo", "Tài khoản của bạn đã hết hạn sử dụng.", "false", "false", "OK", "alert", "");
-                            else//nếu còn hạn thì check quyền và tiếp tục
-                            {
-
-                            }
-                        }
-                        else//nếu tk này k có hạn thì check quyền và tiếp tục
-                        {
-
-                        }
+                        // Legacy bcorn flow no longer performs an extra expiry gate here.
+                        // Account expiry is validated by the main auth layer before reaching this point.
                     }
                 }
             }
@@ -196,5 +112,15 @@ public class bcorn_class
                 return true;
         }
         return false;
+    }
+
+    public static string NormalizeAccount(string rawAccount)
+    {
+        return (rawAccount ?? string.Empty).Trim().ToLowerInvariant();
+    }
+
+    public static string NormalizeText(string value)
+    {
+        return (value ?? string.Empty).Trim();
     }
 }

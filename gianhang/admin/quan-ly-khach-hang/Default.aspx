@@ -30,6 +30,14 @@
                                 <label class="fw-600">Nhóm khách hàng</label>
                                 <asp:DropDownList ID="DropDownList3" data-role="select" data-filter="true" runat="server"></asp:DropDownList>
                             </div>
+                            <div class="mt-3">
+                                <label class="fw-600">Trạng thái nguồn</label>
+                                <asp:DropDownList ID="ddl_trangthai_nguon" runat="server" data-role="select" data-filter="false">
+                                    <asp:ListItem Text="Tất cả" Value="0"></asp:ListItem>
+                                    <asp:ListItem Text="Đang dùng khách hàng" Value="1"></asp:ListItem>
+                                    <asp:ListItem Text="Đã ngừng dùng khách hàng" Value="2"></asp:ListItem>
+                                </asp:DropDownList>
+                            </div>
                         </div>
                         <div id="_time">
                             <asp:UpdatePanel ID="UpdatePanel3" runat="server" UpdateMode="Conditional">
@@ -158,8 +166,12 @@
                                         <%--<asp:TextBox ID="txt_sdt" runat="server" data-role="input" OnTextChanged="txt_sdt_TextChanged" AutoPostBack="true"></asp:TextBox>--%>
 
                                         <asp:TextBox ID="txt_sdt" runat="server" data-role="input"></asp:TextBox>
-
-
+                                        <div class="mt-2 p-3 border bd-cyan bg-light" style="border-radius: 14px;">
+                                            <div class="fw-700">Tự đưa vào Hồ sơ người</div>
+                                            <div class="mt-1 fg-gray">
+                                                Nếu khách hàng này có số điện thoại, sau khi lưu hệ thống sẽ tự nhận diện vào module <strong>Hồ sơ người</strong>. Việc liên kết tài khoản Home được thực hiện tập trung tại đó, không gắn trực tiếp ở form tạo khách hàng.
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="mt-3">
                                         <label class="fw-600">Ngày sinh</label>
@@ -276,7 +288,12 @@
         <ContentTemplate>
             <div class="row mt-1-minus <%--mt-0-lg-minus mt-12-minus--%>">
                 <div class="cell-md-6 order-2 order-md-1 mt-0">
-                    <asp:TextBox ID="txt_search" runat="server" data-role="input" data-prepend="<span class='mif mif-search'></span>" placeholder="Tìm kiếm" OnTextChanged="txt_search_TextChanged" AutoPostBack="true"></asp:TextBox>
+                    <div class="d-flex flex-align-center">
+                        <asp:TextBox ID="txt_search" runat="server" data-role="input" data-prepend="<span class='mif mif-search'></span>" placeholder="Tìm kiếm"></asp:TextBox>
+                        <asp:LinkButton ID="but_search" runat="server" CssClass="button ml-2" OnClick="but_search_Click">
+                            <span class="mif mif-search"></span>
+                        </asp:LinkButton>
+                    </div>
                 </div>
                 <div class="cell-md-6 order-1 order-md-2 mt-0">
 
@@ -291,6 +308,17 @@
                             <li data-role="hint" data-hint-position="top" data-hint-text="Lọc" onclick="show_hide_id_form_1()">
                                 <a class="button"><span class="mif mif-filter"></span></a></li>
                             <li class="bd-gray border bd-default mt-1" style="height: 28px"></li>
+                            <%if (bcorn_class.check_quyen(user, "q8_3") == "")
+                                { %>
+                            <li data-role="hint" data-hint-position="top" data-hint-text="Ngừng dùng">
+                                <asp:Button ID="but_ngung" runat="server" Text="Ngừng dùng" CssClass="button warning" OnClick="but_ngung_Click" />
+                            </li>
+                            <li class="bd-gray border bd-default mt-1" style="height: 28px"></li>
+                            <li data-role="hint" data-hint-position="top" data-hint-text="Mở lại">
+                                <asp:Button ID="but_molai" runat="server" Text="Mở lại" CssClass="button success" OnClick="but_molai_Click" />
+                            </li>
+                            <li class="bd-gray border bd-default mt-1" style="height: 28px"></li>
+                            <%} %>
 
                             <%if (bcorn_class.check_quyen(user, "q8_4") == "")
                                 { %>
@@ -321,6 +349,8 @@
                                 </td>
                                 <td class=" text-bold text-center" style="width: 50px;">Ảnh</td>
                                 <td class="text-bold" style="min-width: 140px">Khách hàng</td>
+                                <td class="text-bold" style="min-width: 220px">Liên kết Home</td>
+                                <td class="text-bold" style="min-width: 150px">Trạng thái nguồn</td>
                                 <td class="text-bold" style="width: 1px">Nhóm</td>
                                 <td class="text-bold" style="min-width: 140px">Người tạo</td>
                                 <td style="width: 1px;"></td>
@@ -332,7 +362,7 @@
                                 <%--<td class="text-bold text-right" style="width: 108px; min-width: 108px">Thanh toán</td>--%>
                                 <%--<td class="text-bold text-right" style="width: 108px; min-width: 108px">Công nợ</td>--%>
                             </tr>
-                            <asp:Repeater ID="Repeater1" runat="server">
+                            <asp:Repeater ID="Repeater1" runat="server" OnItemDataBound="Repeater1_ItemDataBound">
                                 <ItemTemplate>
                                     <tr>
 
@@ -354,6 +384,12 @@
                                             <div>
                                                 <small><%#Eval("diachi").ToString() %></small>
                                             </div>
+                                        </td>
+                                        <td>
+                                            <asp:Literal ID="litPersonHub" runat="server"></asp:Literal>
+                                        </td>
+                                        <td>
+                                            <asp:Literal ID="litLifecycle" runat="server"></asp:Literal>
                                         </td>
                                         <td><%#Eval("tennhom").ToString() %></td>
                                         <td>
@@ -426,16 +462,37 @@
     </asp:UpdatePanel>
     <asp:UpdateProgress ID="UpdateProgress1" runat="server" AssociatedUpdatePanelID="UpdatePanel1">
         <ProgressTemplate>
-            <div class="bg-dark fixed-top h-100 w-100" style="opacity: 0.9; z-index: 99999!important">
-                <div style="padding-top: 50vh;">
-                    <div class="mx-auto color-style activity-atom" data-role="activity" data-type="atom" data-style="color" data-role-activity="true"><span class="electron"></span><span class="electron"></span><span class="electron"></span></div>
-                </div>
+            <div style="position: fixed; top: 92px; right: 18px; z-index: 99999!important; display: inline-flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 999px; background: rgba(15, 23, 42, 0.92); box-shadow: 0 12px 28px rgba(15, 23, 42, 0.24);">
+                <div class="color-style activity-ring" data-role="activity" data-type="ring" data-style="color" data-small="true" data-role-activity="true"></div>
+                <span class="fg-white">Đang tải khách hàng...</span>
             </div>
         </ProgressTemplate>
     </asp:UpdateProgress>
 
 </asp:Content>
 <asp:Content ID="Content3" ContentPlaceHolderID="foot" runat="Server">
-    <%--<%=notifi %>--%>
+    <script src="/js/gianhang-invoice-fast.js?v=2026-03-26.2"></script>
+    <script>
+        (function () {
+            function bindFastUi() {
+                if (!window.ahaInvoiceFast) return;
+                window.ahaInvoiceFast.initSearchSubmit({
+                    inputId: "<%=txt_search.ClientID %>",
+                    buttonId: "<%=but_search.ClientID %>"
+                });
+                window.ahaInvoiceFast.initCustomerLookup({
+                    endpoint: "/gianhang/admin/quan-ly-hoa-don/lookup-data.ashx",
+                    phoneId: "<%=txt_sdt.ClientID %>",
+                    nameId: "<%=txt_tenkhachhang.ClientID %>",
+                    addressId: "<%=txt_diachi.ClientID %>",
+                    careId: "<%=ddl_nhanvien_chamsoc.ClientID %>",
+                    groupId: "<%=DropDownList1.ClientID %>"
+                });
+            }
+            bindFastUi();
+            if (window.Sys && Sys.Application) {
+                Sys.Application.add_load(bindFastUi);
+            }
+        })();
+    </script>
 </asp:Content>
-

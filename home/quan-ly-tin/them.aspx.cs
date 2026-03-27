@@ -65,18 +65,21 @@ public partial class home_quan_ly_bai_Them : System.Web.UI.Page
 
     private bool IsDuyetGianHangDoiTac()
     {
-        string tkEnc = PortalRequest_cl.GetCurrentAccountEncrypted();
-        if (string.IsNullOrEmpty(tkEnc))
+        string tk = (PortalRequest_cl.GetCurrentAccount() ?? "").Trim().ToLowerInvariant();
+        if (string.IsNullOrEmpty(tk))
+        {
+            string tkEnc = PortalRequest_cl.GetCurrentAccountEncrypted();
+            if (string.IsNullOrEmpty(tkEnc))
+                return false;
+            tk = mahoa_cl.giaima_Bcorn(tkEnc);
+        }
+        if (string.IsNullOrEmpty(tk))
             return false;
 
-        string tk = mahoa_cl.giaima_Bcorn(tkEnc);
         using (dbDataContext db = new dbDataContext())
         {
             taikhoan_tb acc = db.taikhoan_tbs.FirstOrDefault(x => x.taikhoan == tk);
-            if (acc != null && PortalScope_cl.CanLoginShop(acc.taikhoan, acc.phanloai, acc.permission))
-                return true;
-
-            return db.DangKy_GianHangDoiTac_tbs.Any(x => x.taikhoan == tk && x.TrangThai == 1);
+            return acc != null && SpaceAccess_cl.CanAccessShop(db, acc);
         }
     }
 
@@ -207,6 +210,21 @@ public partial class home_quan_ly_bai_Them : System.Web.UI.Page
         {
             bool isCompanyShop = CompanyShop_cl.IsCompanyShopAccount(db, nguoiTao);
             string phanloaiBaiViet = CompanyShop_cl.NormalizeProductType(selectedProductType, isCompanyShop);
+            bool isShopPortal = PortalRequest_cl.IsShopPortalRequest();
+            int appliedPlatformSharePercent = isCompanyShop ? phanTramChoSan : 0;
+            if (isShopPortal)
+            {
+                int policyPercent;
+                if (ShopPolicy_cl.TryGetActivePolicyPercent(db, nguoiTao, out policyPercent))
+                {
+                    appliedPlatformSharePercent = policyPercent;
+                }
+                else if (!isCompanyShop)
+                {
+                    Helper_Tabler_cl.ShowModal(this.Page, "Shop của bạn chưa có chính sách % chiết khấu mặc định. Vui lòng gửi/duyệt yêu cầu mở không gian shop trước khi đăng tin.", "Thông báo", true, "warning");
+                    return;
+                }
+            }
 
             bool isInternal = CompanyShop_cl.IsInternalProductType(phanloaiBaiViet);
             if (string.Equals(selectedLoaiTin, AccountVisibility_cl.PostTypeService, StringComparison.OrdinalIgnoreCase))
@@ -256,7 +274,7 @@ public partial class home_quan_ly_bai_Them : System.Web.UI.Page
             ob.ThanhPho = thanhPho;
             ob.LinkMap = linkMap;
             ob.PhanTram_GiamGia_ThanhToan_BangEvoucher = phanTramUuDai;
-            CompanyShop_cl.SetPlatformSharePercent(ob, isCompanyShop ? phanTramChoSan : 0);
+            CompanyShop_cl.SetPlatformSharePercent(ob, appliedPlatformSharePercent);
             db.BaiViet_tbs.InsertOnSubmit(ob);
             db.SubmitChanges();
             ShopToAhaShinePostSync_cl.SyncTradePost(db, ob);

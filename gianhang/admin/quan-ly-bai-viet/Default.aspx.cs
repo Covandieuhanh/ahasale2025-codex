@@ -15,12 +15,28 @@ public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
     post_class po_cl = new post_class();
     datetime_class dt_cl = new datetime_class();
     nganh_class nganh_cl = new nganh_class();
+
+    private void EnsureLegacyAdminSession()
+    {
+        if (Session == null)
+            return;
+
+        string legacyUser = (Session["user"] ?? "").ToString().Trim();
+        if (legacyUser != "")
+            return;
+
+        string homeAccount;
+        string deniedMessage;
+        GianHangAdminBridge_cl.EnsureLegacyAdminSessionFromCurrentHome(db, out homeAccount, out deniedMessage);
+    }
+
     #region phân trang
     public int stt = 1, current_page = 1, total_page = 1, show = 30;
     List<string> list_id_split;
     #endregion
     protected void Page_Load(object sender, EventArgs e)
     {
+        EnsureLegacyAdminSession();
 
         #region Check_Login
         string _quyen = "q4_1";
@@ -455,8 +471,16 @@ public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
     #region autopostback
     protected void txt_search_TextChanged(object sender, EventArgs e)
     {
-        Session["search_baiviet"] = txt_search.Text.Trim();
+        ApplySearchState();
+    }
+    protected void but_search_Click(object sender, EventArgs e)
+    {
+        ApplySearchState();
+    }
+    private void ApplySearchState()
+    {
         Session["current_page_baiviet"] = "1";
+
         main();
     }
     protected void but_quaylai_Click(object sender, EventArgs e)

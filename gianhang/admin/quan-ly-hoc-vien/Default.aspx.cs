@@ -60,7 +60,7 @@ public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
         #endregion
         #region Check quyen theo nganh
         user = Session["user"].ToString();
-        user_parent = "admin";
+        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
         if (bcorn_class.check_quyen(user, "q14_1") == "" || bcorn_class.check_quyen(user, "n14_1") == "")
         {
             if (!IsPostBack)
@@ -136,6 +136,11 @@ public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
                     DropDownList5.SelectedIndex = int.Parse(Session["index_loc_nganh_hocvien"].ToString());
                 else
                     Session["index_loc_nganh_hocvien"] = DropDownList5.SelectedIndex.ToString();
+
+                if (Session["index_loc_nguon_hocvien"] != null)
+                    ddl_trangthai_nguon.SelectedIndex = int.Parse(Session["index_loc_nguon_hocvien"].ToString());
+                else
+                    Session["index_loc_nguon_hocvien"] = ddl_trangthai_nguon.SelectedIndex.ToString();
             }
             main();
         }
@@ -230,6 +235,21 @@ public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
             var list_1 = list_all.Where(p => p.id_nganh == DropDownList5.SelectedValue.ToString()).ToList(); list_all = list_all.Intersect(list_1).ToList();
         }
 
+        HashSet<string> inactiveMemberKeys = null;
+        switch (ddl_trangthai_nguon.SelectedValue.ToString())
+        {
+            case "1":
+                inactiveMemberKeys = GianHangAdminSourceLifecycle_cl.GetInactiveKeySet(db, user_parent, "member");
+                list_all = list_all.Where(p => !inactiveMemberKeys.Contains((p.id + "").Trim())).ToList();
+                break;
+            case "2":
+                inactiveMemberKeys = GianHangAdminSourceLifecycle_cl.GetInactiveKeySet(db, user_parent, "member");
+                list_all = list_all.Where(p => inactiveMemberKeys.Contains((p.id + "").Trim())).ToList();
+                break;
+            default:
+                break;
+        }
+
         tong_hocphi = list_all.Sum(p => p.hocphi).Value;
         tong_thanhtoan = list_all.Sum(p => p.sotien_dathanhtoan).Value;
         tong_congno = list_all.Sum(p => p.sotien_conlai).Value;
@@ -282,12 +302,94 @@ public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
         Repeater1.DataBind();
     }
 
+    protected void Repeater1_ItemDataBound(object sender, RepeaterItemEventArgs e)
+    {
+        if (e.Item.ItemType != ListItemType.Item && e.Item.ItemType != ListItemType.AlternatingItem)
+            return;
+
+        Literal litPersonHub = e.Item.FindControl("litPersonHub") as Literal;
+        Literal litLifecycle = e.Item.FindControl("litLifecycle") as Literal;
+        if (litPersonHub == null || litLifecycle == null)
+            return;
+
+        string displayName = (DataBinder.Eval(e.Item.DataItem, "hoten") + "").Trim();
+        string phone = (DataBinder.Eval(e.Item.DataItem, "sdt") + "").Trim();
+        string sourceKey = (DataBinder.Eval(e.Item.DataItem, "id") + "").Trim();
+        litPersonHub.Text = BuildPersonHubListHtml(displayName, phone, "thành viên", "member", sourceKey);
+        litLifecycle.Text = BuildSourceLifecycleHtml(sourceKey);
+    }
+
+    private string BuildPersonHubListHtml(string displayName, string phone, string roleLabel, string sourceType, string sourceKey)
+    {
+        string normalizedPhone = AccountAuth_cl.NormalizePhone(phone);
+        if (normalizedPhone == "")
+        {
+            return "<small class='fg-gray'>Thiếu số điện thoại để gắn Home. Cập nhật hồ sơ " + HttpUtility.HtmlEncode(roleLabel) + " này trước.</small>";
+        }
+
+        GianHangAdminPersonHub_cl.PersonLinkInfo linkInfo = GianHangAdminPersonHub_cl.GetLinkInfo(db, user_parent, normalizedPhone, displayName);
+        string css = linkInfo == null || string.IsNullOrWhiteSpace(linkInfo.LinkCss) ? "bg-gray fg-white" : linkInfo.LinkCss;
+        string label = linkInfo == null || string.IsNullOrWhiteSpace(linkInfo.StatusLabel) ? "Chưa liên kết" : linkInfo.StatusLabel;
+        string url = GianHangAdminPersonHub_cl.BuildDetailUrl(normalizedPhone);
+        string note = "Mở hồ sơ người để liên kết Home một lần cho toàn bộ vai trò cùng số điện thoại.";
+        GianHangAdminPersonHub_cl.PersonSourceRef sourceInfo = GianHangAdminPersonHub_cl.GetSourceInfo(db, user_parent, normalizedPhone, sourceType, sourceKey);
+        string accessCss = sourceInfo == null || string.IsNullOrWhiteSpace(sourceInfo.AdminAccessCss) ? "bg-gray fg-white" : sourceInfo.AdminAccessCss;
+        string accessLabel = sourceInfo == null || string.IsNullOrWhiteSpace(sourceInfo.AdminAccessLabel) ? "Không mở quyền /gianhang/admin ở nguồn này" : sourceInfo.AdminAccessLabel;
+
+        if (linkInfo != null && linkInfo.LinkedHomeAccount != null)
+        {
+            string linkedName = string.IsNullOrWhiteSpace(linkInfo.LinkedHomeAccount.hoten)
+                ? (linkInfo.LinkedHomeAccount.taikhoan ?? "")
+                : linkInfo.LinkedHomeAccount.hoten;
+            note = "Đã liên kết với Home " + linkedName + " • " + (linkInfo.LinkedHomeAccount.taikhoan ?? "");
+        }
+        else if (linkInfo != null && !string.IsNullOrWhiteSpace(linkInfo.PendingPhone))
+        {
+            note = "Đang chờ số " + linkInfo.PendingPhone + " đăng ký hoặc đăng nhập AhaSale.";
+        }
+
+        return "<span class='data-wrapper'><code class='" + HttpUtility.HtmlAttributeEncode(css) + "'>" + HttpUtility.HtmlEncode(label) + "</code></span>"
+            + "<div class='mt-1'><span class='data-wrapper'><code class='" + HttpUtility.HtmlAttributeEncode(accessCss) + "'>" + HttpUtility.HtmlEncode(accessLabel) + "</code></span></div>"
+            + "<div class='mt-1'><small class='fg-gray'>" + HttpUtility.HtmlEncode(note) + "</small></div>"
+            + "<div class='mt-1'><a class='fg-blue fg-darkBlue-hover' href='" + HttpUtility.HtmlAttributeEncode(url) + "'>Mở hồ sơ người</a></div>";
+    }
+
+    private string BuildSourceLifecycleHtml(string sourceKey)
+    {
+        GianHangAdminSourceLifecycle_cl.SourceLifecycleInfo info = GianHangAdminSourceLifecycle_cl.GetInfo(
+            db,
+            user_parent,
+            "member",
+            sourceKey,
+            "Đang dùng thành viên",
+            "Đã ngừng dùng thành viên",
+            "Vai trò thành viên / học viên này đang được dùng bình thường trong module nguồn.",
+            "Vai trò thành viên / học viên này đang ở trạng thái ngừng dùng an toàn. Liên kết Home trung tâm và lịch sử nghiệp vụ vẫn được giữ.");
+
+        string css = info == null || string.IsNullOrWhiteSpace(info.Css) ? "bg-green fg-white" : info.Css;
+        string label = info == null || string.IsNullOrWhiteSpace(info.Label) ? "Đang dùng thành viên" : info.Label;
+        string note = info == null || string.IsNullOrWhiteSpace(info.Note)
+            ? "Vai trò thành viên / học viên này đang được dùng bình thường trong module nguồn."
+            : info.Note;
+
+        return "<span class='data-wrapper'><code class='" + HttpUtility.HtmlAttributeEncode(css) + "'>" + HttpUtility.HtmlEncode(label) + "</code></span>"
+            + "<div class='mt-1'><small class='fg-gray'>" + HttpUtility.HtmlEncode(note) + "</small></div>";
+    }
+
 
     #region autopostback
     protected void txt_search_TextChanged(object sender, EventArgs e)
     {
-        Session["search_hocvien"] = txt_search.Text.Trim();
+        ApplySearchState();
+    }
+    protected void but_search_Click(object sender, EventArgs e)
+    {
+        ApplySearchState();
+    }
+    private void ApplySearchState()
+    {
         Session["current_page_hocvien"] = "1";
+
         main();
     }
     //protected void txt_show_TextChanged(object sender, EventArgs e)
@@ -324,6 +426,7 @@ public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
 
         Session["index_loc_thanhtoan_hocvien"] = ddl_locdulieu.SelectedIndex;
         Session["index_loc_nganh_hocvien"] = DropDownList5.SelectedIndex;
+        Session["index_loc_nguon_hocvien"] = ddl_trangthai_nguon.SelectedIndex;
         main();
         ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Lọc thành công.", "4000", "warning"), true);
     }
@@ -340,6 +443,7 @@ public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
 
         Session["index_loc_thanhtoan_hocvien"] = null;
         Session["index_loc_nganh_hocvien"] = null;
+        Session["index_loc_nguon_hocvien"] = null;
         Session["notifi"] = thongbao_class.metro_notifi_onload("Thông báo", "Xử lý thành công.", "4000", "warning");
         Response.Redirect("/gianhang/admin/quan-ly-hoc-vien/Default.aspx");
     }
@@ -441,5 +545,51 @@ public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
         }
         else
             ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", ""), true);
+    }
+
+    protected void but_ngung_Click(object sender, EventArgs e)
+    {
+        UpdateSelectedMemberLifecycle(false, "Đã chuyển các thành viên được chọn sang trạng thái ngừng dùng an toàn.");
+    }
+
+    protected void but_molai_Click(object sender, EventArgs e)
+    {
+        UpdateSelectedMemberLifecycle(true, "Đã mở lại các thành viên được chọn.");
+    }
+
+    private void UpdateSelectedMemberLifecycle(bool makeActive, string successMessage)
+    {
+        if (!(bcorn_class.check_quyen(user, "q14_3") == "" || bcorn_class.check_quyen(user, "n14_3") == ""))
+        {
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Bạn không đủ quyền để đổi trạng thái thành viên.", "4000", "warning"), true);
+            return;
+        }
+
+        int affected = 0;
+        for (int i = 0; i < list_id_split.Count; i++)
+        {
+            if (Request.Form[list_id_split[i]] != "on")
+                continue;
+
+            string selectedId = list_id_split[i].Replace("check_", "");
+            if (!hv_cl.exist_id(selectedId))
+                continue;
+
+            if (makeActive)
+                GianHangAdminSourceLifecycle_cl.SetActive(db, user_parent, "member", selectedId, user, "Thành viên / học viên được mở lại từ danh sách thành viên.");
+            else
+                GianHangAdminSourceLifecycle_cl.SetInactive(db, user_parent, "member", selectedId, user, "Thành viên / học viên được chuyển sang trạng thái ngừng dùng an toàn từ danh sách thành viên.");
+
+            affected++;
+        }
+
+        if (affected > 0)
+        {
+            main();
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", successMessage, "4000", makeActive ? "success" : "warning"), true);
+            return;
+        }
+
+        ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Không có thành viên nào phù hợp để đổi trạng thái.", "4000", "warning"), true);
     }
 }

@@ -1,0 +1,71 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeFile="TablerHome.master.cs" Inherits="MasterPage_Tabler_Tabler2" %>
+
+<%@ Register Src="~/Uc/Home/Header_uc.ascx" TagPrefix="uc1" TagName="Header_uc" %>
+<%@ Register Src="~/Uc/Home/Footer_uc.ascx" TagPrefix="uc1" TagName="Footer_uc" %>
+
+
+
+<!DOCTYPE html>
+
+<html>
+<head runat="server">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+   <meta http-equiv="content-language" content="vi" />
+   <meta name="robots" content="index, follow" />
+   <meta name="revisit-after" content="1 days" />
+
+
+    <meta name="format-detection" content="telephone=no">
+    <meta name="format-detection" content="date=no">
+    <meta name="format-detection" content="address=no">
+    <meta name="format-detection" content="email=no">
+    <meta name="format-detection" content="url=no">
+
+
+   <asp:Literal ID="literal_fav_icon" runat="server"></asp:Literal>
+    <asp:ContentPlaceHolder ID="head_truoc" runat="server"></asp:ContentPlaceHolder>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+    <%--icon--%>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler-flags.min.css">
+    <%--icon cờ quốc kỳ--%>
+    <link rel="stylesheet" href="<%= Helper_cl.VersionedUrl("~/assetscss/Tabler-Hota.css") %>" />
+    <link rel="stylesheet" href="<%= Helper_cl.VersionedUrl("~/assetscss/header_tabler_UI.css") %>" />
+    <link rel="stylesheet" href="<%= Helper_cl.VersionedUrl("~/assetscss/aha-ui-refresh.css") %>" />
+    <asp:ContentPlaceHolder ID="head_sau" runat="server"></asp:ContentPlaceHolder>
+    <style>
+        :root {
+    --tblr-primary: #2fb344;        /* xanh lá Tabler */
+    --tblr-primary-rgb: 47, 179, 68;
+}
+
+    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+</head>
+<body>
+    <form id="form1" runat="server">
+
+        <asp:ScriptManager runat="server" ID="ScriptManager1" EnablePageMethods="true" EnableScriptGlobalization="True" />
+        <div class="page">
+            <uc1:Header_uc runat="server" ID="Header_uc" />
+            <div class="page-wrapper" style="margin-top: 55px">
+                <asp:ContentPlaceHolder ID="main" runat="server"></asp:ContentPlaceHolder>
+            </div>
+            <uc1:Footer_uc runat="server" ID="Footer_uc" />
+        </div>
+    </form>
+
+    <asp:ContentPlaceHolder ID="foot_truoc" runat="server"></asp:ContentPlaceHolder>
+    <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.css">
+<script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
+    <script src="<%= Helper_cl.VersionedUrl("~/js/aha-ui-refresh.js") %>"></script>
+    <script src="<%= Helper_cl.VersionedUrl("~/Js/Tabler-Hota.js") %>"></script>
+    <asp:ContentPlaceHolder ID="foot_sau" runat="server"></asp:ContentPlaceHolder>
+</body>
+</html>

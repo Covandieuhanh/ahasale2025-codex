@@ -28,12 +28,12 @@
                                 <div class="cell-lg-4 pl-3-lg pl-0 pr-3-lg pr-0 mt-10">
                                     <div class="h-100">
                                         <div>
-                                            <a class="fg-black fg-green-hover" href="/gianhang/page/chi-tiet-bai-viet.aspx?idbv=<%#Eval("id") %>">
+                                            <a class="fg-black fg-green-hover" href="<%# BuildDetailUrl(Eval("id")) %>">
                                                 <img src="<%#Eval("image") %>" /></a>
                                         </div>
                                         <div class=" border bd-default border-top-none p-3">
                                             <div class=" fw-600 ellipsis-2">
-                                                <a class="fg-black fg-green-hover" href="/gianhang/page/chi-tiet-bai-viet.aspx?idbv=<%#Eval("id") %>"><%#Eval("name") %></a>
+                                                <a class="fg-black fg-green-hover" href="<%# BuildDetailUrl(Eval("id")) %>"><%#Eval("name") %></a>
                                             </div>
                                             <div style="color: #808080" class="mt-1">
                                                 <%#Eval("description") %>
@@ -43,7 +43,7 @@
                                             </div>--%>
                                            <hr class="mt-3 mb-3" />
                                             <div class="text-right">
-                                                <a href="/gianhang/page/chi-tiet-bai-viet.aspx?idbv=<%#Eval("id") %>" class="button secondary rounded">Xem thêm</a>
+                                                <a href="<%# BuildDetailUrl(Eval("id")) %>" class="button secondary rounded">Xem thêm</a>
                                                 <%--<a href="#" class="button bg-emerald bg-darkEmerald-hover fg-white rounded">Thêm vào giỏ</a>--%>
                                             </div>
                                         </div>
@@ -75,4 +75,3 @@
 </asp:Content>
 <asp:Content ID="Content3" ContentPlaceHolderID="foot" runat="Server">
 </asp:Content>
-

@@ -47,7 +47,7 @@ public partial class badmin_temp : System.Web.UI.Page
         }
         #endregion
         user = Session["user"].ToString();
-        user_parent = "admin";
+        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
 
         if (!IsPostBack)
         {

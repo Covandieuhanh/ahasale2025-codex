@@ -7,8 +7,8 @@
     <div class="admin-role-home-shell pt-3 pl-3 pr-3 pb-20">
         <section class="admin-role-home-hero">
             <div class="admin-role-home-hero-main">
-                <div class="admin-role-home-eyebrow">TRANG CHỦ TÀI KHOẢN ADMIN</div>
-                <h1 class="admin-role-home-title">Bảng quyền truy cập của <asp:Label ID="lb_admin_home_name" runat="server" /></h1>
+                <div class="admin-role-home-eyebrow"><asp:Label ID="lb_admin_home_eyebrow" runat="server" /></div>
+                <h1 class="admin-role-home-title"><asp:Label ID="lb_admin_home_title" runat="server" /></h1>
                 <div class="admin-role-home-pill-row">
                     <span class="admin-role-home-pill admin-role-home-pill-primary">
                         Vai trò: <asp:Label ID="lb_admin_home_role" runat="server" />
@@ -30,6 +30,10 @@
             </div>
             <aside class="admin-role-home-sidecard">
                 <div class="admin-role-home-side-title">Thông tin tài khoản</div>
+                <div class="admin-role-home-side-line">
+                    <span class="admin-role-home-side-label">Tên hiển thị</span>
+                    <span class="admin-role-home-side-value"><asp:Label ID="lb_admin_home_name" runat="server" /></span>
+                </div>
                 <div class="admin-role-home-side-line">
                     <span class="admin-role-home-side-label">Tài khoản</span>
                     <span class="admin-role-home-side-value"><asp:Label ID="lb_admin_home_account" runat="server" /></span>
@@ -54,8 +58,8 @@
 
         <section class="admin-role-home-section">
             <div class="admin-role-home-section-head">
-                <h2>Quy định đang áp dụng cho tài khoản này</h2>
-                <p>Các ghi chú dưới đây được sinh theo đúng vai trò và scope đang cấp.</p>
+                <h2><asp:Label ID="lb_admin_home_notes_title" runat="server" /></h2>
+                <p><asp:Label ID="lb_admin_home_notes_description" runat="server" /></p>
             </div>
             <div class="admin-role-home-note-list">
                 <asp:Repeater ID="rpt_admin_home_notes" runat="server">
@@ -69,10 +73,10 @@
             </div>
         </section>
 
-        <section class="admin-role-home-section">
+        <asp:Panel ID="pn_admin_object_groups_section" runat="server" CssClass="admin-role-home-section" Visible="false">
             <div class="admin-role-home-section-head">
-                <h2>5 nhóm đối tượng quản trị</h2>
-                <p>Khối này giúp người dùng nhìn một lần là hiểu ngay mình đang phụ trách nhóm nào trong 5 nhóm admin chính.</p>
+                <h2><asp:Label ID="lb_admin_object_groups_title" runat="server" /></h2>
+                <p><asp:Label ID="lb_admin_object_groups_description" runat="server" /></p>
             </div>
             <div class="admin-role-home-grid">
                 <asp:Repeater ID="rpt_admin_object_groups" runat="server">
@@ -100,15 +104,15 @@
                     </ItemTemplate>
                 </asp:Repeater>
             </div>
-        </section>
+        </asp:Panel>
 
         <section class="admin-role-home-section">
             <div class="admin-role-home-section-head">
-                <h2>Danh sách tab được phép truy cập</h2>
-                <p>Mỗi tab đều ghi rõ tên tab, ý nghĩa, thao tác chính và phạm vi hoạt động để người dùng nắm quyền ngay khi đăng nhập.</p>
+                <h2><asp:Label ID="lb_admin_home_tabs_title" runat="server" /></h2>
+                <p><asp:Label ID="lb_admin_home_tabs_description" runat="server" /></p>
             </div>
             <asp:Panel ID="pn_admin_home_empty" runat="server" CssClass="admin-role-home-empty" Visible="false">
-                Tài khoản này hiện chưa có tab nghiệp vụ nào được cấp. Nếu đây là tài khoản mới, Super Admin cần gán quyền trước khi sử dụng.
+                <asp:Label ID="lb_admin_home_empty" runat="server" />
             </asp:Panel>
             <div class="admin-role-home-grid">
                 <asp:Repeater ID="rpt_admin_home_tabs" runat="server">

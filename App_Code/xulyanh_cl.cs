@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
@@ -20,15 +21,39 @@ public class xulyanh_cl
             using (Bitmap original = new Bitmap(sourcePath))
             {
                 int newHeight = (int)((double)original.Height / original.Width * newWidth);
+                ImageFormat outputFormat = GetImageFormatFromFileName(destinationPath);
+                bool keepTransparency = SupportsTransparency(outputFormat);
+                PixelFormat pixelFormat = keepTransparency ? PixelFormat.Format32bppArgb : PixelFormat.Format24bppRgb;
 
-                using (Bitmap resized = new Bitmap(original, newWidth, newHeight))
+                using (Bitmap resized = new Bitmap(newWidth, newHeight, pixelFormat))
                 {
+                    using (Graphics graphics = Graphics.FromImage(resized))
+                    {
+                        graphics.CompositingMode = CompositingMode.SourceCopy;
+                        graphics.CompositingQuality = CompositingQuality.HighQuality;
+                        graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                        graphics.SmoothingMode = SmoothingMode.HighQuality;
+                        graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                        graphics.Clear(keepTransparency ? Color.Transparent : Color.White);
+
+                        using (ImageAttributes imageAttributes = new ImageAttributes())
+                        {
+                            imageAttributes.SetWrapMode(WrapMode.TileFlipXY);
+                            graphics.DrawImage(
+                                original,
+                                new Rectangle(0, 0, newWidth, newHeight),
+                                0,
+                                0,
+                                original.Width,
+                                original.Height,
+                                GraphicsUnit.Pixel,
+                                imageAttributes);
+                        }
+                    }
+
                     // Kiểm tra xem đường dẫn có hợp lệ và có quyền ghi không
                     if (IsValidPath(destinationPath))
                     {
-                        // Xác định định dạng ảnh dựa trên phần mở rộng của tên tệp
-                        ImageFormat outputFormat = GetImageFormatFromFileName(destinationPath);
-
                         // Lưu ảnh đã thay đổi kích thước dưới định dạng được xác định với chất lượng
                         SaveImageWithQuality(resized, destinationPath, outputFormat, quality);
                     }
@@ -50,6 +75,7 @@ public class xulyanh_cl
     private static void SaveImageWithQuality(Bitmap image, string destinationPath, ImageFormat format, int quality)
     {
         EncoderParameters encoderParameters = null;
+        ImageCodecInfo encoder = GetEncoder(format);
 
         // Nếu định dạng là JPEG, sử dụng EncoderParameters để đặt chất lượng
         if (format == ImageFormat.Jpeg)
@@ -58,8 +84,13 @@ public class xulyanh_cl
             encoderParameters.Param[0] = new EncoderParameter(Encoder.Quality, quality);
         }
 
-        // Lưu ảnh với chất lượng được xác định
-        image.Save(destinationPath, GetEncoder(format), encoderParameters);
+        if (encoder != null && encoderParameters != null)
+        {
+            image.Save(destinationPath, encoder, encoderParameters);
+            return;
+        }
+
+        image.Save(destinationPath, format);
     }
 
     private static ImageFormat GetImageFormatFromFileName(string fileName)
@@ -118,5 +149,12 @@ public class xulyanh_cl
 
         // Nếu không tìm thấy encoder cho định dạng hình ảnh, trả về null
         return null;
+    }
+
+    private static bool SupportsTransparency(ImageFormat format)
+    {
+        return format.Guid == ImageFormat.Png.Guid
+            || format.Guid == ImageFormat.Gif.Guid
+            || format.Guid == ImageFormat.Tiff.Guid;
     }
 }

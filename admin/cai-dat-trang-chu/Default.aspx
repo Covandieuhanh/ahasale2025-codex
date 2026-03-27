@@ -209,8 +209,8 @@
                                         </div>
                                     </div>
                                     <div class="mt-3">
-                                        <label class="fw-600">Icon mobile (Home)</label>
-                                        <span style="cursor: pointer" class="mif mif-info ml-1" data-role="popover" data-popover-text="<small>Kích thước chuẩn: 180x180 pixel. Icon mobile là biểu tượng hiển thị khi người dùng thêm trang web của bạn vào màn hình chính trên thiết bị di động.</small>" data-popover-hide="8000" data-close-button="false" data-popover-position="right" data-popover-trigger="click" data-cls-popover="drop-shadow"></span>
+                                        <label class="fw-600">Icon mobile + logo top bar (Home)</label>
+                                        <span style="cursor: pointer" class="mif mif-info ml-1" data-role="popover" data-popover-text="<small>Kích thước chuẩn: 180x180 pixel. Ảnh này dùng cho icon mobile (khi thêm vào màn hình chính) và logo ở giữa thanh top bar của Home.</small>" data-popover-hide="8000" data-close-button="false" data-popover-position="right" data-popover-trigger="click" data-cls-popover="drop-shadow"></span>
                                         <input type="file" id="fileInput3" onchange="uploadFile3()" data-role="file" data-button-title="<span class='mif-file-upload'></span>" />
                                         <div id="message3" runat="server"></div>
                                         <div id="uploadedFilePath3"></div>
@@ -227,8 +227,8 @@
                                         </div>
                                     </div>
                                     <div class="mt-3">
-                                        <label class="fw-600">Icon mobile (Gian hàng đối tác)</label>
-                                        <span style="cursor: pointer" class="mif mif-info ml-1" data-role="popover" data-popover-text="<small>Icon hiển thị khi người dùng thêm link /shop vào màn hình chính.</small>" data-popover-hide="8000" data-close-button="false" data-popover-position="right" data-popover-trigger="click" data-cls-popover="drop-shadow"></span>
+                                        <label class="fw-600">Icon mobile + logo top bar (Gian hàng đối tác)</label>
+                                        <span style="cursor: pointer" class="mif mif-info ml-1" data-role="popover" data-popover-text="<small>Ảnh này dùng cho icon mobile khi thêm link /shop vào màn hình chính và logo ở giữa thanh top bar trong không gian Shop.</small>" data-popover-hide="8000" data-close-button="false" data-popover-position="right" data-popover-trigger="click" data-cls-popover="drop-shadow"></span>
                                         <input type="file" id="fileInput4" onchange="uploadFile4()" data-role="file" data-button-title="<span class='mif-file-upload'></span>" />
                                         <div id="message4" runat="server"></div>
                                         <div id="uploadedFilePath4"></div>

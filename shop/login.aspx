@@ -35,8 +35,11 @@
         }
 
         .aha-brand img {
-            height: 56px;
             width: auto;
+            max-width: min(82vw, 320px);
+            height: auto;
+            max-height: 56px;
+            object-fit: contain;
         }
 
         .aha-title {
@@ -74,7 +77,7 @@
         <div class="container container-tight py-5">
             <div class="text-center mb-4">
                 <div class="aha-brand mb-3">
-                    <img src="/uploads/images/logo-aha-trang.png" alt="AhaSale" />
+                    <img src="<%= ResolveShopBrandLogoUrl() %>" alt="AhaSale" />
                 </div>
                 <div class="aha-title h2 mb-1">Đăng nhập gian hàng đối tác AhaSale</div>
                 <div class="aha-sub">Dành cho tài khoản gian hàng đối tác quản lý sản phẩm và đơn hàng.</div>
@@ -148,7 +151,7 @@
                     </asp:Panel>
 
                     <div class="mt-4 text-center">
-                        <a class="link-secondary" href="/shop/dang-ky.aspx">Đăng ký tài khoản gian hàng đối tác</a>
+                        <a class="link-secondary" href="/home/mo-khong-gian.aspx?space=shop&amp;return_url=%2Fshop%2Fdefault.aspx">Mở không gian shop đối tác chiến lược</a>
                         <span class="text-secondary mx-2">|</span>
                         <a class="link-secondary" href="/dang-nhap">Đăng nhập tài khoản cá nhân</a>
                     </div>

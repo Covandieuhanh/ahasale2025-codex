@@ -20,6 +20,29 @@ public partial class shop_default : System.Web.UI.Page
     private string _cachedShopAccount;
     private string _cachedShopAccountEncoded;
 
+    protected string ResolveShopBrandLogoUrl()
+    {
+        string contextLogo = PortalBranding_cl.NormalizeIconPath(
+            Convert.ToString(Context == null ? null : Context.Items["AhaHeaderCenterLogoUrl"]),
+            PortalBranding_cl.DefaultShopIconPath);
+
+        if (!string.IsNullOrWhiteSpace(contextLogo))
+            return contextLogo;
+
+        try
+        {
+            using (dbDataContext db = new dbDataContext())
+            {
+                PortalBranding_cl.ScopeBrandingSnapshot branding = PortalBranding_cl.LoadScopeBranding(db, PortalBranding_cl.ScopeShop, true);
+                return PortalBranding_cl.ResolveHeaderLogoPath(branding, PortalBranding_cl.ScopeShop);
+            }
+        }
+        catch
+        {
+            return PortalBranding_cl.DefaultShopIconPath;
+        }
+    }
+
     private class ShopProductSummary
     {
         public int id { get; set; }
@@ -77,7 +100,7 @@ public partial class shop_default : System.Web.UI.Page
                 AccountVisibility_cl.EnsureTradeTypeNormalized(db);
 
                 taikhoan_tb acc = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == tk);
-                if (acc == null || !PortalScope_cl.CanLoginShop(acc.taikhoan, acc.phanloai, acc.permission))
+                if (acc == null || !SpaceAccess_cl.CanAccessShop(db, acc))
                 {
                     check_login_cl.del_all_cookie_session_shop();
                     Response.Redirect("/shop/login.aspx", false);
@@ -86,6 +109,8 @@ public partial class shop_default : System.Web.UI.Page
                 }
 
                 bool isCompanyShop = CompanyShop_cl.IsCompanyShopAccount(db, tk);
+                if (isCompanyShop)
+                    CompanyShopBootstrap_cl.EnsureSystemCatalogMirrored(db);
                 SetControlVisible("ph_menu_ban_san_pham", isCompanyShop);
                 SetControlVisible("ph_menu_company_space", isCompanyShop);
                 SetControlVisible("ph_switch_to_home", PortalActiveMode_cl.HasHomeCredential());
@@ -178,9 +203,7 @@ public partial class shop_default : System.Web.UI.Page
         if (isCompanyShop)
             phanLoaiText += " • Shop công ty • " + (space == ShopSpaceInternal ? "Không gian nội bộ" : "Không gian công khai");
         SetLabelText("lb_phanloai", phanLoaiText);
-        string shopStatusText = acc.TrangThai_Shop == ShopStatus_cl.StatusApproved
-            ? "Hoạt động"
-            : (acc.TrangThai_Shop == ShopStatus_cl.StatusPending ? "Chờ duyệt" : "Đang khóa");
+        string shopStatusText = ShopStatus_cl.GetStatusText(db, acc);
         SetLabelText("lb_trangthai", shopStatusText);
         SetImageUrl("img_avatar", avatar);
 

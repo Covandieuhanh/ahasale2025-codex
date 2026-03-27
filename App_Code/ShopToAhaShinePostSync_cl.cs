@@ -100,12 +100,12 @@ public static class ShopToAhaShinePostSync_cl
         mirror.image = post.image;
         mirror.ngaytao = post.ngaytao ?? AhaTime_cl.Now;
         mirror.nguoitao = shopAccount;
-        mirror.bin = post.bin ?? false;
-        mirror.noibat = post.noibat ?? false;
+        mirror.bin = post.bin == true;
+        mirror.noibat = post.noibat == true;
         mirror.phanloai = isService ? "ctdv" : "ctsp";
         mirror.id_nganh = adminOwner == null ? "" : (adminOwner.id_nganh ?? "").Trim();
         mirror.id_chinhanh = chiNhanhId;
-        mirror.hienthi = !(post.bin ?? false);
+        mirror.hienthi = post.bin != true;
 
         if (isService)
         {

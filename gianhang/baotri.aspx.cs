@@ -33,11 +33,11 @@ public partial class admin_Default2 : System.Web.UI.Page
                 config_baotri_table _ob = q.First();
                 _ob.baotri_trangthai = false;
                 db.SubmitChanges();
-                Response.Redirect(AhaShineHomeRoutes_cl.HomeUrl);
+                Response.Redirect("/gianhang/public.aspx");
             }
         }
         else
-            Response.Redirect(AhaShineHomeRoutes_cl.HomeUrl);
+            Response.Redirect("/gianhang/public.aspx");
 
     }
     protected void Page_Load(object sender, EventArgs e)
@@ -46,7 +46,7 @@ public partial class admin_Default2 : System.Web.UI.Page
         {
             #region meta 
             if (db.config_baotri_tables.First().baotri_trangthai == false)
-                Response.Redirect(AhaShineHomeRoutes_cl.HomeUrl);
+                Response.Redirect("/gianhang/public.aspx");
             else
             {
                 var q = db.config_thongtin_tables;

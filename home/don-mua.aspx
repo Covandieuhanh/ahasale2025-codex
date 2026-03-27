@@ -68,9 +68,113 @@
             padding:6px 10px;
             font-weight:600;
         }
+        .desktop-status-tabs{
+            display:flex;
+            flex-wrap:wrap;
+            gap:8px;
+            margin-top:12px;
+        }
+        .status-tab{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            padding:8px 12px;
+            border:1px solid var(--tblr-border-color,#e2e8f0);
+            border-radius:999px;
+            color:#334155;
+            text-decoration:none;
+            background:#fff;
+            font-weight:600;
+            transition:all .18s ease;
+        }
+        .status-tab:hover{
+            border-color:#94a3b8;
+            color:#0f172a;
+            transform:translateY(-1px);
+        }
+        .status-tab.active{
+            background:#0f172a;
+            border-color:#0f172a;
+            color:#fff;
+            box-shadow:0 10px 24px rgba(15,23,42,.22);
+        }
+        .status-tab-count{
+            min-width:22px;
+            height:22px;
+            padding:0 7px;
+            border-radius:999px;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            background:#f1f5f9;
+            color:#334155;
+            font-size:12px;
+            font-weight:700;
+        }
+        .status-tab.active .status-tab-count{
+            background:rgba(255,255,255,.18);
+            color:#fff;
+        }
+
+        .order-drawer-backdrop{
+            position:fixed;
+            inset:0;
+            background:rgba(15,23,42,.45);
+            z-index:1045;
+            display:none;
+        }
+        .order-drawer{
+            position:fixed;
+            top:0;
+            right:-720px;
+            width:min(720px, 96vw);
+            height:100vh;
+            background:#fff;
+            z-index:1050;
+            box-shadow:-18px 0 44px rgba(15,23,42,.18);
+            transition:right .22s ease;
+            display:flex;
+            flex-direction:column;
+        }
+        .order-drawer.show{ right:0; }
+        .order-drawer-backdrop.show{ display:block; }
+        .order-drawer-head{
+            padding:12px 14px;
+            border-bottom:1px solid #e2e8f0;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:10px;
+        }
+        .order-drawer-title{
+            font-weight:700;
+            font-size:16px;
+            margin:0;
+        }
+        .order-drawer-frame{
+            border:0;
+            width:100%;
+            height:100%;
+            background:#f8fafc;
+        }
+
+        @media (min-width: 768px){
+            .page-header .row.g-2.align-items-center.mt-3{
+                position:sticky;
+                top:70px;
+                z-index:20;
+                background:#fff;
+                border:1px solid #e2e8f0;
+                border-radius:14px;
+                padding:12px;
+                margin-top:14px !important;
+                box-shadow:0 12px 26px rgba(15,23,42,.06);
+            }
+        }
         @media (max-width: 575.98px){
             .status-filter-control{ width:100%; }
             .status-filter-select{ flex:1; min-width:0; }
+            .desktop-status-tabs{ display:none; }
         }
 
         .orders-mobile {
@@ -97,6 +201,10 @@
             font-size: 12px;
             font-weight: 700;
             color: #2563eb;
+        }
+        .order-card-status .badge {
+            font-size: 12px;
+            font-weight: 700;
         }
         .order-card-item {
             display: grid;
@@ -146,6 +254,25 @@
             gap: 10px;
             align-items: center;
             margin-bottom: 12px;
+        }
+        .mobile-page-title{
+            display:none;
+            margin-bottom:10px;
+        }
+        .mobile-page-title .mobile-pretitle{
+            font-size:12px;
+            color:#64748b;
+            font-weight:600;
+            text-transform:uppercase;
+            letter-spacing:.02em;
+            margin-bottom:2px;
+        }
+        .mobile-page-title .mobile-title{
+            font-size:24px;
+            line-height:1.2;
+            font-weight:800;
+            color:#0f172a;
+            margin:0;
         }
 
         .mobile-search {
@@ -205,8 +332,10 @@
         @media (max-width: 767.98px){
             .table-responsive { display: none; }
             .orders-mobile { display: block; }
+            .mobile-page-title { display:block; }
             .mobile-toolbar { display: flex; }
             .mobile-tabs { display: flex; }
+            .desktop-status-tabs { display: none; }
             .page-header .row.g-2.align-items-center { display: none; }
             .page-header .row.g-2.align-items-center.mt-3 { display: none; }
         }
@@ -231,6 +360,56 @@
             return confirm(msg);
         }
 
+        function showReviewUpgradeNotice() {
+            var msg = "Tính năng này đang trong quá trình nâng cấp.";
+            if (window.show_modal) {
+                show_modal(msg, "Thông báo", true, "info");
+                return false;
+            }
+            alert(msg);
+            return false;
+        }
+
+        function markOrderActionBusy(btn, text) {
+            if (!btn) return true;
+            if (btn.getAttribute('data-busy') === '1') return false;
+            btn.setAttribute('data-busy', '1');
+            btn.setAttribute('disabled', 'disabled');
+            if (text) {
+                btn.setAttribute('data-origin-text', btn.innerHTML);
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>' + text;
+            }
+            return true;
+        }
+
+        function openOrderDetailDrawer(url) {
+            if (!url) return false;
+            var mq = window.matchMedia ? window.matchMedia('(max-width: 767.98px)') : null;
+            if (mq && mq.matches) return true;
+
+            var drawer = document.getElementById('order_detail_drawer');
+            var backdrop = document.getElementById('order_detail_backdrop');
+            var frame = document.getElementById('order_detail_frame');
+            if (!drawer || !backdrop || !frame) return true;
+
+            frame.src = url;
+            drawer.classList.add('show');
+            backdrop.classList.add('show');
+            document.body.style.overflow = 'hidden';
+            return false;
+        }
+
+        function closeOrderDetailDrawer() {
+            var drawer = document.getElementById('order_detail_drawer');
+            var backdrop = document.getElementById('order_detail_backdrop');
+            var frame = document.getElementById('order_detail_frame');
+            if (drawer) drawer.classList.remove('show');
+            if (backdrop) backdrop.classList.remove('show');
+            if (frame) frame.src = 'about:blank';
+            document.body.style.overflow = '';
+            return false;
+        }
+
         function goMobileSearch() {
             var input = document.getElementById('txt_search_mobile');
             if (!input) return;
@@ -243,12 +422,17 @@
 
         document.addEventListener('DOMContentLoaded', function () {
             var input = document.getElementById('txt_search_mobile');
-            if (!input) return;
-            input.addEventListener('keypress', function (e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    goMobileSearch();
-                }
+            if (input) {
+                input.addEventListener('keypress', function (e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        goMobileSearch();
+                    }
+                });
+            }
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') closeOrderDetailDrawer();
             });
         });
     </script>
@@ -332,6 +516,32 @@
                                     </span>
                                 </div>
                             </div>
+
+                            <div class="col-12">
+                                <div class="desktop-status-tabs">
+                                    <a href="<%= BuildStatusTabUrl("all") %>" class="<%= GetDesktopTabClass("all") %>">
+                                        Tất cả <span class="status-tab-count"><%= GetStatusTabCount("all") %></span>
+                                    </a>
+                                    <a href="<%= BuildStatusTabUrl("da-dat") %>" class="<%= GetDesktopTabClass("da-dat") %>">
+                                        Đã đặt <span class="status-tab-count"><%= GetStatusTabCount("da-dat") %></span>
+                                    </a>
+                                    <a href="<%= BuildStatusTabUrl("cho-trao-doi") %>" class="<%= GetDesktopTabClass("cho-trao-doi") %>">
+                                        Chờ trao đổi <span class="status-tab-count"><%= GetStatusTabCount("cho-trao-doi") %></span>
+                                    </a>
+                                    <a href="<%= BuildStatusTabUrl("da-trao-doi") %>" class="<%= GetDesktopTabClass("da-trao-doi") %>">
+                                        Đã trao đổi <span class="status-tab-count"><%= GetStatusTabCount("da-trao-doi") %></span>
+                                    </a>
+                                    <a href="<%= BuildStatusTabUrl("da-giao") %>" class="<%= GetDesktopTabClass("da-giao") %>">
+                                        Đã giao <span class="status-tab-count"><%= GetStatusTabCount("da-giao") %></span>
+                                    </a>
+                                    <a href="<%= BuildStatusTabUrl("da-nhan") %>" class="<%= GetDesktopTabClass("da-nhan") %>">
+                                        Đã nhận <span class="status-tab-count"><%= GetStatusTabCount("da-nhan") %></span>
+                                    </a>
+                                    <a href="<%= BuildStatusTabUrl("da-huy") %>" class="<%= GetDesktopTabClass("da-huy") %>">
+                                        Đã hủy <span class="status-tab-count"><%= GetStatusTabCount("da-huy") %></span>
+                                    </a>
+                                </div>
+                            </div>
 	                    </div>
 
                 </div>
@@ -339,6 +549,11 @@
 
             <div class="page-body">
                 <div class="container-xl" >
+
+                    <div class="mobile-page-title">
+                        <div class="mobile-pretitle">Đơn hàng</div>
+                        <h2 class="mobile-title">Đơn mua</h2>
+                    </div>
 
                     <div class="mobile-toolbar">
                         <div class="mobile-search">
@@ -399,13 +614,6 @@
 
                                                 <td>
                                                     <div class="fw-semibold"><%#Eval("ngaydat","{0:dd/MM/yyyy}") %></div>
-                                                    <div class="mt-2">
-                                                        <asp:HyperLink ID="hl_chitiet" runat="server"
-                                                            NavigateUrl='<%# BuildOrderDetailUrl(Eval("id")) %>'
-                                                            CssClass="btn btn-outline-secondary btn-sm">
-                                                            Chi tiết
-                                                        </asp:HyperLink>
-                                                    </div>
                                                 </td>
 
                                                 <td>
@@ -458,7 +666,13 @@
                                                 </td>
 
                                                 <td>
-                                                    <div class="btn-list">
+                                                    <div class="btn-list justify-content-end">
+                                                        <a class="btn btn-outline-secondary btn-sm"
+                                                           href="<%# BuildOrderDetailUrl(Eval("id")) %>"
+                                                           onclick='return openOrderDetailDrawer("<%# BuildOrderDetailUrl(Eval("id")) %>");'>
+                                                            Chi tiết
+                                                        </a>
+
                                                         <asp:PlaceHolder ID="ph_huy_row" runat="server" Visible='<%# Convert.ToBoolean(Eval("show_huydon")) %>'>
                                                             <asp:LinkButton ID="but_huydonhang_row" runat="server"
                                                                 OnClick="but_huydonhang_row_Click"
@@ -472,6 +686,7 @@
                                                         <asp:PlaceHolder ID="ph_nhan_row" runat="server" Visible='<%# Convert.ToBoolean(Eval("show_danhan")) %>'>
                                                             <asp:LinkButton ID="but_danhanhang_row" runat="server"
                                                                 OnClick="but_danhanhang_row_Click"
+                                                                OnClientClick="return markOrderActionBusy(this,'Đang xử lý...');"
                                                                 CommandArgument='<%# Eval("id") %>'
                                                                 CssClass="btn btn-primary btn-sm">
                                                                 Đã nhận hàng
@@ -479,7 +694,7 @@
                                                         </asp:PlaceHolder>
 
                                                         <asp:PlaceHolder ID="ph_review_row" runat="server" Visible='<%# Convert.ToBoolean(Eval("show_review")) %>'>
-                                                            <a class="btn btn-outline-primary btn-sm" href="<%# Eval("review_url") %>">Viết đánh giá</a>
+                                                            <a class="btn btn-outline-primary btn-sm" href="javascript:void(0);" onclick="return showReviewUpgradeNotice();">Viết đánh giá</a>
                                                         </asp:PlaceHolder>
 
                                                         <asp:PlaceHolder ID="ph_rebuy_row" runat="server" Visible='<%# Convert.ToBoolean(Eval("show_rebuy")) %>'>
@@ -510,7 +725,29 @@
                                     <div class="order-card">
                                         <div class="order-card-head">
                                             <div><%# Eval("TenShop") %></div>
-                                            <div class="order-card-status"><%# Eval("trangthai") %></div>
+                                            <div class="order-card-status">
+                                                <asp:PlaceHolder ID="ph_mobile_status_dat" runat="server" Visible='<%#Eval("trangthai").ToString()=="Đã đặt" %>'>
+                                                    <span class="badge bg-azure-lt text-azure">Đã đặt</span>
+                                                </asp:PlaceHolder>
+                                                <asp:PlaceHolder ID="ph_mobile_status_huy" runat="server" Visible='<%#Eval("trangthai").ToString()=="Đã hủy" %>'>
+                                                    <span class="badge bg-red-lt text-red">Đã hủy</span>
+                                                </asp:PlaceHolder>
+                                                <asp:PlaceHolder ID="ph_mobile_status_giao" runat="server" Visible='<%#Eval("trangthai").ToString()=="Đã giao" %>'>
+                                                    <span class="badge bg-yellow-lt text-yellow">Đã giao</span>
+                                                </asp:PlaceHolder>
+                                                <asp:PlaceHolder ID="ph_mobile_status_nhan" runat="server" Visible='<%#Eval("trangthai").ToString()=="Đã nhận" %>'>
+                                                    <span class="badge bg-green-lt text-green">Đã nhận</span>
+                                                </asp:PlaceHolder>
+                                                <asp:PlaceHolder ID="ph_mobile_status_chua_traodoi" runat="server" Visible='<%#Eval("trangthai").ToString()=="Chưa Trao đổi" %>'>
+                                                    <span class="badge bg-orange-lt text-orange">Chưa Trao đổi</span>
+                                                </asp:PlaceHolder>
+                                                <asp:PlaceHolder ID="ph_mobile_status_cho_traodoi" runat="server" Visible='<%#Eval("trangthai").ToString()=="Chờ Trao đổi" %>'>
+                                                    <span class="badge bg-red-lt text-red">Chờ Trao đổi</span>
+                                                </asp:PlaceHolder>
+                                                <asp:PlaceHolder ID="ph_mobile_status_da_traodoi" runat="server" Visible='<%#Eval("trangthai").ToString()=="Đã Trao đổi" %>'>
+                                                    <span class="badge bg-blue-lt text-blue">Đã Trao đổi</span>
+                                                </asp:PlaceHolder>
+                                            </div>
                                         </div>
 
                                         <a class="order-card-item text-decoration-none" href="<%# BuildOrderDetailUrl(Eval("id")) %>">
@@ -532,18 +769,47 @@
                                         </div>
 
                                         <div class="order-card-actions">
+                                            <a class="btn btn-outline-secondary btn-sm" href="<%# BuildOrderDetailUrl(Eval("id")) %>">Chi tiết</a>
+                                            <asp:PlaceHolder ID="ph_huy_mobile" runat="server" Visible='<%# Convert.ToBoolean(Eval("show_huydon")) %>'>
+                                                <asp:LinkButton ID="but_huydonhang_mobile" runat="server"
+                                                    OnClick="but_huydonhang_row_Click"
+                                                    OnClientClick='<%# "return confirmCancelOrder(" + Eval("id") + ");" %>'
+                                                    CommandArgument='<%# Eval("id") %>'
+                                                    CssClass="btn btn-outline-danger btn-sm">
+                                                    Huỷ đơn
+                                                </asp:LinkButton>
+                                            </asp:PlaceHolder>
+                                            <asp:PlaceHolder ID="ph_nhan_mobile" runat="server" Visible='<%# Convert.ToBoolean(Eval("show_danhan")) %>'>
+                                                <asp:LinkButton ID="but_danhanhang_mobile" runat="server"
+                                                    OnClick="but_danhanhang_row_Click"
+                                                    OnClientClick="return markOrderActionBusy(this,'Đang xử lý...');"
+                                                    CommandArgument='<%# Eval("id") %>'
+                                                    CssClass="btn btn-primary btn-sm">
+                                                    Đã nhận
+                                                </asp:LinkButton>
+                                            </asp:PlaceHolder>
                                             <asp:PlaceHolder ID="ph_review_mobile" runat="server" Visible='<%# Convert.ToBoolean(Eval("show_review")) %>'>
-                                                <a class="btn btn-outline-primary btn-sm" href="<%# Eval("review_url") %>">Viết đánh giá</a>
+                                                <a class="btn btn-outline-primary btn-sm" href="javascript:void(0);" onclick="return showReviewUpgradeNotice();">Viết đánh giá</a>
                                             </asp:PlaceHolder>
                                             <asp:PlaceHolder ID="ph_rebuy_mobile" runat="server" Visible='<%# Convert.ToBoolean(Eval("show_rebuy")) %>'>
                                                 <a class="btn btn-primary btn-sm" href="<%# Eval("rebuy_url") %>"><%# Eval("rebuy_label") %></a>
                                             </asp:PlaceHolder>
-                                            <a class="btn btn-outline-secondary btn-sm" href="<%# BuildOrderDetailUrl(Eval("id")) %>">Chi tiết</a>
                                         </div>
                                     </div>
                                 </ItemTemplate>
                             </asp:Repeater>
                         </div>
+                    </div>
+
+                    <div id="order_detail_backdrop" class="order-drawer-backdrop" onclick="return closeOrderDetailDrawer();"></div>
+                    <div id="order_detail_drawer" class="order-drawer" aria-hidden="true">
+                        <div class="order-drawer-head">
+                            <h3 class="order-drawer-title">Chi tiết đơn hàng</h3>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="return closeOrderDetailDrawer();">
+                                Đóng
+                            </button>
+                        </div>
+                        <iframe id="order_detail_frame" class="order-drawer-frame" src="about:blank"></iframe>
                     </div>
 
                 </div>

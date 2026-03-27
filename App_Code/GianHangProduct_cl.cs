@@ -21,21 +21,32 @@ public static class GianHangProduct_cl
         return LoaiSanPham;
     }
 
-    public static IQueryable<GH_SanPham_tb> QueryByShop(dbDataContext db, string shopTaiKhoan)
+    public static IQueryable<GH_SanPham_tb> QueryByStorefront(dbDataContext db, string storefrontAccount)
     {
         EnsureSchema(db);
-        string tk = (shopTaiKhoan ?? "").Trim().ToLowerInvariant();
-        return db.GetTable<GH_SanPham_tb>().Where(p => (p.shop_taikhoan ?? "").Trim().ToLower() == tk);
+        string tk = (storefrontAccount ?? "").Trim().ToLowerInvariant();
+        return db.GetTable<GH_SanPham_tb>().Where(p => p.shop_taikhoan == tk);
+    }
+
+    public static IQueryable<GH_SanPham_tb> QueryPublicByStorefront(dbDataContext db, string storefrontAccount)
+    {
+        return QueryByStorefront(db, storefrontAccount).Where(p => p.bin == null || p.bin == false);
+    }
+
+    public static GH_SanPham_tb GetById(dbDataContext db, int id, string storefrontAccount)
+    {
+        return QueryByStorefront(db, storefrontAccount).FirstOrDefault(p => p.id == id);
+    }
+
+    // Compatibility aliases for older call sites during migration.
+    public static IQueryable<GH_SanPham_tb> QueryByShop(dbDataContext db, string shopTaiKhoan)
+    {
+        return QueryByStorefront(db, shopTaiKhoan);
     }
 
     public static IQueryable<GH_SanPham_tb> QueryPublicByShop(dbDataContext db, string shopTaiKhoan)
     {
-        return QueryByShop(db, shopTaiKhoan).Where(p => p.bin != true);
-    }
-
-    public static GH_SanPham_tb GetById(dbDataContext db, int id, string shopTaiKhoan)
-    {
-        return QueryByShop(db, shopTaiKhoan).FirstOrDefault(p => p.id == id);
+        return QueryPublicByStorefront(db, shopTaiKhoan);
     }
 
     public static GH_SanPham_tb Save(dbDataContext db,
@@ -48,6 +59,7 @@ public static class GianHangProduct_cl
         decimal? giaBan,
         long? giaVon,
         int? soLuongTon,
+        int? phanTramUuDai,
         string loai,
         string idDanhMuc,
         bool isHidden)
@@ -61,7 +73,7 @@ public static class GianHangProduct_cl
         GH_SanPham_tb gh;
         if (id.HasValue && id.Value > 0)
         {
-            gh = table.FirstOrDefault(p => p.id == id.Value && (p.shop_taikhoan ?? "").Trim().ToLower() == tk);
+            gh = table.FirstOrDefault(p => p.id == id.Value && p.shop_taikhoan == tk);
             if (gh == null)
                 return null;
         }
@@ -88,9 +100,9 @@ public static class GianHangProduct_cl
         gh.so_luong_ton = soLuongTon ?? gh.so_luong_ton ?? 0;
         if (gh.so_luong_da_ban == null) gh.so_luong_da_ban = 0;
         if (gh.luot_truy_cap == null) gh.luot_truy_cap = 0;
+        gh.phan_tram_uu_dai = ClampDiscountPercent(phanTramUuDai);
 
         db.SubmitChanges();
-        SyncToHome(db, gh);
         return gh;
     }
 
@@ -99,67 +111,24 @@ public static class GianHangProduct_cl
         EnsureSchema(db);
         string tk = (shopTaiKhoan ?? "").Trim().ToLowerInvariant();
         var gh = db.GetTable<GH_SanPham_tb>()
-            .FirstOrDefault(p => p.id == id && (p.shop_taikhoan ?? "").Trim().ToLower() == tk);
+            .FirstOrDefault(p => p.id == id && p.shop_taikhoan == tk);
         if (gh == null)
             return false;
 
-        gh.bin = !(gh.bin ?? false);
+        gh.bin = gh.bin != true;
         gh.ngay_cap_nhat = AhaTime_cl.Now;
         db.SubmitChanges();
-        SyncToHome(db, gh);
         return true;
+    }
+
+    public static bool TrySyncToHome(dbDataContext db, GH_SanPham_tb gh)
+    {
+        return false;
     }
 
     public static bool SyncToHome(dbDataContext db, GH_SanPham_tb gh)
     {
-        if (db == null || gh == null)
-            return false;
-
-        string loai = NormalizeLoai(gh.loai);
-        string phanLoai = loai == LoaiDichVu ? AccountVisibility_cl.PostTypeService : AccountVisibility_cl.PostTypeProduct;
-        BaiViet_tb bv = null;
-
-        if (gh.id_baiviet.HasValue)
-        {
-            int idBv = gh.id_baiviet.Value;
-            bv = db.BaiViet_tbs.FirstOrDefault(p => p.id == idBv);
-        }
-
-        if (bv == null)
-        {
-            bv = new BaiViet_tb();
-            db.BaiViet_tbs.InsertOnSubmit(bv);
-        }
-
-        String_cl str = new String_cl();
-        string ten = (gh.ten ?? "").Trim();
-
-        bv.name = ten;
-        bv.name_en = string.IsNullOrEmpty(ten) ? "" : str.replace_name_to_url(ten);
-        bv.id_DanhMuc = gh.id_danhmuc;
-        bv.content_post = gh.noi_dung;
-        bv.description = gh.mo_ta;
-        bv.image = gh.hinh_anh;
-        bv.bin = gh.bin ?? false;
-        bv.ngaytao = gh.ngay_tao ?? AhaTime_cl.Now;
-        bv.nguoitao = gh.shop_taikhoan;
-        bv.noibat = false;
-        bv.giaban = gh.gia_ban;
-        bv.giavon = gh.gia_von;
-        bv.soluong_tonkho = gh.so_luong_ton ?? 0;
-        bv.soluong_daban = gh.so_luong_da_ban ?? 0;
-        bv.LuotTruyCap = gh.luot_truy_cap ?? 0;
-        bv.phanloai = phanLoai;
-
-        db.SubmitChanges();
-
-        if (!gh.id_baiviet.HasValue && bv.id > 0)
-        {
-            gh.id_baiviet = bv.id;
-            db.SubmitChanges();
-        }
-
-        return true;
+        return false;
     }
 
     public static decimal ParseGia(string raw)
@@ -186,5 +155,18 @@ public static class GianHangProduct_cl
             return value;
 
         return 0;
+    }
+
+    public static int ClampDiscountPercent(int? value)
+    {
+        int percent = value ?? 0;
+        if (percent < 0) percent = 0;
+        if (percent > 50) percent = 50;
+        return percent;
+    }
+
+    public static int ResolveDiscountPercent(GH_SanPham_tb product)
+    {
+        return product == null ? 0 : ClampDiscountPercent(product.phan_tram_uu_dai);
     }
 }

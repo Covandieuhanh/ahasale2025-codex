@@ -1,753 +1,522 @@
-﻿<%@ Page Title="Thông tin khách hàng" Language="C#" MasterPageFile="~/gianhang/mp-home.master" AutoEventWireup="true" CodeFile="default.aspx.cs" Inherits="taikhoan_add" %>
+<%@ Page Title="Trung tâm gian hàng" Language="C#" MasterPageFile="~/MasterPage/Tabler/TablerHome.master" AutoEventWireup="true" CodeFile="default.aspx.cs" Inherits="gianhang_tai_khoan_default" %>
 
-<%@ Register Assembly="CKEditor.NET" Namespace="CKEditor.NET" TagPrefix="CKEditor" %>
-<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="Server">
+<asp:Content ID="ContentHeadTruoc" ContentPlaceHolderID="head_truoc" runat="Server">
 </asp:Content>
-<asp:Content ID="Content2" ContentPlaceHolderID="main" runat="Server">
 
-    <div class="container-fluid pt-10 pb-20">
-        <div class="container">
-            <div class="row">
-                <div class="cell-lg-12 mt-5">
-                    <div class="text-center">
-                        <div style="">
-                            <asp:UpdatePanel ID="UpdatePanel2" runat="server" UpdateMode="Conditional">
-                                <Triggers>
-                                    <asp:AsyncPostBackTrigger ControlID="Button2" EventName="Click" />
-                                </Triggers>
-                                <ContentTemplate>
-                                    <asp:Label ID="Label1" runat="server" Text=""></asp:Label>
-                                </ContentTemplate>
-                            </asp:UpdatePanel>
-                        </div>
-                        <div class="text-bold mt-1">
-                            <%=hoten %>
-                        </div>
-                        <div class="text-bold">
-                            <a data-role="hint" data-hint-position="top" data-hint-text="Nhấn để gọi" href="tel:<%=sdt %>">
-                                <span class="mif mif-phone"></span><%=sdt %>
-                            </a>
+<asp:Content ID="ContentHeadSau" ContentPlaceHolderID="head_sau" runat="Server">
+    <style>
+        .gh-account-shell {
+            min-height: 100vh;
+            padding: 20px 0 32px;
+            background:
+                radial-gradient(1000px 280px at 12% -4%, rgba(249,115,22,.16), transparent 64%),
+                radial-gradient(900px 260px at 88% -8%, rgba(251,146,60,.12), transparent 58%),
+                #f7fafc;
+        }
+
+        .gh-account-wrap {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
+
+        .gh-account-hero {
+            background: linear-gradient(135deg, #ffb169, #f97316 58%, #fb923c);
+            color: #fff;
+            border-radius: 22px;
+            box-shadow: 0 18px 38px rgba(15, 23, 42, .12);
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+
+        .gh-account-head {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            min-width: 0;
+        }
+
+        .gh-account-avatar {
+            width: 88px;
+            height: 88px;
+            border-radius: 22px;
+            object-fit: cover;
+            border: 3px solid rgba(255,255,255,.45);
+            background: rgba(255,255,255,.18);
+            box-shadow: 0 14px 28px rgba(15, 23, 42, .12);
+        }
+
+        .gh-account-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            min-height: 34px;
+            padding: 0 12px;
+            border-radius: 999px;
+            background: rgba(255,255,255,.18);
+            border: 1px solid rgba(255,255,255,.34);
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: .02em;
+            margin-bottom: 10px;
+        }
+
+        .gh-account-title {
+            margin: 0;
+            font-size: 30px;
+            line-height: 1.08;
+            font-weight: 800;
+        }
+
+        .gh-account-sub {
+            margin-top: 8px;
+            font-size: 14px;
+            opacity: .96;
+        }
+
+        .gh-account-meta {
+            margin-top: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .gh-account-chip {
+            display: inline-flex;
+            align-items: center;
+            min-height: 34px;
+            padding: 0 12px;
+            border-radius: 999px;
+            background: rgba(255,255,255,.14);
+            border: 1px solid rgba(255,255,255,.28);
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .gh-account-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .gh-account-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 42px;
+            padding: 0 16px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 800;
+            border: 1px solid rgba(255,255,255,.36);
+            background: rgba(255,255,255,.16);
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .gh-account-btn:hover {
+            color: #fff;
+            background: rgba(255,255,255,.24);
+        }
+
+        .gh-account-btn--solid {
+            background: #fff;
+            border-color: #fff;
+            color: #c2410c;
+        }
+
+        .gh-account-btn--solid:hover {
+            color: #9a3412;
+            background: #ffedd5;
+            border-color: #ffedd5;
+        }
+
+        .gh-account-grid {
+            margin-top: 16px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .gh-account-stat {
+            background: #fff;
+            border-radius: 18px;
+            border: 1px solid #dbe4ee;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, .06);
+            padding: 16px;
+        }
+
+        .gh-account-stat-label {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 6px;
+        }
+
+        .gh-account-stat-value {
+            font-size: 26px;
+            line-height: 1.05;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .gh-account-layout {
+            margin-top: 16px;
+            display: grid;
+            grid-template-columns: minmax(0, 1.35fr) minmax(320px, .95fr);
+            gap: 16px;
+            align-items: start;
+        }
+
+        .gh-account-card {
+            background: #fff;
+            border: 1px solid #dbe4ee;
+            border-radius: 22px;
+            box-shadow: 0 14px 30px rgba(15, 23, 42, .06);
+            overflow: hidden;
+        }
+
+        .gh-account-card-head {
+            padding: 16px 18px;
+            border-bottom: 1px solid #e8eef5;
+        }
+
+        .gh-account-card-title {
+            margin: 0;
+            font-size: 20px;
+            line-height: 1.15;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .gh-account-card-sub {
+            margin-top: 5px;
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .gh-account-card-body {
+            padding: 18px;
+        }
+
+        .gh-account-kv {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .gh-account-kv-item {
+            padding: 14px;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+
+        .gh-account-kv-label {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+
+        .gh-account-kv-value {
+            font-size: 15px;
+            color: #0f172a;
+            font-weight: 700;
+            word-break: break-word;
+        }
+
+        .gh-account-note {
+            margin-top: 14px;
+            border-radius: 16px;
+            border: 1px solid #fed7aa;
+            background: #fff7ed;
+            color: #9a3412;
+            padding: 14px 15px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .gh-account-links {
+            display: grid;
+            gap: 10px;
+        }
+
+        .gh-account-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 13px 14px;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            background: #fff;
+            color: #0f172a;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .gh-account-link:hover {
+            border-color: #fdba74;
+            background: #fffaf5;
+            color: #c2410c;
+        }
+
+        .gh-account-link small {
+            display: block;
+            font-weight: 500;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        .gh-account-row-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .gh-account-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 15px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+
+        .gh-account-row-title {
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .gh-account-row-sub {
+            margin-top: 2px;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .gh-account-badge {
+            display: inline-flex;
+            align-items: center;
+            min-height: 30px;
+            padding: 0 10px;
+            border-radius: 999px;
+            background: #ffedd5;
+            color: #c2410c;
+            font-size: 12px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 991.98px) {
+            .gh-account-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .gh-account-kv {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</asp:Content>
+
+<asp:Content ID="ContentMain" ContentPlaceHolderID="main" runat="Server">
+    <div class="gh-account-shell">
+        <div class="gh-account-wrap">
+            <div class="gh-account-hero">
+                <div class="gh-account-head">
+                    <asp:Image ID="img_avatar" runat="server" CssClass="gh-account-avatar" />
+                    <div>
+                        <div class="gh-account-eyebrow">Trung tâm vận hành</div>
+                        <h1 class="gh-account-title"><asp:Literal ID="lit_store_name" runat="server" /></h1>
+                        <div class="gh-account-sub">Dùng chung đăng nhập với tài khoản gốc để vận hành gian hàng.</div>
+                        <div class="gh-account-meta">
+                            <span class="gh-account-chip">@<asp:Literal ID="lit_account_key" runat="server" /></span>
+                            <span class="gh-account-chip"><asp:Literal ID="lit_space_status" runat="server" /></span>
+                            <span class="gh-account-chip"><asp:Literal ID="lit_contact_email" runat="server" /></span>
                         </div>
                     </div>
                 </div>
-                <div class="cell-lg-12 mt-5">
-                    <ul data-role="tabs" data-expand="true">
-                        <li><a href="#_khachhang">Khách hàng</a></li>
-                        <li><a href="#_hoadon">Hóa đơn</a></li>
-                        <li><a href="#_dathen">Đặt hẹn</a></li>
-                        <li><a href="#_ghichu">Ghi chú</a></li>
-                        <li class="<%=act_hinhanh %>"><a href="#_hinhanh">Hình ảnh</a></li>
-                        <li><a href="#_donthuoc">Đơn thuốc</a></li>
-                        <li><a href="#_thedichvu">Thẻ dịch vụ</a></li>
 
-                    </ul>
-                    <div class="">
-                        <div id="_khachhang">
-                            <asp:Panel ID="Panel1" runat="server" DefaultButton="button1">
+                <div class="gh-account-actions">
+                    <asp:HyperLink ID="lnk_storefront" runat="server" CssClass="gh-account-btn gh-account-btn--solid">Trang công khai</asp:HyperLink>
+                    <asp:HyperLink ID="lnk_edit_home_profile" runat="server" CssClass="gh-account-btn">Sửa hồ sơ gốc</asp:HyperLink>
+                    <asp:HyperLink ID="lnk_change_password" runat="server" CssClass="gh-account-btn">Đổi mật khẩu</asp:HyperLink>
+                </div>
+            </div>
 
-                                <div class="row">
+            <div class="gh-account-grid">
+                <div class="gh-account-stat">
+                    <div class="gh-account-stat-label">Sản phẩm công khai</div>
+                    <div class="gh-account-stat-value"><asp:Literal ID="lit_product_count" runat="server" /></div>
+                </div>
+                <div class="gh-account-stat">
+                    <div class="gh-account-stat-label">Dịch vụ công khai</div>
+                    <div class="gh-account-stat-value"><asp:Literal ID="lit_service_count" runat="server" /></div>
+                </div>
+                <div class="gh-account-stat">
+                    <div class="gh-account-stat-label">Đơn chờ xử lý</div>
+                    <div class="gh-account-stat-value"><asp:Literal ID="lit_pending_orders" runat="server" /></div>
+                </div>
+                <div class="gh-account-stat">
+                    <div class="gh-account-stat-label">Lịch hẹn trong kỳ</div>
+                    <div class="gh-account-stat-value"><asp:Literal ID="lit_booking_total" runat="server" /></div>
+                </div>
+            </div>
 
-                                    <div class="cell-lg-6 pr-3-lg">
-
-                                        <div class="mt-3">
-                                            <label class="fw-600">Tên khách hàng</label>
-                                            <div>
-                                                <asp:TextBox ID="txt_hoten" runat="server" data-role="input"></asp:TextBox>
-                                            </div>
-                                        </div>
-                                        <div class="mt-3">
-                                            <label class="fw-600">Điện thoại</label>
-                                            <div>
-                                                <asp:TextBox ID="txt_dienthoai" runat="server" data-role="input" ReadOnly="true"></asp:TextBox>
-                                            </div>
-                                        </div>
-
-                                        <%-- THÊM: Email --%>
-                                        <div class="mt-3">
-                                            <label class="fw-600">Email</label>
-                                            <div>
-                                                <asp:TextBox ID="txt_email" runat="server" data-role="input"></asp:TextBox>
-                                            </div>
-                                        </div>
-
-                                        <div class="mt-3">
-                                            <label class="fw-600">Ngày sinh</label>
-                                            <div>
-                                                <asp:TextBox ID="txt_ngaysinh" runat="server" MaxLength="10" data-role="calendar-picker" data-outside="true" data-dialog-mode="true" data-week-start="1" data-locale="vi-VN" data-format="DD/MM/YYYY" data-input-format="DD/MM/YYYY" data-clear-button="true"></asp:TextBox>
-                                            </div>
-                                        </div>
-                                        <div class="mt-3">
-                                            <label class="fw-600">Địa chỉ</label>
-                                            <asp:TextBox ID="txt_diachi" runat="server" data-role="textarea" TextMode="MultiLine"></asp:TextBox><%--autocomplete="off" --%>
-                                        </div>
-                                    </div>
-                                    <div class="cell-lg-6 pl-3-lg">
-                                        <div class="mt-3">
-                                            <label class="fw-600">Ảnh đại diện</label>
-
-                                            <span style="cursor: pointer" class="mif mif-info ml-1" data-role="popover" data-popover-text="<small>Kích thước chuẩn: 500x500 pixel.</small>" data-popover-hide="8000" data-close-button="false" data-popover-position="right" data-popover-trigger="click" data-cls-popover="drop-shadow"></span>
-
-                                            <div class="place-right">
-                                                <asp:UpdatePanel ID="UpdatePanel1" runat="server" UpdateMode="Conditional">
-                                                    <ContentTemplate>
-                                                        <asp:Button ID="Button2" runat="server" Text="Xóa ảnh hiện tại" CssClass="alert small" Visible="false" OnClick="Button2_Click" />
-                                                    </ContentTemplate>
-                                                </asp:UpdatePanel>
-                                            </div>
-                                            <asp:FileUpload ID="FileUpload2" runat="server" type="file" data-role="file" data-button-title="<span class='mif-file-upload'></span>" AllowMultiple="false" />
-
-
-                                        </div>
-                                        <div class="mt-3">
-                                            <label class="fw-600">Nhân viên chăm sóc</label>
-                                            <%--<asp:DropDownList ID="ddl_nhanvien_chamsoc" data-role="select" data-filter="true" runat="server"></asp:DropDownList>--%>
-                                            <div>
-                                                <asp:Label ID="lb_nv_chamsoc" runat="server" Text=""></asp:Label>
-                                            </div>
-                                        </div>
-
-                                        <div class="mt-3">
-                                            <label class="fw-600">Mã giới thiệu</label>
-                                            <%--<asp:TextBox ID="txt_magioithieu" runat="server" data-role="input"></asp:TextBox>--%>
-                                            <div>
-                                                <asp:Label ID="txt_magioithieu" runat="server" Text=""></asp:Label>
-                                            </div>
-                                        </div>
-                                        <%--<div class="mt-3">
-                                        <label class="fw-600">Nhóm khách hàng</label>
-                                        <asp:DropDownList ID="DropDownList1" data-role="select" data-filter="true" runat="server"></asp:DropDownList>
-                                    </div>--%>
-                                    </div>
-
-                                </div>
-
-                                <div class="text-center mt-6 mb-6">
-                                    <asp:Button OnClientClick="Metro.activity.open({type:'cycle',overlayClickClose:false})" ID="button1" runat="server" Text="CẬP NHẬT" CssClass="button success" OnClick="button1_Click" />
-                                </div>
-                            </asp:Panel>
+            <div class="gh-account-layout">
+                <div class="gh-account-card">
+                    <div class="gh-account-card-head">
+                        <h2 class="gh-account-card-title">Thông tin tài khoản gốc</h2>
+                        <div class="gh-account-card-sub">Gian hàng dùng chung danh tính với tài khoản gốc, nhưng vận hành bán hàng trên dữ liệu riêng của không gian này.</div>
+                    </div>
+                    <div class="gh-account-card-body">
+                        <div class="gh-account-kv">
+                            <div class="gh-account-kv-item">
+                                <div class="gh-account-kv-label">Họ tên</div>
+                                <div class="gh-account-kv-value"><asp:Literal ID="lit_full_name" runat="server" /></div>
+                            </div>
+                            <div class="gh-account-kv-item">
+                                <div class="gh-account-kv-label">Loại tài khoản</div>
+                                <div class="gh-account-kv-value"><asp:Literal ID="lit_account_type" runat="server" /></div>
+                            </div>
+                            <div class="gh-account-kv-item">
+                                <div class="gh-account-kv-label">Email liên hệ</div>
+                                <div class="gh-account-kv-value"><asp:Literal ID="lit_email" runat="server" /></div>
+                            </div>
+                            <div class="gh-account-kv-item">
+                                <div class="gh-account-kv-label">Email gian hàng đối tác</div>
+                                <div class="gh-account-kv-value"><asp:Literal ID="lit_gianhang_email" runat="server" /></div>
+                            </div>
+                            <div class="gh-account-kv-item">
+                                <div class="gh-account-kv-label">Trang công khai</div>
+                                <div class="gh-account-kv-value"><asp:Literal ID="lit_profile_url" runat="server" /></div>
+                            </div>
+                            <div class="gh-account-kv-item">
+                                <div class="gh-account-kv-label">Quản trị gian hàng</div>
+                                <div class="gh-account-kv-value"><asp:Literal ID="lit_admin_access" runat="server" /></div>
+                            </div>
                         </div>
 
-                        <div id="_hoadon">
-                            <div class="row mt-2">
-                                <div class="cell-lg-4 mt-2">
-                                    <div class="icon-box border bd-cyan">
-                                        <div class="icon bg-cyan fg-white"><span class="mif-open-book"></span></div>
-                                        <div class="content p-4">
-                                            <div class="text-upper">Số hóa đơn: <span class="text-bold"><%=tong_hoadon.ToString("#,##0") %></span></div>
-                                            <%--<div class="text-upper text-bold text-lead"></div>--%>
-                                            <div class="mt-3">
-                                                <small>
-                                                    <span class="fg-cyan pr-3 text-bold"><%=tong_dv.ToString("#,##0") %> dịch vụ</span>
-                                                    <span class="fg-green pr-3 text-bold"><%=tong_sp.ToString("#,##0") %> sản phẩm</span>
-                                                </small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="cell-lg-4 mt-2">
-                                    <div class="icon-box border bd-red">
-                                        <div class="icon bg-red fg-white"><span class="mif-dollars"></span></div>
-                                        <div class="content p-4">
-                                            <div class="text-upper">Tổng chi tiêu</div>
-                                            <div class="text-upper text-bold text-lead"><%=tong_chitieu.ToString("#,##0") %></div>
-                                        </div>
-                                    </div>
-                                </div>
+                        <div class="gh-account-note">
+                            Mật khẩu, phiên đăng nhập và hồ sơ chính của gian hàng dùng chung với tài khoản gốc. Khi cần đổi mật khẩu, hệ thống sẽ chuyển về đúng khu vực tài khoản gốc để cập nhật.
+                        </div>
+                    </div>
+                </div>
 
-                                <div class="cell-lg-4 mt-2">
-                                    <div class="icon-box border bd-orange">
-                                        <div class="icon bg-orange fg-white"><span class="mif-money"></span></div>
-                                        <div class="content p-4">
-                                            <div class="text-upper">Tổng công nợ</div>
-                                            <div class="text-upper text-bold text-lead"><%=tong_congno.ToString("#,##0") %></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                <div class="gh-account-card">
+                    <div class="gh-account-card-head">
+                        <h2 class="gh-account-card-title">Truy cập nhanh</h2>
+                        <div class="gh-account-card-sub">Các nhóm thao tác chính để vận hành gian hàng hằng ngày.</div>
+                    </div>
+                    <div class="gh-account-card-body">
+                        <div class="gh-account-links">
+                            <asp:HyperLink ID="lnk_manage_posts" runat="server" CssClass="gh-account-link">
+                                <span>
+                                    Quản lý tin
+                                    <small>Đăng mới, cập nhật, ẩn/hiện sản phẩm và dịch vụ.</small>
+                                </span>
+                                <span>›</span>
+                            </asp:HyperLink>
+                            <asp:HyperLink ID="lnk_orders" runat="server" CssClass="gh-account-link">
+                                <span>
+                                    Đơn bán / POS
+                                    <small>Tạo đơn offline, xử lý chờ trao đổi và theo dõi đơn hàng.</small>
+                                </span>
+                                <span>›</span>
+                            </asp:HyperLink>
+                            <asp:HyperLink ID="lnk_bookings" runat="server" CssClass="gh-account-link">
+                                <span>
+                                    Lịch hẹn
+                                    <small>Xem lịch khách đặt, xác nhận, hoàn thành hoặc hủy lịch.</small>
+                                </span>
+                                <span>›</span>
+                            </asp:HyperLink>
+                            <asp:HyperLink ID="lnk_customers" runat="server" CssClass="gh-account-link">
+                                <span>
+                                    Khách hàng
+                                    <small>Quản lý tệp khách, xem chi tiết đơn và lịch hẹn theo khách.</small>
+                                </span>
+                                <span>›</span>
+                            </asp:HyperLink>
+                            <asp:HyperLink ID="lnk_report" runat="server" CssClass="gh-account-link">
+                                <span>
+                                    Báo cáo gian hàng
+                                    <small>Theo dõi doanh thu, đơn, lịch hẹn và hiệu quả vận hành.</small>
+                                </span>
+                                <span>›</span>
+                            </asp:HyperLink>
+                            <asp:PlaceHolder ID="ph_admin_link" runat="server" Visible="false">
+                                <asp:HyperLink ID="lnk_admin" runat="server" CssClass="gh-account-link">
+                                    <span>
+                                        Gian hàng Admin
+                                        <small>Đi tới khu quản trị riêng của gian hàng khi tài khoản đã được mở quyền.</small>
+                                    </span>
+                                    <span>›</span>
+                                </asp:HyperLink>
+                            </asp:PlaceHolder>
+                            <asp:PlaceHolder ID="ph_admin_request_link" runat="server" Visible="false">
+                                <asp:HyperLink ID="lnk_request_admin" runat="server" CssClass="gh-account-link">
+                                    <span>
+                                        Mở công cụ quản trị gian hàng
+                                        <small>Gửi yêu cầu mở quyền quản trị nâng cao cho tài khoản đang vận hành gian hàng.</small>
+                                    </span>
+                                    <span>›</span>
+                                </asp:HyperLink>
+                            </asp:PlaceHolder>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="gh-account-card mt-3">
+                <div class="gh-account-card-head">
+                    <h2 class="gh-account-card-title">Tổng quan vận hành nhanh</h2>
+                    <div class="gh-account-card-sub">Những chỉ số gần nhất để kiểm tra trạng thái hoạt động hiện tại của gian hàng.</div>
+                </div>
+                <div class="gh-account-card-body">
+                    <div class="gh-account-row-list">
+                        <div class="gh-account-row">
                             <div>
-                                <asp:Repeater ID="Repeater1" runat="server">
-                                    <ItemTemplate>
-                                        <div class="text-bold mt-10 ">
-                                            <a data-role="hint" data-hint-position="top" data-hint-text="Xem chi tiết" class="fg-orange" href="/gianhang/admin/quan-ly-hoa-don/chi-tiet.aspx?id=<%#Eval("id") %>">Hóa đơn: <%#Eval("id") %></a>
-                                        </div>
-                                        <div style="overflow: auto" class=" mt-2">
-                                            <table class="table row-hover table-border cell-border compact normal-lg <%--striped--%> <%--compact normal-lg--%>">
-                                                <thead>
-                                                    <tr class="bg-green">
-                                                        <td class="text-bold fg-white" style="width: 1px; min-width: 1px;">Ngày tạo</td>
-                                                        <td class="text-bold fg-white" style="min-width: 120px;">Người tạo</td>
-                                                        <td class="text-bold fg-white" style="width: 100px; min-width: 100px">Tổng tiền</td>
-                                                        <td class="text-bold fg-white" style="width: 1px; min-width: 1px">CK</td>
-                                                        <td class="text-bold fg-white" style="width: 100px; min-width: 100px">Sau CK</td>
-                                                        <td class="text-bold fg-white" style="width: 110px; min-width: 110px">Thanh toán</td>
-                                                        <td class="text-bold fg-white" style="width: 86px; min-width: 86px">Công nợ</td>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr>
-                                                        <td class="text-right">
-                                                            <div><%#Eval("ngaytao","{0:dd/MM/yyyy HH:mm}").ToString() %></div>
-                                                        </td>
-                                                        <td><%#return_ten_nhanvien(Eval("nguoitao").ToString()) %></td>
-                                                        <td class="text-right"><%#Eval("tongtien","{0:#,##0}").ToString() %></td>
-                                                        <td class="text-right">
-                                                            <asp:PlaceHolder ID="PlaceHolder4" runat="server" Visible='<%#Eval("chietkhau").ToString()=="0" %>'>
-                                                                <%#Eval("tongtien_ck_hoadon","{0:#,##0}").ToString() %>
-                                                            </asp:PlaceHolder>
-                                                            <asp:PlaceHolder ID="PlaceHolder5" runat="server" Visible='<%#Eval("chietkhau").ToString()!="0" %>'>
-                                                                <%#Eval("chietkhau")%>%
-                                                            </asp:PlaceHolder>
-                                                        </td>
-                                                        <td class="text-right">
-                                                            <div><%#Eval("tongsauchietkhau","{0:#,##0}").ToString() %></div>
-                                                        </td>
-                                                        <td class="text-right">
-                                                            <asp:PlaceHolder ID="PlaceHolder2" runat="server" Visible='<%#Eval("sotien_conlai").ToString()=="0" %>'>
-                                                                <span class="data-wrapper"><code class="bg-red  fg-white">Đã thanh toán</code></span>
-                                                            </asp:PlaceHolder>
-                                                            <asp:PlaceHolder ID="PlaceHolder3" runat="server" Visible='<%#Eval("sotien_conlai").ToString()!="0" %>'>
-                                                                <%#Eval("sotien_dathanhtoan","{0:#,##0}").ToString() %>
-                                                            </asp:PlaceHolder>
-                                                        </td>
-                                                        <td class="text-right">
-                                                            <asp:PlaceHolder ID="PlaceHolder6" runat="server" Visible='<%#Eval("sotien_conlai").ToString()=="0" %>'>
-                                                                <%#Eval("sotien_conlai","{0:#,##0}").ToString() %>
-                                                            </asp:PlaceHolder>
-                                                            <asp:PlaceHolder ID="PlaceHolder1" runat="server" Visible='<%#Eval("sotien_conlai").ToString()!="0" %>'>
-                                                                <span class="data-wrapper"><code class="bg-orange fg-white"><%#Eval("sotien_conlai","{0:#,##0}").ToString() %></code></span>
-                                                            </asp:PlaceHolder>
-                                                        </td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                        </div>
-
-                                        <div data-role="accordion"
-                                            data-one-frame="false"
-                                            data-show-active="true"
-                                            data-on-frame-open="console.log('frame was opened!', arguments[0])"
-                                            data-on-frame-close="console.log('frame was closed!', arguments[0])">
-                                            <div class="frame">
-                                                <div class="heading">Dịch vụ - Sản phẩm</div>
-                                                <div class="content">
-                                                    <div style="overflow: auto" class=" mt-2">
-                                                        <table class="table row-hover table-border cell-border compact normal-lg <%--striped--%> <%--compact normal-lg--%>">
-                                                            <thead>
-                                                                <tr style="background-color: #f5f5f5">
-
-                                                                    <td class="text-bold" style="width: 1px; min-width: 1px;">Ngày bán</td>
-                                                                    <td class="text-bold" style="min-width: 120px;">Người bán</td>
-                                                                    <td class="text-bold" style="min-width: 150px">Mặt hàng</td>
-
-                                                                    <td class="text-bold text-center" style="width: 1px;">Giá</td>
-                                                                    <td class="text-bold" style="width: 1px;">SL</td>
-                                                                    <td class="text-bold" style="width: 102px; min-width: 102px">Thành tiền</td>
-                                                                    <td class="text-bold" style="width: 1px;">CK</td>
-                                                                    <td class="text-bold" style="width: 100px;">Sau CK</td>
-
-
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                <asp:Repeater ID="Repeater2" runat="server" DataSource='<%#show_chitiet_hoadon(Eval("id").ToString()) %>'>
-                                                                    <ItemTemplate>
-                                                                        <tr>
-
-                                                                            <td class="text-right">
-                                                                                <div><%#Eval("ngaytao","{0:dd/MM/yyyy HH:mm}").ToString() %></div>
-                                                                            </td>
-                                                                            <td><%#return_ten_nhanvien(Eval("nguoitao").ToString())%></td>
-                                                                            <td>
-                                                                                <asp:PlaceHolder ID="PlaceHolder7" runat="server" Visible='<%#Eval("kyhieu").ToString()=="dichvu" %>'>
-                                                                                    <span class="fg-blue"><%#Eval("ten_dvsp_taithoidiemnay").ToString() %></span>
-                                                                                </asp:PlaceHolder>
-                                                                                <asp:PlaceHolder ID="PlaceHolder8" runat="server" Visible='<%#Eval("kyhieu").ToString()=="sanpham" %>'>
-                                                                                    <span class="fg-green"><%#Eval("ten_dvsp_taithoidiemnay").ToString() %></span>
-                                                                                </asp:PlaceHolder>
-                                                                                <div>
-                                                                                    <asp:PlaceHolder ID="PlaceHolder10" runat="server" Visible='<%#Eval("id_thedichvu")!=null%>'>
-                                                                                        <span class="data-wrapper"><code class="bg-orange fg-white">Thẻ DV số <%#Eval("id_thedichvu")%></code></span>
-                                                                                    </asp:PlaceHolder>
-                                                                                </div>
-                                                                            </td>
-                                                                            <td class="text-right">
-                                                                                <%#Eval("gia_dvsp_taithoidiemnay","{0:#,##0}").ToString() %>                                       
-                                                                            </td>
-                                                                            <td class="text-right">
-                                                                                <%#Eval("soluong","{0:#,##0}").ToString() %>
-                                                                            </td>
-                                                                            <td class="text-right">
-                                                                                <div><%#Eval("thanhtien","{0:#,##0}").ToString() %> </div>
-                                                                            </td>
-                                                                            <td class="text-right">
-                                                                                <asp:PlaceHolder ID="PlaceHolder4" runat="server" Visible='<%#Eval("chietkhau").ToString()=="0" %>'>
-                                                                                    <%#Eval("tongtien_ck_dvsp","{0:#,##0}").ToString() %>
-                                                                                </asp:PlaceHolder>
-                                                                                <asp:PlaceHolder ID="PlaceHolder5" runat="server" Visible='<%#Eval("chietkhau").ToString()!="0" %>'>
-                                                                                    <%#Eval("chietkhau")%>%
-                                                                                </asp:PlaceHolder>
-                                                                            </td>
-                                                                            <td class="text-right">
-                                                                                <div><b><%#Eval("tongsauchietkhau","{0:#,##0}").ToString() %></b></div>
-                                                                            </td>
-
-
-                                                                        </tr>
-                                                                        <%--  <%stt = stt + 1; %>--%>
-                                                                    </ItemTemplate>
-                                                                </asp:Repeater>
-                                                            </tbody>
-
-                                                        </table>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </ItemTemplate>
-                                </asp:Repeater>
+                                <div class="gh-account-row-title">Doanh thu gộp trong kỳ</div>
+                                <div class="gh-account-row-sub">Tính theo chi tiết đơn của gian hàng trong kỳ hiện tại.</div>
                             </div>
+                            <div class="gh-account-badge"><asp:Literal ID="lit_revenue_gross" runat="server" /> đ</div>
                         </div>
-
-                        <div id="_dathen">
-                            <div style="overflow: auto" class="mt-3">
-                                <table class="table row-hover table-border cell-border compact normal-lg <%--striped--%> <%--compact normal-lg--%>">
-                                    <tbody>
-                                        <tr style="background-color: #f5f5f5">
-                                            <td class="text-bold" style="min-width: 1px; width: 1px">Mã</td>
-                                            <td class="text-bold" style="min-width: 1px; width: 1px">Ngày đặt</td>
-                                            <td class="text-bold" style="min-width: 140px">Khách hàng</td>
-
-                                            <td class="text-bold" style="min-width: 140px">Dịch vụ</td>
-                                            <td class="text-bold" style="min-width: 140px">NV thực hiện</td>
-                                            <td class="text-bold" style="min-width: 140px">Ghi chú</td>
-                                            <td class="text-bold" style="min-width: 140px">Người tạo</td>
-                                            <td class="text-bold" style="min-width: 100px; width: 100px">Trạng thái</td>
-                                        </tr>
-                                        <asp:Repeater ID="Repeater3" runat="server">
-                                            <ItemTemplate>
-                                                <tr>
-                                                    <td class="text-center">
-                                                        <a data-role="hint" data-hint-position="top" data-hint-text="Chỉnh sửa" href="/gianhang/admin/quan-ly-khach-hang/sua-lich-hen.aspx?id=<%#Eval("id").ToString() %>">
-                                                            <b><%#Eval("id").ToString() %></b>
-                                                        </a>
-                                                    </td>
-                                                    <td class="text-right"><%#Eval("ngaydat","{0:dd/MM/yyyy HH:mm}").ToString() %></td>
-                                                    <td><%#Eval("tenkhachhang").ToString() %>
-                                                        <div><a class="fg-cobalt" data-role="hint" data-hint-position="top" data-hint-text="Nhấn để gọi" href="tel:<%#Eval("sdt").ToString() %>"><%#Eval("sdt").ToString() %></a></div>
-
-                                                      <asp:PlaceHolder ID="PlaceHolderEmailDatHen" runat="server"
-    Visible='<%# !string.IsNullOrWhiteSpace(Convert.ToString(Eval("email"))) %>'>
-    <div>
-        <a class="fg-teal" data-role="hint" data-hint-position="top" data-hint-text="Nhấn để gửi email"
-           href='mailto:<%# Convert.ToString(Eval("email")) %>'>
-            <%# Convert.ToString(Eval("email")) %>
-        </a>
-    </div>
-</asp:PlaceHolder>
-
-                                                    </td>
-
-                                                    <td><%#Eval("tendv").ToString() %></td>
-                                                    <td><%#return_ten_nhanvien(Eval("nhanvien_thuchien").ToString()) %></td>
-                                                    <td><%#Eval("ghichu").ToString() %></td>
-                                                    <td>
-                                                        <%#return_ten_nhanvien(Eval("nguoitao").ToString()) %>
-                                                        <div><small><%#Eval("ngaytao","{0:dd/MM/yyyy HH:mm}").ToString() %></small></div>
-                                                    </td>
-                                                    <td>
-                                                        <asp:PlaceHolder ID="PlaceHolder2" runat="server" Visible='<%#Eval("trangthai").ToString()=="Chưa xác nhận" %>'>
-                                                            <span class="data-wrapper"><code class="bg-cyan  fg-white">Chưa xác nhận</code></span>
-                                                        </asp:PlaceHolder>
-                                                        <asp:PlaceHolder ID="PlaceHolder1" runat="server" Visible='<%#Eval("trangthai").ToString()=="Đã xác nhận" %>'>
-                                                            <span class="data-wrapper"><code class="bg-green  fg-white">Đã xác nhận</code></span>
-                                                        </asp:PlaceHolder>
-                                                        <asp:PlaceHolder ID="PlaceHolder3" runat="server" Visible='<%#Eval("trangthai").ToString()=="Không đến" %>'>
-                                                            <span class="data-wrapper"><code class="bg-orange  fg-white">Không đến</code></span>
-                                                        </asp:PlaceHolder>
-                                                        <asp:PlaceHolder ID="PlaceHolder4" runat="server" Visible='<%#Eval("trangthai").ToString()=="Đã đến" %>'>
-                                                            <span class="data-wrapper"><code class="bg-magenta  fg-white">Đã đến</code></span>
-                                                        </asp:PlaceHolder>
-                                                        <asp:PlaceHolder ID="PlaceHolder5" runat="server" Visible='<%#Eval("trangthai").ToString()=="Đã hủy" %>'>
-                                                            <span class="data-wrapper"><code class="bg-red  fg-white">Đã hủy</code></span>
-                                                        </asp:PlaceHolder>
-                                                    </td>
-                                                </tr>
-
-                                            </ItemTemplate>
-                                        </asp:Repeater>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <div id="_ghichu">
-                            <asp:UpdatePanel ID="UpdatePanel3" runat="server" UpdateMode="Conditional">
-                                <Triggers>
-                                </Triggers>
-                                <ContentTemplate>
-
-                                    <div style="overflow: auto" class="mt-3">
-                                        <table class="table row-hover table-border cell-border compact normal-lg <%--striped--%> <%--compact normal-lg--%>">
-                                            <tbody>
-                                                <tr style="background-color: #f5f5f5">
-                                                    <td style="width: 1px;">
-                                                        <input class="mt-1" type="checkbox" onkeypress="if (event.keyCode==13) return false;" data-role="checkbox" data-style="2" data-caption="" data-cls-caption="fg-lightOrange" data-cls-check="bd-gray  bg-white" onclick="$('.checkbox-table-ghichu input[type=checkbox]').prop('checked', this.checked)">
-                                                    </td>
-                                                    <td class="text-bold" style="min-width: 1px; width: 1px">Ngày tạo</td>
-                                                    <td class="text-bold" style="min-width: 140px">Người tạo</td>
-                                                    <td class="text-bold" style="min-width: 180px">Nội dung ghi chú</td>
-                                                    <td class="text-bold" style="min-width: 80px; width: 80px">Mã đơn</td>
-                                                </tr>
-                                                <asp:Repeater ID="Repeater4" runat="server">
-                                                    <ItemTemplate>
-                                                        <tr>
-                                                            <td class="checkbox-table-ghichu">
-                                                                <asp:PlaceHolder ID="PlaceHolder6" runat="server" Visible='<%#Eval("kyhieu").ToString()=="table" %>'>
-                                                                    <input class="mt-1" type="checkbox" onkeypress="if (event.keyCode==13) return false;" data-role="checkbox" data-style="2" name="ghichu_<%#Eval("id").ToString() %>">
-                                                                </asp:PlaceHolder>
-                                                            </td>
-                                                            <td class="text-right"><%#Eval("ngaytao","{0:dd/MM/yyyy HH:mm}").ToString() %></td>
-                                                            <td><%#return_ten_nhanvien(Eval("nguoitao").ToString()) %></td>
-                                                            <td><%#Eval("ghichu").ToString() %></td>
-                                                            <td class="text-bold text-center">
-                                                                <a data-role="hint" data-hint-position="top" data-hint-text="Xem hóa đơn" href="/gianhang/admin/quan-ly-hoa-don/chi-tiet.aspx?id=<%#Eval("id_hoadon").ToString() %>">
-                                                                    <%#Eval("id_hoadon").ToString() %>
-                                                                </a>
-                                                            </td>
-                                                        </tr>
-                                                    </ItemTemplate>
-                                                </asp:Repeater>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </ContentTemplate>
-                            </asp:UpdatePanel>
-                        </div>
-
-                        <div id="_hinhanh">
-                            <asp:UpdatePanel ID="UpdatePanel7" runat="server" UpdateMode="Conditional">
-                                <Triggers>
-                                </Triggers>
-                                <ContentTemplate>
-
-                                    <div style="overflow: auto" class="mt-3">
-                                        <table class="table row-hover table-border cell-border compact normal-lg <%--striped--%> <%--compact normal-lg--%>">
-                                            <tbody>
-                                                <tr style="background-color: #f5f5f5">
-                                                    <td style="width: 1px;">
-                                                        <input class="mt-1" type="checkbox" onkeypress="if (event.keyCode==13) return false;" data-role="checkbox" data-style="2" data-caption="" data-cls-caption="fg-lightOrange" data-cls-check="bd-gray  bg-white" onclick="$('.checkbox-table-hinhanh input[type=checkbox]').prop('checked', this.checked)">
-                                                    </td>
-                                                    <td class="text-bold" style="min-width: 1px; width: 1px">Ngày tạo</td>
-                                                    <td class="text-bold" style="min-width: 140px">Người tạo</td>
-                                                    <td class="text-bold" style="min-width: 230px; width: 230px">Ảnh trước sau</td>
-                                                    <td class="text-bold" style="min-width: 140px">Ghi chú</td>
-
-                                                </tr>
-                                                <asp:Repeater ID="Repeater6" runat="server">
-                                                    <ItemTemplate>
-                                                        <tr>
-                                                            <td class="checkbox-table-hinhanh">
-
-                                                                <input class="mt-1" type="checkbox" onkeypress="if (event.keyCode==13) return false;" data-role="checkbox" data-style="2" name="hinhanh_<%#Eval("id").ToString() %>">
-                                                            </td>
-                                                            <td class="text-right"><%#Eval("ngaytao","{0:dd/MM/yyyy HH:mm}").ToString() %></td>
-                                                            <td><%#return_ten_nhanvien(Eval("nguoitao").ToString()) %></td>
-
-
-                                                            <td class="text-center">
-                                                                <div data-role="lightbox">
-                                                                    <%#Eval("anhtruoc").ToString() %>
-                                                                    <%#Eval("anhsau").ToString() %>
-                                                                </div>
-                                                            </td>
-
-
-
-                                                            <td><%#Eval("ghichu").ToString() %></td>
-                                                        </tr>
-                                                    </ItemTemplate>
-                                                </asp:Repeater>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </ContentTemplate>
-                            </asp:UpdatePanel>
-                        </div>
-
-                        <div id="_donthuoc">
-                            <asp:UpdatePanel ID="UpdatePanel5" runat="server" UpdateMode="Conditional">
-                                <Triggers>
-                                </Triggers>
-                                <ContentTemplate>
-
-                                    <div style="overflow: auto" class="mt-3">
-                                        <table class="table row-hover table-border cell-border compact normal-lg <%--striped--%> <%--compact normal-lg--%>">
-                                            <tbody>
-                                                <tr style="background-color: #f5f5f5">
-                                                    <td style="width: 1px;">
-                                                        <input class="mt-1" type="checkbox" onkeypress="if (event.keyCode==13) return false;" data-role="checkbox" data-style="2" data-caption="" data-cls-caption="fg-lightOrange" data-cls-check="bd-gray  bg-white" onclick="$('.checkbox-table-donthuoc input[type=checkbox]').prop('checked', this.checked)">
-                                                    </td>
-                                                    <td class="text-bold" style="min-width: 1px; width: 1px">Ngày tạo</td>
-                                                    <td class="text-bold" style="min-width: 140px">Người tạo</td>
-                                                    <td class="text-bold" style="min-width: 180px">Nội dung đơn thuốc</td>
-                                                    <td class="text-bold" style="min-width: 1px; width: 1px">Tái khám</td>
-                                                    <td class="text-bold" style="min-width: 140px">Nơi tái khám</td>
-                                                    <td class="text-bold" style="min-width: 180px">Lời dặn bác sĩ</td>
-                                                </tr>
-                                                <asp:Repeater ID="Repeater5" runat="server">
-                                                    <ItemTemplate>
-                                                        <tr>
-                                                            <td class="checkbox-table-donthuoc">
-
-                                                                <input class="mt-1" type="checkbox" onkeypress="if (event.keyCode==13) return false;" data-role="checkbox" data-style="2" name="donthuoc_<%#Eval("id").ToString() %>">
-                                                            </td>
-                                                            <td class="text-right"><%#Eval("ngaytao","{0:dd/MM/yyyy HH:mm}").ToString() %></td>
-                                                            <td><%#return_ten_nhanvien(Eval("nguoitao").ToString()) %></td>
-                                                            <td><%#Eval("ghichu").ToString() %></td>
-                                                            <td class="text-right"><%#Eval("ngaytaikham","{0:dd/MM/yyyy}").ToString() %></td>
-                                                            <td><%#Eval("noitaikham").ToString() %></td>
-                                                            <td><%#Eval("loidan").ToString() %></td>
-                                                        </tr>
-                                                    </ItemTemplate>
-                                                </asp:Repeater>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </ContentTemplate>
-                            </asp:UpdatePanel>
-                        </div>
-
-                        <div id="_thedichvu">
-                            <div class="row mt-2">
-                                <div class="cell-lg-4 mt-2">
-                                    <div class="icon-box border bd-cyan">
-                                        <div class="icon bg-cyan fg-white"><span class="mif-credit-card"></span></div>
-                                        <div class="content p-4">
-                                            <div class="text-upper">Thẻ đã mua</div>
-                                            <div class="text-upper text-bold text-lead"><%=sl_thedv.ToString("#,##0") %></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="cell-lg-4 mt-2">
-                                    <div class="icon-box border bd-red">
-                                        <div class="icon bg-red fg-white"><span class="mif-dollars"></span></div>
-                                        <div class="content p-4">
-                                            <div class="text-upper">Tổng giá trị thẻ</div>
-                                            <div class="text-upper text-bold text-lead"><%=doanhso_tdv_sauck.ToString("#,##0") %></div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="cell-lg-4 mt-2">
-                                    <div class="icon-box border bd-orange">
-                                        <div class="icon bg-orange fg-white"><span class="mif-money"></span></div>
-                                        <div class="content p-4">
-                                            <div class="text-upper">Tổng công nợ</div>
-                                            <div class="text-upper text-bold text-lead"><%=tong_congno_tdv.ToString("#,##0") %></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
+                        <div class="gh-account-row">
                             <div>
-                                <asp:Repeater ID="Repeater7" runat="server">
-                                    <ItemTemplate>
-                                        <div class="text-bold mt-4 ">
-                                            <a data-role="hint" data-hint-position="top" data-hint-text="Xem chi tiết" class="fg-orange" href="/gianhang/admin/quan-ly-the-dich-vu/chi-tiet.aspx?id=<%#Eval("id") %>">Thẻ dịch vụ số <%#Eval("id") %></a>
-                                        </div>
-                                        <div style="overflow: auto" class=" mt-2">
-                                            <table class="table row-hover table-border cell-border compact normal-lg <%--striped--%> <%--compact normal-lg--%>">
-                                                <thead>
-                                                    <tr style="background-color: #f5f5f5">
-                                                        <td style="width: 1px;"></td>
-                                                        <td class="text-bold" style="min-width: 90px; width: 90px">Thời hạn</td>
-                                                        <td class="text-bold" style="min-width: 130px">Người bán/CK</td>
-                                                        <td class="text-bold" style="min-width: 120px;">Tên thẻ/DV</td>
-                                                        <td class="text-bold" style="min-width: 100px;">Số buổi</td>
-
-                                                        <td class="text-bold" style="min-width: 130px">Tổng tiền/CK</td>
-
-                                                        <td class="text-bold" style="min-width: 100px">Sau CK</td>
-                                                        <td class="text-bold" style="min-width: 110px">T.Toán/C.Nợ</td>
-
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr>
-                                                        <td class="checkbox-table-tdv">
-                                                            <input class="mt-1" type="checkbox" onkeypress="if (event.keyCode==13) return false;" data-role="checkbox" data-style="2" name="check_thedv_<%#Eval("id").ToString() %>">
-                                                        </td>
-                                                        <td class="text-right">
-                                                            <small>
-                                                                <div><%#Eval("ngaytao","{0:dd/MM/yyyy}").ToString() %></div>
-                                                                <div><%#check_hsd(Eval("hsd","{0:dd/MM/yyyy}").ToString()) %></div>
-                                                            </small>
-                                                        </td>
-                                                        <td>
-                                                            <small>
-                                                                <%#Eval("tennguoichot").ToString() %>
-                                                                <div class="text-bold">
-                                                                    <asp:PlaceHolder ID="PlaceHolder7" runat="server" Visible='<%#Eval("phantramchot").ToString()=="0" %>'>
-                                                                        <div class="">CK: <%#Eval("tongtien_chot","{0:#,##0}").ToString() %></div>
-                                                                    </asp:PlaceHolder>
-                                                                    <asp:PlaceHolder ID="PlaceHolder8" runat="server" Visible='<%#Eval("phantramchot").ToString()!="0" %>'>
-                                                                        <div class="">CK: <%#Eval("phantramchot")%>%</div>
-                                                                    </asp:PlaceHolder>
-
-                                                                </div>
-                                                            </small>
-                                                        </td>
-
-                                                        <td><small>
-                                                            <%#Eval("tenthe").ToString() %>
-                                                            <div class="fg-green"><%#Eval("tendv").ToString() %></div>
-                                                        </small>
-                                                        </td>
-                                                        <td>
-                                                            <small>
-                                                                <div>Số buổi: <%#Eval("sobuoi").ToString() %></div>
-                                                                <div>Đã làm: <%#Eval("sl_dalam").ToString() %></div>
-                                                                <div>Còn lại: <%#Eval("sl_conlai").ToString() %></div>
-                                                            </small>
-                                                        </td>
-
-
-                                                        <td class="text-right">
-                                                            <%#Eval("tongtien","{0:#,##0}").ToString() %>
-                                                            <div class="text-bold">
-                                                                <small>
-                                                                    <asp:PlaceHolder ID="PlaceHolder4" runat="server" Visible='<%#Eval("ck_hoadon").ToString()=="0" %>'>CK: <%#Eval("tongtien_ck","{0:#,##0}").ToString() %>
-                                                                    </asp:PlaceHolder>
-                                                                    <asp:PlaceHolder ID="PlaceHolder5" runat="server" Visible='<%#Eval("ck_hoadon").ToString()!="0" %>'>CK: <%#Eval("ck_hoadon")%>%
-                                                                    </asp:PlaceHolder>
-                                                                </small>
-                                                            </div>
-                                                        </td>
-
-
-                                                        <td class="text-right text-bold">
-
-                                                            <div><%#Eval("tongsauchietkhau","{0:#,##0}").ToString() %></div>
-                                                        </td>
-                                                        <td class="text-right">
-                                                            <div>
-                                                                <asp:PlaceHolder ID="PlaceHolder2" runat="server" Visible='<%#Eval("sotien_conlai").ToString()=="0" %>'>
-                                                                    <span class="data-wrapper"><code class="bg-red  fg-white">Đã thanh toán</code></span>
-                                                                </asp:PlaceHolder>
-                                                                <asp:PlaceHolder ID="PlaceHolder3" runat="server" Visible='<%#Eval("sotien_conlai").ToString()!="0" %>'>
-                                                                    <%#Eval("sotien_dathanhtoan","{0:#,##0}").ToString() %>
-                                                                </asp:PlaceHolder>
-                                                            </div>
-                                                            <div>
-                                                                <asp:PlaceHolder ID="PlaceHolder6" runat="server" Visible='<%#Eval("sotien_conlai").ToString()=="0" %>'>
-                                                                    <%#Eval("sotien_conlai","{0:#,##0}").ToString() %>
-                                                                </asp:PlaceHolder>
-                                                                <asp:PlaceHolder ID="PlaceHolder1" runat="server" Visible='<%#Eval("sotien_conlai").ToString()!="0" %>'>
-                                                                    <span class="data-wrapper"><code class="bg-orange fg-white"><%#Eval("sotien_conlai","{0:#,##0}").ToString() %></code></span>
-                                                                </asp:PlaceHolder>
-                                                            </div>
-                                                        </td>
-
-                                                    </tr>
-
-                                                    <%--<%stt = stt + 1; %>--%>
-                                                </tbody>
-                                                <tfoot>
-                                                    <tr class="">
-                                                        <td colspan="4"></td>
-                                                        <td class="text-right text-bold"><%=doanhso_tdv.ToString("#,##0") %></td>
-
-                                                        <td class="text-right text-bold fg-red"><%=doanhso_tdv_sauck.ToString("#,##0") %></td>
-                                                        <td class="text-right text-bold">
-                                                            <%--<div><small>TT: <%=tongtien_dathanhtoan.ToString("#,##0") %></small></div>--%>
-
-                                                            <div class="fg-orange"><%=tong_congno.ToString("#,##0") %></div>
-                                                        </td>
-
-                                                    </tr>
-                                                </tfoot>
-
-                                            </table>
-
-                                        </div>
-                                        <div data-role="accordion"
-                                            data-one-frame="false"
-                                            data-show-active="true"
-                                            data-on-frame-open="console.log('frame was opened!', arguments[0])"
-                                            data-on-frame-close="console.log('frame was closed!', arguments[0])">
-                                            <div class="frame">
-                                                <div class="heading">Nhật ký sử dụng</div>
-                                                <div class="content">
-                                                    <div style="overflow: auto" class=" mt-3 mb-3">
-                                                        <table class="table row-hover table-border cell-border compact normal-lg <%--striped--%> <%--compact normal-lg--%>">
-                                                            <thead>
-                                                                <tr style="background-color: #f5f5f5">
-
-                                                                    <td class="text-bold" style="width: 1px; min-width: 1px;">STT</td>
-                                                                    <td class="text-bold" style="width: 100px;">Ngày SD</td>
-                                                                    <%--<td class="text-bold text-center" style="width: 50px; min-width: 50px">Ảnh</td>--%>
-                                                                    <td class="text-bold" style="min-width: 150px">Dịch vụ</td>
-                                                                    <td class="text-bold" style="width: 1px">Đơn</td>
-                                                                    <td class="text-bold" style="min-width: 170px">Nhân viên làm dịch vụ</td>
-                                                                    <td class="text-bold" style="width: 170px; min-width: 170px">Đánh giá người làm</td>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                <asp:Repeater ID="Repeater1" runat="server" DataSource='<%#show_chitiet_thedv(Eval("id").ToString()) %>'>
-                                                                    <ItemTemplate>
-                                                                        <tr>
-                                                                            <td><%=stt_tdv %></td>
-                                                                            <td class="text-right">
-                                                                                <div><%#Eval("ngaytao","{0:dd/MM/yyyy HH:mm}").ToString() %></div>
-                                                                            </td>
-
-                                                                            <td>
-
-                                                                                <span class="fg-blue"><%#Eval("ten_dvsp_taithoidiemnay").ToString() %></span>
-                                                                            </td>
-                                                                            <td class="text-bold text-center">
-                                                                                <a data-role="hint" data-hint-position="top" data-hint-text="Xem hóa đơn" href="/gianhang/admin/quan-ly-hoa-don/chi-tiet.aspx?id=<%#Eval("id_hoadon").ToString()%>">
-                                                                                    <%#Eval("id_hoadon").ToString()%>
-                                                                                </a>
-                                                                            </td>
-                                                                            <td>
-                                                                                <div><%#Eval("tennguoilam_hientai").ToString()%></div>
-
-                                                                                <asp:PlaceHolder ID="PlaceHolder1" runat="server" Visible='<%#Eval("phantram_lamdichvu").ToString()=="0" %>'>
-                                                                                    <div class="text-right text-bold fg-emerald"><%#Eval("tongtien_lamdichvu","{0:#,##0}").ToString() %></div>
-                                                                                </asp:PlaceHolder>
-                                                                                <asp:PlaceHolder ID="PlaceHolder2" runat="server" Visible='<%#Eval("phantram_lamdichvu").ToString()!="0" %>'>
-                                                                                    <div class="text-right text-bold fg-emerald"><%#Eval("phantram_lamdichvu")%>%</div>
-                                                                                </asp:PlaceHolder>
-                                                                            </td>
-                                                                            <td>
-                                                                                <%#Eval("danhgia_nhanvien_lamdichvu")%>
-                                                                                <div>
-                                                                                    <input data-role="rating" data-value="<%#Eval("danhgia_5sao_dv")%>" name="danhgia_5sao_dv_<%#Eval("id")%>" data-static="true">
-                                                                                </div>
-                                                                            </td>
-                                                                        </tr>
-                                                                        <%stt_tdv = stt_tdv + 1; %>
-                                                                    </ItemTemplate>
-                                                                </asp:Repeater>
-                                                            </tbody>
-
-                                                        </table>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </ItemTemplate>
-                                </asp:Repeater>
+                                <div class="gh-account-row-title">Tổng lượt xem trang công khai</div>
+                                <div class="gh-account-row-sub">Tổng lượt truy cập hiện có trên sản phẩm và dịch vụ công khai.</div>
                             </div>
+                            <div class="gh-account-badge"><asp:Literal ID="lit_total_views" runat="server" /></div>
                         </div>
-
+                        <div class="gh-account-row">
+                            <div>
+                                <div class="gh-account-row-title">Đơn đã Trao đổi / đã giao</div>
+                                <div class="gh-account-row-sub">Theo tiến độ xử lý đơn hiện tại của gian hàng.</div>
+                            </div>
+                            <div class="gh-account-badge"><asp:Literal ID="lit_exchange_delivery" runat="server" /></div>
+                        </div>
+                        <div class="gh-account-row">
+                            <div>
+                                <div class="gh-account-row-title">Lịch hẹn đã xác nhận / hoàn thành</div>
+                                <div class="gh-account-row-sub">Để theo dõi tiến độ phục vụ khách đặt dịch vụ.</div>
+                            </div>
+                            <div class="gh-account-badge"><asp:Literal ID="lit_booking_progress" runat="server" /></div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </asp:Content>
-<asp:Content ID="Content3" ContentPlaceHolderID="foot" runat="Server">
-    <%=notifi %>
+
+<asp:Content ID="ContentFootTruoc" ContentPlaceHolderID="foot_truoc" runat="Server">
+</asp:Content>
+
+<asp:Content ID="ContentFootSau" ContentPlaceHolderID="foot_sau" runat="Server">
 </asp:Content>

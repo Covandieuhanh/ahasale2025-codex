@@ -15,10 +15,12 @@ public static class RootAccount_cl
         public string ShopName { get; set; }
         public bool IsAuthenticated { get; set; }
         public bool CanAccessHome { get; set; }
+        public bool CanAccessGianHang { get; set; }
         public bool CanAccessShop { get; set; }
         public bool CanAccessAdmin { get; set; }
         public bool CanAccessGianHangAdmin { get; set; }
         public bool CanAccessDauGia { get; set; }
+        public bool CanAccessEvent { get; set; }
         public string DefaultSpace { get; set; }
     }
 
@@ -34,6 +36,15 @@ public static class RootAccount_cl
             return null;
 
         return CoreDb_cl.Use(db => GetByAccountKey(db, accountKey));
+    }
+
+    public static taikhoan_tb GetCurrentEntity(dbDataContext db)
+    {
+        string accountKey = GetCurrentAccountKey();
+        if (accountKey == "")
+            return null;
+
+        return GetByAccountKey(db, accountKey);
     }
 
     public static taikhoan_tb GetByAccountKey(dbDataContext db, string accountKey)
@@ -71,6 +82,8 @@ public static class RootAccount_cl
 
     public static RootAccountInfo GetInfo(dbDataContext db, string accountKey)
     {
+        CoreSchemaMigration_cl.EnsureSchemaSafe(db);
+
         taikhoan_tb account = GetByAccountKey(db, accountKey);
         if (account == null)
         {
@@ -82,11 +95,17 @@ public static class RootAccount_cl
             };
         }
 
-        bool canHome = SpaceAccess_cl.CanAccessHome(account);
-        bool canShop = SpaceAccess_cl.CanAccessShop(account);
-        bool canAdmin = SpaceAccess_cl.CanAccessAdmin(account);
-        bool canGianHangAdmin = SpaceAccess_cl.CanAccessGianHangAdmin(account);
-        bool canDauGia = SpaceAccess_cl.CanAccessDauGia(account);
+        CoreAccessBootstrap_cl.EnsureAccountSeeded(db, account);
+
+        bool canHome = SpaceAccess_cl.CanAccessHome(db, account);
+        bool canGianHang = SpaceAccess_cl.CanAccessGianHang(db, account);
+        bool canShop = SpaceAccess_cl.CanAccessShop(db, account);
+        bool canAdmin = SpaceAccess_cl.CanAccessAdmin(db, account);
+        bool canGianHangAdmin = SpaceAccess_cl.CanAccessGianHangAdmin(db, account);
+        if (!canGianHangAdmin && canHome)
+            canGianHangAdmin = GianHangAdminWorkspace_cl.HasAnyWorkspace(db, account.taikhoan);
+        bool canDauGia = SpaceAccess_cl.CanAccessDauGia(db, account);
+        bool canEvent = SpaceAccess_cl.CanAccessEvent(db, account);
 
         return new RootAccountInfo
         {
@@ -99,11 +118,13 @@ public static class RootAccount_cl
             ShopName = (account.ten_shop ?? "").Trim(),
             IsAuthenticated = true,
             CanAccessHome = canHome,
+            CanAccessGianHang = canGianHang,
             CanAccessShop = canShop,
             CanAccessAdmin = canAdmin,
             CanAccessGianHangAdmin = canGianHangAdmin,
             CanAccessDauGia = canDauGia,
-            DefaultSpace = ResolveDefaultSpace(canHome, canShop, canAdmin, canGianHangAdmin, canDauGia)
+            CanAccessEvent = canEvent,
+            DefaultSpace = ResolveDefaultSpace(canHome, canGianHang, canShop, canAdmin, canGianHangAdmin, canDauGia, canEvent)
         };
     }
 
@@ -126,21 +147,24 @@ public static class RootAccount_cl
             return spaces;
 
         if (info.CanAccessHome) spaces.Add(ModuleSpace_cl.Home);
+        if (info.CanAccessGianHang) spaces.Add(ModuleSpace_cl.GianHang);
         if (info.CanAccessShop) spaces.Add(ModuleSpace_cl.Shop);
         if (info.CanAccessAdmin) spaces.Add(ModuleSpace_cl.Admin);
         if (info.CanAccessGianHangAdmin) spaces.Add(ModuleSpace_cl.GianHangAdmin);
         if (info.CanAccessDauGia) spaces.Add(ModuleSpace_cl.DauGia);
+        if (info.CanAccessEvent) spaces.Add(ModuleSpace_cl.Event);
         return spaces;
     }
 
-    private static string ResolveDefaultSpace(bool canHome, bool canShop, bool canAdmin, bool canGianHangAdmin, bool canDauGia)
+    private static string ResolveDefaultSpace(bool canHome, bool canGianHang, bool canShop, bool canAdmin, bool canGianHangAdmin, bool canDauGia, bool canEvent)
     {
         if (canHome) return ModuleSpace_cl.Home;
+        if (canGianHang) return ModuleSpace_cl.GianHang;
         if (canShop) return ModuleSpace_cl.Shop;
         if (canDauGia) return ModuleSpace_cl.DauGia;
+        if (canEvent) return ModuleSpace_cl.Event;
         if (canGianHangAdmin) return ModuleSpace_cl.GianHangAdmin;
         if (canAdmin) return ModuleSpace_cl.Admin;
         return ModuleSpace_cl.Home;
     }
 }
-

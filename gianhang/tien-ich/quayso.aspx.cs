@@ -62,25 +62,24 @@ public partial class congcu_tienich_quayso : System.Web.UI.Page
     {
 
         // CƠ CẤU
-        if (Application["CoCau"] != null)
+        int? coCauIndex = GianHangWorkspaceUtility_cl.GetCoCauIndex(GianHangWorkspaceUtility_cl.ResolveWorkspaceKey(Request));
+        if (coCauIndex.HasValue)
         {
-            
             Timer1.Enabled = false; // Dừng Timer
             but_batdau.Visible = true; // Hiện nút "Bắt đầu"
             but_dunglai.Visible = false; // Ẩn nút "Dừng lại"
-            
 
             var employeeNames = Session["EmployeeNames"] as List<string>;
-            int CoCau = int.Parse(Application["CoCau"].ToString()) - 1;
-            if (employeeNames != null && CoCau < employeeNames.Count)
+            int chiSo = coCauIndex.Value - 1;
+            if (employeeNames != null && chiSo >= 0 && chiSo < employeeNames.Count)
             {
-                Label1.Text = employeeNames[CoCau]; // Trả về phần tử dựa trên chỉ số quy định trước
+                Label1.Text = employeeNames[chiSo]; // Trả về phần tử dựa trên chỉ số quy định trước
             }
-            else//nếu chỉ số cơ cấu vượt quá list thì coi như k cơ cấu
+            else
             {
-                Timer1.Enabled = false; // Dừng Timer
-                but_batdau.Visible = true; // Hiện nút "Bắt đầu"
-                but_dunglai.Visible = false; // Ẩn nút "Dừng lại"
+                Timer1.Enabled = false;
+                but_batdau.Visible = true;
+                but_dunglai.Visible = false;
             }
             Session["EmployeeNames"] = null;
         }
@@ -90,7 +89,6 @@ public partial class congcu_tienich_quayso : System.Web.UI.Page
             but_batdau.Visible = true; // Hiện nút "Bắt đầu"
             but_dunglai.Visible = false; // Ẩn nút "Dừng lại"
             Session["EmployeeNames"] = null;
-
         }
     }
 }

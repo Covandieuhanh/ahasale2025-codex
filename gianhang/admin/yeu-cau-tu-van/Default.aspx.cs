@@ -192,7 +192,16 @@ public partial class admin_category_Default : System.Web.UI.Page
     #region autopostback
     protected void txt_search_TextChanged(object sender, EventArgs e)
     {
+        ApplySearchState();
+    }
+    protected void but_search_Click(object sender, EventArgs e)
+    {
+        ApplySearchState();
+    }
+    private void ApplySearchState()
+    {
         Session["current_page_yeucautuvan"] = "1";
+
         main();
     }
     protected void txt_show_TextChanged(object sender, EventArgs e)

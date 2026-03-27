@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quản trị Khung chat Độc lập</title>
+  <link rel="stylesheet" href="./admin.css" />
+</head>
+<body>
+  <main class="page">
+    <header class="page-header">
+      <div>
+        <h1>Quản trị Khung chat</h1>
+        <p>Bản chạy trực tiếp trên host tĩnh: không cần Node.js. Tài khoản thường quản lý workspace riêng, Super Admin chỉ quản lý trạng thái tài khoản.</p>
+      </div>
+      <div id="auth-header" class="header-side" hidden>
+        <strong id="auth-workspace-badge">Workspace: -</strong>
+        <button id="auth-logout" type="button">Đăng xuất</button>
+      </div>
+    </header>
+
+    <section id="auth-gate" class="card auth-card">
+      <div class="auth-card-head">
+        <h2>Truy cập hệ thống</h2>
+        <p>Gọn trong 2 tab: đăng ký tài khoản mới hoặc đăng nhập tài khoản đã có.</p>
+      </div>
+      <nav id="auth-tabs" class="auth-tabs" aria-label="Đăng ký và đăng nhập">
+        <button id="auth-tab-login" type="button" class="auth-tab-btn is-active" data-auth-tab="login" aria-selected="true">Đăng nhập</button>
+        <button id="auth-tab-register" type="button" class="auth-tab-btn" data-auth-tab="register" aria-selected="false">Đăng ký</button>
+      </nav>
+
+      <section id="auth-panel-login" class="auth-tab-panel">
+        <p>Dùng chung cho tài khoản thường và Super Admin. Nếu là Super Admin, để trống mã workspace.</p>
+        <div class="auth-grid auth-grid-login">
+          <label>Mã workspace (tuỳ chọn)
+            <input id="auth-login-id" type="text" placeholder="Ví dụ: aha-sale (để trống nếu chỉ có 1 workspace)" />
+          </label>
+          <label>Tài khoản
+            <input id="auth-login-user" type="text" placeholder="Ví dụ: admin hoặc root" />
+          </label>
+          <label>Mật khẩu
+            <input id="auth-login-password" type="password" placeholder="Nhập mật khẩu" />
+          </label>
+        </div>
+        <div class="auth-actions">
+          <button id="auth-login-submit" type="button">Đăng nhập</button>
+        </div>
+      </section>
+
+      <section id="auth-panel-register" class="auth-tab-panel" hidden>
+        <p>Đăng ký xong bạn dùng lại tab Đăng nhập để vào hệ thống.</p>
+        <div class="auth-grid auth-grid-register">
+          <label>Tài khoản
+            <input id="auth-register-user" type="text" placeholder="Ví dụ: admin_ahasale" />
+          </label>
+          <label>Mật khẩu
+            <input id="auth-register-password" type="password" placeholder="Nhập mật khẩu" />
+          </label>
+        </div>
+        <div class="auth-actions">
+          <button id="auth-register-submit" type="button" class="primary">Đăng ký tài khoản</button>
+        </div>
+      </section>
+
+      <pre id="auth-status" class="quick-status">Vui lòng đăng nhập hoặc đăng ký tài khoản mới.</pre>
+    </section>
+
+    <div id="admin-app" hidden>
+    <section id="workspace-tools" class="card">
+      <h2>Workspace của bạn</h2>
+      <p id="workspace-tools-summary" class="hint">
+        Sau khi đăng nhập, bạn có thể tạo nhiều workspace và chuyển đổi nhanh tại đây.
+      </p>
+      <div class="doc-form-grid">
+        <label>Tên workspace mới
+          <input id="workspace-create-name" type="text" placeholder="Ví dụ: Aha Sale Miền Nam" />
+        </label>
+        <label>Mã workspace mới (duy nhất)
+          <input id="workspace-create-id" type="text" placeholder="Ví dụ: aha-sale-mien-nam" />
+        </label>
+      </div>
+      <div class="doc-actions">
+        <button id="workspace-create-submit" type="button" class="primary">Tạo workspace mới</button>
+      </div>
+      <div class="doc-actions">
+        <label>Workspace đang quản lý
+          <select id="workspace-switch-select"></select>
+        </label>
+        <button id="workspace-switch-submit" type="button">Mở workspace</button>
+      </div>
+    </section>
+
+    <div id="workspace-dependent">
+    <nav id="admin-tabs" class="admin-tabs" aria-label="Menu quản trị">
+      <button type="button" class="admin-tab-btn is-active" data-admin-tab="setup">Thiết lập</button>
+      <button type="button" class="admin-tab-btn" data-admin-tab="appearance">Giao diện</button>
+      <button type="button" class="admin-tab-btn" data-admin-tab="content">Nội dung</button>
+    </nav>
+
+    <section class="card" data-tab-panel="setup">
+      <h2>Chế độ triển khai không cần Node</h2>
+      <p>
+        Dữ liệu chatbot được lưu trong file <code>/widget-data/widget-data.json</code>. Sau khi chỉnh sửa, hãy bấm
+        <strong>Tải file deploy</strong> rồi upload đè file này lên host để áp dụng cho toàn bộ website.
+      </p>
+      <p class="hint">
+        Hướng dẫn nhanh: <strong>1)</strong> Lưu tạm cấu hình. <strong>2)</strong> Chọn 1 trong 2 cách deploy:
+        tải file thủ công hoặc lưu trực tiếp lên host bằng khóa deploy.
+      </p>
+      <div class="doc-actions">
+        <button id="bundle-download" type="button" class="primary">Tải file deploy (widget-data.json)</button>
+        <input id="bundle-upload" type="file" accept=".json,application/json" />
+        <button id="bundle-import" type="button">Nạp file dữ liệu</button>
+      </div>
+      <p class="hint">
+        Nút <strong>Tải file deploy</strong>: dùng khi bạn muốn backup/lưu file cục bộ. Nút
+        <strong>Nạp file dữ liệu</strong>: dùng để khôi phục cấu hình từ một file đã tải trước đó.
+      </p>
+      <div class="direct-deploy-box">
+        <h3>Lưu trực tiếp lên host (không cần tải rồi upload)</h3>
+        <p class="hint">
+          Cần nhập khóa deploy để xác nhận quyền ghi file. Khóa mặc định là <code>AhaDeploy@2026</code>
+          (bạn có thể đổi trong file <code>/widget/admin/deploy.aspx</code> trên host).
+        </p>
+        <div class="doc-form-grid">
+          <label>Khóa deploy
+            <div class="password-row">
+              <input id="direct-deploy-key" type="password" placeholder="Nhập khóa deploy" />
+              <button id="direct-toggle-deploy-key" type="button" class="mini-btn">Hiện</button>
+            </div>
+          </label>
+        </div>
+        <div class="doc-actions">
+          <button id="direct-deploy-test" type="button">Kiểm tra kết nối deploy</button>
+          <button id="direct-deploy-submit" type="button" class="primary">Lưu trực tiếp lên host</button>
+        </div>
+        <p class="hint">
+          Nút <strong>Kiểm tra kết nối deploy</strong> chỉ kiểm tra khóa và quyền ghi.
+          Nút <strong>Lưu trực tiếp lên host</strong> sẽ ghi đè ngay file <code>/widget-data/widget-data.json</code>.
+        </p>
+        <pre id="direct-deploy-status" class="quick-status">Chưa kiểm tra deploy trực tiếp.</pre>
+      </div>
+      <p class="hint">
+        Lưu ý: nút <strong>Lưu tạm</strong> chỉ lưu vào trình duyệt hiện tại để bạn tiếp tục chỉnh nhanh. Muốn website
+        thật cập nhật thì cần upload file deploy lên host.
+      </p>
+    </section>
+
+    <section id="super-admin-tools" class="card" data-tab-panel="setup" hidden>
+      <div class="card-head">
+        <h2>Quản trị tài khoản (Super Admin)</h2>
+        <button id="super-refresh-accounts" type="button">Tải lại danh sách</button>
+      </div>
+      <p class="hint">
+        Super Admin chỉ dùng khu vực này để quản lý trạng thái tài khoản. Tài khoản bị khóa sẽ không thể đăng nhập.
+      </p>
+      <div id="super-accounts-list" class="documents-list"></div>
+    </section>
+
+    <section class="card quick-start-card" data-tab-panel="setup">
+      <div class="card-head">
+        <h2>Thiết lập siêu nhanh (không cần code)</h2>
+        <button id="quick-auto-deploy" type="button" class="primary">Lưu thiết lập nhanh</button>
+      </div>
+      <p>
+        Chỉ cần điền các ô bên dưới. Hệ thống sẽ lưu cấu hình, tạo mã nhúng sẵn và đồng bộ về workspace hiện tại.
+        Phần quét tự động đã tách riêng để bạn tập trung vào chất lượng câu trả lời.
+      </p>
+      <div class="quick-grid">
+        <label>Tên thương hiệu
+          <input id="quick-brand-name" type="text" placeholder="Ví dụ: Aha Shine" />
+          <small class="field-help">Tên hiển thị của doanh nghiệp trong chatbot và tiêu đề trả lời.</small>
+        </label>
+        <label>Link website cần gắn chatbot
+          <input id="quick-site-url" type="url" placeholder="https://websitecuaban.com" />
+          <small class="field-help">Đường dẫn website chính để tạo mã nhúng đúng domain và project.</small>
+        </label>
+        <label>Tên trợ lý hiển thị
+          <input id="quick-agent-name" type="text" placeholder="Ví dụ: Trợ lý Aha" />
+          <small class="field-help">Tên bot xuất hiện trên đầu khung chat.</small>
+        </label>
+      </div>
+      <label>Lời chào mặc định
+        <textarea id="quick-welcome-message" rows="2" placeholder="Xin chào, mình có thể hỗ trợ gì cho bạn?"></textarea>
+        <small class="field-help">Tin nhắn mở đầu khi khách vừa mở khung chat.</small>
+      </label>
+      <label>Câu trả lời khi bot chưa có dữ liệu
+        <textarea id="quick-fallback-answer" rows="2" placeholder="Mình đã ghi nhận câu hỏi..."></textarea>
+        <small class="field-help">Nội dung bot trả về khi không tìm thấy câu trả lời phù hợp.</small>
+      </label>
+      <p class="hint">
+        Khối này không chạy quét tự động. Mục tiêu là hoàn thành cấu hình thật nhanh để bạn chuyển sang tab
+        <strong>Nội dung</strong> và tinh chỉnh câu trả lời chuẩn theo ý.
+      </p>
+      <div class="quick-embed-box">
+        <label>Mã nhúng tự tạo sẵn (chỉ cần dán vào website của bạn)
+          <textarea id="quick-embed-code" rows="3" readonly></textarea>
+        </label>
+        <div class="doc-actions">
+          <button id="quick-copy-embed" type="button">Sao chép mã nhúng</button>
+          <button id="quick-open-demo" type="button">Mở demo theo tài khoản này</button>
+        </div>
+      </div>
+      <p class="hint">
+        Nút <strong>Sao chép mã nhúng</strong>: copy script để dán lên website.
+        Nút <strong>Mở demo theo tài khoản này</strong>: mở tab xem thử đúng theo workspace đang thao tác.
+      </p>
+      <pre id="quick-status" class="quick-status">Sẵn sàng. Điền thông tin rồi bấm “Lưu thiết lập nhanh”.</pre>
+    </section>
+
+    <section class="advanced-panel">
+      <div class="advanced-panel-content">
+    <section class="advanced-actions" data-tab-panel="setup">
+      <p class="hint">
+        Bạn đang chỉnh phần nâng cao. Bấm <strong>Lưu cài đặt nâng cao</strong> để lưu ngay mà không cần kéo xuống cuối trang.
+      </p>
+      <button id="advanced-save-config" type="button" class="primary">Lưu cài đặt nâng cao</button>
+    </section>
+    <section class="card" data-tab-panel="setup">
+      <h2>Mã nhúng</h2>
+      <p>Sao chép đoạn script bên dưới và dán vào website cần nhúng khung chat.</p>
+      <p class="hint">Nút <strong>Sao chép mã nhúng</strong> sẽ copy toàn bộ đoạn script của workspace hiện tại.</p>
+      <div class="embed-box">
+        <textarea id="embed-code" readonly></textarea>
+        <button id="copy-embed" type="button">Sao chép mã nhúng</button>
+      </div>
+    </section>
+
+    <section class="card grid-2" data-tab-panel="appearance">
+      <div>
+        <h2>Thương hiệu</h2>
+        <label>Tên thương hiệu<input id="brand-name" type="text" /></label>
+        <label>Tên trợ lý<input id="agent-name" type="text" /></label>
+        <label>Nhãn launcher<input id="launcher-label" type="text" /></label>
+        <label>Tiêu đề chào<input id="welcome-title" type="text" /></label>
+        <label>Nội dung chào<textarea id="welcome-message" rows="3"></textarea></label>
+        <label>Placeholder ô nhập<input id="input-placeholder" type="text" /></label>
+      </div>
+
+      <div>
+        <h2>Logo launcher</h2>
+        <div class="logo-preview-wrap">
+          <div id="logo-preview" class="logo-preview" aria-hidden="true"></div>
+        </div>
+        <div class="logo-actions">
+          <input id="logo-upload" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" />
+          <button id="logo-clear" type="button">Xóa logo</button>
+        </div>
+        <p class="hint">Nút <strong>Xóa logo</strong> sẽ trả ảnh launcher về mặc định.</p>
+        <p class="hint">Tải ảnh từ máy. File sẽ được lưu trực tiếp trong cấu hình khung chat.</p>
+      </div>
+    </section>
+
+    <section class="card grid-3" data-tab-panel="appearance">
+      <div>
+        <h2>Giao diện màu</h2>
+        <label>Màu chính<input id="theme-primary" type="color" /></label>
+        <label>Nền launcher<input id="theme-launcher-bg" type="color" /></label>
+        <label>Màu chữ trên nền chính<input id="theme-text-on-primary" type="color" /></label>
+        <label>Nền khung chat<input id="theme-panel-bg" type="color" /></label>
+        <label>Nền tin nhắn bot<input id="theme-bot-bubble" type="color" /></label>
+        <label>Nền tin nhắn người dùng<input id="theme-user-bubble" type="color" /></label>
+      </div>
+      <div>
+        <h2>Bố cục</h2>
+        <label>
+          Vị trí
+          <select id="layout-position">
+            <option value="right">Bên phải</option>
+            <option value="left">Bên trái</option>
+          </select>
+        </label>
+        <label>Khoảng cách mép dưới (px)<input id="layout-bottom" type="number" min="0" max="120" /></label>
+        <label>Khoảng cách mép bên (px)<input id="layout-side" type="number" min="0" max="120" /></label>
+        <label>Z-index<input id="layout-z-index" type="number" min="1000" max="2147483000" /></label>
+      </div>
+      <div>
+        <h2>Hành vi</h2>
+        <label><input id="behavior-show-welcome" type="checkbox" /> Hiện lời chào khi mở chat</label>
+        <label><input id="behavior-start-open" type="checkbox" /> Mở sẵn khi tải trang</label>
+        <label>Độ trễ phản hồi (ms)<input id="behavior-typing-delay" type="number" min="0" max="2000" /></label>
+        <label>Số tin nhắn tối đa<input id="behavior-max-messages" type="number" min="20" max="500" /></label>
+      </div>
+    </section>
+
+    <section class="card" data-tab-panel="appearance">
+      <h2>Nút gợi ý nhanh</h2>
+      <p>Nhập mỗi dòng một nút trả lời nhanh.</p>
+      <textarea id="quick-start-buttons" rows="5"></textarea>
+    </section>
+
+    <section class="card" data-tab-panel="content">
+      <h2>Câu trả lời dự phòng</h2>
+      <textarea id="fallback-answer" rows="3"></textarea>
+    </section>
+
+    <section class="card" data-tab-panel="content">
+      <h2>Cách bot dùng dữ liệu</h2>
+      <ol class="guide-list">
+        <li>Ưu tiên 1: Bot dò trong <strong>Bộ câu trả lời mẫu</strong> theo mức độ gần nghĩa của câu hỏi.</li>
+        <li>Ưu tiên 2: Nếu chưa khớp tốt, bot tìm trong <strong>Kho dữ liệu tài liệu</strong> và trích nội dung liên quan.</li>
+        <li>Ưu tiên 3: Nếu vẫn không có kết quả, bot trả <strong>Câu trả lời dự phòng</strong>.</li>
+      </ol>
+      <p class="hint">Mẹo tối ưu: mỗi ý chính nên có nhiều cách hỏi tương đương trong từ khóa để bot hiểu đúng ý hơn.</p>
+    </section>
+
+    <section class="card" data-tab-panel="content">
+      <div class="card-head">
+        <h2>Kho dữ liệu tài liệu</h2>
+        <button id="reload-documents" type="button">Tải lại dữ liệu</button>
+      </div>
+      <p>
+        Bổ sung dữ liệu liên tục cho khung chat. Hỗ trợ thêm tài liệu bằng văn bản hoặc tải file text
+        (txt, md, csv, json, xlsx).
+      </p>
+      <div class="doc-tools">
+        <label>Tìm tài liệu
+          <input id="documents-search" type="search" placeholder="Tìm theo tiêu đề, nhãn hoặc nội dung..." />
+        </label>
+        <label>Hiển thị mỗi trang
+          <select id="documents-page-size">
+            <option value="10">10 tài liệu</option>
+            <option value="20" selected>20 tài liệu</option>
+          </select>
+        </label>
+        <button id="documents-clear-search" type="button">Xóa tìm kiếm</button>
+      </div>
+      <div class="doc-form-grid">
+        <label>Tiêu đề tài liệu
+          <input id="doc-title" type="text" />
+          <small class="field-help">Tên để quản lý tài liệu và giúp bot ưu tiên tìm đúng chủ đề.</small>
+        </label>
+        <label>Nhãn (phân tách dấu phẩy)
+          <input id="doc-tags" type="text" placeholder="giá, đặt lịch, ưu đãi" />
+          <small class="field-help">Từ khóa phụ trợ để bot gợi ý nhanh và tìm nội dung chính xác hơn.</small>
+        </label>
+      </div>
+      <label>Nội dung tài liệu
+        <textarea id="doc-text" rows="6"></textarea>
+        <small class="field-help">Phần mô tả chi tiết mà bot sẽ trích ra để trả lời người dùng.</small>
+      </label>
+      <div class="doc-actions">
+        <button id="add-document" type="button" class="primary">Thêm tài liệu</button>
+        <input
+          id="doc-upload"
+          type="file"
+          accept=".txt,.md,.csv,.json,.xlsx,text/plain,text/markdown,text/csv,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          multiple
+        />
+        <button id="upload-documents" type="button">Tải lên các file đã chọn</button>
+      </div>
+      <div class="kb-tools">
+        <a href="../templates/documents-template.csv" download>Tải file mẫu tài liệu CSV (Excel)</a>
+        <button id="documents-template-xlsx" type="button">Tải file mẫu tài liệu XLSX</button>
+        <button id="documents-export-csv" type="button">Tải toàn bộ tài liệu hiện tại (CSV)</button>
+        <button id="documents-export-xlsx" type="button">Tải toàn bộ tài liệu hiện tại (XLSX)</button>
+      </div>
+      <p class="hint">
+        Nút <strong>Thêm tài liệu</strong>: thêm nội dung đang nhập tay.
+        Nút <strong>Tải lên các file đã chọn</strong>: nhập hàng loạt từ file.
+        Nút <strong>Tải lại dữ liệu</strong>: đọc lại danh sách tài liệu hiện có.
+      </p>
+      <p class="hint">
+        Nhập hàng loạt theo mẫu CSV/XLSX với cột: <code>id,title,tags,text,sourceUrls</code>.
+        Nhiều giá trị trong <code>tags</code> hoặc <code>sourceUrls</code> thì ngăn cách bằng dấu <code>|</code>.
+      </p>
+      <div class="doc-stat">
+        Tổng: <span id="documents-total">0</span> tài liệu
+        · Đang hiển thị: <span id="documents-visible">0</span>
+        · Trang: <span id="documents-page-current">1</span>/<span id="documents-page-total">1</span>
+      </div>
+      <div class="doc-pagination">
+        <button id="documents-page-prev" type="button">Trang trước</button>
+        <button id="documents-page-next" type="button">Trang sau</button>
+      </div>
+      <div id="documents-list" class="documents-list"></div>
+    </section>
+
+    <section class="card" data-tab-panel="content">
+      <div class="card-head">
+        <h2>Công cụ quét tự động (tùy chọn)</h2>
+        <button id="platform-load-project" type="button">Tải website</button>
+      </div>
+      <p>
+        Khối này dành cho trường hợp bạn muốn quét link nội bộ để tạo bản nháp. Với định hướng hiện tại,
+        bạn có thể bỏ qua và tập trung biên tập nội dung thủ công để đạt độ chính xác cao nhất.
+      </p>
+      <p class="hint">
+        Cách dùng: 1. Lưu website. 2. Quét website và chờ trạng thái chuyển sang <strong>success</strong>.
+        3. Nạp bản nháp ở mục <strong>Duyệt nội dung sau quét</strong>, chỉnh tay và đánh dấu đã duyệt.
+        4. Khi đã duyệt đủ, mới đưa vào chatbot.
+      </p>
+      <div class="platform-grid">
+        <label>Mã website (duy nhất)
+          <input id="platform-project-id" type="text" value="default-site" />
+          <small class="field-help">Mã định danh nội bộ để lưu dự án quét; không nên trùng giữa các website.</small>
+        </label>
+        <label>Tên website
+          <input id="platform-project-name" type="text" placeholder="Aha Shine" />
+          <small class="field-help">Tên hiển thị để bạn dễ phân biệt các dự án trong dashboard.</small>
+        </label>
+        <label>URL gốc cần quét
+          <input id="platform-base-url" type="url" placeholder="https://example.com" />
+          <small class="field-help">Trang bắt đầu để hệ thống đi theo link nội bộ và sinh hướng dẫn.</small>
+        </label>
+        <label>Số trang quét tối đa
+          <input id="platform-max-pages" type="number" min="1" max="200" value="40" />
+          <small class="field-help">Giới hạn tổng số trang được đọc trong một lần quét (cao hơn = quét rộng hơn).</small>
+        </label>
+        <label>Độ sâu quét tối đa
+          <input id="platform-max-depth" type="number" min="0" max="6" value="3" />
+          <small class="field-help">Số tầng link tính từ URL gốc: 0 chỉ quét trang gốc, 1 quét thêm link trực tiếp.</small>
+        </label>
+        <label>Timeout mỗi trang (ms)
+          <input id="platform-timeout-ms" type="number" min="3000" max="30000" value="10000" />
+          <small class="field-help">Thời gian chờ tối đa cho 1 trang trước khi bỏ qua và ghi nhận lỗi timeout.</small>
+        </label>
+      </div>
+      <label>
+        Chỉ quét path chứa (mỗi dòng 1 từ khóa, để trống = quét tất cả)
+        <textarea id="platform-include-paths" rows="3" placeholder="/san-pham&#10;/huong-dan"></textarea>
+        <small class="field-help">Ví dụ nhập <code>/huong-dan</code> để chỉ quét các trang có đường dẫn chứa cụm đó.</small>
+      </label>
+      <label>
+        Bỏ qua path chứa (mỗi dòng 1 từ khóa)
+        <textarea id="platform-exclude-paths" rows="3" placeholder="/admin&#10;/auth"></textarea>
+        <small class="field-help">Dùng để loại trừ trang không cần đưa vào chatbot như admin, auth, hệ thống.</small>
+      </label>
+      <label>
+        Header đăng nhập phiên (mỗi dòng 1 header, dạng <code>Tên-Header: giá trị</code>)
+        <textarea
+          id="platform-auth-headers"
+          rows="4"
+          placeholder="Cookie: sessionid=abc123; token=xyz&#10;Authorization: Bearer eyJ..."
+        ></textarea>
+        <small class="field-help">Trường nâng cao để ghi chú header phiên đăng nhập. Có thể để trống.</small>
+      </label>
+      <p class="hint">
+        Ở bản không Node, trường header chỉ để lưu ghi chú cấu hình. Cách quét trang sau đăng nhập: đăng nhập sẵn bằng
+        trình duyệt hiện tại trước khi bấm quét.
+      </p>
+      <div class="platform-actions">
+        <button id="platform-save-project" type="button">Lưu website</button>
+        <button id="platform-run-crawl" type="button" class="primary">Quét website và sinh hướng dẫn</button>
+        <button id="platform-publish-guides" type="button">Duyệt xong rồi đưa vào chatbot</button>
+      </div>
+      <p class="hint">
+        Nút <strong>Lưu website</strong>: lưu cấu hình nguồn quét.
+        Nút <strong>Quét website và sinh hướng dẫn</strong>: bắt đầu crawl + sinh bản nháp.
+        Nút <strong>Duyệt xong rồi đưa vào chatbot</strong>: chỉ dùng sau khi kiểm duyệt đầy đủ.
+      </p>
+      <pre id="platform-summary" class="platform-summary">Chưa có dữ liệu quét.</pre>
+    </section>
+
+    <section class="card" data-tab-panel="content">
+      <div class="card-head">
+        <h2>Duyệt nội dung sau quét</h2>
+        <button id="review-load-draft" type="button">Nạp bản nháp cần duyệt</button>
+      </div>
+      <p>
+        Đây là bước bắt buộc để kiểm tra lại toàn bộ câu trả lời tự sinh. Bạn có thể sửa tiêu đề, từ khóa, nội dung
+        trả lời và nút gợi ý nhanh trước khi đưa lên chatbot.
+      </p>
+      <div class="review-actions">
+        <button id="review-check-all" type="button">Đánh dấu duyệt tất cả</button>
+        <button id="review-save-draft" type="button">Lưu bản nháp đã chỉnh</button>
+        <button id="review-publish-guides" type="button" class="primary">Xuất bản vào chatbot</button>
+      </div>
+      <p class="hint">
+        Nút <strong>Đánh dấu duyệt tất cả</strong>: tick toàn bộ bản nháp.
+        Nút <strong>Lưu bản nháp đã chỉnh</strong>: lưu lại nội dung đang sửa.
+        Nút <strong>Xuất bản vào chatbot</strong>: đưa dữ liệu đã duyệt vào bot.
+      </p>
+      <pre id="review-summary" class="platform-summary">Chưa nạp bản nháp cần duyệt.</pre>
+      <div id="review-guides-list" class="review-list"></div>
+    </section>
+
+    <section class="card" data-tab-panel="content">
+      <div class="card-head">
+        <h2>Bộ câu trả lời mẫu</h2>
+        <button id="add-kb-row" type="button">Thêm dòng</button>
+      </div>
+      <p>Mỗi dòng gồm từ khóa -> câu trả lời + nút gợi ý nhanh.</p>
+      <div class="kb-tools">
+        <a href="../templates/kb-template.csv" download>Tải file mẫu CSV</a>
+        <a href="../templates/kb-template.json" download>Tải file mẫu JSON</a>
+        <button id="kb-template-xlsx" type="button">Tải file mẫu XLSX</button>
+        <button id="kb-export-csv" type="button">Tải bộ câu trả lời hiện tại (CSV)</button>
+        <button id="kb-export-xlsx" type="button">Tải bộ câu trả lời hiện tại (XLSX)</button>
+        <input id="kb-upload" type="file" accept=".csv,.json,.xlsx,text/csv,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
+        <button id="kb-import" type="button">Nhập bộ câu trả lời từ file</button>
+      </div>
+      <p class="hint">
+        Nút <strong>Thêm dòng</strong>: thêm 1 hàng câu trả lời mới.
+        Nút <strong>Nhập bộ câu trả lời từ file</strong>: nạp dữ liệu hàng loạt từ CSV/JSON.
+      </p>
+      <p class="hint">
+        Định dạng CSV/XLSX: <code>id,keywords,answer,quickReplies</code>. Trường <code>keywords</code> và
+        <code>quickReplies</code> phân tách nhiều giá trị bằng dấu <code>|</code>.
+      </p>
+      <div id="kb-list" class="kb-list"></div>
+    </section>
+
+    <section class="actions">
+      <button id="reload-config" type="button">Tải lại từ file trên host</button>
+      <button id="save-config" type="button">Lưu tạm trên trình duyệt</button>
+      <span id="status" role="status" aria-live="polite"></span>
+    </section>
+    <p class="hint">
+      Nút <strong>Tải lại từ file trên host</strong>: nạp dữ liệu đang chạy thật trên server.
+      Nút <strong>Lưu tạm trên trình duyệt</strong>: chỉ lưu local để tiếp tục chỉnh nhanh.
+    </p>
+    </div>
+    </section>
+    </div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="./admin.js"></script>
+</body>
+</html>

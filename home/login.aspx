@@ -81,17 +81,19 @@
                             </asp:PlaceHolder>
 
                             <asp:Panel ID="pnLogin" runat="server" DefaultButton="but_login">
+                                <asp:HiddenField ID="hid_return_url" runat="server" />
+                                <input type="hidden" name="home_return_url_shadow" value="<%=HttpUtility.HtmlAttributeEncode(RenderRequestedReturnUrl()) %>" />
                                 <div class="mb-3">
-                                    <label class="form-label">Số điện thoại</label>
+                                    <label class="form-label">Tài khoản / Số điện thoại / Email</label>
                                     <div class="input-group input-group-flat">
                                         <span class="input-group-text">
                                             <i class="ti ti-phone"></i>
                                         </span>
                                         <asp:TextBox ID="txt_user" runat="server"
                                             CssClass="form-control"
-                                            MaxLength="20"
-                                            placeholder="Nhập số điện thoại đăng nhập"
-                                            autocomplete="tel"></asp:TextBox>
+                                            MaxLength="120"
+                                            placeholder="Nhập tài khoản hoặc số điện thoại hoặc email"
+                                            autocomplete="username"></asp:TextBox>
                                     </div>
                                 </div>
 
@@ -164,10 +166,57 @@
 <asp:Content ID="cFootSau" ContentPlaceHolderID="foot_sau" runat="Server">
     <script type="text/javascript">
         (function () {
+            function resolveReturnUrl(form) {
+                try {
+                    var action = (form && form.action) ? form.action : '';
+                    var fromAction = new URL(action, window.location.origin).searchParams.get('return_url')
+                        || new URL(action, window.location.origin).searchParams.get('returnUrl');
+                    if (fromAction) return fromAction;
+                } catch (e) { }
+
+                try {
+                    var fromPage = new URL(window.location.href).searchParams.get('return_url')
+                        || new URL(window.location.href).searchParams.get('returnUrl');
+                    if (fromPage) return fromPage;
+                } catch (e) { }
+
+                return '';
+            }
+
+            function syncReturnUrlFields() {
+                var form = document.getElementById('ctl00_form1');
+                if (!form) return;
+
+                var hidden = document.getElementById('<%= hid_return_url.ClientID %>');
+                var shadow = form.querySelector('input[name="home_return_url_shadow"]');
+                var value = resolveReturnUrl(form);
+                if (!value) return;
+
+                if (hidden) hidden.value = value;
+                if (shadow) shadow.value = value;
+
+                try {
+                    var cookieValue = encodeURIComponent(value);
+                    var cookie = 'save_url_home_aka=' + cookieValue + '; path=/; SameSite=Lax';
+                    if (window.location.protocol === 'https:') cookie += '; Secure';
+                    document.cookie = cookie;
+                } catch (e) { }
+            }
+
+            syncReturnUrlFields();
+
             if (window.Sys && Sys.WebForms) {
                 Sys.WebForms.PageRequestManager.getInstance().add_endRequest(function () {
                     var u = document.getElementById('<%= txt_user.ClientID %>');
                     if (u) u.focus();
+                    syncReturnUrlFields();
+                });
+            }
+
+            var form = document.getElementById('ctl00_form1');
+            if (form) {
+                form.addEventListener('submit', function () {
+                    syncReturnUrlFields();
                 });
             }
         })();

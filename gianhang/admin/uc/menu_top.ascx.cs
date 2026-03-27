@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
@@ -164,45 +166,7 @@ public partial class admin_uc_menu_top_uc : System.Web.UI.UserControl
 
     public string GetAdminHomeUrl()
     {
-        if (ShowMenuDashboard())
-            return "/gianhang/admin/default.aspx";
-
-        if (ShowMenuAdminAccount())
-            return "/gianhang/admin/quan-ly-tai-khoan/Default.aspx?scope=admin";
-        if (ShowMenuTransferHistory())
-            return "/gianhang/admin/lich-su-chuyen-diem/default.aspx";
-        if (ShowMenuHomeAccount())
-            return "/gianhang/admin/quan-ly-tai-khoan/Default.aspx?scope=home";
-        if (ShowMenuApproveHanhVi())
-            return "/gianhang/admin/duyet-yeu-cau-len-cap.aspx";
-        if (ShowMenuIssueCard())
-            return "/gianhang/admin/phat-hanh-the.aspx";
-        if (ShowMenuTierDescription())
-            return "/gianhang/admin/MoTaCapBac.aspx";
-        if (ShowMenuSellProduct())
-            return "/gianhang/admin/he-thong-san-pham/ban-san-pham.aspx";
-        if (ShowMenuShopAccount())
-            return "/gianhang/admin/quan-ly-tai-khoan/Default.aspx?scope=shop";
-        if (ShowMenuShopApprove())
-            return "/gianhang/admin/duyet-gian-hang-doi-tac.aspx";
-        if (ShowMenuShopEmailTemplate())
-            return "/gianhang/admin/quan-ly-email-shop/default.aspx";
-        if (ShowMenuHomeTextContent())
-            return "/gianhang/admin/quan-ly-noi-dung-home/default.aspx";
-        if (ShowMenuContentMenu())
-            return "/gianhang/admin/quan-ly-menu/default.aspx";
-        if (ShowMenuContentBaiViet())
-            return "/gianhang/admin/quan-ly-bai-viet/default.aspx";
-        if (ShowMenuContentBanner())
-            return "/gianhang/admin/quan-ly-banner/default.aspx";
-        if (ShowMenuContentGopY())
-            return "/gianhang/admin/quan-ly-gop-y/default.aspx";
-        if (ShowMenuContentThongBao())
-            return "/gianhang/admin/quan-ly-thong-bao/default.aspx";
-        if (ShowMenuContentTuVan())
-            return "/gianhang/admin/yeu-cau-tu-van/default.aspx";
-
-        return "/gianhang/admin/lich-su-chuyen-diem/default.aspx";
+        return "/gianhang/admin/default.aspx";
     }
 
     public string MenuActive(params string[] urls)
@@ -231,11 +195,7 @@ public partial class admin_uc_menu_top_uc : System.Web.UI.UserControl
 
     private string GetCurrentAdminAccount()
     {
-        string taiKhoanMaHoa = Session["taikhoan"] as string;
-        if (string.IsNullOrEmpty(taiKhoanMaHoa))
-            return "";
-
-        return mahoa_cl.giaima_Bcorn(taiKhoanMaHoa);
+        return GianHangAdminContext_cl.ResolveDisplayAccountKey();
     }
 
     protected string BuildCurrentPageUrl(bool openChangePassword)
@@ -262,6 +222,19 @@ public partial class admin_uc_menu_top_uc : System.Web.UI.UserControl
 
         Response.Redirect(url, false);
         Context.ApplicationInstance.CompleteRequest();
+    }
+
+    private string GetLogAccount()
+    {
+        return GetCurrentAdminAccount();
+    }
+
+    private void EnsureTopActionContext()
+    {
+        if (GianHangAdminContext_cl.IsHomeManagedSession())
+            return;
+
+        check_login_cl.check_login_admin("none", "none");
     }
 
     private void ApplyTopViewFromQuery()
@@ -298,6 +271,7 @@ public partial class admin_uc_menu_top_uc : System.Web.UI.UserControl
                 {
                     show_soluong_thongbao(db);
                     lay_thongtin_nguoidung(db);
+                    BindWorkspaceSwitcher(db);
                 }
 
                 ApplyTopViewFromQuery();
@@ -305,12 +279,7 @@ public partial class admin_uc_menu_top_uc : System.Web.UI.UserControl
             }
             catch (Exception _ex)
             {
-                string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
-                if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
-                    _tk = mahoa_cl.giaima_Bcorn(_tk);
-                else
-                    _tk = "";
-                Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
+                Log_cl.Add_Log(_ex.Message, GetLogAccount(), _ex.StackTrace);
             }
         }
     }
@@ -351,30 +320,60 @@ public partial class admin_uc_menu_top_uc : System.Web.UI.UserControl
 
     public void lay_thongtin_nguoidung(dbDataContext db)
     {
-        string _tk = Session["taikhoan"] as string;
-        if (!string.IsNullOrEmpty(_tk))
+        taikhoan_tb q = GianHangAdminContext_cl.ResolveDisplayAccount(db);
+        if (q != null)
         {
-            _tk = mahoa_cl.giaima_Bcorn(_tk);
             try
             {
-                var q = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == _tk);
-                if (q == null) return;
+                string displayAccount = (q.taikhoan ?? "").Trim();
 
                 ViewState["hoten"] = q.hoten;
                 ViewState["anhdaidien"] = q.anhdaidien;
                 ViewState["email"] = q.email;
-                ViewState["taikhoan"] = _tk;
+                ViewState["taikhoan"] = displayAccount;
 
-                // Hiển thị nhãn theo hệ đăng nhập admin.
-                if (AccountType_cl.IsTreasury(q.phanloai))
+                if (GianHangAdminContext_cl.IsHomeManagedSession())
                 {
+                    string ownerAccount = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
+                    string roleLabel = GianHangAdminContext_cl.ResolveCurrentRoleLabel();
+                    bool isOwner = string.Equals(displayAccount, ownerAccount, StringComparison.OrdinalIgnoreCase);
+                    string ownerDisplay = (ownerAccount ?? "").Trim();
+                    if (!string.IsNullOrWhiteSpace(ownerAccount) && !string.Equals(displayAccount, ownerAccount, StringComparison.OrdinalIgnoreCase))
+                    {
+                        taikhoan_tb owner = RootAccount_cl.GetByAccountKey(db, ownerAccount);
+                        if (owner != null && !string.IsNullOrWhiteSpace(owner.hoten))
+                            ownerDisplay = owner.hoten.Trim();
+                    }
+
+                    string rolePrefix = roleLabel == "" ? "Đang tham gia" : roleLabel;
+                    string label = isOwner
+                        ? "Không gian của bạn"
+                        : (rolePrefix + (string.IsNullOrWhiteSpace(ownerDisplay) ? "" : (" · " + ownerDisplay)));
+                    string css = isOwner ? "success" : "info";
+                    ViewState["phanloai_text"] = label;
                     ViewState["phanloai"] =
-                        "<div class=\"button flat-button mr-1 rounded success\">Tài khoản tổng</div>";
+                        "<div class=\"button flat-button mr-1 rounded " + css + "\">" + HttpUtility.HtmlEncode(label) + "</div>";
+
+                    if (!isOwner && !string.IsNullOrWhiteSpace(ownerDisplay))
+                    {
+                        ViewState["hoten"] = (q.hoten ?? "").Trim() + " · đang làm việc tại " + ownerDisplay;
+                    }
                 }
                 else
                 {
-                    ViewState["phanloai"] =
-                        "<div class=\"button flat-button mr-1 rounded info\">Nhân viên admin</div>";
+                    // Hiển thị nhãn theo hệ đăng nhập admin.
+                    if (AccountType_cl.IsTreasury(q.phanloai))
+                    {
+                        ViewState["phanloai_text"] = "Tài khoản tổng";
+                        ViewState["phanloai"] =
+                            "<div class=\"button flat-button mr-1 rounded success\">Tài khoản tổng</div>";
+                    }
+                    else
+                    {
+                        ViewState["phanloai_text"] = "Nhân viên admin";
+                        ViewState["phanloai"] =
+                            "<div class=\"button flat-button mr-1 rounded info\">Nhân viên admin</div>";
+                    }
                 }
 
 
@@ -384,9 +383,72 @@ public partial class admin_uc_menu_top_uc : System.Web.UI.UserControl
             }
             catch (Exception _ex)
             {
-                Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
+                Log_cl.Add_Log(_ex.Message, GetCurrentAdminAccount(), _ex.StackTrace);
             }
         }
+    }
+
+    private void BindWorkspaceSwitcher(dbDataContext db)
+    {
+        ph_workspace_switcher.Visible = false;
+        lit_workspace_switcher.Text = "";
+        // Không render khối thông tin cố định ở đầu dropdown nữa.
+        // Chuyển đổi không gian đã có nút riêng trên top bar, còn dropdown tài khoản
+        // chỉ giữ lại danh sách tab thao tác để gọn và dễ dùng hơn.
+    }
+
+    public bool HasAdminDropdownAvatar()
+    {
+        return !string.IsNullOrWhiteSpace(ViewState["anhdaidien"] as string);
+    }
+
+    public string GetAdminDropdownAvatarUrl()
+    {
+        string url = (ViewState["anhdaidien"] as string ?? "").Trim();
+        return url == "" ? "/uploads/images/macdinh.jpg" : url;
+    }
+
+    public string GetAdminDropdownAccountKey()
+    {
+        return (ViewState["taikhoan"] as string ?? "").Trim();
+    }
+
+    public string GetAdminDropdownDisplayName()
+    {
+        string name = (ViewState["hoten"] as string ?? "").Trim();
+        int ownerIndex = name.IndexOf(" · đang làm việc tại ", StringComparison.OrdinalIgnoreCase);
+        if (ownerIndex > 0)
+            name = name.Substring(0, ownerIndex).Trim();
+        if (name == "")
+            name = GetAdminDropdownAccountKey();
+        return name;
+    }
+
+    public string GetAdminDropdownInitial()
+    {
+        string source = GetAdminDropdownDisplayName();
+        if (string.IsNullOrWhiteSpace(source))
+            source = GetAdminDropdownAccountKey();
+        source = (source ?? "").Trim();
+        if (source == "")
+            return "A";
+        return source.Substring(0, 1).ToUpperInvariant();
+    }
+
+    public string GetAdminDropdownStatusText()
+    {
+        string label = (ViewState["phanloai_text"] as string ?? "").Trim();
+        if (label != "")
+            return label;
+
+        string html = (ViewState["phanloai"] as string ?? "").Trim();
+        if (html == "")
+            return "Không gian gian hàng";
+
+        string plain = Regex.Replace(html, "<.*?>", " ");
+        plain = HttpUtility.HtmlDecode(plain ?? "").Trim();
+        plain = Regex.Replace(plain, "\\s+", " ").Trim();
+        return plain == "" ? "Không gian gian hàng" : plain;
     }
 
 
@@ -413,12 +475,7 @@ public partial class admin_uc_menu_top_uc : System.Web.UI.UserControl
         }
         catch (Exception _ex)
         {
-            string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
-            if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
-                _tk = mahoa_cl.giaima_Bcorn(_tk);
-            else
-                _tk = "";
-            Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
+            Log_cl.Add_Log(_ex.Message, GetLogAccount(), _ex.StackTrace);
         }
     }
 
@@ -466,12 +523,7 @@ public partial class admin_uc_menu_top_uc : System.Web.UI.UserControl
         }
         catch (Exception _ex)
         {
-            string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
-            if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
-                _tk = mahoa_cl.giaima_Bcorn(_tk);
-            else
-                _tk = "";
-            Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
+            Log_cl.Add_Log(_ex.Message, GetLogAccount(), _ex.StackTrace);
             Repeater1.DataSource = new object[0];
             Repeater1.DataBind();
             ph_empty_thongbao.Visible = true;
@@ -481,7 +533,7 @@ public partial class admin_uc_menu_top_uc : System.Web.UI.UserControl
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            EnsureTopActionContext();
             ViewState["sapxep_thongbao"] = "1";
             but_sapxep_moinhat.CssClass = "info small rounded";
             but_sapxep_chuadoc.CssClass = "light small rounded";
@@ -492,12 +544,7 @@ public partial class admin_uc_menu_top_uc : System.Web.UI.UserControl
         }
         catch (Exception _ex)
         {
-            string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
-            if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
-                _tk = mahoa_cl.giaima_Bcorn(_tk);
-            else
-                _tk = "";
-            Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
+            Log_cl.Add_Log(_ex.Message, GetLogAccount(), _ex.StackTrace);
         }
     }
 
@@ -505,7 +552,7 @@ public partial class admin_uc_menu_top_uc : System.Web.UI.UserControl
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            EnsureTopActionContext();
             ViewState["sapxep_thongbao"] = "2";
             but_sapxep_moinhat.CssClass = "light small rounded";
             but_sapxep_chuadoc.CssClass = "info small rounded";
@@ -516,12 +563,7 @@ public partial class admin_uc_menu_top_uc : System.Web.UI.UserControl
         }
         catch (Exception _ex)
         {
-            string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
-            if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
-                _tk = mahoa_cl.giaima_Bcorn(_tk);
-            else
-                _tk = "";
-            Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
+            Log_cl.Add_Log(_ex.Message, GetLogAccount(), _ex.StackTrace);
         }
     }
 
@@ -529,7 +571,7 @@ public partial class admin_uc_menu_top_uc : System.Web.UI.UserControl
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            EnsureTopActionContext();
             using (dbDataContext db = new dbDataContext())
             {
                 show_noidung_thongbao(db);
@@ -539,19 +581,14 @@ public partial class admin_uc_menu_top_uc : System.Web.UI.UserControl
         }
         catch (Exception _ex)
         {
-            string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
-            if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
-                _tk = mahoa_cl.giaima_Bcorn(_tk);
-            else
-                _tk = "";
-            Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
+            Log_cl.Add_Log(_ex.Message, GetLogAccount(), _ex.StackTrace);
         }
     }
     protected void but_chuadoc_Click(object sender, EventArgs e)
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            EnsureTopActionContext();
             LinkButton button = (LinkButton)sender;
             string _id = button.CommandArgument;
             string taiKhoan = GetCurrentAdminAccount();
@@ -571,12 +608,7 @@ public partial class admin_uc_menu_top_uc : System.Web.UI.UserControl
         }
         catch (Exception _ex)
         {
-            string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
-            if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
-                _tk = mahoa_cl.giaima_Bcorn(_tk);
-            else
-                _tk = "";
-            Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
+            Log_cl.Add_Log(_ex.Message, GetLogAccount(), _ex.StackTrace);
         }
     }
 
@@ -584,7 +616,7 @@ public partial class admin_uc_menu_top_uc : System.Web.UI.UserControl
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            EnsureTopActionContext();
             LinkButton button = (LinkButton)sender;
             string _id = button.CommandArgument;
             string taiKhoan = GetCurrentAdminAccount();
@@ -604,19 +636,14 @@ public partial class admin_uc_menu_top_uc : System.Web.UI.UserControl
         }
         catch (Exception _ex)
         {
-            string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
-            if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
-                _tk = mahoa_cl.giaima_Bcorn(_tk);
-            else
-                _tk = "";
-            Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
+            Log_cl.Add_Log(_ex.Message, GetLogAccount(), _ex.StackTrace);
         }
     }
     protected void but_xoathongbao_Click(object sender, EventArgs e)
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            EnsureTopActionContext();
             LinkButton button = (LinkButton)sender;
             string _id = button.CommandArgument;
             string taiKhoan = GetCurrentAdminAccount();
@@ -636,18 +663,21 @@ public partial class admin_uc_menu_top_uc : System.Web.UI.UserControl
         }
         catch (Exception _ex)
         {
-            string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
-            if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
-                _tk = mahoa_cl.giaima_Bcorn(_tk);
-            else
-                _tk = "";
-            Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
+            Log_cl.Add_Log(_ex.Message, GetLogAccount(), _ex.StackTrace);
         }
     }
     #endregion
 
     protected void but_dangxuat_Click(object sender, EventArgs e)
     {
+        if (GianHangAdminContext_cl.IsHomeManagedSession())
+        {
+            GianHangAdminBridge_cl.ClearLegacyAdminSession();
+            Session["thongbao_home"] = thongbao_class.metro_notifi_onload("Thông báo", "Đã thoát khỏi không gian gian hàng.", "2000", "warning");
+            Response.Redirect("/home/default.aspx");
+            return;
+        }
+
         Session["taikhoan"] = "";
         Session["matkhau"] = "";
         if (Request.Cookies["cookie_userinfo_admin_bcorn"] != null)
@@ -658,9 +688,9 @@ public partial class admin_uc_menu_top_uc : System.Web.UI.UserControl
     #region ĐỔI MẬT KHẨU
     protected void but_doimatkhau_Click(object sender, EventArgs e)
     {
-        using (dbDataContext db = new dbDataContext())
-        {
-            string _pass_old = TextBox1.Text.Trim();
+            using (dbDataContext db = new dbDataContext())
+            {
+                string _pass_old = TextBox1.Text.Trim();
             string _pass_1 = TextBox2.Text.Trim();
             string _pass_2 = TextBox3.Text.Trim();
             if (_pass_old == "" || _pass_1 == "" || _pass_2 == "")
@@ -684,12 +714,31 @@ public partial class admin_uc_menu_top_uc : System.Web.UI.UserControl
                 taikhoan_tb _ob = q;
                 _ob.matkhau = _pass_1;
                 db.SubmitChanges();
-                Session["taikhoan"] = "";
-                Session["matkhau"] = "";
-                if (Request.Cookies["cookie_userinfo_admin_bcorn"] != null)
-                    Response.Cookies["cookie_userinfo_admin_bcorn"].Expires = AhaTime_cl.Now.AddDays(-1);
-                Session["thongbao"] = thongbao_class.metro_notifi_onload("Thông báo", "Đổi mật khẩu thành công. Vui lòng đăng nhập lại.", "2000", "warning");
-                Response.Redirect("/gianhang/admin/login.aspx");
+                if (GianHangAdminContext_cl.IsHomeManagedSession())
+                {
+                    GianHangAdminBridge_cl.ClearLegacyAdminSession();
+                    Session["taikhoan_home"] = "";
+                    Session["matkhau_home"] = "";
+                    if (Request.Cookies["cookie_userinfo_home_bcorn"] != null)
+                    {
+                        HttpCookie cookie = new HttpCookie("cookie_userinfo_home_bcorn");
+                        cookie.Expires = AhaTime_cl.Now.AddDays(-1);
+                        cookie.Path = "/";
+                        Response.Cookies.Set(cookie);
+                    }
+
+                    Session["thongbao_home"] = thongbao_class.metro_notifi_onload("Thông báo", "Đổi mật khẩu thành công. Vui lòng đăng nhập lại.", "2000", "warning");
+                    Response.Redirect("/dang-nhap");
+                }
+                else
+                {
+                    Session["taikhoan"] = "";
+                    Session["matkhau"] = "";
+                    if (Request.Cookies["cookie_userinfo_admin_bcorn"] != null)
+                        Response.Cookies["cookie_userinfo_admin_bcorn"].Expires = AhaTime_cl.Now.AddDays(-1);
+                    Session["thongbao"] = thongbao_class.metro_notifi_onload("Thông báo", "Đổi mật khẩu thành công. Vui lòng đăng nhập lại.", "2000", "warning");
+                    Response.Redirect("/gianhang/admin/login.aspx");
+                }
             }
             else
                 ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Vui lòng tải lại trang.", "2000", "warning"), true);

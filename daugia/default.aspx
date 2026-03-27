@@ -5,76 +5,17 @@
 
 <asp:Content ID="ContentHeadSau" ContentPlaceHolderID="head_sau" runat="Server">
     <style>
-        .daugia-shell {
-            padding: 20px 0 40px;
-        }
-
-        .daugia-hero {
-            border-radius: 24px;
-            padding: 24px;
-            background: linear-gradient(125deg, #f8fffe, #eff8ff);
-            border: 1px solid rgba(15, 23, 42, .08);
-            box-shadow: 0 18px 40px rgba(15, 23, 42, .08);
-            margin-bottom: 16px;
-        }
-
-        .daugia-grid {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
-        .daugia-stat {
-            background: #fff;
-            border: 1px solid rgba(15, 23, 42, .08);
-            border-radius: 14px;
-            padding: 14px 16px;
-        }
-
-        .daugia-stat__label {
-            color: #64748b;
-            font-size: 12px;
-        }
-
-        .daugia-stat__value {
-            margin-top: 6px;
-            font-size: 22px;
-            font-weight: 700;
-            line-height: 1;
-            color: #0f172a;
-        }
-
-        .daugia-block {
-            background: #fff;
-            border: 1px solid rgba(15, 23, 42, .08);
-            border-radius: 18px;
-            padding: 18px;
-            margin-bottom: 16px;
-        }
-
-        .daugia-list {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 12px;
-        }
-
-        .daugia-card {
-            border: 1px solid rgba(15, 23, 42, .08);
-            border-radius: 14px;
-            padding: 12px;
-            background: #fff;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+        .daugia-page {
+            padding-bottom: 16px;
         }
 
         .daugia-thumb {
             width: 100%;
             aspect-ratio: 16/9;
-            border-radius: 10px;
+            border-radius: 12px;
             overflow: hidden;
             background: #f1f5f9;
+            border: 1px solid var(--tblr-border-color, #e2e8f0);
         }
 
         .daugia-thumb img {
@@ -84,150 +25,253 @@
             display: block;
         }
 
-        .daugia-title {
-            margin: 0;
-            font-size: 16px;
-            line-height: 1.35;
-            min-height: 44px;
-        }
-
-        .daugia-meta {
-            color: #475569;
-            font-size: 13px;
-        }
-
-        .daugia-price {
+        .daugia-stat-value {
+            font-size: 22px;
+            line-height: 1.1;
             font-weight: 700;
-            color: #0f766e;
-            font-size: 18px;
         }
 
-        .daugia-badge {
+        .daugia-summary-card {
+            overflow: hidden;
+            position: relative;
+        }
+
+        .daugia-summary-card::after {
+            content: "";
+            position: absolute;
+            inset: auto -24px -24px auto;
+            width: 96px;
+            height: 96px;
             border-radius: 999px;
-            font-size: 11px;
-            padding: 3px 10px;
-            display: inline-block;
-            font-weight: 600;
-            letter-spacing: .02em;
+            background: radial-gradient(circle, rgba(22,163,74,.12) 0%, rgba(22,163,74,0) 70%);
+            pointer-events: none;
         }
 
-        .daugia-badge--live {
-            background: #dcfce7;
-            color: #166534;
+        .daugia-summary-card .card-body {
+            padding: 14px 16px;
         }
 
-        .daugia-badge--scheduled {
-            background: #dbeafe;
-            color: #1d4ed8;
+        .daugia-title {
+            color: inherit;
+            text-decoration: none;
+            display: block;
+            line-height: 1.45;
         }
 
-        .daugia-badge--pending {
-            background: #fef3c7;
-            color: #92400e;
+        .daugia-title:hover {
+            text-decoration: underline;
         }
 
-        .daugia-badge--done {
-            background: #e2e8f0;
-            color: #334155;
+        .daugia-mobile-btns {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
 
-        .daugia-empty {
-            color: #64748b;
-            font-size: 14px;
+        .daugia-mobile-btns .btn {
+            width: 100%;
+            justify-content: center;
         }
 
-        @media (max-width: 980px) {
-            .daugia-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
+        .daugia-live-card .card-body {
+            padding: 12px;
+        }
+
+        .daugia-live-card .card-footer {
+            padding: 12px;
+        }
+
+        .daugia-section-card {
+            overflow: hidden;
+        }
+
+        .daugia-section-card .card-header {
+            background: linear-gradient(180deg, rgba(22,163,74,.06) 0%, rgba(255,255,255,0) 100%);
+        }
+
+        @media (max-width: 767.98px) {
+            .page-header .page-title {
+                font-size: 1.35rem;
             }
 
-            .daugia-list {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
+            .card-actions.daugia-mobile-btns {
+                margin-left: 0;
+                margin-top: 8px;
             }
         }
 
-        @media (max-width: 640px) {
-            .daugia-grid {
-                grid-template-columns: 1fr;
+        @media (min-width: 768px) {
+            .daugia-page {
+                padding-bottom: 24px;
             }
 
-            .daugia-list {
-                grid-template-columns: 1fr;
+            .daugia-stat-value {
+                font-size: 26px;
             }
 
-            .daugia-hero {
+            .daugia-mobile-btns {
+                width: auto;
+                flex-direction: row;
+                flex-wrap: wrap;
+                align-items: center;
+            }
+
+            .daugia-mobile-btns .btn {
+                width: auto;
+            }
+
+            .card-actions.daugia-mobile-btns {
+                margin-left: auto;
+                margin-top: 0;
+            }
+
+            .daugia-summary-card .card-body {
+                padding: 18px;
+            }
+
+            .daugia-live-card {
+                transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+            }
+
+            .daugia-live-card:hover {
+                transform: translateY(-3px);
+                border-color: rgba(21,128,61,.22);
+                box-shadow: 0 18px 34px rgba(16,42,67,.12);
+            }
+
+            .daugia-live-card .card-body,
+            .daugia-live-card .card-footer {
                 padding: 16px;
+            }
+
+            .daugia-title {
+                min-height: 48px;
+                font-size: 1rem;
+            }
+        }
+
+        @media (min-width: 1400px) {
+            .daugia-page-header .container-xl,
+            .daugia-page .container-xl {
+                max-width: 1440px;
+            }
+
+            .daugia-live-grid > [class*='col-'] {
+                flex: 0 0 25%;
+                width: 25%;
+                max-width: 25%;
+            }
+
+            .daugia-live-card .card-body,
+            .daugia-live-card .card-footer {
+                padding: 18px;
             }
         }
     </style>
 </asp:Content>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="main" runat="Server">
-    <div class="container-xl daugia-shell">
-        <div class="daugia-hero">
-            <div class="text-muted small">AhaSale / Business Module</div>
-            <h1 class="mb-2">Đấu Giá Ngược</h1>
-            <p class="mb-2 text-muted">Module độc lập của hệ AhaSale. Dùng chung tài khoản, ví E-AHA, thông báo và luồng admin duyệt.</p>
-            <div class="d-flex gap-2 flex-wrap">
-                <a class="btn btn-warning btn-sm" href="/home/dau-gia">Quản lý phiên của tôi</a>
-                <a class="btn btn-success btn-sm" href="/daugia/tao">Tạo phiên đấu giá</a>
-                <a class="btn btn-outline-success btn-sm" href="/home/quan-ly-tin/them.aspx">Tạo tài sản nguồn</a>
-                <a class="btn btn-outline-primary btn-sm" href="/daugia/da-ket-thuc">Phiên đã kết thúc</a>
-                <a class="btn btn-outline-dark btn-sm" href="/admin/quan-ly-dau-gia">Quản trị đấu giá</a>
-            </div>
-        </div>
-
-        <div class="daugia-grid">
-            <div class="daugia-stat">
-                <div class="daugia-stat__label">Đang diễn ra</div>
-                <div class="daugia-stat__value"><%=Summary.LiveCount.ToString("#,##0") %></div>
-            </div>
-            <div class="daugia-stat">
-                <div class="daugia-stat__label">Chờ duyệt</div>
-                <div class="daugia-stat__value"><%=Summary.PendingCount.ToString("#,##0") %></div>
-            </div>
-            <div class="daugia-stat">
-                <div class="daugia-stat__label">Đã lịch</div>
-                <div class="daugia-stat__value"><%=Summary.ScheduledCount.ToString("#,##0") %></div>
-            </div>
-            <div class="daugia-stat">
-                <div class="daugia-stat__label">Đã hoàn tất</div>
-                <div class="daugia-stat__value"><%=Summary.CompletedCount.ToString("#,##0") %></div>
-            </div>
-        </div>
-
-        <div class="daugia-block">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h2 class="h5 mb-0">Phiên Đang Diễn Ra</h2>
-                <a class="small text-decoration-none" href="/daugia/da-ket-thuc">Xem lịch sử</a>
-            </div>
-            <asp:PlaceHolder ID="phLive" runat="server">
-                <div class="daugia-list">
-                    <asp:Repeater ID="rptLive" runat="server">
-                        <ItemTemplate>
-                            <article class="daugia-card">
-                                <a class="daugia-thumb" href="<%# BuildAuctionUrl(Eval("Slug"), Eval("ID")) %>">
-                                    <img src="<%# ResolveImage(Eval("SnapshotImage")) %>" alt="Ảnh phiên đấu giá" />
-                                </a>
-                                <div>
-                                    <span class='<%# BuildStatusBadgeCss(Eval("TrangThai")) %>'><%# BuildStatusLabel(Eval("TrangThai")) %></span>
-                                </div>
-                                <h3 class="daugia-title">
-                                    <a class="text-decoration-none text-dark" href="<%# BuildAuctionUrl(Eval("Slug"), Eval("ID")) %>"><%# Eval("SnapshotTitle") %></a>
-                                </h3>
-                                <div class="daugia-meta">Shop: <%# Eval("SellerAccount") %></div>
-                                <div class="daugia-meta">Kết thúc: <%# FormatDate(Eval("PhienKetThuc")) %></div>
-                                <div class="daugia-meta">Lượt đấu: <%# Eval("SoLuotBid") %></div>
-                                <div class="daugia-price"><%# FormatPoint(Eval("GiaHienTai")) %> E-AHA</div>
-                                <a class="btn btn-primary btn-sm" href="<%# BuildAuctionUrl(Eval("Slug"), Eval("ID")) %>">Vào phiên</a>
-                            </article>
-                        </ItemTemplate>
-                    </asp:Repeater>
+    <div class="page-header d-print-none daugia-page-header">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <div class="page-pretitle">AhaSale / Đấu giá</div>
+                    <h2 class="page-title">Đấu giá ngược</h2>
+                    <div class="text-muted">Không gian hiển thị tổng hợp các phiên đấu giá công khai. Khu quản lý vận hành tách riêng tại `/daugia/admin`.</div>
                 </div>
-            </asp:PlaceHolder>
-            <asp:PlaceHolder ID="phLiveEmpty" runat="server" Visible="false">
-                <div class="daugia-empty">Hiện chưa có phiên nào đang mở.</div>
-            </asp:PlaceHolder>
+                <div class="col-12 col-md-auto ms-md-auto d-print-none">
+                    <div class="btn-list daugia-mobile-btns">
+                        <a class="btn btn-outline-primary btn-sm" href="/daugia/da-ket-thuc">Phiên đã kết thúc</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-body daugia-page">
+        <div class="container-xl">
+            <div class="row row-cards mb-3">
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card daugia-summary-card">
+                        <div class="card-body">
+                            <div class="text-muted text-uppercase small">Đang diễn ra</div>
+                            <div class="daugia-stat-value"><%=Summary.LiveCount.ToString("#,##0") %></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card daugia-summary-card">
+                        <div class="card-body">
+                            <div class="text-muted text-uppercase small">Chờ duyệt</div>
+                            <div class="daugia-stat-value"><%=Summary.PendingCount.ToString("#,##0") %></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card daugia-summary-card">
+                        <div class="card-body">
+                            <div class="text-muted text-uppercase small">Đã lịch</div>
+                            <div class="daugia-stat-value"><%=Summary.ScheduledCount.ToString("#,##0") %></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card daugia-summary-card">
+                        <div class="card-body">
+                            <div class="text-muted text-uppercase small">Đã hoàn tất</div>
+                            <div class="daugia-stat-value"><%=Summary.CompletedCount.ToString("#,##0") %></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card daugia-section-card">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">Phiên đang diễn ra</h3>
+                    <div class="card-actions daugia-mobile-btns">
+                        <a class="btn btn-outline-secondary btn-sm" href="/daugia/da-ket-thuc">Xem lịch sử</a>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <asp:PlaceHolder ID="phLive" runat="server">
+                        <div class="row row-cards daugia-live-grid">
+                            <asp:Repeater ID="rptLive" runat="server">
+                                <ItemTemplate>
+                                    <div class="col-md-6 col-xl-4 col-xxl-3">
+                                        <article class="card h-100 daugia-live-card">
+                                            <div class="card-body d-flex flex-column gap-2">
+                                                <a class="daugia-thumb" href="<%# BuildAuctionUrl(Eval("Slug"), Eval("ID")) %>">
+                                                    <img src="<%# ResolveImage(Eval("SnapshotImage")) %>" alt="Ảnh phiên đấu giá" />
+                                                </a>
+                                                <div>
+                                                    <span class='<%# BuildStatusBadgeCss(Eval("TrangThai")) %>'><%# BuildStatusLabel(Eval("TrangThai")) %></span>
+                                                </div>
+                                                <div class="fw-semibold">
+                                                    <a class="daugia-title" href="<%# BuildAuctionUrl(Eval("Slug"), Eval("ID")) %>"><%# Eval("SnapshotTitle") %></a>
+                                                </div>
+                                                <div class="text-muted small">Shop: <%# Eval("SellerAccount") %></div>
+                                                <div class="text-muted small">Kết thúc: <%# FormatDate(Eval("PhienKetThuc")) %></div>
+                                                <div class="text-muted small">Lượt đấu: <%# Eval("SoLuotBid") %></div>
+                                                <div class="fw-bold text-success mt-1"><%# FormatPoint(Eval("GiaHienTai")) %> Quyền</div>
+                                            </div>
+                                            <div class="card-footer bg-transparent">
+                                                <div class="daugia-mobile-btns">
+                                                    <a class="btn btn-primary btn-sm" href="<%# BuildAuctionUrl(Eval("Slug"), Eval("ID")) %>">Vào phiên</a>
+                                                </div>
+                                            </div>
+                                        </article>
+                                    </div>
+                                </ItemTemplate>
+                            </asp:Repeater>
+                        </div>
+                    </asp:PlaceHolder>
+                    <asp:PlaceHolder ID="phLiveEmpty" runat="server" Visible="false">
+                        <div class="alert alert-secondary mb-0">Hiện chưa có phiên nào đang mở.</div>
+                    </asp:PlaceHolder>
+                </div>
+            </div>
         </div>
     </div>
 </asp:Content>

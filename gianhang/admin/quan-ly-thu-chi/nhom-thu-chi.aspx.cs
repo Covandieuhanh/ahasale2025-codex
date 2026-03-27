@@ -53,7 +53,7 @@ public partial class badmin_Default : System.Web.UI.Page
         #endregion 
         #region Check quyen theo nganh
         user = Session["user"].ToString();
-        user_parent = "admin";
+        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
         if (bcorn_class.check_quyen(user, "q9_5") == "" || bcorn_class.check_quyen(user, "n9_5") == "")
         {
             if (!IsPostBack)
@@ -136,11 +136,19 @@ public partial class badmin_Default : System.Web.UI.Page
     }
     protected void txt_search_TextChanged(object sender, EventArgs e)
     {
-        Session["current_page_nhomthuchi"] = "1";
-
-        main();
-
+        ApplySearchState();
     }
+    protected void but_search_Click(object sender, EventArgs e)
+    {
+        ApplySearchState();
+    }
+    private void ApplySearchState()
+    {
+        Session["search_nhomthuchi"] = txt_search.Text.Trim();
+        Session["current_page_nhomthuchi"] = "1";
+        main();
+    }
+
     protected void txt_show_TextChanged(object sender, EventArgs e)
     {
         Session["current_page_nhomthuchi"] = "1";

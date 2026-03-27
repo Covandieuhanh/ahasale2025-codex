@@ -23,30 +23,18 @@ public partial class MasterPage_Tabler_Tabler2 : System.Web.UI.MasterPage
         return url;
     }
 
-    private static string NormalizeIconPath(string rawPath, string fallbackPath)
-    {
-        string path = (rawPath ?? "").Trim();
-        if (path == "")
-            path = (fallbackPath ?? "").Trim();
-        if (path == "")
-            path = "/uploads/images/icon-mobile.jpg";
-        return path;
-    }
-
     private string BuildAbsoluteUrl(string rawPath, string fallbackPath)
     {
-        string path = NormalizeIconPath(rawPath, fallbackPath);
-        if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-            path.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-            return path;
-
-        if (!path.StartsWith("/"))
-            path = "/" + path;
-        return string.Format("{0}://{1}{2}", Request.Url.Scheme, Request.Url.Authority, path);
+        return PortalBranding_cl.BuildAbsoluteUrl(Request, rawPath, fallbackPath);
     }
 
     protected void Page_Load(object sender, EventArgs e)
     {
+        string currentPath = (Request == null || Request.Url == null) ? string.Empty : (Request.Url.AbsolutePath ?? string.Empty);
+        string currentSpace = ModuleSpace_cl.ResolveByPath(currentPath);
+        if (gianhang_space_nav != null)
+            gianhang_space_nav.Visible = !string.Equals(currentSpace, ModuleSpace_cl.GianHang, StringComparison.OrdinalIgnoreCase);
+
         // Giữ nguyên action hiện tại cho shop portal để không mất marker khi postback.
         if (PortalRequest_cl.IsShopPortalRequest() && form1 != null)
         {
@@ -63,35 +51,25 @@ public partial class MasterPage_Tabler_Tabler2 : System.Web.UI.MasterPage
                 {
 
                     #region Favicon & icon mobile
-                    string path = (Request == null || Request.Url == null) ? "" : (Request.Url.AbsolutePath ?? "");
-                    bool isShopPortal = path.StartsWith("/shop", StringComparison.OrdinalIgnoreCase);
-                    string scopeKey = isShopPortal ? "shop" : "home";
+                    string scopeKey = PortalBranding_cl.ResolveScopeKeyFromRequest(Request);
+                    bool isShopPortal = scopeKey == PortalBranding_cl.ScopeShop;
+                    PortalBranding_cl.ScopeBrandingSnapshot branding = PortalBranding_cl.LoadScopeBranding(db, scopeKey, true);
 
-                    var q = (from tk in db.CaiDatChung_tbs
-                             where tk.phanloai_trang == scopeKey
-                             select new { tk.thongtin_icon, tk.thongtin_apple_touch_icon }).FirstOrDefault();
+                    string fallbackIcon = PortalBranding_cl.ResolveDefaultIconPath(scopeKey);
+                    string iconUrl = BuildAbsoluteUrl(PortalBranding_cl.ResolveFaviconPath(branding, scopeKey), PortalBranding_cl.DefaultHomeIconPath);
+                    string appleTouchIconUrl = BuildAbsoluteUrl(PortalBranding_cl.ResolveHeaderLogoPath(branding, scopeKey), fallbackIcon);
+                    string pwaIcon192Url = appleTouchIconUrl;
+                    string pwaIcon512Url = appleTouchIconUrl;
+                    string manifestPath = isShopPortal ? "/manifest-shop.ashx" : "/manifest.ashx";
+                    string manifestUrl = string.Format("{0}://{1}{2}?v=20260324", Request.Url.Scheme, Request.Url.Authority, manifestPath);
+                    string startupImageUrl = appleTouchIconUrl;
+                    string appName = isShopPortal ? "AhaSale Shop" : "AhaSale";
+                    string themeColor = isShopPortal ? "#ff5b2e" : "#10b981";
 
-                    if (q == null && scopeKey != "home")
-                    {
-                        q = (from tk in db.CaiDatChung_tbs
-                             where tk.phanloai_trang == "home"
-                             select new { tk.thongtin_icon, tk.thongtin_apple_touch_icon }).FirstOrDefault();
-                    }
+                    if (Context != null)
+                        Context.Items["AhaHeaderCenterLogoUrl"] = appleTouchIconUrl;
 
-                    if (q != null)
-                    {
-                        string fallbackIcon = isShopPortal ? "/uploads/images/logo-aha.png" : "/uploads/images/icon-mobile.jpg";
-                        string iconUrl = BuildAbsoluteUrl(q.thongtin_icon, "/uploads/images/favicon.png");
-                        string appleTouchIconUrl = BuildAbsoluteUrl(q.thongtin_apple_touch_icon, fallbackIcon);
-                        string pwaIcon192Url = appleTouchIconUrl;
-                        string pwaIcon512Url = appleTouchIconUrl;
-                        string manifestPath = isShopPortal ? "/manifest-shop.ashx" : "/manifest.json";
-                        string manifestUrl = string.Format("{0}://{1}{2}?v=20260315", Request.Url.Scheme, Request.Url.Authority, manifestPath);
-                        string startupImageUrl = appleTouchIconUrl;
-                        string appName = isShopPortal ? "AhaSale Shop" : "AhaSale";
-                        string themeColor = isShopPortal ? "#ff5b2e" : "#10b981";
-
-                        string iconsHtml = string.Format(@"
+                    string iconsHtml = string.Format(@"
                 <!-- Favicon -->
                 <link rel='icon' href='{0}' sizes='16x16' type='image/x-icon'>
                 <link rel='icon' href='{1}' sizes='32x32' type='image/x-icon'>
@@ -122,8 +100,7 @@ public partial class MasterPage_Tabler_Tabler2 : System.Web.UI.MasterPage
                 <link rel='apple-touch-startup-image' href='{10}'>
                 ", iconUrl, iconUrl, iconUrl, appleTouchIconUrl, appleTouchIconUrl, appleTouchIconUrl, appleTouchIconUrl, pwaIcon192Url, pwaIcon512Url, manifestUrl, startupImageUrl, themeColor, appName);
 
-                        literal_fav_icon.Text = iconsHtml;
-                    }
+                    literal_fav_icon.Text = iconsHtml;
                     #endregion
                     #region lưu nội dung thông báo nếu có
                     if (Session["thongbao_home"] != null)

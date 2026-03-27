@@ -1,24 +1,74 @@
-﻿<%@ Control Language="C#" AutoEventWireup="true" CodeFile="menu-top-uc.ascx.cs" Inherits="admin_uc_menu_top_uc" %>
+<%@ Control Language="C#" AutoEventWireup="true" CodeFile="menu-top-uc.ascx.cs" Inherits="admin_uc_menu_top_uc" %>
+<%@ Register Src="~/admin/uc/admin-space-launcher-uc.ascx" TagPrefix="uc1" TagName="AdminSpaceLauncher" %>
 
-<asp:Panel ID="pn_thongbao_legacy_cache" runat="server" Style="display:none;">
+<div data-role="charms" data-position="right" id="thongbao-charms" style="width: 320px; background-color: #fff; overflow: auto;" class="p-0 m-0 shadow-1 charms right-side">
+    <div style="height: 52px; line-height: 55px" class="fg-white">
+        <div style="float: left"><span class="ml-4 fg-white">THÔNG BÁO ADMIN</span></div>
+        <div style="float: right"><a href="#" class="fg-white" title="Đóng" onclick="window.ahaAdminCharms('close'); return false;"><span class="mif mif-cross mr-4"></span></a></div>
+        <div style="clear: both"></div>
+    </div>
     <asp:UpdatePanel ID="UpdatePanel2" runat="server" UpdateMode="Conditional">
         <ContentTemplate>
-            <asp:Button ID="but_sapxep_moinhat" runat="server" Text="Mới nhất" CssClass="light small rounded" OnClick="but_sapxep_moinhat_Click" Style="display:none;" />
-            <asp:Button ID="but_sapxep_chuadoc" runat="server" Text="Chưa đọc" CssClass="light small rounded" OnClick="but_sapxep_chuadoc_Click" Style="display:none;" />
+            <div class="text-left p-3">
+                <asp:Button ID="but_sapxep_moinhat" runat="server" Text="Mới nhất" CssClass="light small rounded" OnClick="but_sapxep_moinhat_Click" CausesValidation="false" />
+                <asp:Button ID="but_sapxep_chuadoc" runat="server" Text="Chưa đọc" CssClass="light small rounded" OnClick="but_sapxep_chuadoc_Click" CausesValidation="false" />
+                <a href="<%=GetNotificationListUrl() %>" class="button warning small rounded">Quản lý</a>
+            </div>
             <asp:Repeater ID="Repeater1" runat="server">
                 <ItemTemplate>
-                    <asp:LinkButton ID="but_dadoc" runat="server" CommandArgument='<%# Eval("id") %>' OnClick="but_dadoc_Click" Style="display:none;">Đánh dấu đã đọc</asp:LinkButton>
-                    <asp:LinkButton ID="but_chuadoc" runat="server" CommandArgument='<%# Eval("id") %>' OnClick="but_chuadoc_Click" Style="display:none;">Đánh dấu chưa đọc</asp:LinkButton>
-                    <asp:LinkButton ID="but_xoathongbao" runat="server" CommandArgument='<%# Eval("id") %>' OnClick="but_xoathongbao_Click" Style="display:none;">Xóa</asp:LinkButton>
+                    <div class="thongbao-div pt-2 pb-2 pl-3 pr-3">
+                        <a href="<%#Eval("link").ToString()%>idtb=<%#Eval("id").ToString() %>">
+                            <div class="thongbao-avt">
+                                <img src="<%#Eval("avt_nguoithongbao") %>" width="50" height="50" class="img-cover-vuongtron" />
+                            </div>
+                            <div class="thongbao-noidung">
+                                <div class="thongbao-noidungchinh">
+                                    <asp:PlaceHolder ID="PlaceHolder1" runat="server" Visible='<%#Eval("daxem").ToString()=="True" %>'>
+                                        <%#Eval("noidung").ToString() %>
+                                    </asp:PlaceHolder>
+                                    <asp:PlaceHolder ID="PlaceHolder2" runat="server" Visible='<%#Eval("daxem").ToString()=="False" %>'>
+                                        <span class="fg-orange"><%#Eval("noidung").ToString() %></span>
+                                    </asp:PlaceHolder>
+                                </div>
+                                <div class="thongbao-thoigian"><%#Eval("thoigian","{0:dd/MM/yyyy HH:mm}") %></div>
+                            </div>
+                        </a>
+                        <div class="thongbao-hanhdong">
+                            <div class="dropdown-button bg-transparent">
+                                <span class="button bg-transparent"><span class="text-bold" style="font-size: 18px">...</span></span>
+                            </div>
+                            <ul class="d-menu place-right" data-role="dropdown">
+                                <asp:PlaceHolder ID="PlaceHolder4" runat="server" Visible='<%#Eval("daxem").ToString()=="False" %>'>
+                                    <li>
+                                        <asp:LinkButton CommandArgument='<%# Eval("id") %>' ID="but_dadoc" OnClick="but_dadoc_Click" runat="server" Text="Đánh dấu đã đọc" CausesValidation="false"></asp:LinkButton>
+                                    </li>
+                                </asp:PlaceHolder>
+                                <asp:PlaceHolder ID="PlaceHolder3" runat="server" Visible='<%#Eval("daxem").ToString()=="True" %>'>
+                                    <li>
+                                        <asp:LinkButton CommandArgument='<%# Eval("id") %>' ID="but_chuadoc" OnClick="but_chuadoc_Click" runat="server" Text="Đánh dấu chưa đọc" CausesValidation="false"></asp:LinkButton>
+                                    </li>
+                                </asp:PlaceHolder>
+                                <li>
+                                    <asp:LinkButton CommandArgument='<%# Eval("id") %>' ID="but_xoathongbao" OnClick="but_xoathongbao_Click" runat="server" Text="Xóa thông báo này" CausesValidation="false"></asp:LinkButton>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="clr-bc"></div>
+                    </div>
                 </ItemTemplate>
             </asp:Repeater>
-            <asp:PlaceHolder ID="ph_empty_thongbao" runat="server" Visible="false"></asp:PlaceHolder>
+            <asp:PlaceHolder ID="ph_empty_thongbao" runat="server" Visible="false">
+                <div class="px-3 pb-3 fg-gray">Không có thông báo nào.</div>
+            </asp:PlaceHolder>
         </ContentTemplate>
     </asp:UpdatePanel>
-</asp:Panel>
+    <div class="text-center pt-3 pb-10">
+        <a href="<%=GetNotificationListUrl() %>" class="button warning small rounded">Xem tất cả</a>
+    </div>
+</div>
 
 <div data-role="appbar" class="fg-white bg-nmenutop-bc admin-topbar" data-expand-point="lg" style="position: fixed; top: 0; z-index: 3">
-
+    <uc1:AdminSpaceLauncher runat="server" ID="adminSpaceLauncher" ButtonCssClass="app-bar-item fg-white" />
     <a href="#" class="app-bar-item d-block d-none-lg" id="paneToggle"><span class="mif-menu"></span></a>
 
     <a class="app-bar-item fg-white admin-topbar-home" href="<%=GetAdminHomeUrl() %>"><span class="mif mif-home"></span></a>
@@ -27,17 +77,68 @@
         <span class="mif mif-list"></span>
     </a>
     <div class="app-bar-container ml-auto">
-
         <asp:UpdatePanel ID="UpdatePanel1" runat="server" UpdateMode="Conditional">
             <ContentTemplate>
-                <asp:HyperLink ID="but_show_form_thongbao" CssClass="app-bar-item" runat="server">
+                <asp:LinkButton ID="but_show_form_thongbao" OnClick="but_show_form_thongbao_Click" OnClientClick="window.ahaAdminCharms('toggle');" CssClass="app-bar-item" runat="server" CausesValidation="false">
                     <span class="mif-notifications mif-lg"></span>
                     <span class="badge bg-orange fg-white mt-2 mr-1">
                         <asp:Label ID="lb_sl_thongbao" runat="server" Text="0"></asp:Label>
                     </span>
-                </asp:HyperLink>
+                </asp:LinkButton>
             </ContentTemplate>
         </asp:UpdatePanel>
+
+        <% if (ShowQuickCreateMenu()) { %>
+        <div class="app-bar-container admin-quick-dd" id="admin-quick-shell">
+            <button type="button" class="app-bar-item admin-quick-btn" id="admin-quick-toggle" aria-haspopup="true" aria-expanded="false" title="Tạo nhanh">
+                <span class="mif mif-plus"></span>
+            </button>
+            <div class="admin-quick-menu" id="admin-quick-dropdown">
+                <ul class="admin-quick-list">
+                    <% if (ShowQuickCreateAccounts()) { %>
+                        <% if (ShowMenuAdminAccount()) { %>
+                        <li><a href="<%= GetAdminAccountCreateUrl() %>">Tạo tài khoản admin</a></li>
+                        <% } %>
+                        <% if (ShowMenuHomeAccount()) { %>
+                        <li><a href="<%= GetHomeAccountCreateUrl() %>">Tạo tài khoản Home</a></li>
+                        <% } %>
+                        <% if (ShowMenuShopAccount()) { %>
+                        <li><a href="<%= GetShopAccountCreateUrl() %>">Tạo tài khoản gian hàng</a></li>
+                        <% } %>
+                    <% } %>
+
+                    <% if (ShowQuickCreateAccounts() && (ShowQuickCreateOperations() || ShowQuickCreateContent())) { %>
+                    <li class="admin-quick-divider"></li>
+                    <% } %>
+
+                    <% if (ShowQuickCreateOperations()) { %>
+                        <% if (ShowMenuIssueCard()) { %>
+                        <li><a href="<%= GetHomeIssueCardUrl() %>">Phát hành thẻ</a></li>
+                        <% } %>
+                        <% if (ShowMenuSellProduct()) { %>
+                        <li><a href="<%= GetHomeSellProductUrl() %>">Bán sản phẩm</a></li>
+                        <% } %>
+                    <% } %>
+
+                    <% if (ShowQuickCreateOperations() && ShowQuickCreateContent()) { %>
+                    <li class="admin-quick-divider"></li>
+                    <% } %>
+
+                    <% if (ShowQuickCreateContent()) { %>
+                        <% if (ShowMenuContentMenu()) { %>
+                        <li><a href="<%= GetContentMenuCreateUrl() %>">Tạo menu</a></li>
+                        <% } %>
+                        <% if (ShowMenuContentBaiViet()) { %>
+                        <li><a href="<%= GetContentBaiVietCreateUrl() %>">Tạo bài viết</a></li>
+                        <% } %>
+                        <% if (ShowMenuContentBanner()) { %>
+                        <li><a href="<%= GetContentBannerCreateUrl() %>">Tạo banner</a></li>
+                        <% } %>
+                    <% } %>
+                </ul>
+            </div>
+        </div>
+        <% } %>
 
         <div class="app-bar-container admin-avatar-wrap admin-shop-dd" id="admin-avatar-shell" style="visibility:hidden; opacity:0;">
             <button type="button" class="app-bar-item admin-shop-avatar-btn" id="admin-avatar-toggle" aria-haspopup="true" aria-expanded="false">
@@ -46,52 +147,65 @@
                 <span class="admin-shop-avatar-caret">&#9660;</span>
             </button>
             <div class="admin-shop-menu" id="admin-avatar-dropdown">
-                <div class="admin-shop-menu-head">
-                    <p class="admin-shop-menu-title"><%=ViewState["hoten"] %></p>
-                    <div class="admin-shop-menu-sub"><%=Server.HtmlEncode(ViewState["phanloai"] as string ?? "Nhân viên admin") %> • <%=Server.HtmlEncode(ViewState["taikhoan"] as string ?? "") %></div>
-                    <div class="admin-shop-menu-role-row">
-                        <span class="admin-shop-role-pill admin-shop-role-pill-primary"><%=Server.HtmlEncode(ViewState["admin_role_label"] as string ?? "Tài khoản quản trị") %></span>
-                        <span class="admin-shop-role-pill admin-shop-role-pill-scope"><%=Server.HtmlEncode(ViewState["admin_scope_label"] as string ?? "Cổng Admin") %></span>
-                    </div>
-                    <div class="admin-shop-menu-help"><%=Server.HtmlEncode(ViewState["admin_role_description"] as string ?? "") %></div>
-                </div>
                 <div class="admin-shop-menu-body">
-                    <% if (ShowMenuDashboard()) { %>
-                    <div class="admin-shop-menu-group-title">Trang chính</div>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/default.aspx") %>' href="/admin/default.aspx">
+                    <% if (ShowMenuGroupAdmin()) { %>
+                    <div class="admin-shop-menu-group-title">Quản trị admin</div>
+                    <% if (ShowMenuAdminDashboard()) { %>
+                    <a class='admin-shop-menu-item <%= MenuActive("/admin/default.aspx") %>' href="<%= GetAdminDashboardUrl() %>">
                         <span>Trang chủ admin</span>
                         <span class="admin-shop-menu-badge">Dashboard</span>
                     </a>
                     <% } %>
-
-                    <% if (ShowMenuGroupAdmin()) { %>
-                    <div class="admin-shop-menu-group-title">Quản lý admin</div>
                     <% if (ShowMenuAdminAccount()) { %>
                     <a class='admin-shop-menu-item <%= MenuActiveTaiKhoanScope("admin") %>' href="<%= GetAdminAccountManagementUrl() %>">
                         <span>Quản lý tài khoản admin</span>
                     </a>
                     <% } %>
-                    <% if (ShowMenuOtp()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/otp/default.aspx") %>' href="/admin/otp/default.aspx?scope=home">
+                    <% if (ShowMenuAdminOtp()) { %>
+                    <a class='admin-shop-menu-item <%= MenuActive("/admin/otp/default.aspx") %>' href="<%= GetAdminOtpUrl() %>">
                         <span>Quản lý OTP</span>
                     </a>
                     <% } %>
-                    <% if (ShowMenuTransferHistory()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActiveTransferHistory() %>' href="/admin/lich-su-chuyen-diem/default.aspx">
-                        <span>Lịch sử chuyển điểm</span>
-                        <span class="admin-shop-menu-badge"><%=ViewState["DongA"] %></span>
+                    <% if (ShowMenuAdminTokenWallet()) { %>
+                    <a class='admin-shop-menu-item <%= MenuActiveTokenWallet() %>' href="<%= GetAdminTokenWalletUrl() %>">
+                        <span>Ví token điểm</span>
                     </a>
                     <% } %>
-                    <% if (ShowMenuTokenWallet()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActiveTokenWallet() %>' href="/admin/vi-token-diem/default.aspx">
-                        <span>Ví token điểm</span>
-                        <span class="admin-shop-menu-badge">Super</span>
+                    <% if (ShowMenuAdminGopY()) { %>
+                    <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-gop-y/default.aspx") %>' href="<%= GetAdminGopYUrl() %>">
+                        <span>Quản lý góp ý</span>
+                    </a>
+                    <% } %>
+                    <% if (ShowMenuAdminThongBao()) { %>
+                    <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-thong-bao/default.aspx", "/admin/quan-ly-thong-bao/in.aspx", "/admin/quan-ly-thong-bao/bo-loc.aspx", "/admin/quan-ly-thong-bao/xuat-du-lieu.aspx", "/admin/quan-ly-thong-bao/ban-in.aspx") %>' href="<%= GetAdminThongBaoUrl() %>">
+                        <span>Quản lý thông báo</span>
+                    </a>
+                    <% } %>
+                    <% if (ShowMenuAdminTuVan()) { %>
+                    <a class='admin-shop-menu-item <%= MenuActive("/admin/yeu-cau-tu-van/default.aspx", "/admin/yeu-cau-tu-van/bo-loc.aspx", "/admin/yeu-cau-tu-van/xuat-du-lieu.aspx", "/admin/yeu-cau-tu-van/ban-in.aspx") %>' href="<%= GetAdminTuVanUrl() %>">
+                        <span>Yêu cầu tư vấn</span>
+                    </a>
+                    <% } %>
+                    <% if (ShowMenuAdminCompanyShopSync()) { %>
+                    <a class='admin-shop-menu-item <%= MenuActive("/admin/tools/company-shop-sync.aspx") %>' href="<%= GetAdminCompanyShopSyncUrl() %>">
+                        <span>Đồng bộ shop công ty</span>
+                    </a>
+                    <% } %>
+                    <% if (ShowMenuAdminReindexBaiViet()) { %>
+                    <a class='admin-shop-menu-item <%= MenuActive("/admin/tools/reindex-baiviet.aspx") %>' href="<%= GetAdminReindexBaiVietUrl() %>">
+                        <span>Reindex bài viết</span>
                     </a>
                     <% } %>
                     <% } %>
 
-                    <% if (ShowMenuGroupHome()) { %>
-                    <div class="admin-shop-menu-group-title">Quản lý home</div>
+                    <% if (ShowMenuGroupHomeSpace()) { %>
+                    <div class="admin-shop-menu-group-title">Quản trị không gian Home</div>
+                    <% if (ShowMenuTransferHistory()) { %>
+                    <a class='admin-shop-menu-item <%= MenuActiveTransferHistory() %>' href="<%= GetHomeTransferHistoryUrl() %>">
+                        <span>Lịch sử chuyển điểm</span>
+                        <span class="admin-shop-menu-badge"><%=ViewState["DongA"] %></span>
+                    </a>
+                    <% } %>
                     <% if (ShowMenuHomeAccount()) { %>
                     <a class='admin-shop-menu-item <%= MenuActiveTaiKhoanScope("home") %>' href="<%= GetHomeAccountManagementUrl() %>">
                         <span>Quản lý tài khoản home</span>
@@ -103,96 +217,108 @@
                     </a>
                     <% } %>
                     <% if (ShowMenuIssueCard()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/phat-hanh-the.aspx", "/admin/phat-hanh-the/them-moi.aspx") %>' href="/admin/phat-hanh-the/them-moi.aspx">
+                    <a class='admin-shop-menu-item <%= MenuActive("/admin/phat-hanh-the.aspx", "/admin/phat-hanh-the/them-moi.aspx") %>' href="<%= GetHomeIssueCardUrl() %>">
                         <span>Phát hành thẻ</span>
                     </a>
                     <% } %>
                     <% if (ShowMenuTierDescription()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/motacapbac.aspx", "/admin/MoTaCapBac.aspx") %>' href="/admin/MoTaCapBac.aspx">
+                    <a class='admin-shop-menu-item <%= MenuActive("/admin/motacapbac.aspx", "/admin/MoTaCapBac.aspx") %>' href="<%= GetHomeTierDescriptionUrl() %>">
                         <span>Mô tả cấp bậc</span>
                     </a>
                     <% } %>
                     <% if (ShowMenuSellProduct()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/he-thong-san-pham/ban-san-pham.aspx", "/admin/he-thong-san-pham/ban-the.aspx", "/admin/he-thong-san-pham/chi-tiet-giao-dich.aspx") %>' href="/admin/he-thong-san-pham/ban-the.aspx">
+                    <a class='admin-shop-menu-item <%= MenuActive("/admin/he-thong-san-pham/ban-san-pham.aspx", "/admin/he-thong-san-pham/ban-the.aspx", "/admin/he-thong-san-pham/chi-tiet-giao-dich.aspx") %>' href="<%= GetHomeSellProductUrl() %>">
                         <span>Bán sản phẩm</span>
                     </a>
                     <% } %>
                     <% } %>
 
                     <% if (ShowMenuGroupShop()) { %>
-                    <div class="admin-shop-menu-group-title">Quản lý gian hàng đối tác</div>
+                    <div class="admin-shop-menu-group-title">Quản trị không gian Gian hàng đối tác</div>
+                    <% if (ShowMenuShopWorkspace()) { %>
+                    <a class='admin-shop-menu-item <%= MenuActive("/gianhang/admin", "/gianhang/admin/", "/gianhang/admin/default.aspx") %>' href="<%= GetShopWorkspaceUrl() %>">
+                        <span>Trung tâm quản trị gian hàng</span>
+                        <span class="admin-shop-menu-badge">Portal</span>
+                    </a>
+                    <% } %>
                     <% if (ShowMenuShopAccount()) { %>
                     <a class='admin-shop-menu-item <%= MenuActiveTaiKhoanScope("shop") %>' href="<%= GetShopAccountManagementUrl() %>">
                         <span>Quản lý tài khoản gian hàng đối tác</span>
                     </a>
                     <% } %>
                     <% if (ShowMenuShopPointApproval()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActiveShopPointApproval() %>' href="/admin/lich-su-chuyen-diem/default.aspx?tab=shop-only">
+                    <a class='admin-shop-menu-item <%= MenuActiveShopPointApproval() %>' href="<%= GetShopPointApprovalUrl() %>">
                         <span>Duyệt điểm / nghiệp vụ shop</span>
                     </a>
                     <% } %>
                     <% if (ShowMenuShopEmailTemplate()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-email-shop/default.aspx") %>' href="/admin/quan-ly-email-shop/default.aspx">
+                    <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-email-shop/default.aspx") %>' href="<%= GetShopEmailTemplateUrl() %>">
                         <span>Nội dung email gian hàng đối tác</span>
                     </a>
                     <% } %>
                     <% if (ShowMenuShopApprove()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/duyet-gian-hang-doi-tac.aspx") %>' href="/admin/duyet-gian-hang-doi-tac.aspx">
-                        <span>Duyệt gian hàng đối tác</span>
+                    <a class='admin-shop-menu-item <%= MenuActive("/admin/duyet-gian-hang-doi-tac.aspx") %>' href="<%= GetGianHangApprovalUrl() %>">
+                        <span>Duyệt không gian gian hàng</span>
                     </a>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/duyet-nang-cap-level2.aspx") %>' href="/admin/duyet-nang-cap-level2.aspx">
+                    <a class='admin-shop-menu-item <%= MenuActive("/admin/duyet-shop-doi-tac.aspx") %>' href="<%= GetShopPartnerApprovalUrl() %>">
+                        <span>Duyệt gian hàng đối tác (Shop)</span>
+                    </a>
+                    <% } %>
+                    <% if (ShowMenuShopLevel2()) { %>
+                    <a class='admin-shop-menu-item <%= MenuActive("/admin/duyet-nang-cap-level2.aspx") %>' href="<%= GetShopLevel2ApprovalUrl() %>">
                         <span>Duyệt nâng cấp Level 2</span>
                     </a>
                     <% } %>
                     <% } %>
 
+                    <% if (ShowMenuGroupDauGia()) { %>
+                    <div class="admin-shop-menu-group-title">Quản trị không gian Đấu giá</div>
+                    <a class='admin-shop-menu-item' href="<%= GetDauGiaAdminUrl() %>">
+                        <span>Trung tâm quản trị đấu giá</span>
+                        <span class="admin-shop-menu-badge">Portal</span>
+                    </a>
+                    <% } %>
+
+                    <% if (ShowMenuGroupEvent()) { %>
+                    <div class="admin-shop-menu-group-title">Quản trị không gian Sự kiện</div>
+                    <a class='admin-shop-menu-item' href="<%= GetEventAdminUrl() %>">
+                        <span>Trung tâm quản trị sự kiện</span>
+                        <span class="admin-shop-menu-badge">Portal</span>
+                    </a>
+                    <% } %>
+
                     <% if (ShowMenuGroupContent()) { %>
-                    <div class="admin-shop-menu-group-title">Quản lý nội dung</div>
-                    <% if (ShowMenuHomeContent()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/cai-dat-trang-chu/default.aspx") %>' href="/admin/cai-dat-trang-chu/default.aspx">
+                    <div class="admin-shop-menu-group-title">Quản trị nội dung Website</div>
+                    <% if (ShowMenuHomeContent() || ShowMenuHomeTextContent()) { %>
+                    <a class='admin-shop-menu-item <%= MenuActive("/admin/cai-dat-trang-chu/default.aspx") %>' href="<%= GetContentSettingsUrl() %>">
                         <span>Cài đặt trang chủ</span>
                     </a>
                     <% } %>
                     <% if (ShowMenuHomeTextContent()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-noi-dung-home/default.aspx") %>' href="/admin/quan-ly-noi-dung-home/default.aspx">
+                    <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-noi-dung-home/default.aspx") %>' href="<%= GetContentHomeTextUrl() %>">
                         <span>Nội dung trang chủ Home</span>
                     </a>
                     <% } %>
                     <% if (ShowMenuContentMenu()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-menu/default.aspx", "/admin/quan-ly-menu/them-moi.aspx", "/admin/quan-ly-menu/bo-loc.aspx", "/admin/quan-ly-menu/chinh-sua.aspx", "/admin/quan-ly-menu/xuat-du-lieu.aspx", "/admin/quan-ly-menu/ban-in.aspx") %>' href="/admin/quan-ly-menu/default.aspx">
+                    <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-menu/default.aspx", "/admin/quan-ly-menu/them-moi.aspx", "/admin/quan-ly-menu/bo-loc.aspx", "/admin/quan-ly-menu/chinh-sua.aspx", "/admin/quan-ly-menu/xuat-du-lieu.aspx", "/admin/quan-ly-menu/ban-in.aspx") %>' href="<%= GetContentMenuUrl() %>">
                         <span>Quản lý menu</span>
                     </a>
                     <% } %>
                     <% if (ShowMenuContentBaiViet()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-bai-viet/default.aspx", "/admin/quan-ly-bai-viet/in.aspx", "/admin/quan-ly-bai-viet/them-moi.aspx", "/admin/quan-ly-bai-viet/bo-loc.aspx", "/admin/quan-ly-bai-viet/chinh-sua.aspx", "/admin/quan-ly-bai-viet/xuat-du-lieu.aspx", "/admin/quan-ly-bai-viet/ban-in.aspx") %>' href="/admin/quan-ly-bai-viet/default.aspx">
+                    <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-bai-viet/default.aspx", "/admin/quan-ly-bai-viet/in.aspx", "/admin/quan-ly-bai-viet/them-moi.aspx", "/admin/quan-ly-bai-viet/bo-loc.aspx", "/admin/quan-ly-bai-viet/chinh-sua.aspx", "/admin/quan-ly-bai-viet/xuat-du-lieu.aspx", "/admin/quan-ly-bai-viet/ban-in.aspx") %>' href="<%= GetContentBaiVietUrl() %>">
                         <span>Quản lý bài viết</span>
                     </a>
                     <% } %>
                     <% if (ShowMenuContentBanner()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-banner/default.aspx", "/admin/quan-ly-banner/them-moi.aspx") %>' href="/admin/quan-ly-banner/default.aspx">
+                    <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-banner/default.aspx", "/admin/quan-ly-banner/them-moi.aspx") %>' href="<%= GetContentBannerUrl() %>">
                         <span>Quản lý banner</span>
-                    </a>
-                    <% } %>
-                    <% if (ShowMenuContentGopY()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-gop-y/default.aspx") %>' href="/admin/quan-ly-gop-y/default.aspx">
-                        <span>Quản lý góp ý</span>
-                    </a>
-                    <% } %>
-                    <% if (ShowMenuContentThongBao()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-thong-bao/default.aspx", "/admin/quan-ly-thong-bao/in.aspx", "/admin/quan-ly-thong-bao/bo-loc.aspx", "/admin/quan-ly-thong-bao/xuat-du-lieu.aspx", "/admin/quan-ly-thong-bao/ban-in.aspx") %>' href="/admin/quan-ly-thong-bao/default.aspx">
-                        <span>Quản lý thông báo</span>
-                    </a>
-                    <% } %>
-                    <% if (ShowMenuContentTuVan()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/yeu-cau-tu-van/default.aspx", "/admin/yeu-cau-tu-van/bo-loc.aspx", "/admin/yeu-cau-tu-van/xuat-du-lieu.aspx", "/admin/yeu-cau-tu-van/ban-in.aspx") %>' href="/admin/yeu-cau-tu-van/default.aspx">
-                        <span>Yêu cầu tư vấn</span>
                     </a>
                     <% } %>
                     <% } %>
                 </div>
                 <div class="admin-shop-menu-footer">
                     <asp:HyperLink ID="but_show_form_doimatkhau" runat="server" CssClass="admin-shop-btn admin-shop-btn-light">Đổi mật khẩu</asp:HyperLink>
-                    <asp:LinkButton ID="but_dangxuat" runat="server" CssClass="admin-shop-btn admin-shop-btn-danger" OnClick="but_dangxuat_Click">Đăng xuất</asp:LinkButton>
+                    <asp:LinkButton ID="but_dangxuat" runat="server" CssClass="admin-shop-btn admin-shop-btn-danger" OnClick="but_dangxuat_Click" CausesValidation="false">Đăng xuất</asp:LinkButton>
                 </div>
             </div>
         </div>

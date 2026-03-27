@@ -18,8 +18,8 @@
         <asp:Panel ID="pn_form" runat="server" Visible="false" CssClass="card">
             <div class="card-body">
                 <div class="mb-3">
-                    <asp:Label ID="lb_shop_name" runat="server" CssClass="fw-bold"></asp:Label>
-                    <div class="text-muted"><asp:Label ID="lb_shop_desc" runat="server"></asp:Label></div>
+                    <asp:Label ID="lb_gianhang_name" runat="server" CssClass="fw-bold"></asp:Label>
+                    <div class="text-muted"><asp:Label ID="lb_gianhang_desc" runat="server"></asp:Label></div>
                 </div>
 
                 <div class="row">

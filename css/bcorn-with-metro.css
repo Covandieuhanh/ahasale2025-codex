@@ -144,17 +144,29 @@
 }
 
 .w-h-28 {
-    width: 28px;
-    height: 28px;
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px;
+    max-width: 28px !important;
+    max-height: 28px !important;
+    display: block;
 }
 
 .w-h-100 {
-    width: 100px;
-    height: 100px;
+    width: 100px !important;
+    height: 100px !important;
+    min-width: 100px;
+    max-width: 100px !important;
+    max-height: 100px !important;
+    display: block;
 }
 .w-h-50 {
-    width: 50px;
-    height: 50px;
+    width: 50px !important;
+    height: 50px !important;
+    min-width: 50px;
+    max-width: 50px !important;
+    max-height: 50px !important;
+    display: block;
 }
 
 .img-cover-vuongtron {

@@ -73,6 +73,20 @@ public static class PortalScope_cl
         if (t == "5") return true;
         if (t.StartsWith("q1_")) return true;
         if (t.StartsWith("q2_")) return true;
+        if (t.StartsWith("q3_")) return true;
+        if (t == "admin_otp") return true;
+        if (t == "admin_token_wallet") return true;
+        if (t == "admin_feedback") return true;
+        if (t == "admin_notification") return true;
+        if (t == "admin_consulting") return true;
+        if (t == "admin_company_shop_sync") return true;
+        if (t == "admin_reindex_baiviet") return true;
+        if (t == EventPolicy_cl.AdminPermissionCode) return true;
+        if (t == EventPolicy_cl.RoleOwner) return true;
+        if (t == EventPolicy_cl.RoleDesigner) return true;
+        if (t == EventPolicy_cl.RoleApprover) return true;
+        if (t == EventPolicy_cl.RoleOperator) return true;
+        if (t == EventPolicy_cl.RoleViewer) return true;
         return false;
     }
 

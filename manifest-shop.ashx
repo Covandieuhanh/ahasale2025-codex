@@ -9,17 +9,7 @@ public class manifest_shop : IHttpHandler
 {
     private static string NormalizeIconPath(string rawPath)
     {
-        string path = (rawPath ?? "").Trim();
-        if (string.IsNullOrEmpty(path))
-            return "/uploads/images/icon-mobile.jpg";
-
-        if (path.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
-            || path.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-            return path;
-
-        if (!path.StartsWith("/"))
-            path = "/" + path;
-        return path;
+        return PortalBranding_cl.NormalizeIconPath(rawPath, PortalBranding_cl.DefaultShopIconPath);
     }
 
     private static string ResolveIconMime(string iconPath)
@@ -44,7 +34,7 @@ public class manifest_shop : IHttpHandler
         context.Response.Cache.SetCacheability(HttpCacheability.NoCache);
         context.Response.Cache.SetNoStore();
 
-        string iconPath = "/uploads/images/icon-mobile.jpg";
+        string iconPath = PortalBranding_cl.DefaultShopIconPath;
         string appName = "AhaSale Shop";
         string shortName = "AhaSale Shop";
         string themeColor = "#ff5b2e";
@@ -55,19 +45,27 @@ public class manifest_shop : IHttpHandler
             {
                 var q = db.CaiDatChung_tbs
                     .Where(p => p.phanloai_trang == "shop")
-                    .Select(p => new { p.thongtin_apple_touch_icon })
+                    .Select(p => new { p.thongtin_apple_touch_icon, p.thongtin_icon, p.thongtin_logo, p.thongtin_logo1 })
                     .FirstOrDefault();
 
                 if (q == null)
                 {
                     q = db.CaiDatChung_tbs
                         .Where(p => p.phanloai_trang == "home")
-                        .Select(p => new { p.thongtin_apple_touch_icon })
+                        .Select(p => new { p.thongtin_apple_touch_icon, p.thongtin_icon, p.thongtin_logo, p.thongtin_logo1 })
                         .FirstOrDefault();
                 }
 
                 if (q != null)
-                    iconPath = NormalizeIconPath(q.thongtin_apple_touch_icon);
+                    iconPath = NormalizeIconPath(PortalBranding_cl.ResolveHeaderLogoPath(
+                        new PortalBranding_cl.ScopeBrandingSnapshot
+                        {
+                            AppleTouchIconPath = q.thongtin_apple_touch_icon,
+                            IconPath = q.thongtin_icon,
+                            LogoPath = q.thongtin_logo,
+                            LogoAltPath = q.thongtin_logo1
+                        },
+                        PortalBranding_cl.ScopeShop));
                 else
                     iconPath = NormalizeIconPath(iconPath);
             }

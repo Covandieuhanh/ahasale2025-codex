@@ -701,9 +701,10 @@ public partial class home_Default : System.Web.UI.Page
                 ViewState["profile_show_products"] = profileSettings.ShowProducts ? "1" : "0";
 
                 var link = db.MangXaHoi_tbs.Where(x => x.TaiKhoan == q_tk.taikhoan).ToList();
-                var linkCaNhan = link.Where(x => x.Kieu == "Cá nhân").ToList();
+                var linkCaNhan = SocialLinkOrder_cl.SortLinks(link.Where(x => x.Kieu == "Cá nhân"), profileSettings.SocialOrderPersonal);
+                var linkCuaHang = SocialLinkOrder_cl.SortLinks(link.Where(x => x.Kieu == "Cửa hàng"), profileSettings.SocialOrderShop);
                 rptMangXaHoiCN.DataSource = linkCaNhan;
-                rptMangXaHoiCH.DataSource = link.Where(x => x.Kieu == "Cửa hàng");
+                rptMangXaHoiCH.DataSource = linkCuaHang;
                 rptMangXaHoiCN.DataBind();
                 rptMangXaHoiCH.DataBind();
                 phNoSocialLinks.Visible = profileSettings.ShowSocial && linkCaNhan.Count == 0;

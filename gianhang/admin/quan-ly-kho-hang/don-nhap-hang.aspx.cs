@@ -32,7 +32,7 @@ public partial class badmin_Default : System.Web.UI.Page
         //        {
         //            bspa_data_khachhang_table _ob = new bspa_data_khachhang_table();
         //            _ob.tenkhachhang = t.tenkhachhang;
-        //            _ob.user_parent = "admin";
+        //            _ob.user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
         //            _ob.sdt = t.sdt;
         //            _ob.diachi = t.diachi;
         //            _ob.magioithieu = "";
@@ -79,7 +79,7 @@ public partial class badmin_Default : System.Web.UI.Page
         }
         #endregion
         user = Session["user"].ToString();
-        user_parent = "admin";
+        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
         if (!IsPostBack)
         {
 
@@ -315,10 +315,17 @@ public partial class badmin_Default : System.Web.UI.Page
     }
     protected void txt_search_TextChanged(object sender, EventArgs e)
     {
-        Session["search_donnhaphang"] = txt_search.Text.Trim();
+        ApplySearchState();
+    }
+    protected void but_search_Click(object sender, EventArgs e)
+    {
+        ApplySearchState();
+    }
+    private void ApplySearchState()
+    {
         Session["current_page_donnhaphang"] = "1";
-        main();
 
+        main();
     }
     protected void but_quaylai_Click(object sender, EventArgs e)
     {

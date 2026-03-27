@@ -3,14 +3,14 @@
     <div class="container storefront-footer__inner">
         <div class="storefront-footer__grid">
             <section class="storefront-footer__brand">
-                <a href="<%=AhaShineHomeRoutes_cl.HomeUrl %>" class="storefront-footer__logo<%=logo == "" ? " storefront-footer__logo--empty" : "" %>">
+                <a href="<%=HomeUrl %>" class="storefront-footer__logo<%=logo == "" ? " storefront-footer__logo--empty" : "" %>">
                     <% if (logo != "") { %>
                     <img src="<%=logo %>" alt="<%=tencongty %>" onerror="this.style.display='none';" />
                     <% } else { %>
                     <span><%=(tencongty == "" ? "G" : tencongty.Substring(0, 1).ToUpperInvariant()) %></span>
                     <% } %>
                 </a>
-                <div class="storefront-footer__title"><%=tencongty == "" ? "Gian hang doi tac" : tencongty %></div>
+                <div class="storefront-footer__title"><%=tencongty == "" ? "Gian hàng đối tác" : tencongty %></div>
                 <div class="storefront-footer__desc"><%=FooterDescription %></div>
 
                 <div class="storefront-footer__chips">
@@ -24,12 +24,12 @@
             <section class="storefront-footer__nav">
                 <div class="storefront-footer__heading"><%=FooterNavTitle %></div>
                 <div class="storefront-footer__links">
-                    <a href="<%=AhaShineHomeRoutes_cl.HomeUrl %>"><%=NavHomeText %></a>
+                    <a href="<%=HomeUrl %>"><%=NavHomeText %></a>
                     <a href="<%=ServicesUrl %>"><%=QuickServiceText %></a>
                     <a href="<%=ProductsUrl %>"><%=QuickProductText %></a>
                     <a href="<%=ArticlesUrl %>"><%=QuickArticleText %></a>
-                    <a href="<%=AhaShineHomeRoutes_cl.BookingUrl %>"><%=NavBookingText %></a>
-                    <a href="<%=AhaShineHomeRoutes_cl.CartUrl %>">Gio hang</a>
+                    <a href="<%=BookingUrl %>"><%=NavBookingText %></a>
+                    <a href="<%=CartUrl %>">Giỏ hàng</a>
                 </div>
             </section>
 

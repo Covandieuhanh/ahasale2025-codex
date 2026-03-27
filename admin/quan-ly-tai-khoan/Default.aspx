@@ -345,6 +345,12 @@
                                                     <asp:ListItem Text="Super Admin: tài khoản tài sản lõi / ví token điểm / bridge đối soát" Value="q2_1" Selected="false"></asp:ListItem>
                                                     <asp:ListItem Text="Super Admin: xem lịch sử chuyển điểm toàn hệ thống" Value="q1_6" Selected="false"></asp:ListItem>
                                                     <asp:ListItem Text="Super Admin: xem lịch sử chuyển điểm theo phân quyền vận hành" Value="q1_7" Selected="false"></asp:ListItem>
+                                                    <asp:ListItem Text="Admin: quản trị Event Platform /event/admin (tạo chiến dịch tích điểm voucher, lương/thưởng bậc thang)" Value="event_admin" Selected="false"></asp:ListItem>
+                                                    <asp:ListItem Text="Event: chủ không gian (owner)" Value="event_owner" Selected="false"></asp:ListItem>
+                                                    <asp:ListItem Text="Event: thiết kế campaign (designer)" Value="event_designer" Selected="false"></asp:ListItem>
+                                                    <asp:ListItem Text="Event: phê duyệt/publish campaign" Value="event_approver" Selected="false"></asp:ListItem>
+                                                    <asp:ListItem Text="Event: vận hành campaign (đổi trạng thái, target)" Value="event_operator" Selected="false"></asp:ListItem>
+                                                    <asp:ListItem Text="Event: chỉ xem dashboard/campaign" Value="event_viewer" Selected="false"></asp:ListItem>
                                                     <asp:ListItem Text="Super Admin: chuyển điểm đến các tài khoản tổng" Value="q1_1" Selected="false"></asp:ListItem>
                                                     <asp:ListItem Text="Super Admin: điều phối điểm cho tài khoản tầng khách hàng" Value="q1_2" Selected="false"></asp:ListItem>
                                                     <asp:ListItem Text="Super Admin: điều phối điểm cho tài khoản gian hàng đối tác" Value="q1_3" Selected="false"></asp:ListItem>
@@ -494,6 +500,31 @@
             <asp:ListItem Value="2" Text="Cộng tác phát triển"></asp:ListItem>
             <asp:ListItem Value="3" Text="Đồng hành hệ sinh thái"></asp:ListItem>
         </asp:DropDownList>
+    </div>
+</asp:Panel>
+
+<asp:Panel ID="pn_home_event_builder" runat="server" CssClass="mt-3 p-2 border bd-default rounded" Visible="false">
+    <div class="fw-600">Phân quyền theo không gian</div>
+    <div class="fg-gray mt-1">
+        <small>Bật hoặc tắt từng không gian mở rộng để tài khoản Home được phép truy cập đúng khu quản trị tương ứng.</small>
+    </div>
+    <div class="mt-2">
+        <div class="mb-2">
+            <div class="small fg-gray">
+                Không gian Gian hàng (<code>/gianhang</code>) được mở theo luồng:
+                tài khoản Home đăng ký mở không gian -> admin duyệt tại tab <strong>Duyệt không gian gian hàng</strong>.
+                Quyền này không cấp trực tiếp ở màn hình chi tiết tài khoản.
+            </div>
+        </div>
+        <div class="mb-2">
+            <asp:CheckBox ID="cb_home_event_builder" runat="server" Text="Cho phép truy cập không gian Event (/event/admin)" />
+        </div>
+        <div class="mb-2">
+            <asp:CheckBox ID="cb_home_daugia_admin" runat="server" Text="Cho phép truy cập không gian Đấu giá (/daugia/admin)" />
+        </div>
+        <div>
+            <asp:CheckBox ID="cb_home_gianhang_admin" runat="server" Text="Cho phép truy cập không gian quản trị Gian hàng (/gianhang/admin)" />
+        </div>
     </div>
 </asp:Panel>
 

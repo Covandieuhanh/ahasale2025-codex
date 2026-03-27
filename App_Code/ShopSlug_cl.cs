@@ -59,14 +59,14 @@ public static class ShopSlug_cl
 
     public static bool IsShopAccount(dbDataContext db, taikhoan_tb acc)
     {
-        if (acc == null) return false;
-        string scope = PortalScope_cl.ResolveScope(acc.taikhoan, acc.phanloai, acc.permission);
-        if (!string.Equals(scope, PortalScope_cl.ScopeShop, StringComparison.OrdinalIgnoreCase))
+        if (acc == null)
             return false;
+
+        if (db == null)
+            return ShopStatus_cl.IsShopApproved(acc);
+
         ShopStatus_cl.EnsureSchemaSafe(db);
-        if (!ShopStatus_cl.IsShopApproved(acc))
-            return false;
-        return true;
+        return ShopStatus_cl.IsShopApproved(db, acc);
     }
 
     private static string ReadSlug(dbDataContext db, string taiKhoan)

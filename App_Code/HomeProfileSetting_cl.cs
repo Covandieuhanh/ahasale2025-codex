@@ -18,6 +18,8 @@ public static class HomeProfileSetting_cl
         public bool ShowReviews { get; set; }
         public bool ShowShop { get; set; }
         public bool ShowProducts { get; set; }
+        public string SocialOrderPersonal { get; set; }
+        public string SocialOrderShop { get; set; }
     }
 
     public static ProfileSettings GetSettings(dbDataContext db, string taiKhoan, bool isShop)
@@ -32,7 +34,7 @@ public static class HomeProfileSetting_cl
         using (SqlCommand cmd = conn.CreateCommand())
         {
             cmd.CommandText = @"
-SELECT TOP 1 template_key, accent_color, show_contact, show_social, show_reviews, show_shop, show_products
+SELECT TOP 1 template_key, accent_color, show_contact, show_social, show_reviews, show_shop, show_products, social_order_personal, social_order_shop
 FROM dbo.Home_Profile_Setting_tb
 WHERE taikhoan = @tk";
             cmd.Parameters.AddWithValue("@tk", taiKhoan);
@@ -50,7 +52,9 @@ WHERE taikhoan = @tk";
                     ShowSocial = reader["show_social"] == DBNull.Value || Convert.ToBoolean(reader["show_social"]),
                     ShowReviews = reader["show_reviews"] == DBNull.Value || Convert.ToBoolean(reader["show_reviews"]),
                     ShowShop = reader["show_shop"] != DBNull.Value && Convert.ToBoolean(reader["show_shop"]),
-                    ShowProducts = reader["show_products"] != DBNull.Value && Convert.ToBoolean(reader["show_products"])
+                    ShowProducts = reader["show_products"] != DBNull.Value && Convert.ToBoolean(reader["show_products"]),
+                    SocialOrderPersonal = NormalizeOrder(reader["social_order_personal"] as string),
+                    SocialOrderShop = NormalizeOrder(reader["social_order_shop"] as string)
                 };
 
                 if (string.IsNullOrEmpty(settings.TemplateKey))
@@ -92,11 +96,13 @@ WHEN MATCHED THEN UPDATE SET
     show_reviews = @show_reviews,
     show_shop = @show_shop,
     show_products = @show_products,
+    social_order_personal = @social_order_personal,
+    social_order_shop = @social_order_shop,
     updated_at = @updated_at,
     updated_by = @updated_by
 WHEN NOT MATCHED THEN
-    INSERT (taikhoan, template_key, accent_color, show_contact, show_social, show_reviews, show_shop, show_products, updated_at, updated_by)
-    VALUES (@tk, @template_key, @accent_color, @show_contact, @show_social, @show_reviews, @show_shop, @show_products, @updated_at, @updated_by);";
+    INSERT (taikhoan, template_key, accent_color, show_contact, show_social, show_reviews, show_shop, show_products, social_order_personal, social_order_shop, updated_at, updated_by)
+    VALUES (@tk, @template_key, @accent_color, @show_contact, @show_social, @show_reviews, @show_shop, @show_products, @social_order_personal, @social_order_shop, @updated_at, @updated_by);";
 
             cmd.Parameters.AddWithValue("@tk", taiKhoan);
             cmd.Parameters.AddWithValue("@template_key", normalized.TemplateKey ?? (object)DBNull.Value);
@@ -106,6 +112,8 @@ WHEN NOT MATCHED THEN
             cmd.Parameters.AddWithValue("@show_reviews", normalized.ShowReviews);
             cmd.Parameters.AddWithValue("@show_shop", normalized.ShowShop);
             cmd.Parameters.AddWithValue("@show_products", normalized.ShowProducts);
+            cmd.Parameters.AddWithValue("@social_order_personal", normalized.SocialOrderPersonal ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("@social_order_shop", normalized.SocialOrderShop ?? (object)DBNull.Value);
             cmd.Parameters.AddWithValue("@updated_at", AhaTime_cl.Now);
             cmd.Parameters.AddWithValue("@updated_by", (updatedBy ?? "").Trim());
 
@@ -128,7 +136,9 @@ WHEN NOT MATCHED THEN
             ShowSocial = settings.ShowSocial,
             ShowReviews = settings.ShowReviews,
             ShowShop = settings.ShowShop,
-            ShowProducts = settings.ShowProducts
+            ShowProducts = settings.ShowProducts,
+            SocialOrderPersonal = NormalizeOrder(settings.SocialOrderPersonal),
+            SocialOrderShop = NormalizeOrder(settings.SocialOrderShop)
         };
 
         if (string.IsNullOrEmpty(normalized.TemplateKey))
@@ -155,7 +165,9 @@ WHEN NOT MATCHED THEN
             ShowSocial = true,
             ShowReviews = true,
             ShowShop = false,
-            ShowProducts = false
+            ShowProducts = false,
+            SocialOrderPersonal = "",
+            SocialOrderShop = ""
         };
     }
 
@@ -176,6 +188,17 @@ WHEN NOT MATCHED THEN
         if (Regex.IsMatch(raw, "^#([0-9a-fA-F]{6})$"))
             return raw.ToLowerInvariant();
         return "";
+    }
+
+    private static string NormalizeOrder(string value)
+    {
+        string raw = (value ?? "").Trim();
+        if (string.IsNullOrEmpty(raw))
+            return "";
+
+        raw = Regex.Replace(raw, "[^0-9,]", "");
+        raw = Regex.Replace(raw, ",{2,}", ",");
+        return raw.Trim(',');
     }
 
     private static void EnsureSchema(dbDataContext db)
@@ -202,9 +225,19 @@ BEGIN
         show_reviews BIT NULL,
         show_shop BIT NULL,
         show_products BIT NULL,
+        social_order_personal NVARCHAR(MAX) NULL,
+        social_order_shop NVARCHAR(MAX) NULL,
         updated_at DATETIME NULL,
         updated_by NVARCHAR(50) NULL
     )
+END
+IF COL_LENGTH('dbo.Home_Profile_Setting_tb', 'social_order_personal') IS NULL
+BEGIN
+    ALTER TABLE dbo.Home_Profile_Setting_tb ADD social_order_personal NVARCHAR(MAX) NULL
+END
+IF COL_LENGTH('dbo.Home_Profile_Setting_tb', 'social_order_shop') IS NULL
+BEGIN
+    ALTER TABLE dbo.Home_Profile_Setting_tb ADD social_order_shop NVARCHAR(MAX) NULL
 END";
                 conn.Open();
                 cmd.ExecuteNonQuery();

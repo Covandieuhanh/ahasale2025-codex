@@ -152,6 +152,24 @@
             font-weight: 600;
             margin-bottom: 16px;
         }
+
+        .sell-special-trace {
+            background: #f8fafc;
+            border: 1px solid #e5ebf0;
+            border-radius: 14px;
+            padding: 14px;
+        }
+
+        .sell-special-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            background: #dcfce7;
+            color: #166534;
+        }
     </style>
 </asp:Content>
 
@@ -408,6 +426,42 @@
                                 </div>
                             </div>
 
+                            <asp:Panel ID="pn_ct_special" runat="server" Visible="false" CssClass="mt-6">
+                                <div class="text-bold">Nghiệp vụ đặc biệt đã chạy</div>
+                                <hr />
+
+                                <div class="sell-special-trace">
+                                    <div class="table-responsive">
+                                        <table class="table striped table-border cell-border">
+                                            <thead>
+                                                <tr>
+                                                    <th style="min-width:60px" class="text-center">#</th>
+                                                    <th style="min-width:160px">Handler</th>
+                                                    <th style="min-width:120px" class="text-center">Trạng thái</th>
+                                                    <th>Mô tả</th>
+                                                    <th style="min-width:170px">Dữ liệu trace</th>
+                                                    <th style="min-width:160px" class="text-center">Thời gian chạy</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <asp:Repeater ID="rpt_ct_special" runat="server">
+                                                    <ItemTemplate>
+                                                        <tr>
+                                                            <td class="text-center"><%# Container.ItemIndex + 1 %></td>
+                                                            <td class="text-bold"><%# Eval("HandlerLabel") %></td>
+                                                            <td class="text-center"><%# Eval("ExecutionStatus") %></td>
+                                                            <td><%# Eval("ExecutionSummary") %></td>
+                                                            <td class="fg-gray"><%# Eval("ExecutionData") %></td>
+                                                            <td class="text-center"><%# Eval("ExecutedAtText") %></td>
+                                                        </tr>
+                                                    </ItemTemplate>
+                                                </asp:Repeater>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </asp:Panel>
+
                         </div>
                     </div>
                 </div>
@@ -483,6 +537,7 @@
             <%--        <th class="text-right">Ví1</th>
                     <th class="text-right">Ví2</th>
                     <th class="text-right">Ví3</th>--%>
+                    <th class="text-center">Nghiệp vụ đặc biệt</th>
 
                     <th class="text-center">Thao tác</th>
                 </tr>
@@ -518,8 +573,9 @@
                             <%-- <td class="text-right"><%# Eval("Vi1_30PhanTram_NhanDuoc_ViEVoucher", "{0:#,##0.##}") %></td>
                                    <td class="text-right"><%# Eval("Vi2_50PhanTram_NhanDuoc_ViLaoDong", "{0:#,##0.##}") %></td>
                             <td class="text-right"><%# Eval("Vi3_20PhanTram_NhanDuoc_ViGanKet", "{0:#,##0.##}") %></td>--%>
-                           
-                     
+                            <td class="text-center">
+                                <asp:Literal ID="lt_special_badge" runat="server" Text='<%# BuildSpecialExecutionBadge(Eval("SpecialExecutionLabel")) %>'></asp:Literal>
+                            </td>
 
                             <td class="text-center">
                                 <asp:HyperLink runat="server"

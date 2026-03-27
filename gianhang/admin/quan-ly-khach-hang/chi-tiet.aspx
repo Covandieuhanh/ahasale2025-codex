@@ -448,9 +448,9 @@
                         <a class="button" href="/gianhang/admin/quan-ly-khach-hang/danh-sach-lich-hen.aspx?q=add&amp;sdt=<%=sdt %>&amp;tenkh=<%=Server.UrlEncode(hoten) %>">
                             <span class="mif mif-calendar"></span>Đặt lịch</a>
                     </li>
-                    <li data-role="hint" data-hint-position="top" data-hint-text="Tạo hóa đơn">
-                        <a class="button" href="/gianhang/admin/quan-ly-hoa-don/Default.aspx?q=add&amp;sdt=<%=sdt %>&amp;tenkh=<%=Server.UrlEncode(hoten) %>">
-                            <span class="mif mif-open-book"></span>Tạo hóa đơn</a>
+                    <li data-role="hint" data-hint-position="top" data-hint-text="Tạo giao dịch">
+                        <a class="button" href='/gianhang/admin/gianhang/tao-giao-dich.aspx?sdt=<%=sdt %>&amp;tenkh=<%=Server.UrlEncode(hoten) %>&amp;return_url=<%=Server.UrlEncode(Request.RawUrl ?? "/gianhang/admin/quan-ly-khach-hang/chi-tiet.aspx") %>'>
+                            <span class="mif mif-open-book"></span>Tạo giao dịch</a>
                     </li>
                     <li data-role="hint" data-hint-position="top" data-hint-text="Bán thẻ dịch vụ">
                         <a class="button" href="/gianhang/admin/quan-ly-the-dich-vu/Default.aspx?q=add&amp;sdt=<%=sdt %>&amp;tenkh=<%=Server.UrlEncode(hoten) %>">
@@ -630,6 +630,56 @@
                                         </div>
                                     </div>
                                     <!-- /BỔ SUNG EMAIL -->
+
+                                    <div class="booking-link-box mt-4">
+                                        <div class="booking-link-box__title">Hồ sơ người AhaSale</div>
+                                        <div class="booking-link-box__meta mt-1">
+                                            Việc liên kết Home đã được chuyển sang module trung tâm Hồ sơ người. Chỉ cần gắn 1 lần ở đó là các vai trò cùng số điện thoại trong gian hàng này sẽ tự nhận liên kết.
+                                        </div>
+                                        <div class="mt-3">
+                                            <span class="data-wrapper"><code class="<%=HttpUtility.HtmlAttributeEncode(personHubStatusCss) %>"><%=HttpUtility.HtmlEncode(personHubStatusLabel) %></code></span>
+                                        </div>
+                                        <div class="mt-2 fg-gray"><%=HttpUtility.HtmlEncode(personHubNote) %></div>
+                                        <div class="mt-3">
+                                            <span class="data-wrapper"><code class="<%=HttpUtility.HtmlAttributeEncode(personHubAdminAccessCss) %>"><%=HttpUtility.HtmlEncode(personHubAdminAccessLabel) %></code></span>
+                                        </div>
+                                        <div class="mt-2 fg-gray"><%=HttpUtility.HtmlEncode(personHubAdminAccessNote) %></div>
+                                        <div class="mt-3">
+                                            <span class="data-wrapper"><code class="<%=HttpUtility.HtmlAttributeEncode(sourceLifecycleCss) %>"><%=HttpUtility.HtmlEncode(sourceLifecycleLabel) %></code></span>
+                                        </div>
+                                        <div class="mt-2 fg-gray"><%=HttpUtility.HtmlEncode(sourceLifecycleNote) %></div>
+                                        <div class="mt-3 p-3 border" style="border-radius: 12px; border-color: #cfe6ff!important; background: #f7fbff;">
+                                            <div class="booking-link-box__title">Ngừng dùng an toàn</div>
+                                            <div class="booking-link-box__meta mt-1">
+                                                Ngừng dùng khách hàng sẽ không xóa lịch sử, không gỡ liên kết Home ở Hồ sơ người và không làm mất các vai trò khác cùng số điện thoại trong gian hàng này.
+                                            </div>
+                                            <div class="mt-3">
+                                                <% if (!sourceLifecycleIsInactive) { %>
+                                                    <asp:Button ID="but_ngung_khachhang" runat="server" Text="NGỪNG DÙNG KHÁCH HÀNG" CssClass="button warning" OnClick="but_ngung_khachhang_Click" />
+                                                <% } else { %>
+                                                    <asp:Button ID="but_molai_khachhang" runat="server" Text="MỞ LẠI KHÁCH HÀNG" CssClass="button success" OnClick="but_molai_khachhang_Click" />
+                                                <% } %>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3 p-3 border" style="border-radius: 12px; border-color: #f3d6b3!important; background: #fff9f2;">
+                                            <div class="booking-link-box__title"><%=HttpUtility.HtmlEncode(personHubImpactTitle) %></div>
+                                            <div class="booking-link-box__meta mt-1"><%=HttpUtility.HtmlEncode(personHubImpactNote) %></div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <a class="button success" href="<%=HttpUtility.HtmlAttributeEncode(personHubUrl) %>">Mở hồ sơ người</a>
+                                        </div>
+                                        <% if (!string.IsNullOrWhiteSpace(personHubRelatedRolesHtml)) { %>
+                                        <div class="mt-3">
+                                            <div class="booking-link-box__title">Cùng số điện thoại này còn có thêm vai trò khác</div>
+                                            <div class="booking-link-box__meta mt-1">
+                                                Chỉ cần gắn Home ở Hồ sơ người là các hồ sơ dưới đây cũng sẽ nhận cùng trạng thái liên kết trong không gian này.
+                                            </div>
+                                            <div class="mt-2">
+                                                <%=personHubRelatedRolesHtml %>
+                                            </div>
+                                        </div>
+                                        <% } %>
+                                    </div>
 
                                     <div class="mt-3">
                                         <label class="fw-600">Ngày sinh</label>

@@ -14,25 +14,25 @@
             <asp:Repeater ID="Repeater1" runat="server">
                 <ItemTemplate>
                     <article class="feature-card">
-                        <a class="feature-card__media" href="/gianhang/page/chi-tiet-san-pham.aspx?idbv=<%#Eval("id") %>" data-fallback="Hinh anh dang cap nhat">
+                        <a class="feature-card__media" href="<%# BuildDetailUrl(Eval("id")) %>" data-fallback="Hinh anh dang cap nhat">
                             <img src="<%#Eval("image") %>" alt="<%#Eval("name") %>" onerror="this.onerror=null; this.style.display='none'; this.parentNode.className += ' feature-card__media--missing'; this.parentNode.setAttribute('data-fallback', 'Hinh anh dang cap nhat');" />
                         </a>
                         <div class="feature-card__body">
                             <span class="feature-card__eyebrow"><%=ItemLabel %></span>
                             <h3 class="feature-card__title ellipsis-2">
-                                <a href="/gianhang/page/chi-tiet-san-pham.aspx?idbv=<%#Eval("id") %>"><%#Eval("name") %></a>
+                                <a href="<%# BuildDetailUrl(Eval("id")) %>"><%#Eval("name") %></a>
                             </h3>
                             <div class="feature-card__desc"><%#Eval("description") %></div>
                             <div class="feature-card__price">
                                 <span class="mif mif-dollar2"></span>
-                                <%#Eval("giaban_sanpham","{0:#,##0}") %> VNĐ
+                                <%# FormatPrice(Eval("giaban")) %> VNĐ
                             </div>
                             <div class="feature-card__actions">
                                 <% if (SecondaryButtonText != "") { %>
-                                <a class="feature-card__button feature-card__button--ghost" href='<%# AhaShineHomeRoutes_cl.CartUrl + "?id=" + Eval("id").ToString() %>'><%=SecondaryButtonText %></a>
+                                <a class="feature-card__button feature-card__button--ghost" href='<%# BuildCartUrl(Eval("id")) %>'><%=SecondaryButtonText %></a>
                                 <% } %>
                                 <% if (PrimaryButtonText != "") { %>
-                                <a class="feature-card__button feature-card__button--primary" href='<%# AhaShineHomeRoutes_cl.CartUrl + "?id=" + Eval("id").ToString() + "&dh=ok" %>'><%=PrimaryButtonText %></a>
+                                <a class="feature-card__button feature-card__button--primary" href='<%# BuildCheckoutUrl(Eval("id")) %>'><%=PrimaryButtonText %></a>
                                 <% } %>
                             </div>
                         </div>

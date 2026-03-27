@@ -91,12 +91,19 @@ public static class AdminFullPageRoute_cl
             queryText = queryIndex < decoded.Length - 1 ? decoded.Substring(queryIndex + 1) : "";
         }
 
-        if (!path.StartsWith("/admin/", StringComparison.OrdinalIgnoreCase))
+        bool isAdminPath = path.StartsWith("/admin/", StringComparison.OrdinalIgnoreCase);
+        bool isEventAdminPath =
+            path.Equals("/event/admin", StringComparison.OrdinalIgnoreCase)
+            || path.Equals("/event/admin/", StringComparison.OrdinalIgnoreCase)
+            || path.Equals("/event/admin/default.aspx", StringComparison.OrdinalIgnoreCase);
+
+        if (!isAdminPath && !isEventAdminPath)
             return fallback;
 
-        if (path.Equals("/admin/login.aspx", StringComparison.OrdinalIgnoreCase)
+        if (isAdminPath
+            && (path.Equals("/admin/login.aspx", StringComparison.OrdinalIgnoreCase)
             || path.Equals("/admin/doi-mat-khau/default.aspx", StringComparison.OrdinalIgnoreCase)
-            || path.Equals("/admin/quen-mat-khau/default.aspx", StringComparison.OrdinalIgnoreCase))
+            || path.Equals("/admin/quen-mat-khau/default.aspx", StringComparison.OrdinalIgnoreCase)))
             return fallback;
 
         NameValueCollection query = HttpUtility.ParseQueryString(queryText);

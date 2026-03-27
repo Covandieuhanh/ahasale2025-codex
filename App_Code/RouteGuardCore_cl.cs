@@ -17,12 +17,18 @@ public static class RouteGuardCore_cl
 
     public static bool CanCurrentAccountAccessCurrentPath()
     {
-        taikhoan_tb account = RootAccount_cl.GetCurrentEntity();
-        if (account == null)
-            return false;
-
         string currentSpace = ResolveCurrentSpace();
-        return SpaceAccess_cl.CanAccessSpace(account, currentSpace);
+        return CoreDb_cl.Use(db =>
+        {
+            CoreSchemaMigration_cl.EnsureSchemaSafe(db);
+
+            taikhoan_tb account = RootAccount_cl.GetCurrentEntity(db);
+            if (account == null)
+                return false;
+
+            CoreAccessBootstrap_cl.EnsureAccountSeeded(db, account);
+            return SpaceAccess_cl.CanAccessSpace(db, account, currentSpace);
+        });
     }
 
     public static string GetCurrentDeniedMessage()

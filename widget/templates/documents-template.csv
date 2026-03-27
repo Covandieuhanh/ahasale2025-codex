@@ -1,0 +1,4 @@
+id,title,tags,text,sourceUrls
+doc_login,Hướng dẫn đăng nhập,"đăng nhập|login|vào tài khoản","Bước 1: Mở trang đăng nhập. Bước 2: Nhập tài khoản và mật khẩu. Bước 3: Bấm nút Đăng nhập.","https://websitecuaban.com/dang-nhap"
+doc_booking,Hướng dẫn đặt lịch,"đặt lịch|booking|hẹn","Bạn chọn dịch vụ, chọn ngày giờ, nhập thông tin liên hệ rồi xác nhận đặt lịch.","https://websitecuaban.com/dat-lich|https://websitecuaban.com/lich-cua-toi"
+doc_support,Hướng dẫn liên hệ hỗ trợ,"hỗ trợ|liên hệ|hotline","Bạn có thể để lại số điện thoại ngay trong khung chat hoặc gọi hotline của trung tâm hỗ trợ.","https://websitecuaban.com/lien-he"

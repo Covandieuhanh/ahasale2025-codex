@@ -5,8 +5,6 @@
 
 <%@ Register Src="~/gianhang/uc/dangky_tuvan_uc.ascx" TagPrefix="uc1" TagName="dangky_tuvan_uc" %>
 <%@ Register Src="~/gianhang/uc/footer_uc.ascx" TagPrefix="uc1" TagName="footer_uc" %>
-<%@ Register Src="~/gianhang/uc/dangnhap_uc.ascx" TagPrefix="uc1" TagName="dangnhap_uc" %>
-<%@ Register Src="~/gianhang/uc/dangky_tk_home_uc.ascx" TagPrefix="uc1" TagName="dangky_tk_home_uc" %>
 
 
 
@@ -39,12 +37,6 @@
         <asp:ScriptManager ID="ScriptManager1" runat="server" EnableScriptGlobalization="True"></asp:ScriptManager>
         <uc1:dangky_tuvan_uc runat="server" ID="dangky_tuvan_uc" />
 
-        <% if (Session["user_home"].ToString() == "")
-            { %>
-        <uc1:dangnhap_uc runat="server" ID="dangnhap_uc" />
-        <uc1:dangky_tk_home_uc runat="server" id="dangky_tk_home_uc" />
-        <%} %>
-       
         <div class="fix_but_4 floating-cta floating-cta--consult text-center" data-role="hint" data-hint-position="left" data-hint-text="Đăng ký tư vấn">
             <a class="floating-cta__link" onclick="show_hide_id_form_dangkytuvan()">
                 <span class="floating-cta__icon">
@@ -54,7 +46,7 @@
             </a>
         </div>
         <div class="fix_but_3 floating-cta floating-cta--booking text-center" data-role="hint" data-hint-position="left" data-hint-text="Đặt lịch">
-            <a class="floating-cta__link" href="<%=AhaShineHomeRoutes_cl.BookingUrl %>">
+            <a class="floating-cta__link" href="<%=StorefrontBookingUrl %>">
                 <span class="floating-cta__icon">
                     <img src="/uploads/images/icon/lich.png" alt="Đặt lịch" />
                 </span>

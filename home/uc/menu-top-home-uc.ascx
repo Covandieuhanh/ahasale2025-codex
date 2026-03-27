@@ -1,4 +1,5 @@
 ﻿<%@ Control Language="C#" AutoEventWireup="true" CodeFile="menu-top-home-uc.ascx.cs" Inherits="home_uc_menu_top_home_uc" %>
+<%@ Register Src="~/Uc/Shared/SpaceLauncher_uc.ascx" TagPrefix="uc1" TagName="SpaceLauncher" %>
 
 <div data-role="charms" data-position="right" id="thongbao-charms" style="width: 320px; background-color: #fff; overflow: auto;" class="p-0 m-0 shadow-1">
     <div style="height: 52px; line-height: 55px" class="bg-orange fg-white">
@@ -217,6 +218,7 @@
 <%--<div class="container-fluid" data-gradient-colors="#ffba00, #ffeb00" data-role-gradientbox="true" style="z-index: 1000!important; position: fixed; top: 0; background: linear-gradient(#ffba00, #ffeb00);">--%>
 <div class="container-fluid" style="z-index: 1000!important; position: fixed; top: 0; background-color: #181a20">
     <div class="fg-black container bg-transparent pl-0 pr-0" data-role="app-bar" data-expand-point="lg">
+        <uc1:SpaceLauncher runat="server" ID="spaceLauncher" ButtonCssClass="app-bar-item fg-ahasale fg-yellow-hover" />
         <a href="/" class="brand text-bold fg-yellow">
             <img src="/uploads/images/favicon.png" width="28" class="pr-1" />AHASALE</a>
 

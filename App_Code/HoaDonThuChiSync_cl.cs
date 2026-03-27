@@ -18,12 +18,12 @@ public static class HoaDonThuChiSync_cl
 
     public static bool IsAutoInvoiceReceipt(bspa_thuchi_table item)
     {
-        return item != null && (item.tudong_tu_hoadon ?? false);
+        return item != null && item.tudong_tu_hoadon == true;
     }
 
     public static bool IsAutoSystemEntry(bspa_thuchi_table item)
     {
-        return item != null && ((item.tudong_tu_hethong ?? false) || (item.tudong_tu_hoadon ?? false));
+        return item != null && (item.tudong_tu_hethong == true || item.tudong_tu_hoadon == true);
     }
 
     public static string ResolveSourceLabel(bspa_thuchi_table item)
@@ -247,7 +247,7 @@ public static class HoaDonThuChiSync_cl
                 && p.id_lichsu_thanhtoan_lienket == paymentId
                 && (
                     p.nguon_tudong == sourceCode
-                    || (sourceCode == SourceHoaDon && (p.tudong_tu_hoadon ?? false))
+                    || (sourceCode == SourceHoaDon && p.tudong_tu_hoadon == true)
                 ));
         bspa_thuchi_table receipt = q.FirstOrDefault();
         if (receipt == null)
@@ -308,7 +308,7 @@ public static class HoaDonThuChiSync_cl
                 && p.id_lichsu_thanhtoan_lienket == paymentId
                 && (
                     p.nguon_tudong == sourceCode
-                    || (sourceCode == SourceHoaDon && (p.tudong_tu_hoadon ?? false))
+                    || (sourceCode == SourceHoaDon && p.tudong_tu_hoadon == true)
                 )).ToList();
         foreach (var row in rows)
         {
@@ -326,7 +326,7 @@ public static class HoaDonThuChiSync_cl
                 && p.id_hoadon_lienket == documentId
                 && (
                     p.nguon_tudong == sourceCode
-                    || (sourceCode == SourceHoaDon && (p.tudong_tu_hoadon ?? false))
+                    || (sourceCode == SourceHoaDon && p.tudong_tu_hoadon == true)
                 )).ToList();
         foreach (var row in rows)
         {
@@ -340,7 +340,7 @@ public static class HoaDonThuChiSync_cl
             return "";
         if (!string.IsNullOrWhiteSpace(item.nguon_tudong))
             return item.nguon_tudong;
-        if (item.tudong_tu_hoadon ?? false)
+        if (item.tudong_tu_hoadon == true)
             return SourceHoaDon;
         return "";
     }

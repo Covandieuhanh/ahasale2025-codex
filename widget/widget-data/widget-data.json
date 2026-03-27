@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 2,
+  "updatedAt": "",
+  "auth": {
+    "superAdmins": [
+      {
+        "username": "root",
+        "password": "Aha@123456"
+      }
+    ],
+    "accounts": [
+      {
+        "id": "acc_admin",
+        "username": "admin",
+        "displayName": "Quản trị mặc định",
+        "password": "123456",
+        "workspaceIds": [
+          "default-site"
+        ]
+      }
+    ]
+  },
+  "activeWorkspaceId": "default-site",
+  "workspaces": [
+    {
+      "id": "default-site",
+      "name": "Workspace mặc định",
+      "widgetKey": "wk_default-site",
+      "data": {
+        "config": {
+          "brand": {
+            "name": "Aha Shine",
+            "agentName": "Trợ lý Aha",
+            "launcherLabel": "Aha Shine",
+            "welcomeTitle": "Xin chào, mình có thể hỗ trợ gì?",
+            "welcomeMessage": "Mời bạn chọn nhanh nội dung bên dưới hoặc nhập câu hỏi.",
+            "inputPlaceholder": "Nhập tin nhắn...",
+            "logoDataUrl": ""
+          },
+          "theme": {
+            "primaryColor": "#39b54a",
+            "launcherBg": "#ffd33d",
+            "textOnPrimary": "#ffffff",
+            "panelBg": "#ffffff",
+            "botBubbleBg": "#f2f4f7",
+            "userBubbleBg": "#fff6d8"
+          },
+          "layout": {
+            "position": "right",
+            "bottom": 20,
+            "side": 20,
+            "zIndex": 2147482000
+          },
+          "behavior": {
+            "showWelcomeOnOpen": true,
+            "startOpen": false,
+            "maxMessages": 120,
+            "typingDelayMs": 300
+          },
+          "quickStartButtons": [
+            "Bảng giá",
+            "Khuyến mãi",
+            "Đặt lịch",
+            "Liên hệ"
+          ],
+          "knowledgeBase": [
+            {
+              "id": "pricing",
+              "keywords": [
+                "giá",
+                "bảng giá",
+                "chi phí"
+              ],
+              "answer": "Bên mình có nhiều gói theo dịch vụ. Bạn để lại nhu cầu cụ thể, mình sẽ tư vấn gói phù hợp và báo giá chi tiết.",
+              "quickReplies": [
+                "Tư vấn ngay",
+                "Đặt lịch"
+              ]
+            },
+            {
+              "id": "booking",
+              "keywords": [
+                "đặt lịch",
+                "hẹn lịch",
+                "booking"
+              ],
+              "answer": "Bạn vui lòng để lại số điện thoại và khung giờ mong muốn, bên mình sẽ xác nhận lịch ngay.",
+              "quickReplies": [
+                "Sáng",
+                "Chiều",
+                "Tối"
+              ]
+            }
+          ],
+          "fallbackAnswer": "Mình đã ghi nhận câu hỏi của bạn. Bạn có thể để lại số điện thoại để nhân viên hỗ trợ chi tiết hơn nhé."
+        },
+        "documents": [
+          {
+            "id": "doc_1",
+            "title": "Hướng dẫn liên hệ",
+            "text": "Bạn có thể để lại số điện thoại ngay trong khung chat để đội ngũ tư vấn gọi lại.",
+            "tags": [
+              "liên hệ",
+              "hỗ trợ"
+            ],
+            "createdAt": "",
+            "updatedAt": "",
+            "length": 83,
+            "meta": {
+              "sourceUrls": []
+            }
+          }
+        ],
+        "platformProjects": []
+      }
+    }
+  ]
+}

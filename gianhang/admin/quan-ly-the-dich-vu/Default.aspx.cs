@@ -7,6 +7,30 @@ using System.Web.UI.WebControls;
 
 public partial class badmin_Default : System.Web.UI.Page
 {
+    private sealed class ServiceCardListRow
+    {
+        public Int64 id { get; set; }
+        public string tenkhachhang { get; set; }
+        public string sdt { get; set; }
+        public DateTime? ngaytao { get; set; }
+        public string tenthe { get; set; }
+        public string tendv { get; set; }
+        public DateTime? hsd { get; set; }
+        public int? sobuoi { get; set; }
+        public int? sl_dalam { get; set; }
+        public int? sl_conlai { get; set; }
+        public Int64? tongtien { get; set; }
+        public Int64? ck_hoadon { get; set; }
+        public Int64? tongtien_ck { get; set; }
+        public Int64? tongsauchietkhau { get; set; }
+        public Int64? sotien_dathanhtoan { get; set; }
+        public Int64? sotien_conlai { get; set; }
+        public int? phantramchot { get; set; }
+        public Int64? tongtien_chot { get; set; }
+        public string tennguoichot { get; set; }
+        public string id_nganh { get; set; }
+    }
+
     thedichvu_class tdv_cl = new thedichvu_class();
     post_class po_cl = new post_class();
     data_khachhang_class dtkh_cl = new data_khachhang_class();
@@ -60,7 +84,7 @@ public partial class badmin_Default : System.Web.UI.Page
         #endregion
         #region Check quyen theo nganh
         user = Session["user"].ToString();
-        user_parent = "admin";
+        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
         if (bcorn_class.check_quyen(user, "q12_1") == "" || bcorn_class.check_quyen(user, "n12_1") == "")
         {
             if (!IsPostBack)
@@ -262,71 +286,37 @@ public partial class badmin_Default : System.Web.UI.Page
     }
     public void main()
     {
-        //lấy dữ liệu
-        var list_all = (from ob1 in db.thedichvu_tables.Where(p => p.id_chinhanh == Session["chinhanh"].ToString() && p.ngaytao.Value.Date >= DateTime.Parse(Session["tungay_thedichvu"].ToString()).Date && p.ngaytao.Value.Date <= DateTime.Parse(Session["denngay_thedichvu"].ToString()).Date).ToList()
-                            //join ob2 in db.web_menu_tables.ToList() on bv.id_category equals mn.id.ToString()
-                        select new
-                        {
-                            id = ob1.id,
-                            tenkhachhang = ob1.tenkh,
-                            sdt = ob1.sdt,
-                            ngaytao = ob1.ngaytao,
-                            tenthe = ob1.tenthe,
-                            tendv = ob1.ten_taithoidiemnay,
-                            hsd = ob1.hsd,
-                            sobuoi = ob1.tongsoluong,
-                            sl_dalam = ob1.sl_dalam,
-                            sl_conlai = ob1.sl_conlai,
-                            tongtien = ob1.tongtien,
-                            ck_hoadon = ob1.chietkhau,
-                            tongtien_ck = ob1.tongtien_ck_hoadon,
-                            tongsauchietkhau = ob1.tongsauchietkhau,
-                            sotien_dathanhtoan = ob1.sotien_dathanhtoan,
-                            sotien_conlai = ob1.sotien_conlai,
-                            phantramchot = ob1.phantram_chotsale,
-                            tongtien_chot = ob1.tongtien_chotsale_dvsp,
-                            tennguoichot = tk_cl.exist_user_of_userparent(ob1.nguoichotsale, user_parent) == false ? ob1.nguoichotsale : "<div><a class='fg-black' href='/gianhang/admin/quan-ly-tai-khoan/tai-khoan.aspx?user=" + ob1.nguoichotsale + "'>" + tk_cl.return_object(ob1.nguoichotsale).hoten + "</a></div>",
-                            id_nganh = ob1.id_nganh,
-                        }).ToList();
+        string branchId = Session["chinhanh"].ToString();
+        DateTime tuNgay = DateTime.Parse(Session["tungay_thedichvu"].ToString()).Date;
+        DateTime denNgayExclusive = DateTime.Parse(Session["denngay_thedichvu"].ToString()).Date.AddDays(1);
+        var query = db.thedichvu_tables.Where(p => p.id_chinhanh == branchId && p.ngaytao.HasValue && p.ngaytao.Value >= tuNgay && p.ngaytao.Value < denNgayExclusive);
 
+        string keyword = txt_search.Text.Trim();
+        if (keyword != "")
+            query = query.Where(p =>
+                (p.tenkh != null && p.tenkh.Contains(keyword)) ||
+                (p.sdt != null && p.sdt.Contains(keyword)) ||
+                (p.tenthe != null && p.tenthe.Contains(keyword)) ||
+                (p.ten_taithoidiemnay != null && p.ten_taithoidiemnay.Contains(keyword)));
 
-        //xử lý từ khóa
-        string _key = txt_search.Text.ToLower();
-        if (_key != "")
+        switch (ddl_loc_hsd.SelectedValue.ToString())
         {
-            var list_search = list_all.Where(p => p.tenkhachhang.ToLower().Contains(_key) || p.sdt.ToLower().Contains(_key)).ToList();
-            list_all = list_all.Intersect(list_search).ToList();
+            case "1":
+                query = query.Where(p => p.hsd.HasValue && p.hsd.Value >= DateTime.Now.Date);
+                break;
+            case "2":
+                query = query.Where(p => p.hsd.HasValue && p.hsd.Value < DateTime.Now.Date);
+                break;
         }
 
-        if (ddl_loc_hsd.SelectedValue.ToString() != "0")
-        {
-            switch (ddl_loc_hsd.SelectedValue.ToString())
-            {
-                case ("1"): var list_2 = list_all.Where(p => p.hsd.Value.Date >= DateTime.Now.Date).ToList(); list_all = list_all.Intersect(list_2).ToList(); break;
-                case ("2"): var list_3 = list_all.Where(p => p.hsd.Value.Date < DateTime.Now.Date).ToList(); list_all = list_all.Intersect(list_3).ToList(); break;
-                default: break;
-            }
-        }
+        if (DropDownList5.SelectedValue.ToString() != "")
+            query = query.Where(p => p.id_nganh == DropDownList5.SelectedValue.ToString());
 
-        if (DropDownList5.SelectedValue.ToString() != "")//ngành
-        {
-            var list_1 = list_all.Where(p => p.id_nganh == DropDownList5.SelectedValue.ToString()).ToList(); list_all = list_all.Intersect(list_1).ToList();
-        }
-
-        //TÍNH THOỐNỐNG KÊ
-        hoadon_sl = list_all.Count();
-        doanhso_hoadon = list_all.Sum(p => p.tongtien).Value;
-        doanhso_hoadon_sauck = list_all.Sum(p => p.tongsauchietkhau).Value;
-        tongtien_dathanhtoan = list_all.Sum(p => p.sotien_dathanhtoan).Value;
-        tong_congno = list_all.Sum(p => p.sotien_conlai).Value;
-
-        //sắp xếp
-        switch (Session["index_sapxep_thedichvu"].ToString())
-        {
-            case ("0"): list_all = list_all.OrderBy(p => p.ngaytao).ToList(); break;
-            case ("1"): list_all = list_all.OrderByDescending(p => p.ngaytao).ToList(); break;
-            default: list_all = list_all.OrderByDescending(p => p.ngaytao).ToList(); break;
-        }
+        hoadon_sl = query.LongCount();
+        doanhso_hoadon = query.Sum(p => p.tongtien) ?? 0;
+        doanhso_hoadon_sauck = query.Sum(p => p.tongsauchietkhau) ?? 0;
+        tongtien_dathanhtoan = query.Sum(p => p.sotien_dathanhtoan) ?? 0;
+        tong_congno = query.Sum(p => p.sotien_conlai) ?? 0;
 
         //xử lý số lượng hiển thị
         string _s = txt_show.Text.Trim();
@@ -335,7 +325,7 @@ public partial class badmin_Default : System.Web.UI.Page
             show = 30;
         txt_show.Text = show.ToString();
 
-        total_page = number_of_page_class.return_total_page(list_all.Count(), show);
+        total_page = number_of_page_class.return_total_page((int)hoadon_sl, show);
 
         //xử lý số trang        
         current_page = int.Parse(Session["current_page_thedichvu"].ToString());
@@ -352,15 +342,89 @@ public partial class badmin_Default : System.Web.UI.Page
 
         //main
         stt = (show * current_page) - show + 1;
-        var list_split = list_all.Skip(current_page * show - show).Take(show).ToList();
+        bool sortAsc = Session["index_sapxep_thedichvu"].ToString() == "0";
+        query = sortAsc ? query.OrderBy(p => p.ngaytao) : query.OrderByDescending(p => p.ngaytao);
+
+        var pageRows = query.Skip(current_page * show - show)
+            .Take(show)
+            .Select(ob1 => new
+            {
+                ob1.id,
+                tenkhachhang = ob1.tenkh,
+                ob1.sdt,
+                ob1.ngaytao,
+                ob1.tenthe,
+                tendv = ob1.ten_taithoidiemnay,
+                ob1.hsd,
+                sobuoi = ob1.tongsoluong,
+                ob1.sl_dalam,
+                ob1.sl_conlai,
+                ob1.tongtien,
+                ck_hoadon = ob1.chietkhau,
+                tongtien_ck = ob1.tongtien_ck_hoadon,
+                ob1.tongsauchietkhau,
+                ob1.sotien_dathanhtoan,
+                ob1.sotien_conlai,
+                phantramchot = ob1.phantram_chotsale,
+                tongtien_chot = ob1.tongtien_chotsale_dvsp,
+                ob1.nguoichotsale,
+                ob1.id_nganh
+            })
+            .ToList();
+
+        var staffKeys = pageRows
+            .Select(p => (p.nguoichotsale ?? "").Trim())
+            .Where(p => p != "")
+            .Distinct()
+            .ToList();
+        var staffMap = db.taikhoan_table_2023s
+            .Where(p => staffKeys.Contains(p.taikhoan))
+            .Select(p => new { p.taikhoan, p.hoten })
+            .ToList()
+            .ToDictionary(p => p.taikhoan, p => p.hoten ?? "");
+
+        var list_split = pageRows.Select(p =>
+        {
+            string staffKey = (p.nguoichotsale ?? "").Trim();
+            string displayStaff = staffKey;
+            string staffName;
+            if (staffKey != "" && tk_cl.exist_user_of_userparent(staffKey, user_parent) && staffMap.TryGetValue(staffKey, out staffName) && staffName != "")
+            {
+                displayStaff = "<div><a class='fg-black' href='/gianhang/admin/quan-ly-tai-khoan/tai-khoan.aspx?user=" + staffKey + "'>" + staffName + "</a></div>";
+            }
+
+            return new ServiceCardListRow
+            {
+                id = p.id,
+                tenkhachhang = p.tenkhachhang,
+                sdt = p.sdt,
+                ngaytao = p.ngaytao,
+                tenthe = p.tenthe,
+                tendv = p.tendv,
+                hsd = p.hsd,
+                sobuoi = p.sobuoi,
+                sl_dalam = p.sl_dalam,
+                sl_conlai = p.sl_conlai,
+                tongtien = p.tongtien,
+                ck_hoadon = p.ck_hoadon,
+                tongtien_ck = p.tongtien_ck,
+                tongsauchietkhau = p.tongsauchietkhau,
+                sotien_dathanhtoan = p.sotien_dathanhtoan,
+                sotien_conlai = p.sotien_conlai,
+                phantramchot = p.phantramchot,
+                tongtien_chot = p.tongtien_chot,
+                tennguoichot = displayStaff,
+                id_nganh = p.id_nganh
+            };
+        }).ToList();
         list_id_split = new List<string>();
         foreach (var t in list_split)
         {
             list_id_split.Add("check_" + t.id);
         }
         int _s1 = stt + list_split.Count - 1;
-        if (list_all.Count() != 0)
-            lb_show.Text = "Hiển thị " + stt + "-" + _s1 + " trong số " + list_all.Count().ToString("#,##0") + " mục";
+        if (hoadon_sl != 0)
+            lb_show.Text = "Hiển thị " + stt + "-" + _s1 + " trong số " + hoadon_sl.ToString("#,##0") + " mục";
         else
             lb_show.Text = "Hiển thị 0-0 trong số 0";
         Repeater1.DataSource = list_split;
@@ -368,10 +432,11 @@ public partial class badmin_Default : System.Web.UI.Page
     }
     protected void txt_search_TextChanged(object sender, EventArgs e)
     {
-        Session["search_thedichvu"] = txt_search.Text.Trim();
-        Session["current_page_thedichvu"] = "1";
-        main();
-
+        ApplySearchState();
+    }
+    protected void but_search_Click(object sender, EventArgs e)
+    {
+        ApplySearchState();
     }
     protected void but_quaylai_Click(object sender, EventArgs e)
     {
@@ -655,6 +720,13 @@ public partial class badmin_Default : System.Web.UI.Page
         txt_tungay.Text = DateTime.Now.Date.ToString();
         txt_denngay.Text = DateTime.Now.Date.ToString();
         ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Chọn nhanh thành công.<br/>Hãy nhấn nút BẮT ĐẦU LỌC.", "1000", "warning"), true);
+    }
+
+    private void ApplySearchState()
+    {
+        Session["search_thedichvu"] = txt_search.Text.Trim();
+        Session["current_page_thedichvu"] = "1";
+        main();
     }
     protected void but_tuantruoc_Click(object sender, EventArgs e)
     {

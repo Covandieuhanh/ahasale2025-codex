@@ -1593,6 +1593,10 @@ public partial class admin_Default : System.Web.UI.Page
         ddl_cap_sp.SelectedValue = "1";
         ddl_cap_sp.Enabled = false;
         pn_tang_home.Visible = false;
+        pn_home_event_builder.Visible = false;
+        cb_home_event_builder.Checked = false;
+        cb_home_daugia_admin.Checked = false;
+        cb_home_gianhang_admin.Checked = false;
 
         txt_reset_home_password.Text = "";
         txt_reset_home_pin.Text = "";
@@ -1660,6 +1664,64 @@ public partial class admin_Default : System.Web.UI.Page
         DropDownList1.Items.Clear();
         DropDownList1.Items.Add(new ListItem(displayType, displayType));
         DropDownList1.SelectedIndex = 0;
+    }
+
+    private bool HasPermissionToken(string permissionRaw, string token)
+    {
+        string expected = (token ?? "").Trim();
+        if (expected == "")
+            return false;
+
+        return PortalScope_cl.SplitPermissionTokens(permissionRaw)
+            .Any(p => string.Equals((p ?? "").Trim(), expected, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private string SetOrRemovePermissionToken(string permissionRaw, string token, bool enabled)
+    {
+        string expected = (token ?? "").Trim();
+        var set = new HashSet<string>(
+            PortalScope_cl.SplitPermissionTokens(permissionRaw).Select(p => (p ?? "").Trim()).Where(p => p != ""),
+            StringComparer.OrdinalIgnoreCase);
+
+        if (expected != "")
+        {
+            if (enabled)
+                set.Add(expected);
+            else
+                set.Remove(expected);
+        }
+
+        return string.Join(",", set.OrderBy(p => p, StringComparer.OrdinalIgnoreCase));
+    }
+
+    private bool HasActiveSpaceAccess(dbDataContext db, taikhoan_tb account, string spaceCode)
+    {
+        if (db == null || account == null)
+            return false;
+
+        return SpaceAccess_cl.CanAccessSpace(db, account, spaceCode);
+    }
+
+    private void SetHomeSpaceAccess(dbDataContext db, taikhoan_tb account, string spaceCode, bool enabled, string approvedBy)
+    {
+        if (db == null || account == null)
+            return;
+
+        string normalizedSpace = ModuleSpace_cl.Normalize(spaceCode);
+        if (normalizedSpace == "")
+            return;
+
+        SpaceAccess_cl.UpsertSpaceAccess(
+            db,
+            account.taikhoan,
+            normalizedSpace,
+            enabled ? SpaceAccess_cl.StatusActive : SpaceAccess_cl.StatusRevoked,
+            enabled ? "admin_space_grant" : "admin_space_revoke",
+            false,
+            approvedBy,
+            AhaTime_cl.Now,
+            enabled ? "" : ("Admin đã tắt quyền truy cập " + normalizedSpace),
+            null);
     }
 
     private void ShowFilterForm()
@@ -1858,6 +1920,10 @@ public partial class admin_Default : System.Web.UI.Page
             ddl_cap_sp.SelectedValue = (liCap != null) ? tierValue : "1";
             ddl_cap_sp.Enabled = isHomeAccount && CanAdjustAnyHomeTier(db, tkAdmin);
             pn_tang_home.Visible = isHomeAccount;
+            pn_home_event_builder.Visible = isHomeAccount;
+            cb_home_event_builder.Checked = HasActiveSpaceAccess(db, q, ModuleSpace_cl.Event);
+            cb_home_daugia_admin.Checked = HasActiveSpaceAccess(db, q, ModuleSpace_cl.DauGia);
+            cb_home_gianhang_admin.Checked = HasActiveSpaceAccess(db, q, ModuleSpace_cl.GianHangAdmin);
 
             txt_taikhoan.Text = q.taikhoan;
             txt_taikhoan.ReadOnly = true;
@@ -2437,6 +2503,16 @@ public partial class admin_Default : System.Web.UI.Page
                                 "Tầng hồ sơ của bạn đã được cập nhật: " + TierHome_cl.GetTenTangHome(targetTier) + ". Quyền hành vi đã được đặt lại, vui lòng gửi yêu cầu xác nhận hành vi mới.",
                                 "/home/tao-yeu-cau.aspx");
                         }
+
+                        string updatedPermission = SetOrRemovePermissionToken(
+                            q.permission,
+                            EventPolicy_cl.HomePermissionCode,
+                            false);
+                        q.permission = PortalScope_cl.NormalizePermissionWithScope(updatedPermission, PortalScope_cl.ScopeHome);
+
+                        SetHomeSpaceAccess(db, q, ModuleSpace_cl.Event, cb_home_event_builder.Checked, tkAdmin);
+                        SetHomeSpaceAccess(db, q, ModuleSpace_cl.DauGia, cb_home_daugia_admin.Checked, tkAdmin);
+                        SetHomeSpaceAccess(db, q, ModuleSpace_cl.GianHangAdmin, cb_home_gianhang_admin.Checked, tkAdmin);
                     }
 
                     db.SubmitChanges();

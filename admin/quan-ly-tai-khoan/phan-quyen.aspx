@@ -337,11 +337,18 @@
 
                 <div class="admin-permission-group">
                     <div class="mt-1">
-                        <asp:CheckBox ID="check_all_quyen_quanlynhanvien" runat="server" CssClass="text-bold" Text="SUPER ADMIN: CẤU TRÚC CỔNG ADMIN / PHÂN QUYỀN" />
+                        <asp:CheckBox ID="check_all_quyen_quanlynhanvien" runat="server" CssClass="text-bold" Text="QUẢN TRỊ ADMIN: CẤU TRÚC CỔNG / PHÂN QUYỀN VÀ CÔNG CỤ NỘI BỘ" />
                     </div>
                     <asp:CheckBoxList ID="check_list_quyen_quanlynhanvien" runat="server">
                         <asp:ListItem Text="Super Admin: tạo tài khoản admin và gán 5 vai trò vận hành" Value="5" Selected="false"></asp:ListItem>
                         <asp:ListItem Text="Super Admin: các quyền cấu trúc admin mở rộng (tạm thời)" Value="1" Selected="false"></asp:ListItem>
+                        <asp:ListItem Text="Admin: quản lý OTP (home/shop), cấu hình gateway và lịch sử OTP" Value="admin_otp" Selected="false"></asp:ListItem>
+                        <asp:ListItem Text="Admin: truy cập ví token điểm và đối soát bridge token" Value="admin_token_wallet" Selected="false"></asp:ListItem>
+                        <asp:ListItem Text="Admin: quản lý góp ý hệ thống" Value="admin_feedback" Selected="false"></asp:ListItem>
+                        <asp:ListItem Text="Admin: quản lý thông báo hệ thống" Value="admin_notification" Selected="false"></asp:ListItem>
+                        <asp:ListItem Text="Admin: quản lý yêu cầu tư vấn" Value="admin_consulting" Selected="false"></asp:ListItem>
+                        <asp:ListItem Text="Admin: công cụ đồng bộ shop công ty" Value="admin_company_shop_sync" Selected="false"></asp:ListItem>
+                        <asp:ListItem Text="Admin: công cụ reindex bài viết" Value="admin_reindex_baiviet" Selected="false"></asp:ListItem>
                     </asp:CheckBoxList>
                 </div>
 
@@ -353,6 +360,12 @@
                         <asp:ListItem Text="Super Admin: tài khoản tài sản lõi / ví token điểm / bridge đối soát" Value="q2_1" Selected="false"></asp:ListItem>
                         <asp:ListItem Text="Super Admin: xem lịch sử chuyển điểm toàn hệ thống" Value="q1_6" Selected="false"></asp:ListItem>
                         <asp:ListItem Text="Super Admin: xem lịch sử chuyển điểm theo phân quyền vận hành" Value="q1_7" Selected="false"></asp:ListItem>
+                        <asp:ListItem Text="Admin: quản trị Event Platform /event/admin (tạo chiến dịch tích điểm voucher, lương/thưởng bậc thang)" Value="event_admin" Selected="false"></asp:ListItem>
+                        <asp:ListItem Text="Event: chủ không gian (owner)" Value="event_owner" Selected="false"></asp:ListItem>
+                        <asp:ListItem Text="Event: thiết kế campaign (designer)" Value="event_designer" Selected="false"></asp:ListItem>
+                        <asp:ListItem Text="Event: phê duyệt/publish campaign" Value="event_approver" Selected="false"></asp:ListItem>
+                        <asp:ListItem Text="Event: vận hành campaign (đổi trạng thái, target)" Value="event_operator" Selected="false"></asp:ListItem>
+                        <asp:ListItem Text="Event: chỉ xem dashboard/campaign" Value="event_viewer" Selected="false"></asp:ListItem>
                         <asp:ListItem Text="Super Admin: chuyển điểm đến các tài khoản tổng" Value="q1_1" Selected="false"></asp:ListItem>
                         <asp:ListItem Text="Super Admin: điều phối điểm cho tài khoản tầng khách hàng" Value="q1_2" Selected="false"></asp:ListItem>
                         <asp:ListItem Text="Super Admin: điều phối điểm cho tài khoản gian hàng đối tác" Value="q1_3" Selected="false"></asp:ListItem>

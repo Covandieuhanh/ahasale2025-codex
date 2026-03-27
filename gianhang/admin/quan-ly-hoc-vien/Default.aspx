@@ -47,6 +47,14 @@
                                 <label class="fw-600">Ngành</label>
                                 <asp:DropDownList ID="DropDownList5" data-role="select" data-filter="true" runat="server"></asp:DropDownList>
                             </div>
+                            <div class="mt-3">
+                                <label class="fw-600">Trạng thái nguồn</label>
+                                <asp:DropDownList ID="ddl_trangthai_nguon" runat="server" data-role="select" data-filter="false">
+                                    <asp:ListItem Text="Tất cả" Value="0"></asp:ListItem>
+                                    <asp:ListItem Text="Đang dùng thành viên" Value="1"></asp:ListItem>
+                                    <asp:ListItem Text="Đã ngừng dùng thành viên" Value="2"></asp:ListItem>
+                                </asp:DropDownList>
+                            </div>
                         </div>
                         <div id="_time">
                             <asp:UpdatePanel ID="UpdatePanel3" runat="server" UpdateMode="Conditional">
@@ -148,7 +156,12 @@
             <ContentTemplate>
                 <div class="row mt-1-minus <%--mt-0-lg-minus mt-12-minus--%>">
                     <div class="cell-md-6 order-2 order-md-1 mt-0">
-                        <asp:TextBox ID="txt_search" runat="server" data-role="input" data-prepend="<span class='mif mif-search'></span>" placeholder="Tìm kiếm" OnTextChanged="txt_search_TextChanged" AutoPostBack="true"></asp:TextBox>
+                        <div class="d-flex flex-align-center gap-2">
+                            <asp:TextBox ID="txt_search" runat="server" data-role="input" data-prepend="<span class='mif mif-search'></span>" placeholder="Tìm kiếm"></asp:TextBox>
+                            <asp:LinkButton ID="but_search" runat="server" CssClass="button" OnClick="but_search_Click" CausesValidation="false">
+                                <span class="mif mif-search"></span>
+                            </asp:LinkButton>
+                        </div>
                     </div>
                     <div class="cell-md-6 order-1 order-md-2 mt-0">
 
@@ -161,6 +174,17 @@
 
                                 <li data-role="hint" data-hint-position="top" data-hint-text="Lọc" onclick="show_hide_id_form_1()">
                                     <a class="button"><span class="mif mif-filter"></span></a></li>
+                                <%if (bcorn_class.check_quyen(user, "q14_3") == "" || bcorn_class.check_quyen(user, "n14_3") == "")
+                                    { %>
+                                <li class="bd-gray border bd-default mt-1" style="height: 28px"></li>
+                                <li data-role="hint" data-hint-position="top" data-hint-text="Ngừng dùng">
+                                    <asp:Button ID="but_ngung" runat="server" Text="Ngừng dùng" CssClass="button warning" OnClick="but_ngung_Click" />
+                                </li>
+                                <li class="bd-gray border bd-default mt-1" style="height: 28px"></li>
+                                <li data-role="hint" data-hint-position="top" data-hint-text="Mở lại">
+                                    <asp:Button ID="but_molai" runat="server" Text="Mở lại" CssClass="button success" OnClick="but_molai_Click" />
+                                </li>
+                                <%} %>
                                 <%if (bcorn_class.check_quyen(user, "q14_4") == ""||bcorn_class.check_quyen(user, "n14_4") == "")
                                     { %>
                                 <li class="bd-gray border bd-default mt-1" style="height: 28px"></li>
@@ -187,6 +211,8 @@
 
                                     <td class=" text-bold text-center" style="width: 50px;">Ảnh</td>
                                     <td class=" text-bold " style="min-width: 120px;">Họ tên</td>
+                                    <td class=" text-bold " style="min-width: 220px;">Liên kết Home</td>
+                                    <td class=" text-bold " style="min-width: 150px;">Trạng thái nguồn</td>
                                     <td class=" text-bold " style="min-width: 120px;">Ngành/Gói</td>
 
                                     <td class=" text-bold " style="width: 120px;">Số buổi</td>
@@ -199,7 +225,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <asp:Repeater ID="Repeater1" runat="server">
+                                <asp:Repeater ID="Repeater1" runat="server" OnItemDataBound="Repeater1_ItemDataBound">
                                     <ItemTemplate>
                                         <tr>
                                             <td class="checkbox-table">
@@ -224,8 +250,14 @@
                                                 <div><small><%#Eval("ngaysinh","{0:dd/MM/yyyy}") %></small></div>
                                             </td>
                                             <td>
+                                                <asp:Literal ID="litPersonHub" runat="server"></asp:Literal>
+                                            </td>
+                                            <td>
+                                                <asp:Literal ID="litLifecycle" runat="server"></asp:Literal>
+                                            </td>
+                                            <td>
                                                 <div>
-                                                    <%#Eval("nganhhoc") %>123
+                                                    <%#Eval("nganhhoc") %>
                                                 </div>
                                                 <div><%#Eval("goidaotao") %></div>
                                                 <div>
@@ -328,5 +360,21 @@
 
 </asp:Content>
 <asp:Content ID="Content3" ContentPlaceHolderID="foot" runat="Server">
-</asp:Content>
 
+    <script src="/js/gianhang-invoice-fast.js?v=20260326a"></script>
+    <script>
+        (function () {
+            function bindFastUi() {
+                if (!window.ahaInvoiceFast) return;
+                window.ahaInvoiceFast.initSearchSubmit({
+                    inputId: "<%=txt_search.ClientID %>",
+                    buttonId: "<%=but_search.ClientID %>"
+                });
+            }
+            bindFastUi();
+            if (window.Sys && Sys.Application) {
+                Sys.Application.add_load(bindFastUi);
+            }
+        })();
+    </script>
+</asp:Content>

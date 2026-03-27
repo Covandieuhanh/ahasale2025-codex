@@ -15,19 +15,21 @@ public partial class home_quan_ly_bai_Default : System.Web.UI.Page
 
     bool IsDuyetGianHangDoiTac()
     {
-        string _tk = PortalRequest_cl.GetCurrentAccountEncrypted();
-        if (string.IsNullOrEmpty(_tk)) return false;
-
-        string tk = mahoa_cl.giaima_Bcorn(_tk);
+        string tk = (PortalRequest_cl.GetCurrentAccount() ?? "").Trim().ToLowerInvariant();
+        if (string.IsNullOrEmpty(tk))
+        {
+            string tkEnc = PortalRequest_cl.GetCurrentAccountEncrypted();
+            if (string.IsNullOrEmpty(tkEnc))
+                return false;
+            tk = mahoa_cl.giaima_Bcorn(tkEnc);
+        }
+        if (string.IsNullOrEmpty(tk))
+            return false;
 
         using (dbDataContext db = new dbDataContext())
         {
             taikhoan_tb acc = db.taikhoan_tbs.FirstOrDefault(x => x.taikhoan == tk);
-            if (acc != null && PortalScope_cl.CanLoginShop(acc.taikhoan, acc.phanloai, acc.permission))
-                return true;
-
-            // ✅ điều kiện: đã có bản ghi duyệt thành công TrangThai = 1
-            return db.DangKy_GianHangDoiTac_tbs.Any(x => x.taikhoan == tk && x.TrangThai == 1);
+            return acc != null && SpaceAccess_cl.CanAccessShop(db, acc);
         }
     }
 
@@ -71,17 +73,9 @@ public partial class home_quan_ly_bai_Default : System.Web.UI.Page
             : "/home/quan-ly-tin/them.aspx";
     }
 
-    private string GetManageAuctionUrl()
-    {
-        return PortalRequest_cl.IsShopPortalRequest()
-            ? "/shop/dau-gia"
-            : "/home/dau-gia";
-    }
-
     protected void Page_Load(object sender, EventArgs e)
     {
         lnk_add_new.NavigateUrl = GetCreatePostUrl();
-        lnk_manage_auction.NavigateUrl = GetManageAuctionUrl();
         bool isCompanyShopPortal = IsCurrentCompanyShopPortal();
         ViewState["is_company_shop_portal"] = isCompanyShopPortal ? "1" : "0";
         ph_company_shop_options.Visible = isCompanyShopPortal;
@@ -271,28 +265,6 @@ public partial class home_quan_ly_bai_Default : System.Web.UI.Page
             ? "/shop/quan-ly-tin?edit_id=" + HttpUtility.UrlEncode(id)
             : "/home/quan-ly-tin/default.aspx?edit_id=" + HttpUtility.UrlEncode(id);
         return url;
-    }
-
-    protected string GetAuctionCreateUrl(object idObj, object nameObj)
-    {
-        string id = (idObj ?? "").ToString().Trim();
-        int postId;
-        if (!int.TryParse(id, out postId) || postId <= 0)
-            return "/daugia/tao";
-
-        var query = HttpUtility.ParseQueryString(string.Empty);
-        query["source_type"] = "shop_post";
-        query["source_id"] = postId.ToString();
-        query["scope"] = "shop";
-
-        string title = ((nameObj ?? "") + "").Trim();
-        if (!string.IsNullOrEmpty(title))
-            query["title"] = title;
-
-        if (PortalRequest_cl.IsShopPortalRequest())
-            query["shop_portal"] = "1";
-
-        return "/daugia/tao?" + query.ToString();
     }
 
     private void LoadEditPost(int id)
@@ -495,6 +467,21 @@ public partial class home_quan_ly_bai_Default : System.Web.UI.Page
         {
             bool isCompanyShop = CompanyShop_cl.IsCompanyShopAccount(db, _nguoitao);
             _phanloai_baiviet = CompanyShop_cl.NormalizeProductType(_kenh_hienthi, isCompanyShop);
+            bool isShopPortal = PortalRequest_cl.IsShopPortalRequest();
+            int appliedPlatformSharePercent = isCompanyShop ? _phantram_chietkhau_san : 0;
+            if (isShopPortal)
+            {
+                int policyPercent;
+                if (ShopPolicy_cl.TryGetActivePolicyPercent(db, _nguoitao, out policyPercent))
+                {
+                    appliedPlatformSharePercent = policyPercent;
+                }
+                else if (!isCompanyShop)
+                {
+                    Helper_Tabler_cl.ShowModal(this.Page, "Shop của bạn chưa có chính sách % chiết khấu mặc định. Vui lòng gửi/duyệt yêu cầu mở không gian shop trước khi đăng tin.", "Thông báo", true, "warning");
+                    return;
+                }
+            }
 
             #region Kiểm tra ngoại lệ.
             if (_idmenu == "")
@@ -573,7 +560,7 @@ public partial class home_quan_ly_bai_Default : System.Web.UI.Page
                 // ✅ NEW: lưu phần trăm ưu đãi (null coi như 0)
                 // Nếu field của bạn là int? thì vẫn ok (0), còn nếu muốn null khi 0 thì có thể set null tại đây.
                 _ob.PhanTram_GiamGia_ThanhToan_BangEvoucher = _phantram_uu_dai;
-                CompanyShop_cl.SetPlatformSharePercent(_ob, isCompanyShop ? _phantram_chietkhau_san : 0);
+                CompanyShop_cl.SetPlatformSharePercent(_ob, appliedPlatformSharePercent);
 
                 db.BaiViet_tbs.InsertOnSubmit(_ob);
                 db.SubmitChanges();
@@ -657,7 +644,7 @@ public partial class home_quan_ly_bai_Default : System.Web.UI.Page
                     _ob.phanloai = _phanloai_baiviet;
 
                 _ob.PhanTram_GiamGia_ThanhToan_BangEvoucher = _phantram_uu_dai;
-                CompanyShop_cl.SetPlatformSharePercent(_ob, isCompanyShop ? _phantram_chietkhau_san : 0);
+                CompanyShop_cl.SetPlatformSharePercent(_ob, appliedPlatformSharePercent);
 
                 string ds_anhphu = (hf_anhphu.Value ?? "").Trim();
                 if (!string.IsNullOrEmpty(ds_anhphu))

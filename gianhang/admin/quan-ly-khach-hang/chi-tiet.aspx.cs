@@ -9,6 +9,20 @@ using System.IO;
 public partial class taikhoan_add : System.Web.UI.Page
 {
     public string id, sdt, notifi, user, user_parent;
+    public string personHubUrl = "/gianhang/admin/quan-ly-con-nguoi/Default.aspx";
+    public string personHubStatusLabel = "Chưa liên kết";
+    public string personHubStatusCss = "bg-gray fg-white";
+    public string personHubNote = "Mở hồ sơ người để liên kết hoặc tạo chờ liên kết theo số điện thoại này.";
+    public string personHubRelatedRolesHtml = "";
+    public string personHubAdminAccessLabel = "Không mở quyền /gianhang/admin ở vai trò khách hàng";
+    public string personHubAdminAccessCss = "bg-gray fg-white";
+    public string personHubAdminAccessNote = "Vai trò khách hàng chỉ là dữ liệu nghiệp vụ. Nếu cùng người này còn là nhân sự nội bộ thì quyền vào /gianhang/admin sẽ được quyết định ở hồ sơ nhân sự nội bộ đó.";
+    public string personHubImpactTitle = "Tác động khi xóa vai trò khách hàng";
+    public string personHubImpactNote = "Xóa hồ sơ khách hàng này sẽ không tự gỡ liên kết Home ở Hồ sơ người. Nếu cùng số điện thoại còn xuất hiện ở vai trò khác trong gian hàng, người này vẫn được gom chung ở hồ sơ trung tâm.";
+    public string sourceLifecycleLabel = "Đang dùng khách hàng";
+    public string sourceLifecycleCss = "bg-green fg-white";
+    public string sourceLifecycleNote = "Hồ sơ khách hàng này đang được dùng bình thường trong module nguồn.";
+    public bool sourceLifecycleIsInactive = false;
 
     // BỔ SUNG EMAIL (giả định cột trong bspa_data_khachhang_table là: email)
     public string email;
@@ -72,13 +86,16 @@ public partial class taikhoan_add : System.Web.UI.Page
         }
         #endregion
         user = Session["user"].ToString();
-        user_parent = "admin";
+        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
         if (!string.IsNullOrWhiteSpace(Request.QueryString["id"]))
         {
             id = Request.QueryString["id"].ToString().Trim();
             var q = db.bspa_data_khachhang_tables.Where(p => p.id.ToString() == id && p.id_chinhanh == Session["chinhanh"].ToString());
             if (q.Count() != 0)
             {
+                bspa_data_khachhang_table currentCustomer = q.First();
+                BindPersonHub(currentCustomer.tenkhachhang, currentCustomer.sdt);
+                BindCustomerLifecycle(currentCustomer);
 
                 main();
                 nap_ngu_canh_datlich();
@@ -139,6 +156,109 @@ public partial class taikhoan_add : System.Web.UI.Page
     private void nap_tongquan_crm()
     {
         tongquan_crm = khachhang_vanhanh_class.tai_tongquan(db, sdt, Session["chinhanh"].ToString());
+    }
+
+    private void BindPersonHub(string displayName, string phone)
+    {
+        string normalizedPhone = AccountAuth_cl.NormalizePhone(phone);
+        if (string.IsNullOrWhiteSpace(normalizedPhone))
+        {
+            personHubUrl = "/gianhang/admin/quan-ly-con-nguoi/Default.aspx";
+            personHubStatusLabel = "Thiếu số điện thoại";
+            personHubStatusCss = "bg-gray fg-white";
+            personHubNote = "Cập nhật số điện thoại để khách hàng này được gom vào hồ sơ người chung.";
+            return;
+        }
+
+        personHubUrl = GianHangAdminPersonHub_cl.BuildDetailUrl(normalizedPhone);
+        BindSourceAdminAccess(normalizedPhone);
+        personHubRelatedRolesHtml = BuildRelatedRolesHtml(normalizedPhone);
+        personHubImpactNote = BuildImpactNote(normalizedPhone);
+        GianHangAdminPersonHub_cl.PersonLinkInfo linkInfo = GianHangAdminPersonHub_cl.GetLinkInfo(db, user_parent, normalizedPhone, displayName);
+        if (linkInfo == null)
+            return;
+
+        personHubStatusLabel = linkInfo.StatusLabel;
+        personHubStatusCss = linkInfo.LinkCss;
+        if (linkInfo.LinkedHomeAccount != null)
+        {
+            string linkedName = string.IsNullOrWhiteSpace(linkInfo.LinkedHomeAccount.hoten)
+                ? (linkInfo.LinkedHomeAccount.taikhoan ?? "")
+                : linkInfo.LinkedHomeAccount.hoten;
+            personHubNote = "Đã liên kết với tài khoản Home " + linkedName + " • " + (linkInfo.LinkedHomeAccount.taikhoan ?? "");
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(linkInfo.PendingPhone))
+        {
+            personHubNote = "Đang chờ số " + linkInfo.PendingPhone + " đăng ký hoặc đăng nhập AhaSale để tự gắn.";
+            return;
+        }
+
+        personHubNote = "Mở hồ sơ người để liên kết hoặc tạo chờ liên kết theo số điện thoại này.";
+    }
+
+    private string BuildRelatedRolesHtml(string normalizedPhone)
+    {
+        IList<GianHangAdminPersonHub_cl.PersonSourceRef> sources = GianHangAdminPersonHub_cl.GetOtherSourcesForPhone(db, user_parent, normalizedPhone, "customer", id);
+        if (sources == null || sources.Count == 0)
+            return "";
+
+        return string.Join("", sources.Select(p =>
+            "<div class='mt-2'>" +
+            "<a class='fg-cobalt' href='" + HttpUtility.HtmlAttributeEncode(p.DetailUrl ?? "#") + "'>" + HttpUtility.HtmlEncode((p.SourceLabel ?? "").Trim() == "" ? "Hồ sơ liên quan" : p.SourceLabel) + "</a>" +
+            "<span class='fg-gray'> • " + HttpUtility.HtmlEncode((p.Name ?? "").Trim() == "" ? (p.Phone ?? "") : p.Name) + "</span>" +
+            "<div class='fg-gray'><small>Vai trò: <strong>" + HttpUtility.HtmlEncode(p.RoleLabel ?? "") + "</strong></small></div>" +
+            "<div class='fg-gray'><small>Trạng thái nguồn: <span class='data-wrapper'><code class='" + HttpUtility.HtmlAttributeEncode(string.IsNullOrWhiteSpace(p.SourceLifecycleCss) ? "bg-green fg-white" : p.SourceLifecycleCss) + "'>" + HttpUtility.HtmlEncode(string.IsNullOrWhiteSpace(p.SourceLifecycleLabel) ? "Đang dùng ở nguồn" : p.SourceLifecycleLabel) + "</code></span></small></div>" +
+            "<div class='fg-gray'><small>Quyền /gianhang/admin: <span class='data-wrapper'><code class='" + HttpUtility.HtmlAttributeEncode(string.IsNullOrWhiteSpace(p.AdminAccessCss) ? "bg-gray fg-white" : p.AdminAccessCss) + "'>" + HttpUtility.HtmlEncode(string.IsNullOrWhiteSpace(p.AdminAccessLabel) ? "Không mở quyền /gianhang/admin ở nguồn này" : p.AdminAccessLabel) + "</code></span></small></div>" +
+            "</div>"));
+    }
+
+    private void BindSourceAdminAccess(string normalizedPhone)
+    {
+        GianHangAdminPersonHub_cl.PersonSourceRef sourceInfo = GianHangAdminPersonHub_cl.GetSourceInfo(db, user_parent, normalizedPhone, "customer", id);
+        if (sourceInfo == null)
+            return;
+
+        personHubAdminAccessLabel = string.IsNullOrWhiteSpace(sourceInfo.AdminAccessLabel)
+            ? "Không mở quyền /gianhang/admin ở vai trò khách hàng"
+            : sourceInfo.AdminAccessLabel;
+        personHubAdminAccessCss = string.IsNullOrWhiteSpace(sourceInfo.AdminAccessCss)
+            ? "bg-gray fg-white"
+            : sourceInfo.AdminAccessCss;
+        personHubAdminAccessNote = "Vai trò khách hàng chỉ là dữ liệu nghiệp vụ. Nếu cùng người này còn là nhân sự nội bộ thì quyền vào /gianhang/admin sẽ được quyết định ở hồ sơ nhân sự nội bộ đó.";
+    }
+
+    private string BuildImpactNote(string normalizedPhone)
+    {
+        bool hasOtherRoles = !string.IsNullOrWhiteSpace(BuildRelatedRolesHtml(normalizedPhone));
+        return hasOtherRoles
+            ? "Xóa hồ sơ khách hàng này sẽ không tự gỡ liên kết Home ở Hồ sơ người. Các vai trò khác cùng số điện thoại trong gian hàng vẫn tiếp tục được gom chung và giữ trạng thái liên kết hiện có."
+            : "Xóa hồ sơ khách hàng này sẽ không tự gỡ liên kết Home ở Hồ sơ người. Nếu đây là vai trò nguồn cuối cùng thì hồ sơ trung tâm vẫn được giữ, chỉ chuyển sang trạng thái chưa còn vai trò nguồn.";
+    }
+
+    private void BindCustomerLifecycle(bspa_data_khachhang_table customer)
+    {
+        if (customer == null)
+            return;
+
+        GianHangAdminSourceLifecycle_cl.SourceLifecycleInfo info = GianHangAdminSourceLifecycle_cl.GetInfo(
+            db,
+            user_parent,
+            "customer",
+            customer.id + "",
+            "Đang dùng khách hàng",
+            "Đã ngừng dùng khách hàng",
+            "Hồ sơ khách hàng này đang được dùng bình thường trong module nguồn.",
+            "Hồ sơ khách hàng này đang ở trạng thái ngừng dùng an toàn. Lịch sử nghiệp vụ và liên kết Home trung tâm vẫn được giữ.");
+
+        sourceLifecycleLabel = info == null || string.IsNullOrWhiteSpace(info.Label) ? "Đang dùng khách hàng" : info.Label;
+        sourceLifecycleCss = info == null || string.IsNullOrWhiteSpace(info.Css) ? "bg-green fg-white" : info.Css;
+        sourceLifecycleNote = info == null || string.IsNullOrWhiteSpace(info.Note)
+            ? "Hồ sơ khách hàng này đang được dùng bình thường trong module nguồn."
+            : info.Note;
+        sourceLifecycleIsInactive = info != null && info.IsInactive;
+        personHubImpactTitle = sourceLifecycleIsInactive ? "Tác động khi xóa hồ sơ khách hàng đã ngừng dùng" : "Tác động khi xóa vai trò khách hàng";
     }
 
     private void nap_ngu_canh_datlich()
@@ -617,6 +737,7 @@ public partial class taikhoan_add : System.Web.UI.Page
                     if (_checkloi == false)
                     {
                         db.SubmitChanges();
+                        GianHangAdminPersonHub_cl.SyncSourcePhoneState(db, user_parent, _sdt_old, _sdt, _tenkhachhang, user);
                         Session["notifi"] = thongbao_class.metro_notifi_onload("Thông báo", "Cập nhật thành công.", "4000", "warning");
                         Response.Redirect("/gianhang/admin/quan-ly-khach-hang/chi-tiet.aspx?id=" + id);
                     }
@@ -642,6 +763,32 @@ public partial class taikhoan_add : System.Web.UI.Page
             main();
             ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Xóa ảnh đại diện thành công.", "4000", "warning"), true);
         }
+    }
+
+    protected void but_ngung_khachhang_Click(object sender, EventArgs e)
+    {
+        if (bcorn_class.check_quyen(user, "q8_3") != "")
+        {
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Bạn không đủ quyền để đổi trạng thái khách hàng.", "4000", "warning"), true);
+            return;
+        }
+
+        GianHangAdminSourceLifecycle_cl.SetInactive(db, user_parent, "customer", id, user, "Khách hàng được chuyển sang trạng thái ngừng dùng an toàn từ trang chi tiết.");
+        Session["notifi"] = thongbao_class.metro_notifi_onload("Thông báo", "Đã chuyển khách hàng sang trạng thái ngừng dùng an toàn.", "3200", "warning");
+        Response.Redirect("/gianhang/admin/quan-ly-khach-hang/chi-tiet.aspx?id=" + id);
+    }
+
+    protected void but_molai_khachhang_Click(object sender, EventArgs e)
+    {
+        if (bcorn_class.check_quyen(user, "q8_3") != "")
+        {
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Bạn không đủ quyền để đổi trạng thái khách hàng.", "4000", "warning"), true);
+            return;
+        }
+
+        GianHangAdminSourceLifecycle_cl.SetActive(db, user_parent, "customer", id, user, "Khách hàng được mở lại từ trang chi tiết.");
+        Session["notifi"] = thongbao_class.metro_notifi_onload("Thông báo", "Đã mở lại trạng thái dùng của khách hàng.", "3200", "success");
+        Response.Redirect("/gianhang/admin/quan-ly-khach-hang/chi-tiet.aspx?id=" + id);
     }
 
     protected void but_xoa_ghichu_Click(object sender, ImageClickEventArgs e)

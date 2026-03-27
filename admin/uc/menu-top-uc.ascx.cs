@@ -26,18 +26,25 @@ public partial class admin_uc_menu_top_uc : System.Web.UI.UserControl
         bool isRoot = account != null && AdminRolePolicy_cl.IsSuperAdmin(tk);
         SetFlag("menu_is_root", isRoot);
 
-        bool showDashboard = account != null;
-        bool showAdminAccount = false;
-        bool showOtp = false;
         bool showTransferHistory = false;
-        bool showTokenWallet = false;
+        bool showAdminDashboard = false;
+        bool showAdminAccount = false;
+        bool showAdminOtp = false;
+        bool showAdminTokenWallet = false;
+        bool showAdminGopY = false;
+        bool showAdminThongBao = false;
+        bool showAdminTuVan = false;
+        bool showAdminCompanyShopSync = false;
+        bool showAdminReindexBaiViet = false;
         bool showHomeAccount = false;
         bool showApproveHanhVi = false;
         bool showIssueCard = false;
         bool showTierDescription = false;
         bool showSellProduct = false;
+        bool showShopWorkspace = false;
         bool showShopAccount = false;
         bool showShopApprove = false;
+        bool showShopLevel2 = false;
         bool showShopEmailTemplate = false;
         bool showShopPointApproval = false;
         bool showHomeContent = false;
@@ -45,49 +52,76 @@ public partial class admin_uc_menu_top_uc : System.Web.UI.UserControl
         bool showContentMenu = false;
         bool showContentBaiViet = false;
         bool showContentBanner = false;
-        bool showContentGopY = false;
-        bool showContentThongBao = false;
-        bool showContentTuVan = false;
+        bool showDauGiaWorkspace = false;
+        bool showEventWorkspace = false;
+        bool showLegacySystemProductMenu = !CompanyShop_cl.HideLegacyAdminSystemProduct();
 
-        using (dbDataContext db = new dbDataContext())
+        if (account != null && !string.IsNullOrWhiteSpace(tk))
         {
-            showAdminAccount = AdminRolePolicy_cl.CanManageAdminAccounts(db, tk);
-            showOtp = isRoot;
-            showTransferHistory = AdminRolePolicy_cl.CanAccessTransferHistory(db, tk);
-            showTokenWallet = isRoot;
-            showHomeAccount = AdminRolePolicy_cl.CanManageHomeAccounts(db, tk);
-            showApproveHanhVi = AdminRolePolicy_cl.CanReviewHomePointRequests(db, tk);
-            showIssueCard = AdminRolePolicy_cl.CanIssueCards(db, tk);
-            showTierDescription = AdminRolePolicy_cl.CanViewTierReference(db, tk);
-            showSellProduct = AdminRolePolicy_cl.CanSellSystemProducts(db, tk);
-            showShopAccount = AdminRolePolicy_cl.CanManageShopAccounts(db, tk);
-            showShopApprove = AdminRolePolicy_cl.CanApproveShopPartnerRegistration(db, tk);
-            showShopEmailTemplate = AdminRolePolicy_cl.CanManageShopOperations(db, tk);
-            showShopPointApproval = AdminRolePolicy_cl.CanReviewShopPointRequests(db, tk) || AdminRolePolicy_cl.CanManageShopAccounts(db, tk);
+            using (dbDataContext db = new dbDataContext())
+            {
+                string phanloai = account != null ? (account.phanloai ?? "") : "";
+                string permissionRaw = account != null ? (account.permission ?? "") : "";
+                var tabKeys = new HashSet<string>(
+                    AdminRolePolicy_cl.BuildAdminHomeTabs(db, tk, phanloai, permissionRaw)
+                        .Select(item => (item.Key ?? "").Trim()),
+                    StringComparer.OrdinalIgnoreCase);
 
-            bool canManageHomeContent = AdminRolePolicy_cl.CanManageHomeContent(db, tk);
-            showHomeContent = false;
-            showHomeTextContent = canManageHomeContent;
-            showContentMenu = isRoot;
-            showContentBaiViet = isRoot;
-            showContentBanner = isRoot;
-            showContentGopY = isRoot;
-            showContentThongBao = isRoot;
-            showContentTuVan = isRoot;
+                Func<string, bool> hasKey = key => tabKeys.Contains((key ?? "").Trim());
+
+                showAdminDashboard = hasKey("admin_dashboard");
+                showAdminAccount = hasKey("admin_accounts");
+                showAdminOtp = hasKey("admin_otp");
+                showAdminTokenWallet = hasKey("token_wallet");
+                showAdminGopY = hasKey("admin_feedback");
+                showAdminThongBao = hasKey("notifications");
+                showAdminTuVan = hasKey("consulting");
+                showAdminCompanyShopSync = hasKey("admin_company_shop_sync");
+                showAdminReindexBaiViet = hasKey("admin_reindex_baiviet");
+                showTransferHistory = hasKey("core_assets");
+                showHomeAccount = hasKey("home_accounts");
+                showApproveHanhVi = hasKey("home_point_approval")
+                    || hasKey("home_points_customer")
+                    || hasKey("home_points_development")
+                    || hasKey("home_points_ecosystem");
+                showIssueCard = showLegacySystemProductMenu && hasKey("issue_cards");
+                showTierDescription = hasKey("tier_reference");
+                showSellProduct = showLegacySystemProductMenu && hasKey("system_products");
+                showShopWorkspace = hasKey("shop_workspace");
+                showShopAccount = hasKey("shop_accounts");
+                showShopApprove = hasKey("home_gianhang_space") || hasKey("shop_partner");
+                showShopLevel2 = hasKey("shop_level2");
+                showShopEmailTemplate = hasKey("shop_email");
+                showShopPointApproval = hasKey("shop_points");
+                showHomeContent = hasKey("home_config");
+                showHomeTextContent = hasKey("home_content");
+                showContentMenu = hasKey("home_menu");
+                showContentBaiViet = hasKey("home_posts");
+                showContentBanner = hasKey("home_banner");
+                showDauGiaWorkspace = hasKey("daugia_workspace");
+                showEventWorkspace = hasKey("event_workspace");
+            }
         }
 
-        SetFlag("menu_dashboard", showDashboard);
+        SetFlag("menu_admin_dashboard", showAdminDashboard);
         SetFlag("menu_admin_account", showAdminAccount);
-        SetFlag("menu_otp", showOtp);
+        SetFlag("menu_admin_otp", showAdminOtp);
+        SetFlag("menu_admin_token_wallet", showAdminTokenWallet);
+        SetFlag("menu_admin_gopy", showAdminGopY);
+        SetFlag("menu_admin_thongbao", showAdminThongBao);
+        SetFlag("menu_admin_tuvan", showAdminTuVan);
+        SetFlag("menu_admin_company_shop_sync", showAdminCompanyShopSync);
+        SetFlag("menu_admin_reindex_baiviet", showAdminReindexBaiViet);
         SetFlag("menu_transfer_history", showTransferHistory);
-        SetFlag("menu_token_wallet", showTokenWallet);
         SetFlag("menu_home_account", showHomeAccount);
         SetFlag("menu_home_approve_hanhvi", showApproveHanhVi);
         SetFlag("menu_home_issue_card", showIssueCard);
         SetFlag("menu_home_tier_desc", showTierDescription);
         SetFlag("menu_home_sell_product", showSellProduct);
+        SetFlag("menu_shop_workspace", showShopWorkspace);
         SetFlag("menu_shop_account", showShopAccount);
         SetFlag("menu_shop_approve", showShopApprove);
+        SetFlag("menu_shop_level2", showShopLevel2);
         SetFlag("menu_shop_email_template", showShopEmailTemplate);
         SetFlag("menu_shop_point_approval", showShopPointApproval);
         SetFlag("menu_content_home", showHomeContent);
@@ -95,43 +129,100 @@ public partial class admin_uc_menu_top_uc : System.Web.UI.UserControl
         SetFlag("menu_content_menu", showContentMenu);
         SetFlag("menu_content_baiviet", showContentBaiViet);
         SetFlag("menu_content_banner", showContentBanner);
-        SetFlag("menu_content_gopy", showContentGopY);
-        SetFlag("menu_content_thongbao", showContentThongBao);
-        SetFlag("menu_content_tuvan", showContentTuVan);
-
-        SetFlag("menu_group_admin", showDashboard || showAdminAccount || showOtp || showTransferHistory || showTokenWallet);
-        SetFlag("menu_group_home", showHomeAccount || showApproveHanhVi || showIssueCard || showTierDescription || showSellProduct);
-        SetFlag("menu_group_shop", showShopAccount || showShopApprove || showShopEmailTemplate || showShopPointApproval);
-        SetFlag("menu_group_content", showHomeContent || showHomeTextContent || showContentMenu || showContentBaiViet || showContentBanner || showContentGopY || showContentThongBao || showContentTuVan);
+        SetFlag("menu_daugia_workspace", showDauGiaWorkspace);
+        SetFlag("menu_event_workspace", showEventWorkspace);
     }
 
-    public bool ShowMenuGroupAdmin() { return GetFlag("menu_group_admin"); }
-    public bool ShowMenuGroupHome() { return GetFlag("menu_group_home"); }
-    public bool ShowMenuGroupShop() { return GetFlag("menu_group_shop"); }
-    public bool ShowMenuGroupContent() { return GetFlag("menu_group_content"); }
-    public bool ShowMenuDashboard() { return GetFlag("menu_dashboard"); }
+    private string GetCurrentManagementSpace()
+    {
+        object value = ViewState["admin_management_space"];
+        string space = value == null ? "" : value.ToString();
+        space = AdminManagementSpace_cl.NormalizeSpace(space);
+        return string.IsNullOrWhiteSpace(space) ? AdminManagementSpace_cl.SpaceAdmin : space;
+    }
 
-    public bool ShowMenuAdminAccount() { return GetFlag("menu_admin_account"); }
-    public bool ShowMenuOtp() { return GetFlag("menu_otp"); }
-    public bool ShowMenuTransferHistory() { return GetFlag("menu_transfer_history"); }
-    public bool ShowMenuTokenWallet() { return GetFlag("menu_token_wallet"); }
-    public bool ShowMenuHomeAccount() { return GetFlag("menu_home_account"); }
-    public bool ShowMenuApproveHanhVi() { return GetFlag("menu_home_approve_hanhvi"); }
-    public bool ShowMenuIssueCard() { return GetFlag("menu_home_issue_card"); }
-    public bool ShowMenuTierDescription() { return GetFlag("menu_home_tier_desc"); }
-    public bool ShowMenuSellProduct() { return GetFlag("menu_home_sell_product"); }
-    public bool ShowMenuShopAccount() { return GetFlag("menu_shop_account"); }
-    public bool ShowMenuShopApprove() { return GetFlag("menu_shop_approve"); }
-    public bool ShowMenuShopEmailTemplate() { return GetFlag("menu_shop_email_template"); }
-    public bool ShowMenuShopPointApproval() { return GetFlag("menu_shop_point_approval"); }
-    public bool ShowMenuHomeContent() { return GetFlag("menu_content_home"); }
-    public bool ShowMenuHomeTextContent() { return GetFlag("menu_content_home_text"); }
-    public bool ShowMenuContentMenu() { return GetFlag("menu_content_menu"); }
-    public bool ShowMenuContentBaiViet() { return GetFlag("menu_content_baiviet"); }
-    public bool ShowMenuContentBanner() { return GetFlag("menu_content_banner"); }
-    public bool ShowMenuContentGopY() { return GetFlag("menu_content_gopy"); }
-    public bool ShowMenuContentThongBao() { return GetFlag("menu_content_thongbao"); }
-    public bool ShowMenuContentTuVan() { return GetFlag("menu_content_tuvan"); }
+    public bool IsManagementSpaceAdmin() { return GetCurrentManagementSpace() == AdminManagementSpace_cl.SpaceAdmin; }
+    public bool IsManagementSpaceHome() { return GetCurrentManagementSpace() == AdminManagementSpace_cl.SpaceHome; }
+    public bool IsManagementSpaceGianHang() { return GetCurrentManagementSpace() == AdminManagementSpace_cl.SpaceGianHang; }
+    public bool IsManagementSpaceDauGia() { return GetCurrentManagementSpace() == AdminManagementSpace_cl.SpaceDauGia; }
+    public bool IsManagementSpaceEvent() { return GetCurrentManagementSpace() == AdminManagementSpace_cl.SpaceEvent; }
+    public bool IsManagementSpaceContent() { return GetCurrentManagementSpace() == AdminManagementSpace_cl.SpaceContent; }
+
+    public bool ShowMenuAdminDashboard() { return IsManagementSpaceAdmin() && GetFlag("menu_admin_dashboard"); }
+    public bool ShowMenuAdminAccount() { return IsManagementSpaceAdmin() && GetFlag("menu_admin_account"); }
+    public bool ShowMenuAdminOtp() { return IsManagementSpaceAdmin() && GetFlag("menu_admin_otp"); }
+    public bool ShowMenuAdminTokenWallet() { return IsManagementSpaceAdmin() && GetFlag("menu_admin_token_wallet"); }
+    public bool ShowMenuAdminGopY() { return IsManagementSpaceAdmin() && GetFlag("menu_admin_gopy"); }
+    public bool ShowMenuAdminThongBao() { return IsManagementSpaceAdmin() && GetFlag("menu_admin_thongbao"); }
+    public bool ShowMenuAdminTuVan() { return IsManagementSpaceAdmin() && GetFlag("menu_admin_tuvan"); }
+    public bool ShowMenuAdminCompanyShopSync() { return IsManagementSpaceAdmin() && GetFlag("menu_admin_company_shop_sync"); }
+    public bool ShowMenuAdminReindexBaiViet() { return IsManagementSpaceAdmin() && GetFlag("menu_admin_reindex_baiviet"); }
+    public bool ShowMenuTransferHistory() { return IsManagementSpaceHome() && GetFlag("menu_transfer_history"); }
+    public bool ShowMenuHomeAccount() { return IsManagementSpaceHome() && GetFlag("menu_home_account"); }
+    public bool ShowMenuApproveHanhVi() { return IsManagementSpaceHome() && GetFlag("menu_home_approve_hanhvi"); }
+    public bool ShowMenuIssueCard() { return IsManagementSpaceHome() && GetFlag("menu_home_issue_card"); }
+    public bool ShowMenuTierDescription() { return IsManagementSpaceHome() && GetFlag("menu_home_tier_desc"); }
+    public bool ShowMenuSellProduct() { return IsManagementSpaceHome() && GetFlag("menu_home_sell_product"); }
+    public bool ShowMenuShopWorkspace() { return IsManagementSpaceGianHang() && GetFlag("menu_shop_workspace"); }
+    public bool ShowMenuShopAccount() { return IsManagementSpaceGianHang() && GetFlag("menu_shop_account"); }
+    public bool ShowMenuShopApprove() { return IsManagementSpaceGianHang() && GetFlag("menu_shop_approve"); }
+    public bool ShowMenuShopLevel2() { return IsManagementSpaceGianHang() && GetFlag("menu_shop_level2"); }
+    public bool ShowMenuShopEmailTemplate() { return IsManagementSpaceGianHang() && GetFlag("menu_shop_email_template"); }
+    public bool ShowMenuShopPointApproval() { return IsManagementSpaceGianHang() && GetFlag("menu_shop_point_approval"); }
+    public bool ShowMenuHomeContent() { return IsManagementSpaceContent() && GetFlag("menu_content_home"); }
+    public bool ShowMenuHomeTextContent() { return IsManagementSpaceContent() && GetFlag("menu_content_home_text"); }
+    public bool ShowMenuContentMenu() { return IsManagementSpaceContent() && GetFlag("menu_content_menu"); }
+    public bool ShowMenuContentBaiViet() { return IsManagementSpaceContent() && GetFlag("menu_content_baiviet"); }
+    public bool ShowMenuContentBanner() { return IsManagementSpaceContent() && GetFlag("menu_content_banner"); }
+    public bool ShowMenuDauGiaWorkspace() { return IsManagementSpaceDauGia() && GetFlag("menu_daugia_workspace"); }
+    public bool ShowMenuEventWorkspace() { return IsManagementSpaceEvent() && GetFlag("menu_event_workspace"); }
+
+    public bool ShowMenuGroupAdmin()
+    {
+        return ShowMenuAdminDashboard() || ShowMenuAdminAccount() || ShowMenuAdminOtp() || ShowMenuAdminTokenWallet()
+            || ShowMenuAdminGopY() || ShowMenuAdminThongBao() || ShowMenuAdminTuVan()
+            || ShowMenuAdminCompanyShopSync() || ShowMenuAdminReindexBaiViet();
+    }
+
+    public bool ShowMenuGroupHomeSpace()
+    {
+        return ShowMenuTransferHistory() || ShowMenuHomeAccount() || ShowMenuApproveHanhVi()
+            || ShowMenuIssueCard() || ShowMenuTierDescription() || ShowMenuSellProduct();
+    }
+
+    public bool ShowMenuGroupShop() { return ShowMenuShopWorkspace() || ShowMenuShopAccount() || ShowMenuShopApprove() || ShowMenuShopLevel2() || ShowMenuShopEmailTemplate() || ShowMenuShopPointApproval(); }
+    public bool ShowMenuGroupContent() { return ShowMenuHomeContent() || ShowMenuHomeTextContent() || ShowMenuContentMenu() || ShowMenuContentBaiViet() || ShowMenuContentBanner(); }
+    public bool ShowMenuGroupDauGia() { return ShowMenuDauGiaWorkspace(); }
+    public bool ShowMenuGroupEvent() { return ShowMenuEventWorkspace(); }
+
+    public bool ShowQuickCreateAccounts()
+    {
+        if (IsManagementSpaceAdmin())
+            return ShowMenuAdminAccount();
+
+        if (IsManagementSpaceHome())
+            return ShowMenuHomeAccount();
+
+        if (IsManagementSpaceGianHang())
+            return ShowMenuShopAccount();
+
+        return false;
+    }
+
+    public bool ShowQuickCreateOperations()
+    {
+        return IsManagementSpaceHome() && (ShowMenuIssueCard() || ShowMenuSellProduct());
+    }
+
+    public bool ShowQuickCreateContent()
+    {
+        return IsManagementSpaceContent() && (ShowMenuContentMenu() || ShowMenuContentBaiViet() || ShowMenuContentBanner());
+    }
+
+    public bool ShowQuickCreateMenu()
+    {
+        return ShowQuickCreateAccounts() || ShowQuickCreateOperations() || ShowQuickCreateContent();
+    }
 
     public string GetAdminHomeUrl()
     {
@@ -140,11 +231,18 @@ public partial class admin_uc_menu_top_uc : System.Web.UI.UserControl
         {
             using (dbDataContext db = new dbDataContext())
             {
-                return AdminRolePolicy_cl.ResolveLandingUrl(db, taiKhoan);
+                taikhoan_tb account = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == taiKhoan);
+                if (account != null)
+                    return AdminManagementSpace_cl.ResolveCurrentLandingUrl(db, account, Request);
             }
         }
 
         return "/admin/login.aspx";
+    }
+
+    private string GetScopedUrl(string url, string space)
+    {
+        return AdminManagementSpace_cl.AppendSpaceToUrl(url, space);
     }
 
     public string GetApproveHomePointUrl()
@@ -154,11 +252,11 @@ public partial class admin_uc_menu_top_uc : System.Web.UI.UserControl
         {
             using (dbDataContext db = new dbDataContext())
             {
-                return AdminRolePolicy_cl.ResolveHomePointApprovalUrl(db, taiKhoan);
+                return GetScopedUrl(AdminRolePolicy_cl.ResolveHomePointApprovalUrl(db, taiKhoan), AdminManagementSpace_cl.SpaceHome);
             }
         }
 
-        return "/admin/duyet-yeu-cau-len-cap.aspx";
+        return GetScopedUrl("/admin/duyet-yeu-cau-len-cap.aspx", AdminManagementSpace_cl.SpaceHome);
     }
 
     public string GetAdminAccountManagementUrl()
@@ -168,11 +266,56 @@ public partial class admin_uc_menu_top_uc : System.Web.UI.UserControl
         {
             using (dbDataContext db = new dbDataContext())
             {
-                return AdminRolePolicy_cl.ResolveAdminAccountManagementUrl(db, taiKhoan);
+                return GetScopedUrl(AdminRolePolicy_cl.ResolveAdminAccountManagementUrl(db, taiKhoan), AdminManagementSpace_cl.SpaceAdmin);
             }
         }
 
-        return "/admin/quan-ly-tai-khoan/Default.aspx?scope=admin&fscope=admin";
+        return GetScopedUrl("/admin/quan-ly-tai-khoan/Default.aspx?scope=admin&fscope=admin", AdminManagementSpace_cl.SpaceAdmin);
+    }
+
+    public string GetAdminDashboardUrl()
+    {
+        return GetScopedUrl("/admin/default.aspx", AdminManagementSpace_cl.SpaceAdmin);
+    }
+
+    public string GetAdminOtpUrl()
+    {
+        return GetScopedUrl("/admin/otp/default.aspx?scope=home", AdminManagementSpace_cl.SpaceAdmin);
+    }
+
+    public string GetAdminTokenWalletUrl()
+    {
+        return GetScopedUrl("/admin/vi-token-diem/default.aspx", AdminManagementSpace_cl.SpaceAdmin);
+    }
+
+    public string GetAdminGopYUrl()
+    {
+        return GetScopedUrl("/admin/quan-ly-gop-y/default.aspx", AdminManagementSpace_cl.SpaceAdmin);
+    }
+
+    public string GetAdminThongBaoUrl()
+    {
+        return GetScopedUrl("/admin/quan-ly-thong-bao/default.aspx", AdminManagementSpace_cl.SpaceAdmin);
+    }
+
+    public string GetAdminTuVanUrl()
+    {
+        return GetScopedUrl("/admin/yeu-cau-tu-van/default.aspx", AdminManagementSpace_cl.SpaceAdmin);
+    }
+
+    public string GetAdminCompanyShopSyncUrl()
+    {
+        return GetScopedUrl("/admin/tools/company-shop-sync.aspx", AdminManagementSpace_cl.SpaceAdmin);
+    }
+
+    public string GetAdminReindexBaiVietUrl()
+    {
+        return GetScopedUrl("/admin/tools/reindex-baiviet.aspx", AdminManagementSpace_cl.SpaceAdmin);
+    }
+
+    public string GetAdminAccountCreateUrl()
+    {
+        return GetScopedUrl("/admin/quan-ly-tai-khoan/them-moi.aspx?scope=admin&fscope=admin", AdminManagementSpace_cl.SpaceAdmin);
     }
 
     public string GetHomeAccountManagementUrl()
@@ -182,11 +325,16 @@ public partial class admin_uc_menu_top_uc : System.Web.UI.UserControl
         {
             using (dbDataContext db = new dbDataContext())
             {
-                return AdminRolePolicy_cl.ResolveHomeAccountManagementUrl(db, taiKhoan);
+                return GetScopedUrl(AdminRolePolicy_cl.ResolveHomeAccountManagementUrl(db, taiKhoan), AdminManagementSpace_cl.SpaceHome);
             }
         }
 
-        return "/admin/quan-ly-tai-khoan/Default.aspx?scope=home&fscope=home";
+        return GetScopedUrl("/admin/quan-ly-tai-khoan/Default.aspx?scope=home&fscope=home", AdminManagementSpace_cl.SpaceHome);
+    }
+
+    public string GetShopWorkspaceUrl()
+    {
+        return GetScopedUrl("/gianhang/admin/default.aspx?system=1", AdminManagementSpace_cl.SpaceGianHang);
     }
 
     public string GetShopAccountManagementUrl()
@@ -196,13 +344,50 @@ public partial class admin_uc_menu_top_uc : System.Web.UI.UserControl
         {
             using (dbDataContext db = new dbDataContext())
             {
-                return AdminRolePolicy_cl.ResolveShopAccountManagementUrl(db, taiKhoan);
+                return GetScopedUrl(AdminRolePolicy_cl.ResolveShopAccountManagementUrl(db, taiKhoan), AdminManagementSpace_cl.SpaceGianHang);
             }
         }
 
-        return "/admin/quan-ly-tai-khoan/Default.aspx?scope=shop&fscope=shop&frole=shop_partner";
+        return GetScopedUrl("/admin/quan-ly-tai-khoan/Default.aspx?scope=shop&fscope=shop&frole=shop_partner", AdminManagementSpace_cl.SpaceGianHang);
     }
 
+    public string GetDauGiaAdminUrl()
+    {
+        return GetScopedUrl("/daugia/admin/default.aspx?system=1", AdminManagementSpace_cl.SpaceDauGia);
+    }
+
+    public string GetEventAdminUrl()
+    {
+        return GetScopedUrl("/event/admin/default.aspx?system=1", AdminManagementSpace_cl.SpaceEvent);
+    }
+
+    public string GetHomeAccountCreateUrl()
+    {
+        return GetScopedUrl("/admin/quan-ly-tai-khoan/them-moi.aspx?scope=home&fscope=home", AdminManagementSpace_cl.SpaceHome);
+    }
+
+    public string GetShopAccountCreateUrl()
+    {
+        return GetScopedUrl("/admin/quan-ly-tai-khoan/them-moi.aspx?scope=shop&fscope=shop&frole=shop_partner", AdminManagementSpace_cl.SpaceGianHang);
+    }
+
+    public string GetHomeTransferHistoryUrl() { return GetScopedUrl("/admin/lich-su-chuyen-diem/default.aspx", AdminManagementSpace_cl.SpaceHome); }
+    public string GetHomeIssueCardUrl() { return GetScopedUrl("/admin/phat-hanh-the/them-moi.aspx", AdminManagementSpace_cl.SpaceHome); }
+    public string GetHomeTierDescriptionUrl() { return GetScopedUrl("/admin/MoTaCapBac.aspx", AdminManagementSpace_cl.SpaceHome); }
+    public string GetHomeSellProductUrl() { return GetScopedUrl("/admin/he-thong-san-pham/ban-the.aspx", AdminManagementSpace_cl.SpaceHome); }
+    public string GetShopPointApprovalUrl() { return GetScopedUrl("/admin/lich-su-chuyen-diem/default.aspx?tab=shop-only", AdminManagementSpace_cl.SpaceGianHang); }
+    public string GetShopEmailTemplateUrl() { return GetScopedUrl("/admin/quan-ly-email-shop/default.aspx", AdminManagementSpace_cl.SpaceGianHang); }
+    public string GetGianHangApprovalUrl() { return GetScopedUrl("/admin/duyet-gian-hang-doi-tac.aspx", AdminManagementSpace_cl.SpaceGianHang); }
+    public string GetShopPartnerApprovalUrl() { return GetScopedUrl("/admin/duyet-shop-doi-tac.aspx", AdminManagementSpace_cl.SpaceGianHang); }
+    public string GetShopLevel2ApprovalUrl() { return GetScopedUrl("/admin/duyet-nang-cap-level2.aspx", AdminManagementSpace_cl.SpaceGianHang); }
+    public string GetContentSettingsUrl() { return GetScopedUrl("/admin/cai-dat-trang-chu/default.aspx", AdminManagementSpace_cl.SpaceContent); }
+    public string GetContentHomeTextUrl() { return GetScopedUrl("/admin/quan-ly-noi-dung-home/default.aspx", AdminManagementSpace_cl.SpaceContent); }
+    public string GetContentMenuUrl() { return GetScopedUrl("/admin/quan-ly-menu/default.aspx", AdminManagementSpace_cl.SpaceContent); }
+    public string GetContentMenuCreateUrl() { return GetScopedUrl("/admin/quan-ly-menu/them-moi.aspx", AdminManagementSpace_cl.SpaceContent); }
+    public string GetContentBaiVietUrl() { return GetScopedUrl("/admin/quan-ly-bai-viet/default.aspx", AdminManagementSpace_cl.SpaceContent); }
+    public string GetContentBaiVietCreateUrl() { return GetScopedUrl("/admin/quan-ly-bai-viet/them-moi.aspx", AdminManagementSpace_cl.SpaceContent); }
+    public string GetContentBannerUrl() { return GetScopedUrl("/admin/quan-ly-banner/default.aspx", AdminManagementSpace_cl.SpaceContent); }
+    public string GetContentBannerCreateUrl() { return GetScopedUrl("/admin/quan-ly-banner/them-moi.aspx", AdminManagementSpace_cl.SpaceContent); }
     public string MenuActive(params string[] urls)
     {
         string currentUrl = (HttpContext.Current.Request.Url.AbsolutePath ?? "").ToLower().Trim();
@@ -308,7 +493,7 @@ public partial class admin_uc_menu_top_uc : System.Web.UI.UserControl
         return ResolveUrl("~/admin/doi-mat-khau/default.aspx?return_url=" + HttpUtility.UrlEncode(currentUrl));
     }
 
-    private string BuildNotificationListUrl()
+    public string GetNotificationListUrl()
     {
         return ResolveUrl("~/admin/quan-ly-thong-bao/default.aspx");
     }
@@ -329,7 +514,6 @@ public partial class admin_uc_menu_top_uc : System.Web.UI.UserControl
 
     private void ApplyAccountRouteLinks()
     {
-        but_show_form_thongbao.NavigateUrl = BuildNotificationListUrl();
         but_show_form_doimatkhau.NavigateUrl = BuildChangePasswordUrl();
     }
 
@@ -422,7 +606,9 @@ public partial class admin_uc_menu_top_uc : System.Web.UI.UserControl
                 ViewState["taikhoan"] = _tk;
                 ViewState["admin_role_label"] = AdminRolePolicy_cl.GetAdminRoleLabel(db, q.taikhoan, q.phanloai, q.permission);
                 ViewState["admin_role_description"] = AdminRolePolicy_cl.GetAdminRoleDescription(db, q.taikhoan, q.phanloai, q.permission);
-                ViewState["admin_scope_label"] = AdminRolePolicy_cl.GetScopeDisplayLabel(PortalScope_cl.ResolveScope(q.taikhoan, q.phanloai, q.permission));
+                string currentSpace = AdminManagementSpace_cl.GetCurrentSpace(db, q, Request);
+                ViewState["admin_management_space"] = currentSpace;
+                ViewState["admin_scope_label"] = AdminManagementSpace_cl.GetTitle(currentSpace);
 
                 // Hiển thị nhãn theo hệ đăng nhập admin.
                 if (AccountType_cl.IsTreasury(q.phanloai))

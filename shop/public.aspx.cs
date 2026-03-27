@@ -89,7 +89,7 @@ public partial class shop_public : System.Web.UI.Page
                 RedirectToRoot();
                 return;
             }
-            if (!ShopStatus_cl.IsShopApproved(shop))
+            if (!ShopStatus_cl.IsShopApproved(db, shop))
             {
                 RedirectToRoot();
                 return;

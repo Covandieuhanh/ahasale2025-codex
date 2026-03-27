@@ -35,18 +35,45 @@ public static class AdvancedAdminAccessGate_cl
                 context.Session["notifi"] = thongbao_class.metro_notifi_onload("Thông báo", contextWarning, "2200", "warning");
         }
 
-        string adminUser = ((context.Session["user"] ?? "").ToString() ?? "").Trim().ToLowerInvariant();
-        if (string.IsNullOrWhiteSpace(adminUser))
-        {
-            Redirect(page, "/gianhang/admin/f5_ss_admin.aspx");
-            return false;
-        }
-
         using (dbDataContext db = new dbDataContext())
         {
+            string adminUser = ((context.Session["user"] ?? "").ToString() ?? "").Trim().ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(adminUser))
+            {
+                string homeAccountKey;
+                string deniedMessage;
+                if (GianHangAdminBridge_cl.EnsureLegacyAdminSessionFromCurrentHome(db, out homeAccountKey, out deniedMessage))
+                    adminUser = ((context.Session["user"] ?? "").ToString() ?? "").Trim().ToLowerInvariant();
+
+                if (string.IsNullOrWhiteSpace(adminUser))
+                {
+                    if (!string.IsNullOrWhiteSpace(homeAccountKey) && !string.IsNullOrWhiteSpace(deniedMessage))
+                    {
+                        HomeSpaceAccess_cl.RedirectToAccessPage(page, ModuleSpace_cl.GianHangAdmin, context.Request.RawUrl ?? "/gianhang/admin");
+                        return false;
+                    }
+
+                    Redirect(page, "/gianhang/admin/f5_ss_admin.aspx");
+                    return false;
+                }
+            }
+
             taikhoan_table_2023 adminAccount = db.taikhoan_table_2023s.FirstOrDefault(p => p.taikhoan == adminUser);
             string userParentHint = adminAccount == null ? AhaShineContext_cl.UserParent : adminAccount.user_parent;
-            if (!ShopLevel_cl.CanUseAdvancedAdmin(db, adminUser, userParentHint))
+            string currentHomeAccountKey = ((context.Session["gianhang_admin_home"] ?? "").ToString() ?? "").Trim().ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(currentHomeAccountKey))
+                currentHomeAccountKey = GianHangAdminBridge_cl.ReadHomeAccountFromSessionOrCookie();
+
+            bool hasManagedWorkspaceAccess = false;
+            if (!string.IsNullOrWhiteSpace(currentHomeAccountKey))
+            {
+                taikhoan_tb currentHomeAccount = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == currentHomeAccountKey);
+                hasManagedWorkspaceAccess =
+                    (currentHomeAccount != null && SpaceAccess_cl.CanAccessGianHangAdmin(db, currentHomeAccount))
+                    || GianHangAdminWorkspace_cl.HasAnyWorkspace(db, currentHomeAccountKey);
+            }
+
+            if (!hasManagedWorkspaceAccess && !ShopLevel_cl.CanUseAdvancedAdmin(db, adminUser, userParentHint))
             {
                 context.Session["user"] = "";
                 context.Session["chinhanh"] = "";

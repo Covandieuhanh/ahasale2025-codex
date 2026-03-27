@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Web;
@@ -7,18 +8,110 @@ using System.Web.UI.WebControls;
 
 public partial class Uc_Home_Header_uc : System.Web.UI.UserControl
 {
+    private const string DefaultHeaderCenterLogo = "/uploads/images/favicon.png";
+
+    private sealed class HeaderAccountSnapshot
+    {
+        public string TaiKhoan { get; set; }
+        public string HoTen { get; set; }
+        public string AnhDaiDien { get; set; }
+        public string QrCode { get; set; }
+        public string Email { get; set; }
+        public string PhanLoai { get; set; }
+        public string Permission { get; set; }
+        public decimal DongA { get; set; }
+        public decimal Vi1ThatEvocher30PhanTram { get; set; }
+        public decimal Vi2ThatLaoDong50PhanTram { get; set; }
+        public decimal Vi3ThatGanKet20PhanTram { get; set; }
+        public decimal HoSoTieuDungShopOnly { get; set; }
+        public decimal HoSoUuDaiShopOnly { get; set; }
+    }
+
+    private sealed class HeaderQuickAction
+    {
+        public string Url { get; set; }
+        public string Label { get; set; }
+        public string Note { get; set; }
+        public string Badge { get; set; }
+    }
+
     public string show_danhmuc_nav = "";
     public string show_danhmuc_mobile = "";
+    protected string HeaderCenterLogoUrl { get; private set; }
+    private string _resolvedHeaderCenterLogoUrl = "";
+
+    public Uc_Home_Header_uc()
+    {
+        HeaderCenterLogoUrl = DefaultHeaderCenterLogo;
+    }
 
     private string GetCurrentHomeAccount()
     {
         return PortalRequest_cl.GetCurrentAccount();
     }
 
+    private static string NormalizeHeaderLogoUrl(string raw)
+    {
+        string value = (raw ?? "").Trim();
+        if (string.IsNullOrEmpty(value))
+            return "";
+        if (value.StartsWith("javascript:", StringComparison.OrdinalIgnoreCase))
+            return "";
+
+        Uri absolute;
+        if (Uri.TryCreate(value, UriKind.Absolute, out absolute))
+        {
+            if (string.Equals(absolute.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(absolute.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+                return absolute.AbsoluteUri;
+            return "";
+        }
+
+        if (value.StartsWith("~/", StringComparison.Ordinal))
+            value = value.Substring(1);
+        if (!value.StartsWith("/", StringComparison.Ordinal))
+            value = "/" + value;
+
+        return value;
+    }
+
+    protected string ResolveHeaderCenterLogoUrl()
+    {
+        if (!string.IsNullOrWhiteSpace(_resolvedHeaderCenterLogoUrl))
+            return _resolvedHeaderCenterLogoUrl;
+
+        string resolved = DefaultHeaderCenterLogo;
+        HttpContext context = HttpContext.Current;
+        if (context != null)
+        {
+            string contextLogo = NormalizeHeaderLogoUrl(Convert.ToString(context.Items["AhaHeaderCenterLogoUrl"]));
+            if (string.IsNullOrEmpty(contextLogo))
+                contextLogo = resolved;
+            if (!string.IsNullOrWhiteSpace(contextLogo))
+            {
+                _resolvedHeaderCenterLogoUrl = contextLogo;
+                HeaderCenterLogoUrl = contextLogo;
+                return _resolvedHeaderCenterLogoUrl;
+            }
+        }
+
+        _resolvedHeaderCenterLogoUrl = resolved;
+        HeaderCenterLogoUrl = resolved;
+        return _resolvedHeaderCenterLogoUrl;
+    }
+
+    private void BindHeaderCenterLogo(dbDataContext db)
+    {
+        HeaderCenterLogoUrl = ResolveHeaderCenterLogoUrl();
+    }
+
     protected void Page_Load(object sender, EventArgs e)
     {
         try
         {
+            HeaderCenterLogoUrl = ResolveHeaderCenterLogoUrl();
+            BindDesktopSpaceBadge();
+
             // Luôn dựng lại trạng thái menu/account cho mọi request để tránh
             // lệch Visible của PlaceHolder sau postback/async postback trên mobile.
             BuildDanhMucTabler(1, 3, false, "web", "0");
@@ -29,6 +122,7 @@ public partial class Uc_Home_Header_uc : System.Web.UI.UserControl
         }
         catch (Exception ex)
         {
+            HeaderCenterLogoUrl = DefaultHeaderCenterLogo;
             SafeFallbackForGuestHeader();
             Log_cl.Add_Log(ex.Message, "header_uc", ex.StackTrace);
         }
@@ -59,6 +153,8 @@ public partial class Uc_Home_Header_uc : System.Web.UI.UserControl
             if (phShopLevel2Upgrade != null) phShopLevel2Upgrade.Visible = false;
             if (phUtilityHome != null) phUtilityHome.Visible = false;
             if (phMenuHomeExtra != null) phMenuHomeExtra.Visible = false;
+            if (phHomeSpaceAccessSummary != null) phHomeSpaceAccessSummary.Visible = false;
+            if (phHomeSpaceAccessSummaryMobile != null) phHomeSpaceAccessSummaryMobile.Visible = false;
             if (phTopDesktopHomeUtilities != null) phTopDesktopHomeUtilities.Visible = false;
             if (phTopNotificationDesktop != null) phTopNotificationDesktop.Visible = false;
             if (phTopNotificationDesktopShop != null) phTopNotificationDesktopShop.Visible = false;
@@ -66,6 +162,7 @@ public partial class Uc_Home_Header_uc : System.Web.UI.UserControl
             if (phTopMobileHomeUtilities != null) phTopMobileHomeUtilities.Visible = true;
             if (phTopMobileFavorite != null) phTopMobileFavorite.Visible = true;
             if (phTopNotificationMobile != null) phTopNotificationMobile.Visible = true;
+            if (phTopMobileGuestAuth != null) phTopMobileGuestAuth.Visible = false;
             if (badgeThongBaoDesktop != null) badgeThongBaoDesktop.Visible = false;
             if (badgeThongBaoDesktopShop != null) badgeThongBaoDesktopShop.Visible = false;
             if (badgeThongBaoMobile != null) badgeThongBaoMobile.Visible = false;
@@ -90,13 +187,325 @@ public partial class Uc_Home_Header_uc : System.Web.UI.UserControl
             }
 
             if (phTopNotificationDesktop != null) phTopNotificationDesktop.Visible = true;
-            if (phTopNotificationDesktopShop != null) phTopNotificationDesktopShop.Visible = true;
+            if (phTopNotificationDesktopShop != null) phTopNotificationDesktopShop.Visible = false;
             if (phTopNotificationMobile != null) phTopNotificationMobile.Visible = true;
         }
         catch (Exception ex)
         {
             Log_cl.Add_Log(ex.Message, "header_uc_refresh", ex.StackTrace);
         }
+    }
+
+    private void BindDesktopSpaceBadge()
+    {
+        if (phDesktopSpaceBadge == null || lb_desktop_space_badge == null)
+            return;
+
+        string currentSpace = ResolveCurrentSpaceCode();
+        phDesktopSpaceBadge.Visible = true;
+        lb_desktop_space_badge.Text = ResolveCurrentSpaceLabel(currentSpace);
+        lb_desktop_space_badge.CssClass = "mode-badge " + ResolveCurrentSpaceCss(currentSpace);
+    }
+
+    protected string ResolveTopAccountLabel()
+    {
+        string taiKhoan = Convert.ToString(ViewState["taikhoan"]);
+        if (IsCurrentSpaceGianHang() && !string.IsNullOrWhiteSpace(taiKhoan))
+            return "Home " + taiKhoan.Trim();
+
+        string hoTen = Convert.ToString(ViewState["hoten"]);
+        if (!string.IsNullOrWhiteSpace(hoTen))
+            return hoTen.Trim();
+
+        if (!string.IsNullOrWhiteSpace(taiKhoan))
+            return taiKhoan.Trim();
+
+        return "Tài khoản";
+    }
+
+    protected string ResolveDropdownProfileName()
+    {
+        string taiKhoan = Convert.ToString(ViewState["taikhoan"]);
+        if (IsCurrentSpaceGianHang() && !string.IsNullOrWhiteSpace(taiKhoan))
+            return "Home " + taiKhoan.Trim();
+
+        string hoTen = Convert.ToString(ViewState["hoten"]);
+        if (!string.IsNullOrWhiteSpace(hoTen))
+            return hoTen.Trim();
+
+        if (!string.IsNullOrWhiteSpace(taiKhoan))
+            return taiKhoan.Trim();
+
+        return "Tài khoản";
+    }
+
+    private bool IsCurrentSpaceGianHang()
+    {
+        return string.Equals(ResolveCurrentSpaceCode(), ModuleSpace_cl.GianHang, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private string ResolveGianHangActiveMenuKey()
+    {
+        HttpRequest request = HttpContext.Current == null ? null : HttpContext.Current.Request;
+        string path = request == null || request.Url == null ? "" : (request.Url.AbsolutePath ?? "").Trim().ToLowerInvariant();
+
+        if (string.IsNullOrEmpty(path))
+            return "trang-cong-khai";
+
+        if (path.StartsWith("/gianhang/admin/", StringComparison.OrdinalIgnoreCase)
+            || path.Equals("/gianhang/admin", StringComparison.OrdinalIgnoreCase)
+            || path.Equals("/gianhang/mo-cong-cu-quan-tri.aspx", StringComparison.OrdinalIgnoreCase))
+            return "quan-tri";
+
+        if (path.StartsWith("/gianhang/quan-ly-tin/", StringComparison.OrdinalIgnoreCase))
+            return "quan-ly-tin";
+
+        if (path.Equals("/gianhang/don-ban.aspx", StringComparison.OrdinalIgnoreCase)
+            || path.Equals("/gianhang/cho-thanh-toan.aspx", StringComparison.OrdinalIgnoreCase)
+            || path.Equals("/gianhang/hoa-don-dien-tu.aspx", StringComparison.OrdinalIgnoreCase))
+            return "don-ban";
+
+        if (path.Equals("/gianhang/quan-ly-lich-hen.aspx", StringComparison.OrdinalIgnoreCase)
+            || path.Equals("/gianhang/dat-lich.aspx", StringComparison.OrdinalIgnoreCase)
+            || path.Equals("/gianhang/datlich.aspx", StringComparison.OrdinalIgnoreCase))
+            return "lich-hen";
+
+        if (path.Equals("/gianhang/khach-hang.aspx", StringComparison.OrdinalIgnoreCase)
+            || path.Equals("/gianhang/khach-hang-chi-tiet.aspx", StringComparison.OrdinalIgnoreCase))
+            return "khach-hang";
+
+        if (path.Equals("/gianhang/bao-cao.aspx", StringComparison.OrdinalIgnoreCase))
+            return "bao-cao";
+
+        if (path.Equals("/gianhang/nang-cap-level2.aspx", StringComparison.OrdinalIgnoreCase))
+            return "nang-cap-level2";
+
+        return "trang-cong-khai";
+    }
+
+    protected string ResolveGianHangMenuItemClass(string menuKey)
+    {
+        return string.Equals((menuKey ?? "").Trim(), ResolveGianHangActiveMenuKey(), StringComparison.OrdinalIgnoreCase)
+            ? "is-active"
+            : "";
+    }
+
+    private string ResolveCurrentSpaceCode()
+    {
+        HttpRequest request = HttpContext.Current == null ? null : HttpContext.Current.Request;
+        string path = request == null || request.Url == null ? "" : (request.Url.AbsolutePath ?? "").Trim();
+        if (string.IsNullOrEmpty(path))
+            return ModuleSpace_cl.Home;
+
+        if (path.Equals("/admin", StringComparison.OrdinalIgnoreCase)
+            || path.StartsWith("/admin/", StringComparison.OrdinalIgnoreCase))
+            return ModuleSpace_cl.Admin;
+
+        if (path.Equals("/shop", StringComparison.OrdinalIgnoreCase)
+            || path.StartsWith("/shop/", StringComparison.OrdinalIgnoreCase))
+            return ModuleSpace_cl.Shop;
+
+        if (path.Equals("/gianhang/admin", StringComparison.OrdinalIgnoreCase)
+            || path.StartsWith("/gianhang/admin/", StringComparison.OrdinalIgnoreCase))
+            return ModuleSpace_cl.GianHangAdmin;
+
+        if (path.Equals("/gianhang", StringComparison.OrdinalIgnoreCase)
+            || path.StartsWith("/gianhang/", StringComparison.OrdinalIgnoreCase))
+            return ModuleSpace_cl.GianHang;
+
+        if (path.Equals("/daugia", StringComparison.OrdinalIgnoreCase)
+            || path.StartsWith("/daugia/", StringComparison.OrdinalIgnoreCase))
+            return ModuleSpace_cl.DauGia;
+
+        if (path.Equals("/event", StringComparison.OrdinalIgnoreCase)
+            || path.StartsWith("/event/", StringComparison.OrdinalIgnoreCase))
+            return ModuleSpace_cl.Event;
+
+        return ModuleSpace_cl.Home;
+    }
+
+    private string ResolveCurrentSpaceLabel(string spaceCode)
+    {
+        switch ((spaceCode ?? "").Trim().ToLowerInvariant())
+        {
+            case ModuleSpace_cl.Shop:
+                return "Không gian Gian hàng đối tác";
+            case ModuleSpace_cl.GianHang:
+                return "Không gian Gian hàng";
+            case ModuleSpace_cl.GianHangAdmin:
+                return "Không gian Gian hàng Admin";
+            case ModuleSpace_cl.Admin:
+                return "Không gian Admin";
+            case ModuleSpace_cl.DauGia:
+                return "Không gian Đấu giá";
+            case ModuleSpace_cl.Event:
+                return "Không gian Event";
+            default:
+                return "Không gian Home";
+        }
+    }
+
+    private string ResolveCurrentSpaceCss(string spaceCode)
+    {
+        switch ((spaceCode ?? "").Trim().ToLowerInvariant())
+        {
+            case ModuleSpace_cl.Shop:
+            case ModuleSpace_cl.GianHang:
+                return "mode-shop";
+            case ModuleSpace_cl.GianHangAdmin:
+                return "mode-gianhang-admin";
+            case ModuleSpace_cl.Admin:
+                return "mode-admin";
+            case ModuleSpace_cl.DauGia:
+                return "mode-daugia";
+            case ModuleSpace_cl.Event:
+                return "mode-event";
+            default:
+                return "mode-home";
+        }
+    }
+
+    protected string ResolveHeaderSpaceCssClass()
+    {
+        string spaceCode = ResolveCurrentSpaceCode();
+        switch ((spaceCode ?? "").Trim().ToLowerInvariant())
+        {
+            case ModuleSpace_cl.Shop:
+                return "site-header-space-shop site-header-shop";
+            case ModuleSpace_cl.Admin:
+                return "site-header-space-admin";
+            case ModuleSpace_cl.GianHang:
+                return "site-header-space-gianhang";
+            case ModuleSpace_cl.GianHangAdmin:
+                return "site-header-space-gianhang-admin";
+            case ModuleSpace_cl.DauGia:
+                return "site-header-space-daugia";
+            case ModuleSpace_cl.Event:
+                return "site-header-space-event";
+            default:
+                return "site-header-space-home";
+        }
+    }
+
+    protected string ResolveHeaderInlineStyle()
+    {
+        string spaceCode = ResolveCurrentSpaceCode();
+        string gradient = "linear-gradient(110deg, #0f5a4a 0%, #198754 55%, #2fbf6d 100%)";
+        string shadow = "0 8px 24px rgba(5, 28, 22, 0.2)";
+
+        switch ((spaceCode ?? "").Trim().ToLowerInvariant())
+        {
+            case ModuleSpace_cl.Shop:
+                gradient = "linear-gradient(110deg, #b63a1e 0%, #ee4d2d 56%, #ff8757 100%)";
+                shadow = "0 8px 24px rgba(238, 77, 45, 0.25)";
+                break;
+            case ModuleSpace_cl.Admin:
+                gradient = "linear-gradient(110deg, #7f1d1d 0%, #dc2626 58%, #ef4444 100%)";
+                shadow = "0 8px 24px rgba(220, 38, 38, 0.25)";
+                break;
+            case ModuleSpace_cl.GianHang:
+                gradient = "linear-gradient(110deg, #c2410c 0%, #f97316 56%, #fdba74 100%)";
+                shadow = "0 8px 24px rgba(249, 115, 22, 0.24)";
+                break;
+            case ModuleSpace_cl.GianHangAdmin:
+                gradient = "linear-gradient(110deg, #312e81 0%, #4f46e5 58%, #818cf8 100%)";
+                shadow = "0 8px 24px rgba(79, 70, 229, 0.24)";
+                break;
+            case ModuleSpace_cl.DauGia:
+                gradient = "linear-gradient(110deg, #9d174d 0%, #db2777 56%, #f472b6 100%)";
+                shadow = "0 8px 24px rgba(219, 39, 119, 0.24)";
+                break;
+            case ModuleSpace_cl.Event:
+                gradient = "linear-gradient(110deg, #155e75 0%, #0891b2 56%, #22d3ee 100%)";
+                shadow = "0 8px 24px rgba(8, 145, 178, 0.24)";
+                break;
+        }
+
+        return "background: " + gradient + " !important; border-bottom: 1px solid rgba(255,255,255,0.2) !important; box-shadow: " + shadow + " !important;";
+    }
+
+    private bool IsCurrentDauGiaAdminSpace()
+    {
+        HttpRequest request = HttpContext.Current == null ? null : HttpContext.Current.Request;
+        string path = request == null || request.Url == null ? "" : (request.Url.AbsolutePath ?? "").Trim();
+        return path.StartsWith("/daugia/admin", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private List<HeaderQuickAction> BuildHeaderQuickActions()
+    {
+        string spaceCode = ResolveCurrentSpaceCode();
+        var items = new List<HeaderQuickAction>();
+
+        if (string.Equals(spaceCode, ModuleSpace_cl.DauGia, StringComparison.OrdinalIgnoreCase))
+        {
+            bool adminSubspace = IsCurrentDauGiaAdminSpace();
+            items.Add(new HeaderQuickAction { Url = "/daugia/default.aspx", Label = adminSubspace ? "Khu đấu giá public" : "Phiên live", Note = "Xem các phiên đang mở", Badge = "Live" });
+            items.Add(new HeaderQuickAction { Url = "/daugia/da-ket-thuc.aspx", Label = "Phiên đã kết thúc", Note = "Tra cứu lịch sử đấu giá", Badge = "Lịch sử" });
+            items.Add(new HeaderQuickAction { Url = "/daugia/admin/portal.aspx", Label = "Trung tâm quản lý", Note = "Điểm vào điều phối /daugia/admin", Badge = "Portal" });
+            items.Add(new HeaderQuickAction { Url = "/daugia/admin/quan-ly.aspx", Label = "Quản lý phiên", Note = "Theo dõi toàn bộ phiên của bạn", Badge = "Admin" });
+            items.Add(new HeaderQuickAction { Url = "/daugia/admin/tao.aspx", Label = "Tạo phiên mới", Note = "Khởi tạo nhanh một phiên đấu giá", Badge = "Tạo mới" });
+        }
+        else if (string.Equals(spaceCode, ModuleSpace_cl.Event, StringComparison.OrdinalIgnoreCase))
+        {
+            items.Add(new HeaderQuickAction { Url = "/event/default.aspx", Label = "Trang sự kiện", Note = "Theo dõi không gian event public", Badge = "Public" });
+            items.Add(new HeaderQuickAction { Url = "/event/admin/default.aspx", Label = "Event admin", Note = "Điểm vào khu quản trị event", Badge = "Admin" });
+        }
+
+        return items;
+    }
+
+    protected bool ShowHeaderQuickActions()
+    {
+        return BuildHeaderQuickActions().Count > 0;
+    }
+
+    protected string ResolveHeaderQuickActionsTitle()
+    {
+        string spaceCode = ResolveCurrentSpaceCode();
+        if (string.Equals(spaceCode, ModuleSpace_cl.DauGia, StringComparison.OrdinalIgnoreCase))
+            return "Đi nhanh không gian đấu giá";
+        if (string.Equals(spaceCode, ModuleSpace_cl.Event, StringComparison.OrdinalIgnoreCase))
+            return "Đi nhanh không gian event";
+        return "Đi nhanh";
+    }
+
+    protected string RenderHeaderQuickActionsHtml()
+    {
+        var items = BuildHeaderQuickActions();
+        if (items.Count == 0)
+            return "";
+
+        var html = new StringBuilder();
+        foreach (HeaderQuickAction item in items)
+        {
+            html.Append("<a class=\"aha-header-quick-link\" href=\"")
+                .Append(HttpUtility.HtmlAttributeEncode(item.Url ?? "#"))
+                .Append("\">")
+                .Append("<span class=\"aha-header-quick-copy\">")
+                .Append("<strong>")
+                .Append(HttpUtility.HtmlEncode(item.Label ?? ""))
+                .Append("</strong>");
+
+            if (!string.IsNullOrWhiteSpace(item.Note))
+            {
+                html.Append("<small>")
+                    .Append(HttpUtility.HtmlEncode(item.Note))
+                    .Append("</small>");
+            }
+
+            html.Append("</span>");
+
+            if (!string.IsNullOrWhiteSpace(item.Badge))
+            {
+                html.Append("<span class=\"aha-header-quick-badge\">")
+                    .Append(HttpUtility.HtmlEncode(item.Badge))
+                    .Append("</span>");
+            }
+
+            html.Append("</a>");
+        }
+
+        return html.ToString();
     }
 
     private void BuildDanhMucTabler(int capBatDau, int capKetThuc, bool bin, string kyhieu, string idLoaiTru)
@@ -106,7 +515,11 @@ public partial class Uc_Home_Header_uc : System.Web.UI.UserControl
 
         using (dbDataContext db = new dbDataContext())
         {
+            BindHeaderCenterLogo(db);
+
             string _tk_enc = PortalRequest_cl.GetCurrentAccountEncrypted();
+            string currentSpaceCode = ResolveCurrentSpaceCode();
+            bool laKhongGianGianHang = string.Equals(currentSpaceCode, ModuleSpace_cl.GianHang, StringComparison.OrdinalIgnoreCase);
             bool isShopPortalRequest = PortalRequest_cl.IsShopPortalRequest();
             bool hasHomeCredential = PortalActiveMode_cl.HasHomeCredential();
             bool hasShopCredential = PortalActiveMode_cl.HasShopCredential();
@@ -115,10 +528,10 @@ public partial class Uc_Home_Header_uc : System.Web.UI.UserControl
             bool showModeBadge = (homeModeActive && hasHomeCredential) || (shopModeActive && hasShopCredential);
 
             if (phModeBadge != null)
-                phModeBadge.Visible = showModeBadge;
+                phModeBadge.Visible = false;
 
             if (phModeBadgeMobile != null)
-                phModeBadgeMobile.Visible = showModeBadge;
+                phModeBadgeMobile.Visible = true;
 
             if (lb_mode_badge != null)
             {
@@ -136,16 +549,8 @@ public partial class Uc_Home_Header_uc : System.Web.UI.UserControl
 
             if (lb_mode_badge_mobile != null)
             {
-                if (showModeBadge)
-                {
-                    bool isShopMode = shopModeActive;
-                    lb_mode_badge_mobile.Text = isShopMode ? "Shop" : "Home";
-                    lb_mode_badge_mobile.CssClass = "mode-badge mode-mobile " + (isShopMode ? "mode-shop" : "mode-home");
-                }
-                else
-                {
-                    lb_mode_badge_mobile.Text = "";
-                }
+                lb_mode_badge_mobile.Text = ResolveCurrentSpaceLabel(currentSpaceCode);
+                lb_mode_badge_mobile.CssClass = "mode-badge mode-mobile " + ResolveCurrentSpaceCss(currentSpaceCode);
             }
 
             if (!string.IsNullOrEmpty(_tk_enc)) // có đăng nhập
@@ -176,8 +581,8 @@ public partial class Uc_Home_Header_uc : System.Web.UI.UserControl
                     if (phTopDesktopHomeUtilities != null) phTopDesktopHomeUtilities.Visible = false;
                     if (phTopMobileHomeUtilities != null) phTopMobileHomeUtilities.Visible = false;
                     if (phTopMobileFavorite != null) phTopMobileFavorite.Visible = false;
-                    if (phTopNotificationDesktop != null) phTopNotificationDesktop.Visible = false;
-                    if (phTopNotificationDesktopShop != null) phTopNotificationDesktopShop.Visible = true;
+                    if (phTopNotificationDesktop != null) phTopNotificationDesktop.Visible = true;
+                    if (phTopNotificationDesktopShop != null) phTopNotificationDesktopShop.Visible = false;
                     if (phTopNotificationMobile != null) phTopNotificationMobile.Visible = true;
                     if (phTopMobileAccount != null) phTopMobileAccount.Visible = true;
                 }
@@ -212,11 +617,28 @@ public partial class Uc_Home_Header_uc : System.Web.UI.UserControl
                 if (phMenuHomeDonMua != null) phMenuHomeDonMua.Visible = !laGianHangDoiTac;
                 if (phMenuHomeLichHen != null) phMenuHomeLichHen.Visible = !laGianHangDoiTac;
                 if (phMenuHomeLichSuTraoDoi != null) phMenuHomeLichSuTraoDoi.Visible = !laGianHangDoiTac;
-                if (phUtilityHome != null) phUtilityHome.Visible = !laGianHangDoiTac;
-                if (phMenuHomeExtra != null) phMenuHomeExtra.Visible = !laGianHangDoiTac;
+                if (phUtilityHome != null) phUtilityHome.Visible = !laGianHangDoiTac && !laKhongGianGianHang;
+                if (phMenuHomeExtra != null) phMenuHomeExtra.Visible = !laGianHangDoiTac && !laKhongGianGianHang;
                 if (phSwitchToShop != null) phSwitchToShop.Visible = !laGianHangDoiTac && hasShopCredential;
                 if (phSwitchToHome != null) phSwitchToHome.Visible = laGianHangDoiTac && hasHomeCredential;
                 if (phGuestSwitchHome != null) phGuestSwitchHome.Visible = false;
+                if (phTopMobileGuestAuth != null) phTopMobileGuestAuth.Visible = false;
+
+                if (phHomeSpaceAccessSummary != null && laKhongGianGianHang)
+                    phHomeSpaceAccessSummary.Visible = false;
+                if (phGianHangCompactMenu != null) phGianHangCompactMenu.Visible = laKhongGianGianHang;
+                if (phDefaultAccountMenu != null) phDefaultAccountMenu.Visible = !laKhongGianGianHang;
+                if (phGianHangCompactAdmin != null)
+                {
+                    RootAccount_cl.RootAccountInfo rootInfo = RootAccount_cl.GetInfo(db, GetCurrentHomeAccount());
+                    phGianHangCompactAdmin.Visible = laKhongGianGianHang && rootInfo != null && rootInfo.CanAccessGianHangAdmin;
+                }
+                if (laKhongGianGianHang)
+                {
+                    if (phSwitchToShop != null) phSwitchToShop.Visible = false;
+                    if (phSwitchToHome != null) phSwitchToHome.Visible = false;
+                    if (phMenuShopTinhNang != null) phMenuShopTinhNang.Visible = false;
+                }
             }
             else // chưa đăng nhập
             {
@@ -246,24 +668,35 @@ public partial class Uc_Home_Header_uc : System.Web.UI.UserControl
                 if (phUtilityHome != null) phUtilityHome.Visible = false;
                 if (phMenuHomeExtra != null) phMenuHomeExtra.Visible = false;
                 if (phTopDesktopHomeUtilities != null) phTopDesktopHomeUtilities.Visible = false;
-                if (phTopMobileHomeUtilities != null) phTopMobileHomeUtilities.Visible = !isShopPortalRequest;
-                if (phTopMobileFavorite != null) phTopMobileFavorite.Visible = !isShopPortalRequest;
+                if (phTopMobileHomeUtilities != null) phTopMobileHomeUtilities.Visible = false;
+                if (phTopMobileFavorite != null) phTopMobileFavorite.Visible = false;
                 if (phTopNotificationDesktop != null) phTopNotificationDesktop.Visible = false;
                 if (phTopNotificationDesktopShop != null) phTopNotificationDesktopShop.Visible = false;
-                if (phTopNotificationMobile != null) phTopNotificationMobile.Visible = !isShopPortalRequest;
-                if (phTopMobileAccount != null) phTopMobileAccount.Visible = !isShopPortalRequest;
+                if (phTopNotificationMobile != null) phTopNotificationMobile.Visible = false;
+                if (phTopMobileAccount != null) phTopMobileAccount.Visible = false;
+                if (phTopMobileGuestAuth != null) phTopMobileGuestAuth.Visible = !isShopPortalRequest;
                 badgeThongBaoDesktop.Visible = false;
                 if (badgeThongBaoDesktopShop != null) badgeThongBaoDesktopShop.Visible = false;
                 badgeThongBaoMobile.Visible = false;
                 if (phSwitchToShop != null) phSwitchToShop.Visible = false;
                 if (phSwitchToHome != null) phSwitchToHome.Visible = false;
                 if (phGuestSwitchHome != null) phGuestSwitchHome.Visible = (!homeModeActive && shopModeActive && hasHomeCredential);
+                if (phGianHangCompactMenu != null) phGianHangCompactMenu.Visible = false;
+                if (phDefaultAccountMenu != null) phDefaultAccountMenu.Visible = true;
+                if (phGianHangCompactAdmin != null) phGianHangCompactAdmin.Visible = false;
             }
 
             // Shop portal chỉ hiển thị nút quay về trang chủ shop ở top-nav/mobile-nav.
             string portalScope = (ViewState["portal_scope"] ?? "").ToString();
             if (string.IsNullOrEmpty(portalScope))
                 portalScope = isShopPortalRequest ? PortalScope_cl.ScopeShop : PortalScope_cl.ScopeHome;
+
+            if (laKhongGianGianHang)
+            {
+                show_danhmuc_nav = "";
+                show_danhmuc_mobile = "";
+                return;
+            }
 
             if (string.Equals(portalScope, PortalScope_cl.ScopeShop, StringComparison.OrdinalIgnoreCase))
             {
@@ -562,30 +995,62 @@ public partial class Uc_Home_Header_uc : System.Web.UI.UserControl
         {
             _tk = mahoa_cl.giaima_Bcorn(_tk);
 
-            var q = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == _tk);
+            HeaderAccountSnapshot q = db.ExecuteQuery<HeaderAccountSnapshot>(@"
+SELECT TOP 1
+    taikhoan AS TaiKhoan,
+    hoten AS HoTen,
+    anhdaidien AS AnhDaiDien,
+    qr_code AS QrCode,
+    email AS Email,
+    phanloai AS PhanLoai,
+    permission AS Permission,
+    ISNULL(DongA, 0) AS DongA,
+    ISNULL(Vi1That_Evocher_30PhanTram, 0) AS Vi1ThatEvocher30PhanTram,
+    ISNULL(Vi2That_LaoDong_50PhanTram, 0) AS Vi2ThatLaoDong50PhanTram,
+    ISNULL(Vi3That_GanKet_20PhanTram, 0) AS Vi3ThatGanKet20PhanTram,
+    ISNULL(HoSo_TieuDung_ShopOnly, 0) AS HoSoTieuDungShopOnly,
+    ISNULL(HoSo_UuDai_ShopOnly, 0) AS HoSoUuDaiShopOnly
+FROM dbo.taikhoan_tb
+WHERE taikhoan = {0}
+", _tk).FirstOrDefault();
             if (q == null) return;
 
-            ViewState["hoten"] = q.hoten;
-            ViewState["anhdaidien"] = q.anhdaidien;
-            ViewState["qr_code"] = q.qr_code;
-            ViewState["email"] = q.email;
+            ViewState["hoten"] = q.HoTen;
+            ViewState["anhdaidien"] = q.AnhDaiDien;
+            ViewState["qr_code"] = q.QrCode;
+            ViewState["email"] = q.Email;
             ViewState["taikhoan"] = _tk;
-            string scope = PortalScope_cl.ResolveScope(q.taikhoan, q.phanloai, q.permission);
+            string scope = PortalScope_cl.ResolveScope(_tk, q.PhanLoai, q.Permission);
             ViewState["portal_scope"] = scope;
-            ViewState["public_profile_link"] = ShopSlug_cl.GetPublicUrl(db, q);
-            int tierHome = TierHome_cl.TinhTierHome(db, _tk);
+            ViewState["public_profile_link"] = string.Equals(scope, PortalScope_cl.ScopeShop, StringComparison.OrdinalIgnoreCase)
+                ? ("/shop/public.aspx?user=" + HttpUtility.UrlEncode(_tk.Trim().ToLowerInvariant()))
+                : ("/" + _tk.Trim().ToLowerInvariant() + ".info");
+            int tierHome = TierHome_cl.GetTierFromPhanLoai(q.PhanLoai);
+            if (tierHome <= TierHome_cl.Tier0)
+                tierHome = TierHome_cl.Tier1;
             ViewState["tier_home"] = tierHome;
+            try
+            {
+                BindHomeSpaceAccessSummary(db, _tk, scope);
+            }
+            catch
+            {
+                if (phHomeSpaceAccessSummary != null)
+                    phHomeSpaceAccessSummary.Visible = false;
+                if (phHomeSpaceAccessSummaryMobile != null)
+                    phHomeSpaceAccessSummaryMobile.Visible = false;
+            }
 
             // ✅ lưu raw để check nghiệp vụ
-            ViewState["phanloai_raw"] = q.phanloai;
+            ViewState["phanloai_raw"] = q.PhanLoai;
 
-            ViewState["DongA"] = (q.DongA ?? 0m).ToString("#,##0");
+            ViewState["DongA"] = q.DongA.ToString("#,##0");
 
             // Dropdown hồ sơ phải hiển thị SỐ DƯ THẬT đã ghi nhận (Vi*That),
             // không hiển thị phần điểm nhận/chờ xử lý (DuVi*).
-            string soDuUuDaiThat = (q.Vi1That_Evocher_30PhanTram ?? 0m).ToString("#,##0.00");
-            string soDuLaoDongThat = (q.Vi2That_LaoDong_50PhanTram ?? 0m).ToString("#,##0.00");
-            string soDuGanKetThat = (q.Vi3That_GanKet_20PhanTram ?? 0m).ToString("#,##0.00");
+            string soDuUuDaiThat = q.Vi1ThatEvocher30PhanTram.ToString("#,##0.00");
+            string soDuLaoDongThat = q.Vi2ThatLaoDong50PhanTram.ToString("#,##0.00");
+            string soDuGanKetThat = q.Vi3ThatGanKet20PhanTram.ToString("#,##0.00");
 
             // Key mới (ưu tiên render)
             ViewState["HoSo_UuDai_Real"] = soDuUuDaiThat;
@@ -598,8 +1063,8 @@ public partial class Uc_Home_Header_uc : System.Web.UI.UserControl
             ViewState["DuVi3_GanKet_20PhanTram"] = soDuGanKetThat;
 
             // ✅ NEW: 2 trường hồ sơ shop only (null -> 0)
-            ViewState["HoSo_TieuDung_ShopOnly"] = (q.HoSo_TieuDung_ShopOnly ?? 0m).ToString("#,##0.00");
-            ViewState["HoSo_UuDai_ShopOnly"] = (q.HoSo_UuDai_ShopOnly ?? 0m).ToString("#,##0.00");
+            ViewState["HoSo_TieuDung_ShopOnly"] = q.HoSoTieuDungShopOnly.ToString("#,##0.00");
+            ViewState["HoSo_UuDai_ShopOnly"] = q.HoSoUuDaiShopOnly.ToString("#,##0.00");
 
             if (scope == PortalScope_cl.ScopeShop)
             {
@@ -643,6 +1108,216 @@ public partial class Uc_Home_Header_uc : System.Web.UI.UserControl
                 if (phShopLevel2Upgrade != null) phShopLevel2Upgrade.Visible = false;
             }
         }
+    }
+
+    private void BindHomeSpaceAccessSummary(dbDataContext db, string accountKey, string scope)
+    {
+        // Chỉ hiển thị "Không gian hoạt động" trong menu 3 gạch (mobile offcanvas trái).
+        bool hasMobileSummary = phHomeSpaceAccessSummaryMobile != null && litHomeSpaceAccessSummaryMobile != null;
+        if (phHomeSpaceAccessSummary != null)
+            phHomeSpaceAccessSummary.Visible = false;
+        if (litHomeSpaceAccessSummary != null)
+            litHomeSpaceAccessSummary.Text = "";
+
+        if (!hasMobileSummary)
+            return;
+
+        phHomeSpaceAccessSummaryMobile.Visible = false;
+        litHomeSpaceAccessSummaryMobile.Text = "";
+
+        if (!string.Equals((scope ?? "").Trim(), PortalScope_cl.ScopeHome, StringComparison.OrdinalIgnoreCase))
+            return;
+
+        RootAccount_cl.RootAccountInfo info = RootAccount_cl.GetInfo(db, accountKey);
+        if (info == null || !info.IsAuthenticated)
+            return;
+
+        StringBuilder html = new StringBuilder();
+        AppendGianHangAdminWorkspaceLinks(db, html, accountKey);
+        AppendOwnGianHangAdminRequestLink(db, html, accountKey);
+        AppendOwnGianHangSpaceEntry(db, html, info, accountKey);
+        AppendManagedSpaceEntry(
+            db,
+            html,
+            accountKey,
+            ModuleSpace_cl.DauGia,
+            "đấu giá",
+            info.CanAccessDauGia,
+            "/daugia/admin/");
+        AppendManagedSpaceEntry(
+            db,
+            html,
+            accountKey,
+            ModuleSpace_cl.Event,
+            "sự kiện",
+            info.CanAccessEvent,
+            "/event/admin/");
+
+        if (html.Length == 0)
+            return;
+
+        string summaryHtml = html.ToString();
+        litHomeSpaceAccessSummaryMobile.Text = summaryHtml;
+        phHomeSpaceAccessSummaryMobile.Visible = true;
+    }
+
+    private void AppendSpaceLink(StringBuilder html, string label, string url, string routeText)
+    {
+        if (html == null)
+            return;
+
+        html.AppendFormat(@"
+<a class=""home-space-access-link"" href=""{0}"">
+    <span class=""home-space-access-copy"">
+        <strong>{1}</strong>
+        <span>{2}</span>
+    </span>
+    <i class=""ti ti-chevron-right text-secondary""></i>
+</a>",
+            HttpUtility.HtmlAttributeEncode(url),
+            HttpUtility.HtmlEncode(label),
+            HttpUtility.HtmlEncode(routeText));
+    }
+
+    private void AppendGianHangAdminWorkspaceLinks(dbDataContext db, StringBuilder html, string accountKey)
+    {
+        if (db == null || html == null || string.IsNullOrWhiteSpace(accountKey))
+            return;
+
+        var workspaces = GianHangAdminWorkspace_cl.GetAvailableWorkspaces(db, accountKey);
+        foreach (var workspace in workspaces)
+        {
+            if (workspace == null || string.IsNullOrWhiteSpace(workspace.OwnerAccountKey))
+                continue;
+
+            string ownerDisplay = (workspace.OwnerDisplayName ?? workspace.OwnerAccountKey ?? "").Trim();
+            string roleLabel = (workspace.RoleLabel ?? "").Trim();
+            string label = workspace.IsOwner
+                ? "Truy cập không gian quản trị gian hàng của bạn"
+                : ("Truy cập không gian quản trị gian hàng của " + ownerDisplay);
+            string routeText = workspace.IsOwner
+                ? "Đã duyệt · /gianhang/admin"
+                : ((roleLabel == "" ? "Đã tham gia" : roleLabel) + " · /gianhang/admin");
+
+            AppendSpaceLink(
+                html,
+                label,
+                "/gianhang/admin?space_owner=" + HttpUtility.UrlEncode(workspace.OwnerAccountKey),
+                routeText);
+        }
+    }
+
+    private void AppendOwnGianHangAdminRequestLink(dbDataContext db, StringBuilder html, string accountKey)
+    {
+        if (db == null || html == null || string.IsNullOrWhiteSpace(accountKey))
+            return;
+
+        taikhoan_tb account = RootAccount_cl.GetByAccountKey(db, accountKey);
+        if (account == null || SpaceAccess_cl.CanAccessGianHangAdmin(db, account))
+            return;
+
+        string routeText = BuildRequestStatusHint(
+            db,
+            accountKey,
+            ModuleSpace_cl.GianHangAdmin,
+            "Chưa duyệt · mở /gianhang/admin");
+
+        AppendSpaceLink(
+            html,
+            "Đăng ký không gian quản trị gian hàng của bạn",
+            "/home/mo-khong-gian.aspx?space=gianhang_admin&return_url=" + HttpUtility.UrlEncode("/gianhang/admin"),
+            routeText);
+    }
+
+    private void AppendOwnGianHangSpaceEntry(dbDataContext db, StringBuilder html, RootAccount_cl.RootAccountInfo info, string accountKey)
+    {
+        if (db == null || html == null || info == null || string.IsNullOrWhiteSpace(accountKey))
+            return;
+
+        if (info.CanAccessGianHang)
+        {
+            AppendSpaceLink(
+                html,
+                "Truy cập không gian gian hàng đối tác",
+                "/gianhang/",
+                "Đã duyệt · /gianhang");
+            return;
+        }
+
+        string routeText = BuildRequestStatusHint(
+            db,
+            accountKey,
+            ModuleSpace_cl.GianHang,
+            "Chưa duyệt · mở /gianhang");
+
+        AppendSpaceLink(
+            html,
+            "Đăng ký không gian gian hàng đối tác",
+            "/home/dang-ky-gian-hang-doi-tac.aspx?return_url=" + HttpUtility.UrlEncode("/gianhang/"),
+            routeText);
+    }
+
+    private void AppendManagedSpaceEntry(
+        dbDataContext db,
+        StringBuilder html,
+        string accountKey,
+        string spaceCode,
+        string spaceLabelLower,
+        bool canAccess,
+        string accessUrl)
+    {
+        if (db == null || html == null || string.IsNullOrWhiteSpace(accountKey))
+            return;
+
+        string normalizedSpace = ModuleSpace_cl.Normalize(spaceCode);
+        if (normalizedSpace == "")
+            return;
+
+        if (canAccess)
+        {
+            AppendSpaceLink(
+                html,
+                "Truy cập không gian " + spaceLabelLower,
+                accessUrl,
+                "Đã duyệt · " + accessUrl.TrimEnd('/'));
+            return;
+        }
+
+        string registerUrl = HomeSpaceAccess_cl.BuildAccessPageUrl(normalizedSpace, accessUrl);
+        string routeText = BuildRequestStatusHint(
+            db,
+            accountKey,
+            normalizedSpace,
+            "Chưa duyệt · mở " + accessUrl.TrimEnd('/'));
+
+        AppendSpaceLink(
+            html,
+            "Đăng ký không gian " + spaceLabelLower,
+            registerUrl,
+            routeText);
+    }
+
+    private string BuildRequestStatusHint(dbDataContext db, string accountKey, string spaceCode, string fallback)
+    {
+        if (db == null || string.IsNullOrWhiteSpace(accountKey))
+            return fallback;
+
+        CoreSpaceRequest_cl.SpaceRequestInfo latestRequest =
+            CoreSpaceRequest_cl.GetLatestRequest(db, accountKey, spaceCode);
+        if (latestRequest == null)
+            return fallback;
+
+        string status = (latestRequest.RequestStatus ?? "").Trim();
+        if (string.Equals(status, CoreSpaceRequest_cl.StatusPending, StringComparison.OrdinalIgnoreCase))
+            return "Đang chờ duyệt · đã gửi yêu cầu";
+        if (string.Equals(status, CoreSpaceRequest_cl.StatusRejected, StringComparison.OrdinalIgnoreCase))
+            return "Yêu cầu gần nhất bị từ chối";
+        if (string.Equals(status, CoreSpaceRequest_cl.StatusCancelled, StringComparison.OrdinalIgnoreCase))
+            return "Yêu cầu gần nhất đã hủy";
+        if (string.Equals(status, CoreSpaceRequest_cl.StatusApproved, StringComparison.OrdinalIgnoreCase))
+            return "Yêu cầu gần nhất đã duyệt";
+
+        return fallback;
     }
 
     private string GetIcon(string iconHtml)

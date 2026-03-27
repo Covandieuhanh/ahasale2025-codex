@@ -167,6 +167,55 @@
                                             <asp:TextBox ID="txt_facebook" runat="server" data-role="input"></asp:TextBox>
                                         </div>
                                     </div>
+                                    <div class="mt-4 p-4 border bd-cyan bg-light" style="border-radius: 14px;">
+                                        <div class="fw-700">Hồ sơ người AhaSale</div>
+                                        <div class="mt-1 fg-gray">
+                                            Thành viên này được liên kết Home tại module trung tâm Hồ sơ người. Gắn một lần ở đó là các vai trò cùng số điện thoại trong gian hàng sẽ tự đồng bộ.
+                                        </div>
+                                        <div class="mt-3">
+                                            <span class="data-wrapper"><code class="<%=HttpUtility.HtmlAttributeEncode(personHubStatusCss) %>"><%=HttpUtility.HtmlEncode(personHubStatusLabel) %></code></span>
+                                        </div>
+                                        <div class="mt-2 fg-gray"><%=HttpUtility.HtmlEncode(personHubNote) %></div>
+                                        <div class="mt-3">
+                                            <span class="data-wrapper"><code class="<%=HttpUtility.HtmlAttributeEncode(personHubAdminAccessCss) %>"><%=HttpUtility.HtmlEncode(personHubAdminAccessLabel) %></code></span>
+                                        </div>
+                                        <div class="mt-2 fg-gray"><%=HttpUtility.HtmlEncode(personHubAdminAccessNote) %></div>
+                                        <div class="mt-3">
+                                            <span class="data-wrapper"><code class="<%=HttpUtility.HtmlAttributeEncode(sourceLifecycleCss) %>"><%=HttpUtility.HtmlEncode(sourceLifecycleLabel) %></code></span>
+                                        </div>
+                                        <div class="mt-2 fg-gray"><%=HttpUtility.HtmlEncode(sourceLifecycleNote) %></div>
+                                        <div class="mt-3 p-3 border" style="border-radius: 12px; border-color: #cfe6ff!important; background: #f7fbff;">
+                                            <div class="fw-700">Ngừng dùng an toàn</div>
+                                            <div class="mt-1 fg-gray">
+                                                Ngừng dùng thành viên sẽ không xóa lịch sử, không gỡ liên kết Home ở Hồ sơ người và không làm mất các vai trò khác cùng số điện thoại trong gian hàng này.
+                                            </div>
+                                            <div class="mt-3">
+                                                <% if (!sourceLifecycleIsInactive) { %>
+                                                <asp:Button ID="but_ngung_hocvien" runat="server" Text="NGỪNG DÙNG THÀNH VIÊN" CssClass="button warning" OnClick="but_ngung_hocvien_Click" />
+                                                <% } else { %>
+                                                <asp:Button ID="but_molai_hocvien" runat="server" Text="MỞ LẠI THÀNH VIÊN" CssClass="button success" OnClick="but_molai_hocvien_Click" />
+                                                <% } %>
+                                            </div>
+                                        </div>
+                                        <div class="mt-3 p-3 border" style="border-radius: 12px; border-color: #f3d6b3!important; background: #fff9f2;">
+                                            <div class="fw-700"><%=HttpUtility.HtmlEncode(personHubImpactTitle) %></div>
+                                            <div class="mt-1 fg-gray"><%=HttpUtility.HtmlEncode(personHubImpactNote) %></div>
+                                        </div>
+                                        <div class="mt-3">
+                                            <a class="button success" href="<%=HttpUtility.HtmlAttributeEncode(personHubUrl) %>">Mở hồ sơ người</a>
+                                        </div>
+                                        <% if (!string.IsNullOrWhiteSpace(personHubRelatedRolesHtml)) { %>
+                                        <div class="mt-3 pt-3 border-top bd-light">
+                                            <div class="fw-700">Cùng số điện thoại này còn có thêm vai trò khác</div>
+                                            <div class="mt-1 fg-gray">
+                                                Đây là các hồ sơ khác trong cùng không gian đang dùng chung số điện thoại với thành viên này.
+                                            </div>
+                                            <div class="mt-2">
+                                                <%=personHubRelatedRolesHtml %>
+                                            </div>
+                                        </div>
+                                        <% } %>
+                                    </div>
                                 </div>
                                 <div class="cell-lg-4 p-3-lg mt-0-lg mt-5">
                                     <h5>Ngành học</h5>
@@ -302,4 +351,3 @@
 <asp:Content ID="Content3" ContentPlaceHolderID="foot" runat="Server">
     <%=notifi %>
 </asp:Content>
-

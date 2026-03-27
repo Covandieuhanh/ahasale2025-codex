@@ -178,11 +178,11 @@
                                     </div>
                                     <div class="mt-3">
                                         <label class="fw-600">Tên khách hàng</label>
-                                        <asp:TextBox ID="txt_tenkhachhang" runat="server" data-role="input" OnTextChanged="txt_tenkhachhang_TextChanged" AutoPostBack="true"></asp:TextBox></div>
+                                        <asp:TextBox ID="txt_tenkhachhang" runat="server" data-role="input"></asp:TextBox></div>
                                     <div class="mt-3">
                                         <label class="fw-600">Điện thoại</label>
                                         <%--<asp:TextBox ID="txt_sdt" runat="server" data-role="input" OnTextChanged="txt_sdt_TextChanged" AutoPostBack="true"></asp:TextBox>--%>
-                                        <asp:TextBox ID="txt_sdt" runat="server" data-role="input" OnTextChanged="txt_sdt_TextChanged" AutoPostBack="true"></asp:TextBox></div>
+                                        <asp:TextBox ID="txt_sdt" runat="server" data-role="input"></asp:TextBox></div>
                                     <%--<div class="mt-3">
                                         <label class="fw-600">Ngày sinh</label>
                                         <asp:TextBox ID="txt_ngaysinh" runat="server" MaxLength="10" data-role="calendar-picker" data-outside="true" data-dialog-mode="true" data-week-start="1" data-locale="vi-VN" data-format="DD/MM/YYYY" data-input-format="DD/MM/YYYY" data-clear-button="true"></asp:TextBox>
@@ -377,7 +377,12 @@
             <ContentTemplate>
                 <div class="row mt-1-minus <%--mt-0-lg-minus mt-12-minus--%>">
                     <div class="cell-md-6 order-2 order-md-1 mt-0">
-                        <asp:TextBox ID="txt_search" runat="server" data-role="input" data-prepend="<span class='mif mif-search'></span>" placeholder="Tìm kiếm" OnTextChanged="txt_search_TextChanged" AutoPostBack="true"></asp:TextBox>
+                        <div class="d-flex flex-align-center gap-2">
+                            <asp:TextBox ID="txt_search" runat="server" data-role="input" data-prepend="<span class='mif mif-search'></span>" placeholder="Tìm kiếm"></asp:TextBox>
+                            <asp:LinkButton ID="but_search" runat="server" CssClass="button" OnClick="but_search_Click" CausesValidation="false">
+                                <span class="mif mif-search"></span>
+                            </asp:LinkButton>
+                        </div>
                     </div>
                     <div class="cell-md-6 order-1 order-md-2 mt-0">
                         <div class="place-right">
@@ -541,11 +546,14 @@
                                                     <b><%#Eval("id").ToString() %></b>
                                                 </a>
                                                 <div>
-                                                    <asp:PlaceHolder ID="PlaceHolder7" runat="server" Visible='<%#Eval("nguongoc").ToString()=="App" %>'>
-                                                        <span class="data-wrapper"><code class="bg-cobalt fg-white">App</code></span>
-                                                    </asp:PlaceHolder>
-                                                    <asp:PlaceHolder ID="PlaceHolder8" runat="server" Visible='<%#Eval("nguongoc").ToString()=="Web" %>'>
-                                                        <span class="data-wrapper"><code class="bg-emerald fg-white">Web</code></span>
+                                                    <span class="data-wrapper">
+                                                        <code class="<%#Eval("source_badge_css") %>"><%#Eval("source_display") %></code>
+                                                    </span>
+                                                    <div class="fg-gray"><small><%#Eval("source_hint") %></small></div>
+                                                    <asp:PlaceHolder ID="ph_workspace_order" runat="server" Visible='<%#Convert.ToBoolean(Eval("is_workspace_mirror")) %>'>
+                                                        <div>
+                                                            <a class="fg-orange" href="<%#Eval("native_order_url") %>">Mở đơn /gianhang</a>
+                                                        </div>
                                                     </asp:PlaceHolder>
                                                 </div>
 
@@ -669,16 +677,41 @@
                 <%--END TABLE CHÍNH--%>
             </ContentTemplate>
         </asp:UpdatePanel>
-        <asp:UpdateProgress ID="UpdateProgress1" runat="server" AssociatedUpdatePanelID="UpdatePanel1">
-            <ProgressTemplate>
-                <div class="bg-dark fixed-top h-100 w-100" style="opacity: 0.9; z-index: 99999!important">
-                    <div style="padding-top: 50vh;">
-                        <div class="mx-auto color-style activity-atom" data-role="activity" data-type="atom" data-style="color" data-role-activity="true"><span class="electron"></span><span class="electron"></span><span class="electron"></span></div>
-                    </div>
-                </div>
-            </ProgressTemplate>
-        </asp:UpdateProgress>
+    <asp:UpdateProgress ID="UpdateProgress1" runat="server" AssociatedUpdatePanelID="UpdatePanel1">
+        <ProgressTemplate>
+            <div style="position: fixed; top: 92px; right: 18px; z-index: 99999!important; display: inline-flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 999px; background: rgba(15, 23, 42, 0.92); box-shadow: 0 12px 28px rgba(15, 23, 42, 0.24);">
+                <div class="color-style activity-ring" data-role="activity" data-type="ring" data-style="color" data-small="true" data-role-activity="true"></div>
+                <span class="fg-white">Đang tải dữ liệu...</span>
+            </div>
+        </ProgressTemplate>
+    </asp:UpdateProgress>
     </div>
+</asp:Content>
+<asp:Content ID="ContentFast" ContentPlaceHolderID="foot" runat="Server">
+    <script src="/js/gianhang-invoice-fast.js?v=2026-03-26.2"></script>
+    <script>
+        (function () {
+            function bindFastUi() {
+                if (!window.ahaInvoiceFast) return;
+                window.ahaInvoiceFast.initSearchSubmit({
+                    inputId: "<%=txt_search.ClientID %>",
+                    buttonId: "<%=but_search.ClientID %>"
+                });
+                window.ahaInvoiceFast.initCustomerLookup({
+                    endpoint: "/gianhang/admin/quan-ly-hoa-don/lookup-data.ashx",
+                    phoneId: "<%=txt_sdt.ClientID %>",
+                    nameId: "<%=txt_tenkhachhang.ClientID %>",
+                    addressId: "<%=txt_diachi.ClientID %>",
+                    careId: "<%=ddl_nhanvien_chamsoc.ClientID %>",
+                    groupId: "<%=DropDownList1.ClientID %>"
+                });
+            }
+            bindFastUi();
+            if (window.Sys && Sys.Application) {
+                Sys.Application.add_load(bindFastUi);
+            }
+        })();
+    </script>
 </asp:Content>
 <asp:Content ID="Content3" ContentPlaceHolderID="foot" runat="Server">
     <script>
@@ -688,4 +721,3 @@
     </script>
     <%--<%=notifi %>--%>
 </asp:Content>
-

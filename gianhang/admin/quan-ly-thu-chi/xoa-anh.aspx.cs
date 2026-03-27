@@ -50,7 +50,7 @@ public partial class quan_ly_ban_hang_thuong_quy_cap_duoi : System.Web.UI.Page
         }
         #endregion 
         user = Session["user"].ToString();
-        user_parent = "admin";
+        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
 
         if (!string.IsNullOrWhiteSpace(Request.QueryString["id"]))
         {

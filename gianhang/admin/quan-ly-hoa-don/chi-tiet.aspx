@@ -198,7 +198,7 @@
                                             <div class="mt-3">
                                                 <label class="fw-600">Dịch vụ</label>
                                                 <%--<asp:DropDownList ID="ddl_dichvu" runat="server" AutoPostBack="true" OnSelectedIndexChanged="ddl_dichvu_SelectedIndexChanged"></asp:DropDownList>--%>
-                                                <asp:TextBox ID="txt_tendichvu" runat="server" data-role="input" placeholder="Nhập và chọn tên dịch vụ" OnTextChanged="txt_tendichvu_TextChanged" AutoPostBack="true"></asp:TextBox></div>
+                                                <asp:TextBox ID="txt_tendichvu" runat="server" data-role="input" placeholder="Nhập và chọn tên dịch vụ"></asp:TextBox></div>
                                             <div class="mt-3">
                                                 <label class="fw-600">Giá</label>
                                                 <asp:TextBox ID="txt_gia" MaxLength="13" runat="server" data-role="input" onchange="format_sotien(this);"></asp:TextBox><%--autocomplete="off" --%>
@@ -285,7 +285,7 @@
                                             <div class="mt-3">
                                                 <label class="fw-600">Sản phẩm</label>
                                                 <%--<asp:DropDownList ID="ddl_sanpham" runat="server" AutoPostBack="true" OnSelectedIndexChanged="ddl_sanpham_SelectedIndexChanged"></asp:DropDownList>--%>
-                                                <asp:TextBox ID="txt_tensanpham" runat="server" data-role="input" placeholder="Nhập và chọn tên sản phẩm" OnTextChanged="txt_tensanpham_TextChanged" AutoPostBack="true"></asp:TextBox></div>
+                                                <asp:TextBox ID="txt_tensanpham" runat="server" data-role="input" placeholder="Nhập và chọn tên sản phẩm"></asp:TextBox></div>
                                             <div class="mt-3">
                                                 <label class="fw-600">Giá</label>
                                                 <asp:TextBox ID="txt_gia_sanpham" MaxLength="13" runat="server" data-role="input" onchange="format_sotien(this);"></asp:TextBox><%--autocomplete="off" --%>
@@ -761,8 +761,12 @@
 
                     <div class="row">
                         <div class="cell-md-6 order-2 order-md-1 mt-0">
-                            <asp:TextBox ID="txt_search" runat="server" data-role="input" data-prepend="<span class='mif mif-search'></span>" placeholder="Tìm kiếm theo dịch vụ hoặc sản phẩm" OnTextChanged="txt_search_TextChanged" AutoPostBack="true"></asp:TextBox>
-
+                            <div class="d-flex flex-align-center gap-2">
+                                <asp:TextBox ID="txt_search" runat="server" data-role="input" data-prepend="<span class='mif mif-search'></span>" placeholder="Tìm kiếm theo dịch vụ hoặc sản phẩm"></asp:TextBox>
+                                <asp:LinkButton ID="but_search" runat="server" CssClass="button" OnClick="but_search_Click" CausesValidation="false">
+                                    <span class="mif mif-search"></span>
+                                </asp:LinkButton>
+                            </div>
                         </div>
                         <div class="cell-md-6 order-1 order-md-2 mt-0">
 
@@ -963,14 +967,46 @@
         </asp:UpdatePanel>
         <asp:UpdateProgress ID="UpdateProgress1" runat="server" AssociatedUpdatePanelID="UpdatePanel1">
             <ProgressTemplate>
-                <div class="bg-dark fixed-top h-100 w-100" style="opacity: 0.9; z-index: 99999!important">
-                    <div style="padding-top: 50vh;">
-                        <div class="mx-auto color-style activity-atom" data-role="activity" data-type="atom" data-style="color" data-role-activity="true"><span class="electron"></span><span class="electron"></span><span class="electron"></span></div>
-                    </div>
+                <div style="position: fixed; top: 92px; right: 18px; z-index: 99999!important; display: inline-flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 999px; background: rgba(15, 23, 42, 0.92); box-shadow: 0 12px 28px rgba(15, 23, 42, 0.24);">
+                    <div class="color-style activity-ring" data-role="activity" data-type="ring" data-style="color" data-small="true" data-role-activity="true"></div>
+                    <span class="fg-white">Đang cập nhật hóa đơn...</span>
                 </div>
             </ProgressTemplate>
         </asp:UpdateProgress>
     </div>
+</asp:Content>
+<asp:Content ID="ContentFast" ContentPlaceHolderID="foot" runat="Server">
+    <script src="/js/gianhang-invoice-fast.js?v=2026-03-26.2"></script>
+    <script>
+        (function () {
+            function bindFastUi() {
+                if (!window.ahaInvoiceFast) return;
+                window.ahaInvoiceFast.initSearchSubmit({
+                    inputId: "<%=txt_search.ClientID %>",
+                    buttonId: "<%=but_search.ClientID %>"
+                });
+                window.ahaInvoiceFast.initItemLookup({
+                    endpoint: "/gianhang/admin/quan-ly-hoa-don/lookup-data.ashx",
+                    mode: "service",
+                    inputId: "<%=txt_tendichvu.ClientID %>",
+                    priceId: "<%=txt_gia.ClientID %>",
+                    saleId: "<%=txt_chietkhau_chotsale.ClientID %>",
+                    performerId: "<%=txt_chietkhau_lamdichvu.ClientID %>"
+                });
+                window.ahaInvoiceFast.initItemLookup({
+                    endpoint: "/gianhang/admin/quan-ly-hoa-don/lookup-data.ashx",
+                    mode: "product",
+                    inputId: "<%=txt_tensanpham.ClientID %>",
+                    priceId: "<%=txt_gia_sanpham.ClientID %>",
+                    saleId: "<%=txt_chietkhau_chotsale_sanpham.ClientID %>"
+                });
+            }
+            bindFastUi();
+            if (window.Sys && Sys.Application) {
+                Sys.Application.add_load(bindFastUi);
+            }
+        })();
+    </script>
 </asp:Content>
 <asp:Content ID="Content3" ContentPlaceHolderID="foot" runat="Server">
     <script>
@@ -980,4 +1016,3 @@
     </script>
     <%--<%=notifi %>--%>
 </asp:Content>
-

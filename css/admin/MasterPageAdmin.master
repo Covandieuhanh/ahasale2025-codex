@@ -1,0 +1,289 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeFile="MasterPageAdmin.master.cs" Inherits="admin_MasterPageAdmin" %>
+
+<%@ Register Src="~/admin/uc/menu-left-uc.ascx" TagPrefix="uc1" TagName="menuleftuc" %>
+<%@ Register Src="~/admin/uc/menu-top-uc.ascx" TagPrefix="uc1" TagName="menutopuc" %>
+
+
+
+<!DOCTYPE html>
+
+<html lang="vi">
+<head runat="server">
+    <title>ADMIN AHASALE.VN</title>
+
+    <%--Basic --%>
+    <meta charset="UTF-8" />
+    <meta http-equiv="content-language" content="vi" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes" />
+    <meta name="robots" content="index, follow" />
+    <meta name="revisit-after" content="1 days" />
+    <meta property="og:type" content="website" />
+
+    <%--Open Graph Meta Tags --%>
+    <%--
+    <meta property="og:title" content="Mô tả ngắn và hấp dẫn về trang web của bạn" />
+    <meta property="og:url" content="URL_trang_web_cua_ban" />
+    <meta property="og:image" content="URL_hinh_anh_1200x630" />
+    <meta property="og:description" content="Mô tả ngắn và hấp dẫn về nội dung của trang web của bạn." />
+
+    <title></title>
+    <meta name="description" content="Mô tả ngắn và hấp dẫn về nội dung của trang web của bạn." />
+    <link rel="canonical" href="https://bcorn.net" />--%>
+
+    <%--Favicon & icon Mobile--%>
+    <asp:Literal ID="literal_fav_icon" runat="server"></asp:Literal>
+
+    <%--css nguồn--%>
+    <link href="/Metro-UI-CSS-master/css/metro-all.min.css" rel="stylesheet" />
+    <link href="/Metro-UI-CSS-master/css/icons.css" rel="stylesheet" />
+    <%--dành riêng cho trang admin--%>
+    <link href="/css/admin-style.css" rel="stylesheet" />
+    <%--viết thêm dựa vào metro--%>
+    <link href="/css/bcorn-with-metro.css" rel="stylesheet" />
+    <%--sửa lại css metro theo ý mình--%>
+    <link href="/css/fix-metro.css" rel="stylesheet" />
+    <link href="/css/admin-unified.css?v=2026-03-02.3" rel="stylesheet" />
+    <link href="/css/admin-clean.css?v=2026-03-03.12" rel="stylesheet" />
+    <link href="/css/admin-home-sync.css?v=2026-03-06.2" rel="stylesheet" />
+    <!-- jquery nên để trước các js khác -->
+    <%--<script src="/js/jquery-3.7.1.min.js"></script>--%>
+    <asp:ContentPlaceHolder ID="head" runat="server"></asp:ContentPlaceHolder>
+
+    <link rel='icon' href='/uploads/images/favicon.png' sizes='16x16' type='image/x-icon' />
+    <link rel='icon' href='/uploads/images/favicon.png' sizes='32x32' type='image/x-icon' />
+    <link rel='icon' href='/uploads/images/favicon.png' sizes='48x48' type='image/x-icon' />
+    <!-- Apple Touch Icon -->
+    <link rel='apple-touch-icon' href='/uploads/images/icon-mobile.jpg' sizes='180x180' />
+    <link rel='apple-touch-icon' href='/uploads/images/icon-mobile.jpg' sizes='167x167' />
+    <link rel='apple-touch-icon' href='/uploads/images/icon-mobile.jpg' sizes='152x152' />
+    <link rel='apple-touch-icon' href='/uploads/images/icon-mobile.jpg' sizes='120x120' />
+
+    <!-- Android Icons -->
+    <link rel='icon' href='/uploads/images/icon-mobile.jpg' sizes='192x192' />
+    <link rel='icon' href='/uploads/images/icon-mobile.jpg' sizes='144x144' />
+    <meta property='og:title' content='ADMIN AHASALE.VN' />
+    <meta property='og:image' content='/uploads/images/config/ac087060-8cf4-4fd7-bf20-a5fff4677952.jpg' />
+
+   
+</head>
+<body class="admin-shell admin-static admin-loading admin-avatar-nav-only">
+    <script>
+        (function () {
+            function markAdminReady() {
+                var body = document.body;
+                if (!body) return;
+                body.classList.remove("admin-loading");
+                body.classList.add("admin-ready");
+            }
+
+            if (document.readyState === "loading") {
+                document.addEventListener("DOMContentLoaded", markAdminReady);
+            } else {
+                markAdminReady();
+            }
+
+            window.addEventListener("pageshow", markAdminReady);
+            window.setTimeout(markAdminReady, 1400);
+        })();
+    </script>
+    <form id="form1" runat="server">
+
+        <asp:ScriptManager ID="ScriptManager1" runat="server" EnableScriptGlobalization="True"></asp:ScriptManager>
+
+        <div id="nv" class="admin-navview" data-role="navview" data-toggle="#paneToggle" data-expand="xl" data-compact="lg" data-active-state="false">
+            <uc1:menuleftuc runat="server" ID="menuleftuc" />
+
+            <div class="navview-content h-vh-100 admin-content">
+                <uc1:menutopuc runat="server" ID="menutopuc" />
+
+                <div class="content-inner admin-content-inner">
+                    <%--<div class="pos-relative pb-11">
+                        <div id="menutop-tool-bc" style="position: fixed; top: 52px; width: 100%; z-index: 2">
+                            <ul class="h-menu bg-white">
+                                <li class=""><a href="#">Thanh công cụ</a></li>
+                                <li><a href="#"><span class="mif mif-plus"></span>Thanh công cụ</a></li>
+                                <li>
+                                    <asp:LinkButton ID="LinkButton2" runat="server"><span class="mif-floppy-disk"></span> Lưu</asp:LinkButton>
+                                </li>
+
+                                <li>
+                                    <a href="#" class="dropdown-toggle">Products</a>
+                                    <ul class="d-menu" data-role="dropdown">
+                                        <li>
+                                            <a href="#" class="dropdown-toggle">Windows</a>
+                                            <ul class="d-menu" data-role="dropdown">
+                                                <li><a href="#">Windows 10</a></li>
+                                                <li><a href="#">Windows Server</a></li>
+                                                <li class="divider"></li>
+                                                <li><a href="#">MS-DOS</a></li>
+                                            </ul>
+                                        </li>
+                                        <li><a href="#">Skype</a></li>
+                                        <li class="divider"></li>
+                                        <li><a href="#">Office</a></li>
+                                    </ul>
+                                </li>
+
+                                <li><a href="#">Thanh công cụ</a></li>
+                                <li><a href="#">Thanh công cụ</a></li>
+                            </ul>
+                        </div>
+                    </div>--%>
+                    <%--<div class="pos-relative">
+                        <div id="menu-tool-bc" style="position: fixed; bottom: 0px; width: 100%">
+                            <ul class="h-menu">
+                                <li class=""><a href="#">Thanh công cụ</a></li>
+                                <li><a href="#"><span class="mif mif-plus"></span>Thanh công cụ</a></li>
+                                <li>
+                                    <asp:LinkButton ID="LinkButton1" runat="server"><span class="mif-floppy-disk"></span> Lưu</asp:LinkButton>
+                                </li>
+
+                                <li>
+                                    <a href="#" class="dropdown-toggle">Products</a>
+                                    <ul class="d-menu" data-role="dropdown" style="top: auto; bottom: 100%">
+                                        <li>
+                                            <a href="#" class="dropdown-toggle">Windows</a>
+                                            <ul class="d-menu" data-role="dropdown">
+                                                <li><a href="#">Windows 10</a></li>
+                                                <li><a href="#">Windows Server</a></li>
+                                                <li class="divider"></li>
+                                                <li><a href="#">MS-DOS</a></li>
+                                            </ul>
+                                        </li>
+                                        <li><a href="#">Skype</a></li>
+                                        <li class="divider"></li>
+                                        <li><a href="#">Office</a></li>
+                                    </ul>
+                                </li>
+
+                                <li><a href="#">Thanh công cụ</a></li>
+                                <li><a href="#">Thanh công cụ</a></li>
+                            </ul>
+                        </div>
+                    </div>--%>
+                    <div class="admin-page">
+                        <asp:ContentPlaceHolder ID="main" runat="server"></asp:ContentPlaceHolder>
+                    </div>
+                    <div class="pb-20">&nbsp;</div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <script src="/Metro-UI-CSS-master/js/metro.min.js"></script>
+        <script src="/js/bcorn.js"></script>
+        <script src="/js/aha-ui-refresh.js?v=2026-03-06.4"></script>
+        <script>
+            window.ahaAdminCharms = function (action) {
+                try {
+                    if (!window.Metro || typeof Metro.getPlugin !== "function") {
+                        return true;
+                    }
+                    var charms = Metro.getPlugin("#thongbao-charms", "charms");
+                    if (!charms) {
+                        return true;
+                    }
+                    if (action === "toggle" && typeof charms.toggle === "function") {
+                        charms.toggle();
+                    } else if (action === "open" && typeof charms.open === "function") {
+                        charms.open();
+                    } else if (typeof charms.close === "function") {
+                        charms.close();
+                    }
+                } catch (err) { }
+                return true;
+            };
+        </script>
+        <script>
+            (function () {
+                function revealAdminAvatar() {
+                    var shell = document.getElementById("admin-avatar-shell");
+                    if (!shell) return;
+                    shell.style.visibility = "visible";
+                    shell.style.opacity = "1";
+                }
+
+                function bindAdminAvatarDropdown() {
+                    var shell = document.getElementById("admin-avatar-shell");
+                    var toggle = document.getElementById("admin-avatar-toggle");
+                    var dropdown = document.getElementById("admin-avatar-dropdown");
+                    if (!shell || !toggle || !dropdown) return;
+
+                    if (toggle.getAttribute("data-avatar-bound") === "1") return;
+                    toggle.setAttribute("data-avatar-bound", "1");
+
+                    function closeDropdown() {
+                        shell.classList.remove("open");
+                        toggle.setAttribute("aria-expanded", "false");
+                    }
+
+                    function openDropdown() {
+                        shell.classList.add("open");
+                        toggle.setAttribute("aria-expanded", "true");
+                    }
+
+                    toggle.addEventListener("click", function (event) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        if (shell.classList.contains("open")) {
+                            closeDropdown();
+                        } else {
+                            openDropdown();
+                        }
+                    });
+
+                    dropdown.addEventListener("click", function (event) {
+                        event.stopPropagation();
+                    });
+
+                    if (!window.__ahaAdminAvatarDocBound) {
+                        document.addEventListener("click", function (event) {
+                            var currentShell = document.getElementById("admin-avatar-shell");
+                            var currentToggle = document.getElementById("admin-avatar-toggle");
+                            if (!currentShell || !currentToggle) return;
+                            if (currentShell.contains(event.target)) return;
+                            currentShell.classList.remove("open");
+                            currentToggle.setAttribute("aria-expanded", "false");
+                        });
+
+                        document.addEventListener("keydown", function (event) {
+                            if (event.key !== "Escape") return;
+                            var currentShell = document.getElementById("admin-avatar-shell");
+                            var currentToggle = document.getElementById("admin-avatar-toggle");
+                            if (!currentShell || !currentToggle) return;
+                            currentShell.classList.remove("open");
+                            currentToggle.setAttribute("aria-expanded", "false");
+                        });
+                        window.__ahaAdminAvatarDocBound = true;
+                    }
+                }
+
+                if (document.readyState === "loading") {
+                    document.addEventListener("DOMContentLoaded", function () {
+                        revealAdminAvatar();
+                        bindAdminAvatarDropdown();
+                    });
+                } else {
+                    revealAdminAvatar();
+                    bindAdminAvatarDropdown();
+                }
+
+                window.addEventListener("pageshow", function () {
+                    revealAdminAvatar();
+                    bindAdminAvatarDropdown();
+                });
+
+                if (window.Sys && Sys.WebForms && Sys.WebForms.PageRequestManager) {
+                    Sys.WebForms.PageRequestManager.getInstance().add_endRequest(function () {
+                        revealAdminAvatar();
+                        bindAdminAvatarDropdown();
+                    });
+                }
+            })();
+        </script>
+        <asp:ContentPlaceHolder ID="foot" runat="server"></asp:ContentPlaceHolder>
+        <%=ViewState["thongbao"] %>
+    </form>
+</body>
+</html>

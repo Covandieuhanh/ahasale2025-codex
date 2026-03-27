@@ -9,6 +9,30 @@ using System.Web.UI.WebControls;
 public partial class shop_bao_cao : System.Web.UI.Page
 {
     private readonly Dictionary<string, Control> _controlCache = new Dictionary<string, Control>(StringComparer.Ordinal);
+
+    protected string ResolveShopBrandLogoUrl()
+    {
+        string contextLogo = PortalBranding_cl.NormalizeIconPath(
+            Convert.ToString(Context == null ? null : Context.Items["AhaHeaderCenterLogoUrl"]),
+            PortalBranding_cl.DefaultShopIconPath);
+
+        if (!string.IsNullOrWhiteSpace(contextLogo))
+            return contextLogo;
+
+        try
+        {
+            using (dbDataContext db = new dbDataContext())
+            {
+                PortalBranding_cl.ScopeBrandingSnapshot branding = PortalBranding_cl.LoadScopeBranding(db, PortalBranding_cl.ScopeShop, true);
+                return PortalBranding_cl.ResolveHeaderLogoPath(branding, PortalBranding_cl.ScopeShop);
+            }
+        }
+        catch
+        {
+            return PortalBranding_cl.DefaultShopIconPath;
+        }
+    }
+
     protected void Page_Load(object sender, EventArgs e)
     {
         if (string.Equals((Request.QueryString["switch"] ?? "").Trim(), "shop", StringComparison.OrdinalIgnoreCase))
@@ -32,7 +56,7 @@ public partial class shop_bao_cao : System.Web.UI.Page
                 AccountVisibility_cl.EnsureTradeTypeNormalized(db);
 
                 taikhoan_tb acc = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == tk);
-                if (acc == null || !PortalScope_cl.CanLoginShop(acc.taikhoan, acc.phanloai, acc.permission))
+                if (acc == null || !SpaceAccess_cl.CanAccessShop(db, acc))
                 {
                     check_login_cl.del_all_cookie_session_shop();
                     Response.Redirect("/shop/login.aspx", false);
@@ -71,7 +95,7 @@ public partial class shop_bao_cao : System.Web.UI.Page
             AccountVisibility_cl.EnsureTradeTypeNormalized(db);
 
             taikhoan_tb acc = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == tk);
-            if (acc == null || !PortalScope_cl.CanLoginShop(acc.taikhoan, acc.phanloai, acc.permission))
+            if (acc == null || !SpaceAccess_cl.CanAccessShop(db, acc))
             {
                 check_login_cl.del_all_cookie_session_shop();
                 Response.Redirect("/shop/login.aspx", false);
@@ -120,9 +144,7 @@ public partial class shop_bao_cao : System.Web.UI.Page
 
         string phanLoaiText = string.IsNullOrWhiteSpace(acc.phanloai) ? "Gian hàng đối tác" : acc.phanloai;
         SetLabelText("lb_phanloai", phanLoaiText);
-        string shopStatusText = acc.TrangThai_Shop == ShopStatus_cl.StatusApproved
-            ? "Hoạt động"
-            : (acc.TrangThai_Shop == ShopStatus_cl.StatusPending ? "Chờ duyệt" : "Đang khóa");
+        string shopStatusText = ShopStatus_cl.GetStatusText(db, acc);
         SetLabelText("lb_trangthai", shopStatusText);
 
         SetHyperLinkNavigateUrl("lnk_public_shop", publicPath);

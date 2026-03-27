@@ -15,7 +15,7 @@ public partial class gianhang_admin_cau_hinh_storefront_edit : System.Web.UI.Pag
         try
         {
             RequireAdmin("q1_3");
-            if (!AdvancedAdminOwnerGuard_cl.EnsureOwnerOnly(this, Session["user"].ToString(), AhaShineContext_cl.UserParent, "cấu hình /shop", "/gianhang/admin"))
+            if (!AdvancedAdminOwnerGuard_cl.EnsureOwnerOnly(this, Session["user"].ToString(), AhaShineContext_cl.UserParent, "cấu hình /gianhang", "/gianhang/admin"))
                 return;
 
             string warningMessage;
@@ -74,7 +74,7 @@ public partial class gianhang_admin_cau_hinh_storefront_edit : System.Web.UI.Pag
         txt_secondary_cta_url.Text = section.secondary_cta_url;
         txt_source_value.Text = section.source_value;
         txt_rank.Text = section.rank.HasValue ? section.rank.Value.ToString() : string.Empty;
-        chk_visible.Checked = section.is_visible ?? false;
+        chk_visible.Checked = GianHangStorefrontConfig_cl.ResolveBool(section.is_visible, false);
         txt_style_variant.Text = section.style_variant;
         txt_extra_json.Text = section.extra_json;
     }
@@ -95,7 +95,7 @@ public partial class gianhang_admin_cau_hinh_storefront_edit : System.Web.UI.Pag
         try
         {
             RequireAdmin("q1_3");
-            if (!AdvancedAdminOwnerGuard_cl.EnsureOwnerOnly(this, Session["user"].ToString(), AhaShineContext_cl.UserParent, "cấu hình /shop", "/gianhang/admin"))
+            if (!AdvancedAdminOwnerGuard_cl.EnsureOwnerOnly(this, Session["user"].ToString(), AhaShineContext_cl.UserParent, "cấu hình /gianhang", "/gianhang/admin"))
                 return;
             chiNhanhId = AhaShineContext_cl.ResolveChiNhanhId();
             section = SqlTransientGuard_cl.Execute(() => ResolveSection(), 3, 250);
@@ -127,7 +127,7 @@ public partial class gianhang_admin_cau_hinh_storefront_edit : System.Web.UI.Pag
             section.updated_at = DateTime.Now;
             SqlTransientGuard_cl.Execute(() => db.SubmitChanges(), 3, 250);
 
-            Session["notifi"] = thongbao_class.metro_notifi_onload("Thong bao", "Cap nhat block storefront thanh cong.", "3000", "success");
+            Session["notifi"] = thongbao_class.metro_notifi_onload("Thông báo", "Cập nhật block trang công khai thành công.", "3000", "success");
             Response.Redirect("/gianhang/admin/cau-hinh-storefront/default.aspx");
         }
         catch (Exception ex)
@@ -166,7 +166,7 @@ public partial class gianhang_admin_cau_hinh_storefront_edit : System.Web.UI.Pag
             }
             if (result == "2")
             {
-                Session["notifi"] = thongbao_class.metro_dialog_onload("Thong bao", "Ban khong du quyen de truy cap thao tac vua roi.", "false", "false", "OK", "alert", "");
+                Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập thao tác vừa rồi.", "false", "false", "OK", "alert", "");
                 Response.Redirect("/gianhang/admin");
                 return;
             }

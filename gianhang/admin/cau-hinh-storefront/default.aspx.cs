@@ -7,8 +7,8 @@ public partial class gianhang_admin_cau_hinh_storefront_default : System.Web.UI.
 {
     private readonly dbDataContext db = new dbDataContext();
     public string notifi = string.Empty;
-    public string shopDashboardUrl = "/shop/default.aspx";
-    public string shopPublicUrl = "/shop/public.aspx";
+    public string gianhangDashboardUrl = "/gianhang/default.aspx";
+    public string shopPublicUrl = "/gianhang/public.aspx";
     private gianhang_storefront_config_table config;
     private string chiNhanhId = "1";
 
@@ -17,7 +17,7 @@ public partial class gianhang_admin_cau_hinh_storefront_default : System.Web.UI.
         try
         {
             RequireAdmin("q1_3");
-            if (!AdvancedAdminOwnerGuard_cl.EnsureOwnerOnly(this, Session["user"].ToString(), AhaShineContext_cl.UserParent, "cấu hình /shop", "/gianhang/admin"))
+            if (!AdvancedAdminOwnerGuard_cl.EnsureOwnerOnly(this, Session["user"].ToString(), AhaShineContext_cl.UserParent, "cấu hình /gianhang", "/gianhang/admin"))
                 return;
 
             string warningMessage;
@@ -32,7 +32,9 @@ public partial class gianhang_admin_cau_hinh_storefront_default : System.Web.UI.
             SqlTransientGuard_cl.Execute(() =>
             {
                 config = GianHangStorefrontConfig_cl.GetConfig(db, chiNhanhId);
-                shopPublicUrl = ShopSlug_cl.GetPublicUrlByTaiKhoan(db, AhaShineContext_cl.UserParent);
+                string accountKey = (AhaShineContext_cl.UserParent ?? string.Empty).Trim().ToLowerInvariant();
+                if (accountKey != string.Empty)
+                    shopPublicUrl = GianHangPublic_cl.BuildStorefrontUrl(accountKey);
 
                 if (!IsPostBack)
                     LoadForm();
@@ -61,7 +63,7 @@ public partial class gianhang_admin_cau_hinh_storefront_default : System.Web.UI.
         txt_brand_note.Text = config.brand_note;
         txt_nav_home.Text = config.nav_home_text;
         txt_nav_booking.Text = config.nav_booking_text;
-        chk_quickstrip_visible.Checked = config.quickstrip_visible ?? true;
+        chk_quickstrip_visible.Checked = GianHangStorefrontConfig_cl.ResolveBool(config.quickstrip_visible, true);
         txt_quick_service.Text = config.quick_service_text;
         txt_quick_product.Text = config.quick_product_text;
         txt_quick_article.Text = config.quick_article_text;
@@ -125,7 +127,7 @@ public partial class gianhang_admin_cau_hinh_storefront_default : System.Web.UI.
         try
         {
             RequireAdmin("q1_3");
-            if (!AdvancedAdminOwnerGuard_cl.EnsureOwnerOnly(this, Session["user"].ToString(), AhaShineContext_cl.UserParent, "cấu hình /shop", "/gianhang/admin"))
+            if (!AdvancedAdminOwnerGuard_cl.EnsureOwnerOnly(this, Session["user"].ToString(), AhaShineContext_cl.UserParent, "cấu hình /gianhang", "/gianhang/admin"))
                 return;
             chiNhanhId = AhaShineContext_cl.ResolveChiNhanhId();
             config = SqlTransientGuard_cl.Execute(() => GianHangStorefrontConfig_cl.GetConfig(db, chiNhanhId), 3, 250);
@@ -171,7 +173,7 @@ public partial class gianhang_admin_cau_hinh_storefront_default : System.Web.UI.
             config.updated_at = DateTime.Now;
             SqlTransientGuard_cl.Execute(() => db.SubmitChanges(), 3, 250);
 
-            Session["notifi"] = thongbao_class.metro_notifi_onload("Thong bao", "Cap nhat storefront thanh cong.", "3000", "success");
+            Session["notifi"] = thongbao_class.metro_notifi_onload("Thông báo", "Cập nhật trang công khai thành công.", "3000", "success");
             Response.Redirect("/gianhang/admin/cau-hinh-storefront/default.aspx");
         }
         catch (Exception ex)
@@ -210,7 +212,7 @@ public partial class gianhang_admin_cau_hinh_storefront_default : System.Web.UI.
             }
             if (result == "2")
             {
-                Session["notifi"] = thongbao_class.metro_dialog_onload("Thong bao", "Ban khong du quyen de truy cap thao tac vua roi.", "false", "false", "OK", "alert", "");
+                Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập thao tác vừa rồi.", "false", "false", "OK", "alert", "");
                 Response.Redirect("/gianhang/admin");
                 return;
             }

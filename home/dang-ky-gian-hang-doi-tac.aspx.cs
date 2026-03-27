@@ -1,143 +1,144 @@
 ﻿using System;
-using System.Linq;
+using System.Collections.Generic;
+using System.Web;
 
 public partial class home_dang_ky_gian_hang_doi_tac : System.Web.UI.Page
 {
+    private string _accountKey = "";
+    private string _returnUrl = "/gianhang/";
+    private string _profileReturnUrl = "/home/dang-ky-gian-hang-doi-tac.aspx";
+    private GianHangOnboarding_cl.ShopInfoState _state;
+
     protected void Page_Load(object sender, EventArgs e)
     {
-        Response.Redirect("/shop/dang-ky.aspx", false);
-        Context.ApplicationInstance.CompleteRequest();
-    }
+        DisablePageCache();
+        check_login_cl.check_login_home("none", "none", true);
 
-    void LoadAll()
-    {
-        string tk = mahoa_cl.giaima_Bcorn(Session["taikhoan_home"] + "");
-        if (string.IsNullOrEmpty(tk)) return;
-
-        using (dbDataContext db = new dbDataContext())
+        _accountKey = (PortalRequest_cl.GetCurrentAccount() ?? "").Trim().ToLowerInvariant();
+        _returnUrl = GianHangRoutes_cl.NormalizeReturnUrl(Request.QueryString["return_url"], "/gianhang/");
+        _profileReturnUrl = "/home/dang-ky-gian-hang-doi-tac.aspx?return_url=" + Server.UrlEncode(_returnUrl);
+        if (_accountKey == "")
         {
-            // Lấy trạng thái mới nhất (nếu có)
-            var last = db.DangKy_GianHangDoiTac_tbs
-                .Where(x => x.taikhoan == tk)
-                .OrderByDescending(x => x.NgayTao)
-                .FirstOrDefault();
-
-            RenderTrangThaiUI(last);
-
-            // Lịch sử
-            var ls = db.DangKy_GianHangDoiTac_tbs
-                .Where(x => x.taikhoan == tk)
-                .OrderByDescending(x => x.NgayTao)
-                .Select(x => new
-                {
-                    x.NgayTao,
-                    x.TrangThai,
-                    x.GhiChuAdmin,
-                    TrangThaiText =
-                        x.TrangThai == 0 ? "Chờ duyệt" :
-                        x.TrangThai == 1 ? "Đã duyệt" : "Từ chối"
-                })
-                .ToList();
-
-            rp_lichsu.DataSource = ls;
-            rp_lichsu.DataBind();
-        }
-    }
-
-    void RenderTrangThaiUI(dynamic last)
-    {
-        // default: chưa có đăng ký
-        string html = "<div class='alert alert-info mb-0'>Bạn chưa có đăng ký nào.</div>";
-        bool enableButton = true;
-
-        if (last != null)
-        {
-            int st = (int)last.TrangThai;
-
-            if (st == 0)
-            {
-                html = "<div class='alert alert-warning mb-0'>Đăng ký của bạn đang chờ admin duyệt.</div>";
-                enableButton = false; // đang chờ -> không cho bấm
-            }
-            else if (st == 1)
-            {
-                html = "<div class='alert alert-success mb-0'>Bạn đã là gian hàng đối tác (đã duyệt). Không thể đăng ký lại.</div>";
-                enableButton = false; // đã duyệt -> chặn vĩnh viễn
-            }
-            else // st == 2
-            {
-                html = "<div class='alert alert-danger mb-0'>Đăng ký trước đó đã bị từ chối. Bạn có thể đăng ký lại.</div>";
-                enableButton = true; // bị từ chối -> cho đăng ký lại
-            }
-        }
-
-        ltr_trangthai.Text = html;
-        but_dangky.Enabled = enableButton;
-
-        // Option: nếu disabled thì thêm class cho đúng style (không bắt buộc)
-        // if (!enableButton) but_dangky.CssClass = "btn btn-success disabled";
-    }
-
-    protected void but_dangky_Click(object sender, EventArgs e)
-    {
-        // bắt buộc đồng ý điều khoản
-        if (!chk_dongy.Checked)
-        {
-            Helper_Tabler_cl.ShowModal(this,
-                "Bạn phải đồng ý với điều khoản và chính sách trước khi đăng ký.",
-                "Chưa xác nhận", true, "warning");
+            Response.Redirect("/dang-nhap?return_url=" + Server.UrlEncode(Request.RawUrl ?? "/home/default.aspx"), true);
             return;
         }
 
-        string tk = Session["taikhoan_home"] as string;
-        if (!string.IsNullOrEmpty(tk)) tk = mahoa_cl.giaima_Bcorn(tk);
-        else return;
+        if (!IsPostBack)
+            BindPage();
+    }
 
+    private void DisablePageCache()
+    {
+        Response.Cache.SetCacheability(HttpCacheability.NoCache);
+        Response.Cache.SetNoStore();
+        Response.Cache.SetExpires(DateTime.UtcNow.AddDays(-1));
+        Response.Cache.SetRevalidation(HttpCacheRevalidation.AllCaches);
+    }
+
+    protected void btn_submit_Click(object sender, EventArgs e)
+    {
         using (dbDataContext db = new dbDataContext())
         {
-            // chặn nếu đã duyệt (1 người chỉ được đăng ký 1 lần nếu đã được duyệt)
-            bool daDuyet = db.DangKy_GianHangDoiTac_tbs
-                .Any(x => x.taikhoan == tk && x.TrangThai == 1);
-            if (daDuyet)
-            {
-                Helper_Tabler_cl.ShowModal(this,
-                    "Bạn đã là gian hàng đối tác (đã duyệt), không thể đăng ký lại.",
-                    "Không thể đăng ký", true, "info");
-                LoadAll();
-                return;
-            }
+            string message;
+            bool ok = GianHangOnboarding_cl.SubmitOnboarding(
+                db,
+                _accountKey,
+                txt_shop_name.Text,
+                _accountKey,
+                out message);
 
-            // chặn nếu đang có yêu cầu chờ
-            bool dangCho = db.DangKy_GianHangDoiTac_tbs
-                .Any(x => x.taikhoan == tk && x.TrangThai == 0);
-            if (dangCho)
-            {
-                Helper_Tabler_cl.ShowModal(this,
-                    "Bạn đang có một đăng ký chờ admin duyệt. Không thể gửi thêm đăng ký mới.",
-                    "Đã tồn tại đăng ký", true, "warning");
-                LoadAll();
-                return;
-            }
-
-            // insert đăng ký mới
-            var dk = new DangKy_GianHangDoiTac_tb
-            {
-                taikhoan = tk,
-                TrangThai = 0,
-                NgayTao = AhaTime_cl.Now,
-                GhiChuAdmin = null,
-                NgayDuyet = null,
-                AdminDuyet = null
-            };
-
-            db.DangKy_GianHangDoiTac_tbs.InsertOnSubmit(dk);
-            db.SubmitChanges();
+            Helper_Tabler_cl.ShowToast(this, message, ok ? "success" : "warning", true, 2800, ok ? "Thành công" : "Thông báo");
         }
 
-        Helper_Tabler_cl.ShowToast(this,
-            "Đã gửi đăng ký, vui lòng chờ admin duyệt.",
-            "success", true, 2500, "Thành công");
+        BindPage();
+    }
 
-        LoadAll();
+    protected string GetStepCss(bool isFirstStep)
+    {
+        if (_state == null)
+            return "gianhang-step gianhang-step--active";
+
+        if (isFirstStep)
+            return (_state.IsPending || _state.IsActive)
+                ? "gianhang-step gianhang-step--done"
+                : "gianhang-step gianhang-step--active";
+
+        return (_state.IsPending || _state.IsActive)
+            ? "gianhang-step gianhang-step--active"
+            : "gianhang-step";
+    }
+
+    private void BindPage()
+    {
+        using (dbDataContext db = new dbDataContext())
+        {
+            _state = GianHangOnboarding_cl.LoadState(db, _accountKey);
+            GianHangOnboarding_cl.ShopInfoDraft draft = _state == null ? null : _state.Draft;
+
+            lit_account_root.Text = "Tài khoản gốc: " + Server.HtmlEncode(_accountKey);
+            txt_shop_name.Text = draft == null ? "" : draft.ShopName;
+            lit_contact_name.Text = Server.HtmlEncode(draft == null ? "" : draft.FullName);
+            lit_contact_email.Text = Server.HtmlEncode(draft == null ? "" : draft.ContactEmail);
+            lit_contact_phone.Text = Server.HtmlEncode(draft == null ? "" : draft.ContactPhone);
+            lit_contact_phone_dup.Text = Server.HtmlEncode(draft == null ? "" : draft.ContactPhone);
+            lit_pickup_address.Text = Server.HtmlEncode(draft == null ? "" : draft.PickupAddress).Replace("\n", "<br />");
+
+            string homeUrl = "/home/default.aspx";
+            string editInfoUrl = "/home/edit-info.aspx?return_url=" + Server.UrlEncode(_profileReturnUrl);
+            lnk_edit_profile_warning.NavigateUrl = editInfoUrl;
+            lnk_edit_profile_inline.NavigateUrl = editInfoUrl;
+            lnk_back_home_form.NavigateUrl = homeUrl;
+            lnk_back_home_waiting.NavigateUrl = homeUrl;
+            lnk_back_home_done.NavigateUrl = homeUrl;
+
+            ph_form.Visible = !_state.IsPending && !_state.IsActive;
+            ph_waiting.Visible = _state.IsPending;
+            ph_done.Visible = _state.IsActive;
+
+            ph_request_feedback.Visible = (_state.IsRejected || _state.IsBlocked) && ph_form.Visible;
+            lit_request_feedback_title.Text = _state.IsBlocked ? "Quyền gian hàng đang bị khóa" : "Yêu cầu gần nhất đã bị từ chối";
+            lit_request_feedback_body.Text = Server.HtmlEncode(BuildRequestFeedback(_state));
+
+            ph_profile_warning.Visible = !string.IsNullOrWhiteSpace(_state.MissingProfileMessage) && ph_form.Visible;
+            lit_profile_warning.Text = Server.HtmlEncode(_state.MissingProfileMessage);
+            btn_submit.Enabled = _state.CanSubmit;
+
+            lit_waiting_status.Text = Server.HtmlEncode(_state.RequestStatusText);
+            ph_waiting_time.Visible = _state.RequestedAt.HasValue;
+            lit_waiting_time.Text = _state.RequestedAt.HasValue ? _state.RequestedAt.Value.ToString("dd/MM/yyyy HH:mm") : "";
+            ph_waiting_note.Visible = !string.IsNullOrWhiteSpace(_state.ReviewNote);
+            lit_waiting_note.Text = Server.HtmlEncode(_state.ReviewNote);
+
+            lit_done_status.Text = Server.HtmlEncode(_state.AccessStatusText);
+            lnk_open_gianhang.NavigateUrl = _returnUrl;
+
+            List<GianHangOnboarding_cl.RequestHistoryItem> history = GianHangOnboarding_cl.LoadHistory(db, _accountKey);
+            ph_history_empty.Visible = history.Count == 0;
+            rp_history.DataSource = history;
+            rp_history.DataBind();
+        }
+    }
+
+    private static string BuildRequestFeedback(GianHangOnboarding_cl.ShopInfoState state)
+    {
+        if (state == null)
+            return "";
+
+        string note = (state.ReviewNote ?? "").Trim();
+        if (state.IsBlocked)
+        {
+            if (note != "")
+                return "Quyền /gianhang của tài khoản này đã từng bị khóa hoặc thu hồi. Ghi chú admin: " + note + ". Bạn có thể cập nhật lại thông tin shop rồi gửi yêu cầu mới để được xét duyệt lại.";
+            return "Quyền /gianhang của tài khoản này đã từng bị khóa hoặc thu hồi. Bạn có thể cập nhật lại thông tin shop rồi gửi yêu cầu mới để được xét duyệt lại.";
+        }
+
+        if (state.IsRejected)
+        {
+            if (note != "")
+                return "Yêu cầu mở gian hàng gần nhất chưa được duyệt. Ghi chú admin: " + note + ". Bạn có thể chỉnh lại thông tin shop rồi gửi lại.";
+            return "Yêu cầu mở gian hàng gần nhất chưa được duyệt. Bạn có thể chỉnh lại thông tin shop rồi gửi lại.";
+        }
+
+        return "";
     }
 }

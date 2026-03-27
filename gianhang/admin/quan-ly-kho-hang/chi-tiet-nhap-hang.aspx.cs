@@ -245,7 +245,7 @@ public partial class badmin_Default : System.Web.UI.Page
         }
         #endregion
         user = Session["user"].ToString();
-        user_parent = "admin";
+        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
 
         if (!string.IsNullOrWhiteSpace(Request.QueryString["id"]))
         {
@@ -271,57 +271,54 @@ public partial class badmin_Default : System.Web.UI.Page
     }
     public void main()
     {
-        //lấy dữ liệu
-        var list_all = (from ob1 in db.donnhaphang_chitiet_tables.Where(p => p.user_parent == user_parent && p.id_hoadon == id&& p.id_chinhanh == Session["chinhanh"].ToString()).ToList()
-                            //join ob2 in db.web_post_tables.Where(p => p.phanloai == "ctsp").ToList() on ob1.id_dvsp.ToString() equals ob2.id.ToString()
-                        select new
-                        {
-                            id = ob1.id,
-                            ten_dichvu_sanpham = ob1.ten_dvsp_taithoidiemnay,
-                            gia = ob1.gia_dvsp_taithoidiemnay,
-                            soluong = ob1.soluong,
-                            thanhtien = ob1.thanhtien,
-                            chietkhau = ob1.chietkhau,
-                            tongtien_ck = ob1.tongtien_ck_dvsp,
-                            sauck = ob1.tongsauchietkhau,
-                            //hinhanh = ob2.image,
-                            kyhieu = ob1.kyhieu,
-                            ngayban = ob1.ngaytao,
-                            dvt = ob1.dvt,
-                            solo = ob1.solo,
-                            nsx = ob1.nsx,
-                            hsd = ob1.hsd,
-                        });
+        var query = db.donnhaphang_chitiet_tables.Where(p => p.user_parent == user_parent && p.id_hoadon == id && p.id_chinhanh == Session["chinhanh"].ToString());
 
-        //xử lý từ khóa
-        string _key = txt_search.Text.ToLower();
+        string _key = txt_search.Text.Trim();
         if (_key != "")
-        {
-            var list_search = list_all.Where(p => p.ten_dichvu_sanpham.ToLower().Contains(_key)).ToList();
-            list_all = list_all.Intersect(list_search).ToList();
-        }
+            query = query.Where(p => p.ten_dvsp_taithoidiemnay.Contains(_key));
 
-        //sắp xếp
-        list_all = list_all.OrderBy(p => p.ngayban).ToList();
+        var list_split = query
+            .OrderBy(p => p.ngaytao)
+            .Select(ob1 => new
+            {
+                id = ob1.id,
+                ten_dichvu_sanpham = ob1.ten_dvsp_taithoidiemnay,
+                gia = ob1.gia_dvsp_taithoidiemnay,
+                soluong = ob1.soluong,
+                thanhtien = ob1.thanhtien,
+                chietkhau = ob1.chietkhau,
+                tongtien_ck = ob1.tongtien_ck_dvsp,
+                sauck = ob1.tongsauchietkhau,
+                kyhieu = ob1.kyhieu,
+                ngayban = ob1.ngaytao,
+                dvt = ob1.dvt,
+                solo = ob1.solo,
+                nsx = ob1.nsx,
+                hsd = ob1.hsd,
+            })
+            .ToList();
 
-        //main
-        var list_split = list_all.ToList();
         list_id_split = new List<string>();
         foreach (var t in list_split)
         {
             list_id_split.Add("check_" + t.id);
         }
-        int _s1 = stt + list_split.Count - 1;
 
         Repeater1.DataSource = list_split;
         Repeater1.DataBind();
     }
     protected void txt_search_TextChanged(object sender, EventArgs e)
     {
+        ApplySearchState();
+    }
+    protected void but_search_Click(object sender, EventArgs e)
+    {
+        ApplySearchState();
+    }
+    private void ApplySearchState()
+    {
         Session["current_page_chitietnhaphang"] = "1";
-
         main();
-
     }
 
     protected void but_quaylai_Click(object sender, EventArgs e)

@@ -1,0 +1,795 @@
+body.admin-shell {
+    --ui-bg: #f3f5f8;
+    --ui-surface: #ffffff;
+    --ui-surface-soft: #f8fafc;
+    --ui-border: #dce4ec;
+    --ui-border-strong: #cad5e1;
+    --ui-text: #1f2f3e;
+    --ui-muted: #66798b;
+    --ui-accent: #0d6e9d;
+    --ui-accent-soft: #eaf4fb;
+    --ui-danger: #c63f3f;
+    --ui-shadow: 0 8px 18px rgba(19, 41, 61, 0.06);
+    --ui-radius: 12px;
+    --ui-radius-lg: 16px;
+    font-family: "Sarabun", "Segoe UI", "Noto Sans", sans-serif;
+    color: var(--ui-text);
+    background: linear-gradient(180deg, #f7f9fb 0%, var(--ui-bg) 100%);
+}
+
+body.admin-shell,
+body.admin-shell * {
+    box-sizing: border-box;
+}
+
+/* Static admin mode: remove visual effects and keep layout stable */
+body.admin-shell.admin-static,
+body.admin-shell.admin-static *,
+body.admin-shell.admin-static *::before,
+body.admin-shell.admin-static *::after {
+    transition: none !important;
+    animation: none !important;
+}
+
+/* Hide the whole admin shell until DOM is ready to avoid intermediate flicker frames */
+body.admin-shell.admin-loading #nv {
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+body.admin-shell.admin-ready #nv {
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+body.admin-shell.admin-static #nv .navview-menu li a {
+    -webkit-tap-highlight-color: transparent;
+}
+
+body.admin-shell.admin-static #nv .navview-menu li a:hover {
+    background: transparent !important;
+    color: #264055 !important;
+}
+
+body.admin-shell.admin-static #nv .navview-menu li.active > a,
+body.admin-shell.admin-static #nv .navview-menu li.active > a:hover {
+    background: var(--ui-accent-soft) !important;
+    color: #124462 !important;
+    border: 1px solid #d3e8f5;
+}
+
+body.admin-shell ::-webkit-scrollbar {
+    width: 8px !important;
+    height: 8px !important;
+}
+
+body.admin-shell ::-webkit-scrollbar-track {
+    background: #eaf0f5 !important;
+}
+
+body.admin-shell ::-webkit-scrollbar-thumb {
+    background: #c2d0dd !important;
+    border-radius: 999px;
+}
+
+body.admin-shell ::-webkit-scrollbar-thumb:hover {
+    background: #a8b9c9 !important;
+}
+
+body.admin-shell .navview .navview-menu li.active::before {
+    display: none !important;
+}
+
+body.admin-shell #nv .navview-pane {
+    background: #f8fafc !important;
+    color: var(--ui-text) !important;
+    border-right: 1px solid var(--ui-border) !important;
+}
+
+body.admin-shell #nv .navview-pane > .d-flex.flex-align-center {
+    background: #ffffff !important;
+    border-bottom: 1px solid var(--ui-border) !important;
+    box-shadow: none !important;
+}
+
+body.admin-shell .bg-navview-left-bc,
+body.admin-shell .bg-navview-left-bc-hover:hover,
+body.admin-shell .bg-nmenutop-bc {
+    background: #ffffff !important;
+}
+
+body.admin-shell #nv .navview-pane .app-title {
+    color: #1b2d3d !important;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+}
+
+body.admin-shell #nv .navview-pane .pull-button,
+body.admin-shell #nv .navview-pane .pull-button .mif-menu {
+    color: #5e7488 !important;
+}
+
+body.admin-shell #nv .navview-menu {
+    background: transparent !important;
+    padding: 10px 8px 86px;
+}
+
+body.admin-shell #nv .navview-menu .item-header {
+    margin: 10px 8px 6px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    color: var(--ui-muted) !important;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    background: transparent !important;
+    border: 1px dashed #d8e2eb;
+}
+
+body.admin-shell #nv .navview-menu li a {
+    margin: 2px 6px;
+    min-height: 42px;
+    border-radius: 10px;
+    color: #264055 !important;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+}
+
+/* Keep sidebar labels visually stable when navigating between tabs */
+body.admin-shell #nv .navview-menu li a,
+body.admin-shell #nv .navview-menu li a .icon,
+body.admin-shell #nv .navview-menu .caption,
+body.admin-shell #nv .navview-menu .item-header {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+}
+
+body.admin-shell #nv .navview-menu .caption,
+body.admin-shell #nv .navview-menu .item-header {
+    font-family: "Sarabun", "Segoe UI", "Noto Sans", sans-serif;
+    text-rendering: geometricPrecision;
+}
+
+body.admin-shell #nv .navview-menu li a .icon {
+    color: #4d667a;
+}
+
+body.admin-shell #nv .navview-menu li a:hover {
+    background: #eef4fa !important;
+    color: #173248 !important;
+}
+
+body.admin-shell #nv .navview-menu li.active > a {
+    background: var(--ui-accent-soft) !important;
+    color: #124462 !important;
+    border: 1px solid #d3e8f5;
+}
+
+body.admin-shell #nv .navview-pane > .data-box {
+    background: #ffffff !important;
+    border-top: 1px solid var(--ui-border) !important;
+    color: var(--ui-muted) !important;
+}
+
+body.admin-shell .admin-topbar {
+    background: #ffffff !important;
+    border-bottom: 1px solid var(--ui-border) !important;
+    box-shadow: none !important;
+}
+
+body.admin-shell .admin-topbar .app-bar-item,
+body.admin-shell .admin-topbar a,
+body.admin-shell .admin-topbar .mif {
+    color: #2a4257 !important;
+}
+
+body.admin-shell .admin-topbar .app-bar-item:hover {
+    background: #f2f7fb !important;
+}
+
+body.admin-shell .admin-topbar #admin-ui-density-toggle {
+    border: 1px solid transparent;
+}
+
+body.admin-shell .admin-topbar #admin-ui-density-toggle.active {
+    background: var(--ui-accent-soft) !important;
+    border-color: #cfe3f0;
+    color: #175577 !important;
+}
+
+body.admin-shell .admin-topbar .badge {
+    background: #d84f4f !important;
+    color: #ffffff !important;
+}
+
+body.admin-shell #thongbao-charms {
+    position: fixed !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 100% !important;
+    z-index: 1090 !important;
+    border-left: 1px solid var(--ui-border);
+    box-shadow: -8px 0 26px rgba(15, 30, 44, 0.12);
+}
+
+body.admin-shell .user-block {
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius);
+    box-shadow: var(--ui-shadow);
+    overflow: hidden;
+}
+
+body.admin-shell .admin-content-inner {
+    background: transparent !important;
+    padding: 16px 18px 26px !important;
+}
+
+body.admin-shell .admin-page {
+    max-width: 1560px;
+}
+
+body.admin-shell .admin-page #menutop-tool-bc {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 24 !important;
+    border: 1px solid var(--ui-border) !important;
+    border-radius: var(--ui-radius-lg) !important;
+    box-shadow: none !important;
+    background: var(--ui-surface) !important;
+}
+
+body.admin-shell .admin-page #menutop-tool-bc .h-menu {
+    min-height: 50px;
+    padding: 7px;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+body.admin-shell .admin-page #menutop-tool-bc .h-menu > li > a,
+body.admin-shell .admin-page #menutop-tool-bc .h-menu > li > .button {
+    min-height: 36px;
+    height: 36px;
+    line-height: 34px;
+    border-radius: 9px;
+    padding: 0 11px;
+    color: #2f4b61 !important;
+    font-weight: 600;
+}
+
+body.admin-shell .admin-page #menutop-tool-bc .h-menu > li > a:hover {
+    background: var(--ui-accent-soft) !important;
+    color: #15506f !important;
+}
+
+body.admin-shell .admin-page #menutop-tool-bc .h-menu .bd-gray.border.bd-default {
+    opacity: 0.5;
+}
+
+body.admin-shell .admin-page #timkiem-fixtop-bc {
+    position: static !important;
+    top: auto !important;
+    right: auto !important;
+    width: min(360px, 100%) !important;
+    margin: 8px 0 0 auto;
+}
+
+body.admin-shell .admin-page .p-3,
+body.admin-shell .admin-page .p-4 {
+    padding-top: 12px !important;
+}
+
+body.admin-shell .admin-page .bg-white.p-4,
+body.admin-shell .admin-page .bg-white.p-3,
+body.admin-shell .admin-page .p-4.bg-white,
+body.admin-shell .admin-page .p-3.bg-white,
+body.admin-shell .admin-page .bcorn-fix-title-table-container,
+body.admin-shell .admin-page .table-responsive,
+body.admin-shell .admin-page .aha-admin-control-card,
+body.admin-shell .admin-page .aha-admin-table-shell,
+body.admin-shell .admin-page .aha-admin-kpi {
+    background: var(--ui-surface) !important;
+    border: 1px solid var(--ui-border) !important;
+    border-radius: var(--ui-radius-lg) !important;
+    box-shadow: none !important;
+}
+
+body.admin-shell .admin-page h4,
+body.admin-shell .admin-page .h4 {
+    color: #1d3448;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+}
+
+body.admin-shell .admin-page .aha-admin-meta {
+    color: var(--ui-muted);
+}
+
+body.admin-shell .admin-page .aha-admin-summary {
+    gap: 8px;
+}
+
+body.admin-shell .admin-page .aha-admin-kpi {
+    border-radius: 999px !important;
+    min-height: 34px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 12px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #335167;
+    background: #f7fbff !important;
+}
+
+body.admin-shell .admin-page .aha-admin-kpi .value {
+    color: #125b82;
+}
+
+/* Keep filter controls above any transient overlays created by legacy scripts */
+body.admin-shell .admin-page .aha-admin-control-card,
+body.admin-shell .admin-page .aha-admin-control-row .input,
+body.admin-shell .admin-page .aha-admin-control-row .select {
+    position: relative;
+    z-index: 8;
+}
+
+body.admin-shell .admin-page .aha-admin-control-row .input input,
+body.admin-shell .admin-page .aha-admin-control-row .select .select-input,
+body.admin-shell .admin-page .aha-admin-control-row .select .button {
+    pointer-events: auto !important;
+}
+
+body.admin-shell .admin-page .bcorn-fix-title-table,
+body.admin-shell .admin-page .table,
+body.admin-shell .admin-page .aha-admin-table {
+    width: 100%;
+    color: var(--ui-text);
+    font-size: 13px;
+    border-collapse: separate !important;
+    border-spacing: 0;
+}
+
+/* Allow long admin tables to scroll vertically instead of being clipped by legacy max-height rules */
+body.admin-shell .admin-page .bcorn-fix-title-table-container {
+    max-height: calc(100vh - 230px) !important;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+}
+
+body.admin-shell .admin-page .bcorn-fix-title-table thead th,
+body.admin-shell .admin-page .table thead th,
+body.admin-shell .admin-page .aha-admin-table thead th {
+    background: #f7fafd !important;
+    color: #2c4a61 !important;
+    border-bottom: 1px solid var(--ui-border) !important;
+    border-right: 1px solid #e8eef4 !important;
+    height: 42px;
+    padding: 10px 12px;
+}
+
+body.admin-shell .admin-page .bcorn-fix-title-table tbody td,
+body.admin-shell .admin-page .table tbody td,
+body.admin-shell .admin-page .aha-admin-table tbody td {
+    border-bottom: 1px solid #e8eef4 !important;
+    border-right: 1px solid #edf2f7 !important;
+    padding: 9px 10px;
+    background: #ffffff;
+}
+
+body.admin-shell .admin-page .bcorn-fix-title-table tbody tr:nth-child(2n) td,
+body.admin-shell .admin-page .table tbody tr:nth-child(2n) td,
+body.admin-shell .admin-page .aha-admin-table tbody tr:nth-child(2n) td {
+    background: #fbfdff !important;
+}
+
+body.admin-shell .admin-page .bcorn-fix-title-table tbody tr:hover td,
+body.admin-shell .admin-page .table tbody tr:hover td,
+body.admin-shell .admin-page .aha-admin-table tbody tr:hover td {
+    background: #f3f8fc !important;
+}
+
+body.admin-shell .admin-page label,
+body.admin-shell .admin-page .label {
+    color: #304c62 !important;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+body.admin-shell .admin-page .fg-red {
+    color: #b54040 !important;
+}
+
+body.admin-shell .admin-page .input,
+body.admin-shell .admin-page .file {
+    width: 100% !important;
+    min-height: 44px;
+    display: flex !important;
+    align-items: center;
+    border: 1px solid var(--ui-border-strong) !important;
+    border-radius: var(--ui-radius) !important;
+    background: #ffffff !important;
+    overflow: hidden;
+    box-shadow: none !important;
+}
+
+body.admin-shell .admin-page .select {
+    width: 100% !important;
+    min-height: 44px;
+    display: flex !important;
+    align-items: center;
+    border: 1px solid var(--ui-border-strong) !important;
+    border-radius: var(--ui-radius) !important;
+    background: #ffffff !important;
+    overflow: visible !important;
+    position: relative !important;
+    box-shadow: none !important;
+}
+
+body.admin-shell .admin-page .select .drop-container {
+    z-index: 1080 !important;
+}
+
+body.admin-shell .admin-page .input input,
+body.admin-shell .admin-page .input textarea {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    min-height: 44px !important;
+    height: 44px !important;
+    line-height: 42px !important;
+    border: 0 !important;
+    background: transparent !important;
+    color: var(--ui-text) !important;
+    padding: 0 12px !important;
+    box-shadow: none !important;
+}
+
+body.admin-shell .admin-page textarea,
+body.admin-shell .admin-page .input textarea {
+    min-height: 110px !important;
+    height: auto !important;
+    line-height: 1.4 !important;
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+}
+
+body.admin-shell .admin-page .input .prepend,
+body.admin-shell .admin-page .input .append {
+    min-width: 38px;
+    width: 38px;
+    color: #607588;
+}
+
+body.admin-shell .admin-page .input .button,
+body.admin-shell .admin-page .input .input-clear-button,
+body.admin-shell .admin-page .input button,
+body.admin-shell .admin-page .select .button,
+body.admin-shell .admin-page .file .button {
+    min-width: 40px !important;
+    width: 40px !important;
+    height: 44px !important;
+    line-height: 42px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-left: 1px solid #e6edf4 !important;
+    border-radius: 0 !important;
+    background: #f5f8fb !important;
+    color: #6a7f90 !important;
+    box-shadow: none !important;
+}
+
+body.admin-shell .admin-page .input .input-clear-button {
+    display: none !important;
+}
+
+body.admin-shell .admin-page select,
+body.admin-shell .admin-page .select select,
+body.admin-shell .admin-page input[type="text"],
+body.admin-shell .admin-page input[type="password"],
+body.admin-shell .admin-page input[type="number"],
+body.admin-shell .admin-page input[type="email"],
+body.admin-shell .admin-page input[type="tel"] {
+    min-height: 44px !important;
+    height: 44px !important;
+    border-radius: var(--ui-radius) !important;
+    border: 1px solid var(--ui-border-strong) !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+}
+
+body.admin-shell .admin-page .input:focus-within,
+body.admin-shell .admin-page .select:focus-within,
+body.admin-shell .admin-page .file:focus-within,
+body.admin-shell .admin-page input:focus,
+body.admin-shell .admin-page select:focus,
+body.admin-shell .admin-page textarea:focus {
+    border-color: #90b5cc !important;
+    box-shadow: 0 0 0 3px rgba(46, 116, 151, 0.14) !important;
+    outline: none !important;
+}
+
+body.admin-shell .admin-page .button,
+body.admin-shell .admin-page button,
+body.admin-shell .admin-page input[type="button"],
+body.admin-shell .admin-page input[type="submit"] {
+    min-height: 40px;
+    height: 40px;
+    line-height: 38px;
+    border-radius: 10px !important;
+    border: 1px solid transparent;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+body.admin-shell .admin-page .button.light,
+body.admin-shell .admin-page .light.button {
+    background: #f3f7fb !important;
+    border-color: var(--ui-border) !important;
+    color: #36526a !important;
+}
+
+body.admin-shell .admin-page .button.dark,
+body.admin-shell .admin-page .dark.button {
+    background: #214760 !important;
+    color: #ffffff !important;
+}
+
+body.admin-shell .admin-page .button.success,
+body.admin-shell .admin-page .success.button {
+    background: #1f7a4f !important;
+    color: #ffffff !important;
+}
+
+body.admin-shell .admin-page .button.alert,
+body.admin-shell .admin-page .alert.button {
+    background: #c64747 !important;
+    color: #ffffff !important;
+}
+
+body.admin-shell .admin-page .button.mini,
+body.admin-shell .admin-page .mini.button {
+    min-height: 32px;
+    height: 32px;
+    line-height: 30px;
+    border-radius: 8px !important;
+}
+
+body.admin-shell .admin-page .button.mini.dark,
+body.admin-shell .admin-page .mini.button.dark {
+    background: #eaf1f7 !important;
+    color: #2a4860 !important;
+    border-color: #ccdae7 !important;
+}
+
+body.admin-shell .admin-page .button.mini.success,
+body.admin-shell .admin-page .mini.button.success {
+    background: #eaf6ef !important;
+    color: #2b6d48 !important;
+    border-color: #bedcc9 !important;
+}
+
+body.admin-shell .admin-page .button.mini.alert,
+body.admin-shell .admin-page .mini.button.alert {
+    background: #fbecec !important;
+    color: #9a3f3f !important;
+    border-color: #e6c3c3 !important;
+}
+
+body.admin-shell .admin-page div[style*="position: fixed; width: 100%; height: 100%; top: 0; left: 0; overflow: auto; z-index: 1040"] {
+    background: rgba(18, 31, 42, 0.45) !important;
+    backdrop-filter: blur(2px);
+    padding: 20px 14px !important;
+}
+
+body.admin-shell .admin-page div[style*="position: fixed; width: 100%; height: 52px"] {
+    top: 18px !important;
+    left: 0 !important;
+    padding: 0 14px !important;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+}
+
+body.admin-shell .admin-page div[style*="position: fixed; width: 100%; height: 52px"] > div[style*="max-width"],
+body.admin-shell .admin-page div[style*="position: fixed; width: 100%; height: 100%; top: 0; left: 0; overflow: auto; z-index: 1040"] > div[style*="max-width"] {
+    width: 100% !important;
+    max-width: min(980px, 100%) !important;
+    margin: 0 auto !important;
+}
+
+body.admin-shell .admin-page div[style*="position: fixed; width: 100%; height: 52px"] > div[style*="max-width"] {
+    pointer-events: auto;
+}
+
+body.admin-shell .admin-page div[style*="position: fixed; width: 100%; height: 52px"] .bg-white {
+    height: 54px !important;
+    border-radius: var(--ui-radius-lg) var(--ui-radius-lg) 0 0 !important;
+    border: 1px solid var(--ui-border) !important;
+    border-bottom: 0 !important;
+    box-shadow: none !important;
+    display: flex;
+    align-items: center;
+    padding: 0 16px !important;
+}
+
+body.admin-shell .admin-page div[style*="position: fixed; width: 100%; height: 52px"] .pt-4 {
+    padding-top: 0 !important;
+    font-size: 22px;
+    font-weight: 800 !important;
+    letter-spacing: 0.01em;
+}
+
+body.admin-shell .admin-page div[style*="position: fixed; width: 100%; height: 52px"] hr {
+    display: none;
+}
+
+body.admin-shell .admin-page .bg-white.border.bd-transparent[style*="padding-top: 52px"] {
+    border: 1px solid var(--ui-border) !important;
+    border-top: 0 !important;
+    border-radius: 0 0 var(--ui-radius-lg) var(--ui-radius-lg) !important;
+    box-shadow: none !important;
+    padding-top: 68px !important;
+    padding-bottom: 22px !important;
+    padding-left: clamp(14px, 2vw, 24px) !important;
+    padding-right: clamp(14px, 2vw, 24px) !important;
+    max-height: calc(100vh - 92px);
+    overflow-y: auto;
+}
+
+body.admin-shell .admin-page div[style*="position: fixed; width: 100%; height: 52px"] span.mif-cross {
+    color: var(--ui-danger) !important;
+    font-size: 1.7rem !important;
+}
+
+body.admin-shell .admin-page .aha-admin-status {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    padding: 0 10px;
+    border-radius: 999px;
+    border: 1px solid #d8e3ed;
+    background: #f4f8fc;
+    color: #35566e;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+body.admin-shell .admin-page .aha-admin-status.pending {
+    background: #fff5e6 !important;
+    border-color: #f0d4a4 !important;
+    color: #8d6220 !important;
+}
+
+body.admin-shell .admin-page .aha-admin-status.approved {
+    background: #ecf8f1 !important;
+    border-color: #b5dbca !important;
+    color: #286b46 !important;
+}
+
+body.admin-shell .admin-page .aha-admin-status.rejected {
+    background: #feeeee !important;
+    border-color: #efc4c4 !important;
+    color: #943838 !important;
+}
+
+body.admin-smart-compact {
+    --aha-admin-pane-width: 90px;
+}
+
+body.admin-smart-compact #nv .navview-pane .app-title,
+body.admin-smart-compact #nv .navview-menu .item-header,
+body.admin-smart-compact #nv .navview-menu .caption,
+body.admin-smart-compact #nv .navview-pane > .data-box {
+    display: none !important;
+}
+
+body.admin-smart-compact #nv .navview-pane > .d-flex.flex-align-center {
+    justify-content: center;
+}
+
+body.admin-smart-compact #nv .navview-pane .pull-button {
+    width: 100%;
+}
+
+body.admin-smart-compact #nv .navview-menu {
+    padding: 10px 6px 14px;
+}
+
+body.admin-smart-compact #nv .navview-menu li a {
+    margin: 2px 4px;
+    min-height: 42px;
+    justify-content: center;
+    padding: 0;
+}
+
+body.admin-smart-compact #nv .navview-menu li a .icon {
+    margin: 0;
+    width: 26px;
+    min-width: 26px;
+}
+
+body.admin-smart-compact .admin-content-inner {
+    padding-left: 14px !important;
+}
+
+body.admin-smart-compact .admin-topbar #admin-ui-density-toggle .mif::before,
+body.admin-smart-compact .admin-topbar #admin-ui-density-toggle .mif {
+    transform: rotate(90deg);
+    display: inline-block;
+}
+
+@media (max-width: 1199.98px) {
+    body.admin-shell .admin-content-inner {
+        padding: 12px !important;
+    }
+}
+
+@media (max-width: 991.98px) {
+    body.admin-shell #nv .navview-pane {
+        width: min(86vw, 320px);
+    }
+
+    body.admin-shell .admin-topbar #admin-ui-density-toggle {
+        display: none !important;
+    }
+
+    body.admin-smart-compact {
+        --aha-admin-pane-width: min(86vw, 320px);
+    }
+
+    body.admin-shell .admin-page #menutop-tool-bc .h-menu {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+    }
+
+    body.admin-shell .admin-page #timkiem-fixtop-bc {
+        width: 100% !important;
+        margin-top: 8px;
+    }
+
+    body.admin-shell .admin-page .aha-admin-head {
+        flex-direction: column;
+    }
+
+    body.admin-shell .admin-page .aha-admin-summary {
+        justify-content: flex-start;
+    }
+
+}
+
+@media (max-width: 575.98px) {
+    body.admin-shell .admin-content-inner {
+        padding: 8px !important;
+    }
+
+    body.admin-shell .admin-page .button,
+    body.admin-shell .admin-page button,
+    body.admin-shell .admin-page input[type="button"],
+    body.admin-shell .admin-page input[type="submit"],
+    body.admin-shell .admin-page input[type="text"],
+    body.admin-shell .admin-page input[type="password"],
+    body.admin-shell .admin-page input[type="number"],
+    body.admin-shell .admin-page input[type="email"],
+    body.admin-shell .admin-page input[type="tel"],
+    body.admin-shell .admin-page select {
+        min-height: 40px !important;
+        height: 40px !important;
+    }
+
+    body.admin-shell .admin-page div[style*="position: fixed; width: 100%; height: 52px"] .pt-4 {
+        font-size: 19px;
+    }
+
+    body.admin-shell .admin-page .bg-white.border.bd-transparent[style*="padding-top: 52px"] {
+        max-height: calc(100vh - 78px);
+        padding-top: 62px !important;
+    }
+
+    body.admin-shell .admin-page .bcorn-fix-title-table-container {
+        max-height: calc(100vh - 200px) !important;
+    }
+}

@@ -1,4 +1,5 @@
 ﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="default.aspx.cs" Inherits="admin_Default2" %>
+<%@ Register Src="~/Uc/Shared/SpaceLauncher_uc.ascx" TagPrefix="uc1" TagName="SpaceLauncher" %>
 
 <!DOCTYPE html>
 
@@ -197,6 +198,7 @@
         <div class="bg-quen-mat-khau">
             <div class="container-fluid pos-fixed fixed-top bg-darkRed z-1 fg-white gh-quen-topbar">
                 <div class="fg-white container bg-transparent pl-0 pr-0" data-role="app-bar" data-expand-point="lg">
+                    <uc1:SpaceLauncher runat="server" ID="spaceLauncher" ButtonCssClass="app-bar-item" />
                     <a class="app-bar-item" href="/gianhang/admin/login.aspx" title="Quay lại"><span class="mif-arrow-left mr-3"></span>Quay lại đăng nhập</a>
                 </div>
             </div>

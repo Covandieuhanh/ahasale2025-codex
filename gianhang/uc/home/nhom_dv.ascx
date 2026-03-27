@@ -24,7 +24,7 @@
                             <div class="feature-card__desc"><%#Eval("description") %></div>
                             <div class="feature-card__actions">
                                 <% if (SecondaryButtonText != "") { %>
-                                <a class="feature-card__button feature-card__button--ghost" href="<%=AhaShineHomeRoutes_cl.BookingUrl %>"><%=SecondaryButtonText %></a>
+                                <a class="feature-card__button feature-card__button--ghost" href="<%=BookingUrl %>"><%=SecondaryButtonText %></a>
                                 <% } %>
                                 <% if (PrimaryButtonText != "") { %>
                                 <a class="feature-card__button feature-card__button--primary" href="<%# ResolveGroupUrl(Eval("id"), Eval("url_other")) %>"><%=PrimaryButtonText %></a>

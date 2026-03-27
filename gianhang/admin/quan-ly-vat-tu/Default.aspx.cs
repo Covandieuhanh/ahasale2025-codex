@@ -329,8 +329,16 @@ public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
     #region autopostback
     protected void txt_search_TextChanged(object sender, EventArgs e)
     {
-        Session["search_qlvt"] = txt_search.Text.Trim();
+        ApplySearchState();
+    }
+    protected void but_search_Click(object sender, EventArgs e)
+    {
+        ApplySearchState();
+    }
+    private void ApplySearchState()
+    {
         Session["current_page_qlvt"] = "1";
+
         main();
     }
     protected void but_quaylai_Click(object sender, EventArgs e)

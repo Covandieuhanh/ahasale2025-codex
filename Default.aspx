@@ -1,6 +1,5 @@
 ﻿<%@ Page Title="" Language="C#" MasterPageFile="~/MasterPage/Tabler/TablerHome.master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="_Default" %>
 
-<%@ Register Src="~/Uc/Home/DanhMuc_icon_Home_UC.ascx" TagPrefix="uc1" TagName="DanhMuc_icon_Home_UC" %>
 <%@ Register Src="~/Uc/Home/TuKhoaPhoBien_UC.ascx" TagPrefix="uc1" TagName="TuKhoaPhoBien_UC" %>
 <%@ Register Src="~/Uc/Home/GioiThieuDai_UC.ascx" TagPrefix="uc1" TagName="GioiThieuDai_UC" %>
 <%@ Register Src="~/Uc/Home/DanhChoBan_MoiNhat_UC.ascx" TagPrefix="uc1" TagName="DanhChoBan_MoiNhat_UC" %>
@@ -14,7 +13,6 @@
     </style>
 </asp:Content>
 <asp:Content ID="Content3" ContentPlaceHolderID="main" runat="Server">
-    <uc1:DanhMuc_icon_Home_UC runat="server" ID="DanhMuc_icon_Home_UC" />
     <uc1:DanhChoBan_MoiNhat_UC runat="server" ID="DanhChoBan_MoiNhat_UC" />
     <uc1:GioiThieuDai_UC runat="server" ID="GioiThieuDai_UC" />
     <uc1:TuKhoaPhoBien_UC runat="server" ID="TuKhoaPhoBien_UC" />

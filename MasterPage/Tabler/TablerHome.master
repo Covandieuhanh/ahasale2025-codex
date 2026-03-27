@@ -2,6 +2,7 @@
 
 <%@ Register Src="~/Uc/Home/Header_uc.ascx" TagPrefix="uc1" TagName="Header_uc" %>
 <%@ Register Src="~/Uc/Home/Footer_uc.ascx" TagPrefix="uc1" TagName="Footer_uc" %>
+<%@ Register Src="~/gianhang/uc/space_nav.ascx" TagPrefix="uc2" TagName="space_nav" %>
 
 
 
@@ -27,12 +28,13 @@
     <asp:ContentPlaceHolder ID="head_truoc" runat="server"></asp:ContentPlaceHolder>
     <script>
         (function () {
-            try {
-                const key = 'theme-preference';
-                const saved = localStorage.getItem(key);
-                const theme = (saved === 'dark' || saved === 'light') ? saved : 'light';
-                document.documentElement.setAttribute('data-bs-theme', theme);
-            } catch (e) { }
+            document.documentElement.setAttribute('data-bs-theme', 'light');
+            try { localStorage.removeItem('theme-preference'); } catch (e) { }
+            document.addEventListener('DOMContentLoaded', function () {
+                if (!document.body) return;
+                document.body.setAttribute('data-bs-theme', 'light');
+                document.body.classList.remove('theme-dark', 'dark', 'dark-mode');
+            });
         })();
     </script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
@@ -45,16 +47,45 @@
     <link rel="stylesheet" href="<%= Helper_cl.VersionedUrl("~/assetscss/aha-ui-refresh.css") %>" />
     <asp:ContentPlaceHolder ID="head_sau" runat="server"></asp:ContentPlaceHolder>
     <style>
+        <%
+            string headerSpace = ModuleSpace_cl.ResolveByPath(Request == null || Request.Url == null ? "" : Request.Url.AbsolutePath);
+            string tablerPrimary = "#2fb344";
+            string tablerPrimaryRgb = "47, 179, 68";
+            if (headerSpace == ModuleSpace_cl.Shop)
+            {
+                tablerPrimary = "#ee4d2d";
+                tablerPrimaryRgb = "238, 77, 45";
+            }
+            else if (headerSpace == ModuleSpace_cl.Admin)
+            {
+                tablerPrimary = "#dc2626";
+                tablerPrimaryRgb = "220, 38, 38";
+            }
+            else if (headerSpace == ModuleSpace_cl.GianHang)
+            {
+                tablerPrimary = "#f97316";
+                tablerPrimaryRgb = "249, 115, 22";
+            }
+            else if (headerSpace == ModuleSpace_cl.GianHangAdmin)
+            {
+                tablerPrimary = "#4f46e5";
+                tablerPrimaryRgb = "79, 70, 229";
+            }
+            else if (headerSpace == ModuleSpace_cl.DauGia)
+            {
+                tablerPrimary = "#db2777";
+                tablerPrimaryRgb = "219, 39, 119";
+            }
+            else if (headerSpace == ModuleSpace_cl.Event)
+            {
+                tablerPrimary = "#0891b2";
+                tablerPrimaryRgb = "8, 145, 178";
+            }
+        %>
         :root {
-    --tblr-primary: #2fb344;        /* xanh lá Tabler */
-    --tblr-primary-rgb: 47, 179, 68;
-}
-        <% if (PortalRequest_cl.IsShopPortalRequest()) { %>
-        :root {
-            --tblr-primary: #ee4d2d;
-            --tblr-primary-rgb: 238, 77, 45;
+            --tblr-primary: <%= tablerPrimary %>;
+            --tblr-primary-rgb: <%= tablerPrimaryRgb %>;
         }
-        <% } %>
         .aha-btn-loading {
             opacity: 0.7;
             cursor: wait;
@@ -72,6 +103,7 @@
         <div class="page">
             <uc1:Header_uc runat="server" ID="Header_uc" />
             <div class="page-wrapper" style="margin-top: var(--aha-header-offset, 55px)">
+                <uc2:space_nav runat="server" ID="gianhang_space_nav" />
                 <asp:ContentPlaceHolder ID="main" runat="server"></asp:ContentPlaceHolder>
             </div>
             <uc1:Footer_uc runat="server" ID="Footer_uc" />
@@ -171,5 +203,6 @@
         })();
     </script>
     <asp:ContentPlaceHolder ID="foot_sau" runat="server"></asp:ContentPlaceHolder>
+    <%=ViewState["thongbao_home"] %>
 </body>
 </html>

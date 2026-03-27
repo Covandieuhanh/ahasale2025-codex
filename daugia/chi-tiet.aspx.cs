@@ -175,6 +175,10 @@ public partial class daugia_chi_tiet : Page
 
     private string GetCurrentPortalUser()
     {
+        string portalUser = (PortalRequest_cl.GetCurrentAccount() ?? "").Trim().ToLowerInvariant();
+        if (portalUser != "")
+            return portalUser;
+
         string user = ((Session["user_home"] ?? "") + "").Trim().ToLowerInvariant();
         if (user != "")
             return user;
@@ -183,13 +187,44 @@ public partial class daugia_chi_tiet : Page
         if (home != "")
             return home;
 
-        return DecodeSessionAccount("taikhoan_shop");
+        string homeCookie = DecodeCookieAccount("cookie_userinfo_home_bcorn");
+        if (homeCookie != "")
+            return homeCookie;
+
+        string shop = DecodeSessionAccount("taikhoan_shop");
+        if (shop != "")
+            return shop;
+
+        return DecodeCookieAccount("cookie_userinfo_shop_bcorn");
     }
 
     private string DecodeSessionAccount(string sessionKey)
     {
         string encrypted = Session[sessionKey] as string;
         if (string.IsNullOrWhiteSpace(encrypted))
+            return "";
+
+        try
+        {
+            return (mahoa_cl.giaima_Bcorn(encrypted) ?? "").Trim().ToLowerInvariant();
+        }
+        catch
+        {
+            return "";
+        }
+    }
+
+    private string DecodeCookieAccount(string cookieName)
+    {
+        if (Request == null || Request.Cookies == null || string.IsNullOrWhiteSpace(cookieName))
+            return "";
+
+        HttpCookie cookie = Request.Cookies[cookieName];
+        if (cookie == null)
+            return "";
+
+        string encrypted = (cookie["taikhoan"] ?? "").Trim();
+        if (encrypted == "")
             return "";
 
         try
@@ -227,11 +262,25 @@ public partial class daugia_chi_tiet : Page
 
     private void ShowHomeNotice(string message, string cssClass)
     {
-        Session["notifi_home"] = thongbao_class.metro_notifi_onload(
-            "Thông báo",
-            string.IsNullOrWhiteSpace(message) ? "Đã xử lý thao tác." : message,
-            "1800",
-            string.IsNullOrWhiteSpace(cssClass) ? "info" : cssClass);
+        string noticeText = string.IsNullOrWhiteSpace(message) ? "Đã xử lý thao tác." : message;
+        string noticeType = string.IsNullOrWhiteSpace(cssClass) ? "info" : cssClass;
+
+        if (PortalRequest_cl.IsShopPortalRequest())
+        {
+            Session["ThongBao_Shop"] = string.Format("toast|{0}|{1}|{2}|{3}",
+                "Thông báo",
+                noticeText,
+                noticeType,
+                "1800");
+        }
+        else
+        {
+            Session["thongbao_home"] = thongbao_class.metro_notifi_onload(
+                "Thông báo",
+                noticeText,
+                "1800",
+                noticeType);
+        }
         Response.Redirect(Request.RawUrl, true);
     }
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Web;
 
 public static class AccountVisibility_cl
 {
@@ -8,9 +9,15 @@ public static class AccountVisibility_cl
     public const string PostTypeService = "dichvu";
     public const string ShopPartnerType = "Gian hàng đối tác";
     private const string ShopScopeToken = PortalScope_cl.ScopeShop;
+    private const string VisibleSellerCacheKey = "__ahasale_visible_seller_cache";
     private static bool _tradeTypeNormalized;
     private static readonly object _tradeTypeLock = new object();
 
+    private sealed class VisibleSellerCache
+    {
+        public List<string> ExactKeys { get; set; }
+        public HashSet<string> NormalizedKeys { get; set; }
+    }
 
     public static bool IsBlocked(taikhoan_tb account)
     {
@@ -43,28 +50,12 @@ public static class AccountVisibility_cl
         if (db == null)
             return false;
 
-        string tk = (taiKhoan ?? "").Trim().ToLowerInvariant();
+        string tk = NormalizeAccountKey(taiKhoan);
         if (string.IsNullOrEmpty(tk))
             return false;
 
-        ShopStatus_cl.EnsureSchemaSafe(db);
-        EnsureTradeTypeNormalized(db);
-        bool hasTrangThai = ShopStatus_cl.HasTrangThaiColumn(db);
-        if (!hasTrangThai)
-        {
-            return db.taikhoan_tbs.Any(p =>
-                p.taikhoan == tk
-                && p.block != true);
-        }
-
-        return db.taikhoan_tbs.Any(p =>
-            p.taikhoan == tk
-            && (((p.phanloai == ShopPartnerType
-                  || ((p.permission ?? "").ToLower()).Contains(ShopScopeToken))
-                 && p.TrangThai_Shop == ShopStatus_cl.StatusApproved)
-                || (!(p.phanloai == ShopPartnerType
-                      || ((p.permission ?? "").ToLower()).Contains(ShopScopeToken))
-                    && p.block != true)));
+        VisibleSellerCache cache = GetVisibleSellerCache(db);
+        return cache.NormalizedKeys.Contains(tk);
     }
 
     public static IQueryable<BaiViet_tb> FilterVisibleProducts(dbDataContext db, IQueryable<BaiViet_tb> source)
@@ -72,30 +63,14 @@ public static class AccountVisibility_cl
         if (db == null || source == null)
             return source;
 
-        ShopStatus_cl.EnsureSchemaSafe(db);
-        EnsureTradeTypeNormalized(db);
-        bool hasTrangThai = ShopStatus_cl.HasTrangThaiColumn(db);
-        if (!hasTrangThai)
-        {
-            return source.Where(p =>
-                p.phanloai == PostTypeProduct
-                && (p.bin == false || p.bin == null)
-                && db.taikhoan_tbs.Any(acc =>
-                    acc.taikhoan == p.nguoitao
-                    && acc.block != true));
-        }
+        List<string> allowedKeys = GetVisibleSellerCache(db).ExactKeys;
+        if (allowedKeys.Count == 0)
+            return source.Where(p => false);
 
         return source.Where(p =>
             p.phanloai == PostTypeProduct
             && (p.bin == false || p.bin == null)
-            && db.taikhoan_tbs.Any(acc =>
-                acc.taikhoan == p.nguoitao
-                && (((acc.phanloai == ShopPartnerType
-                      || ((acc.permission ?? "").ToLower()).Contains(ShopScopeToken))
-                     && acc.TrangThai_Shop == ShopStatus_cl.StatusApproved)
-                    || (!(acc.phanloai == ShopPartnerType
-                          || ((acc.permission ?? "").ToLower()).Contains(ShopScopeToken))
-                        && acc.block != true))));
+            && allowedKeys.Contains(p.nguoitao));
     }
 
     public static bool IsVisibleTradeType(string phanLoai)
@@ -119,30 +94,14 @@ public static class AccountVisibility_cl
         if (db == null || source == null)
             return source;
 
-        ShopStatus_cl.EnsureSchemaSafe(db);
-        EnsureTradeTypeNormalized(db);
-        bool hasTrangThai = ShopStatus_cl.HasTrangThaiColumn(db);
-        if (!hasTrangThai)
-        {
-            return source.Where(p =>
-                (p.phanloai == PostTypeProduct || p.phanloai == PostTypeService)
-                && (p.bin == false || p.bin == null)
-                && db.taikhoan_tbs.Any(acc =>
-                    acc.taikhoan == p.nguoitao
-                    && acc.block != true));
-        }
+        List<string> allowedKeys = GetVisibleSellerCache(db).ExactKeys;
+        if (allowedKeys.Count == 0)
+            return source.Where(p => false);
 
         return source.Where(p =>
             (p.phanloai == PostTypeProduct || p.phanloai == PostTypeService)
             && (p.bin == false || p.bin == null)
-            && db.taikhoan_tbs.Any(acc =>
-                acc.taikhoan == p.nguoitao
-                && (((acc.phanloai == ShopPartnerType
-                      || ((acc.permission ?? "").ToLower()).Contains(ShopScopeToken))
-                     && acc.TrangThai_Shop == ShopStatus_cl.StatusApproved)
-                    || (!(acc.phanloai == ShopPartnerType
-                          || ((acc.permission ?? "").ToLower()).Contains(ShopScopeToken))
-                        && acc.block != true))));
+            && allowedKeys.Contains(p.nguoitao));
     }
 
     public static BaiViet_tb FindVisibleTradePostById(dbDataContext db, string idsp)
@@ -154,32 +113,15 @@ public static class AccountVisibility_cl
         if (string.IsNullOrEmpty(id))
             return null;
 
-        ShopStatus_cl.EnsureSchemaSafe(db);
-        EnsureTradeTypeNormalized(db);
-        bool hasTrangThai = ShopStatus_cl.HasTrangThaiColumn(db);
-        if (!hasTrangThai)
-        {
-            return db.BaiViet_tbs.FirstOrDefault(p =>
-                p.id.ToString() == id
-                && (p.phanloai == PostTypeProduct || p.phanloai == PostTypeService)
-                && (p.bin == false || p.bin == null)
-                && db.taikhoan_tbs.Any(acc =>
-                    acc.taikhoan == p.nguoitao
-                    && acc.block != true));
-        }
+        List<string> allowedKeys = GetVisibleSellerCache(db).ExactKeys;
+        if (allowedKeys.Count == 0)
+            return null;
 
         return db.BaiViet_tbs.FirstOrDefault(p =>
             p.id.ToString() == id
             && (p.phanloai == PostTypeProduct || p.phanloai == PostTypeService)
             && (p.bin == false || p.bin == null)
-            && db.taikhoan_tbs.Any(acc =>
-                acc.taikhoan == p.nguoitao
-                && (((acc.phanloai == ShopPartnerType
-                      || ((acc.permission ?? "").ToLower()).Contains(ShopScopeToken))
-                     && acc.TrangThai_Shop == ShopStatus_cl.StatusApproved)
-                    || (!(acc.phanloai == ShopPartnerType
-                          || ((acc.permission ?? "").ToLower()).Contains(ShopScopeToken))
-                        && acc.block != true))));
+            && allowedKeys.Contains(p.nguoitao));
     }
 
     public static BaiViet_tb FindVisibleProductById(dbDataContext db, string idsp)
@@ -191,32 +133,15 @@ public static class AccountVisibility_cl
         if (string.IsNullOrEmpty(id))
             return null;
 
-        ShopStatus_cl.EnsureSchemaSafe(db);
-        EnsureTradeTypeNormalized(db);
-        bool hasTrangThai = ShopStatus_cl.HasTrangThaiColumn(db);
-        if (!hasTrangThai)
-        {
-            return db.BaiViet_tbs.FirstOrDefault(p =>
-                p.id.ToString() == id
-                && p.phanloai == PostTypeProduct
-                && (p.bin == false || p.bin == null)
-                && db.taikhoan_tbs.Any(acc =>
-                    acc.taikhoan == p.nguoitao
-                    && acc.block != true));
-        }
+        List<string> allowedKeys = GetVisibleSellerCache(db).ExactKeys;
+        if (allowedKeys.Count == 0)
+            return null;
 
         return db.BaiViet_tbs.FirstOrDefault(p =>
             p.id.ToString() == id
             && p.phanloai == PostTypeProduct
             && (p.bin == false || p.bin == null)
-            && db.taikhoan_tbs.Any(acc =>
-                acc.taikhoan == p.nguoitao
-                && (((acc.phanloai == ShopPartnerType
-                      || ((acc.permission ?? "").ToLower()).Contains(ShopScopeToken))
-                     && acc.TrangThai_Shop == ShopStatus_cl.StatusApproved)
-                    || (!(acc.phanloai == ShopPartnerType
-                          || ((acc.permission ?? "").ToLower()).Contains(ShopScopeToken))
-                        && acc.block != true))));
+            && allowedKeys.Contains(p.nguoitao));
     }
 
     public static int LockLegacyHomeAccountsWithoutPhone(dbDataContext db, out int hiddenPostCount)
@@ -304,5 +229,132 @@ WHERE phanloai IS NOT NULL
                 _tradeTypeNormalized = true;
             }
         }
+    }
+
+    private static VisibleSellerCache GetVisibleSellerCache(dbDataContext db)
+    {
+        HttpContext context = HttpContext.Current;
+        if (context != null)
+        {
+            VisibleSellerCache cached = context.Items[VisibleSellerCacheKey] as VisibleSellerCache;
+            if (cached != null)
+                return cached;
+        }
+
+        ShopStatus_cl.EnsureSchemaSafe(db);
+        EnsureTradeTypeNormalized(db);
+        CoreSchemaMigration_cl.EnsureSchemaSafe(db);
+
+        bool hasTrangThai = ShopStatus_cl.HasTrangThaiColumn(db);
+        HashSet<string> gianHangActiveKeys = GetActiveGianHangKeys(db);
+        HashSet<string> shopActiveKeys = GetActiveShopKeys(db);
+        List<string> exactKeys = new List<string>();
+        HashSet<string> normalizedKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (taikhoan_tb account in db.taikhoan_tbs.ToList())
+        {
+            if (!IsAccountVisibleForTradeFeed(account, hasTrangThai, gianHangActiveKeys, shopActiveKeys))
+                continue;
+
+            string exactKey = (account.taikhoan ?? "").Trim();
+            string normalizedKey = NormalizeAccountKey(account.taikhoan);
+            if (exactKey == "" || normalizedKey == "")
+                continue;
+
+            if (!normalizedKeys.Contains(normalizedKey))
+            {
+                normalizedKeys.Add(normalizedKey);
+                exactKeys.Add(exactKey);
+            }
+        }
+
+        VisibleSellerCache cache = new VisibleSellerCache
+        {
+            ExactKeys = exactKeys,
+            NormalizedKeys = normalizedKeys
+        };
+
+        if (context != null)
+            context.Items[VisibleSellerCacheKey] = cache;
+
+        return cache;
+    }
+
+    private static HashSet<string> GetActiveGianHangKeys(dbDataContext db)
+    {
+        List<string> keys = db.ExecuteQuery<string>(
+                "SELECT AccountKey FROM dbo.CoreSpaceAccess_tb WHERE SpaceCode = {0} AND AccessStatus = {1}",
+                ModuleSpace_cl.GianHang,
+                SpaceAccess_cl.StatusActive)
+            .Select(NormalizeAccountKey)
+            .Where(p => p != "")
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        return new HashSet<string>(keys, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static HashSet<string> GetActiveShopKeys(dbDataContext db)
+    {
+        List<string> keys = db.ExecuteQuery<string>(
+                "SELECT AccountKey FROM dbo.CoreSpaceAccess_tb WHERE SpaceCode = {0} AND AccessStatus = {1}",
+                ModuleSpace_cl.Shop,
+                SpaceAccess_cl.StatusActive)
+            .Select(NormalizeAccountKey)
+            .Where(p => p != "")
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        return new HashSet<string>(keys, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static bool IsAccountVisibleForTradeFeed(taikhoan_tb account, bool hasTrangThai, HashSet<string> gianHangActiveKeys, HashSet<string> shopActiveKeys)
+    {
+        if (account == null)
+            return false;
+
+        string accountKey = NormalizeAccountKey(account.taikhoan);
+        if (accountKey == "")
+            return false;
+
+        bool isShop = IsShopAccount(account, accountKey, shopActiveKeys);
+        if (isShop)
+        {
+            if (shopActiveKeys != null && shopActiveKeys.Contains(accountKey))
+                return true;
+
+            if (!hasTrangThai)
+                return account.block != true;
+
+            return account.TrangThai_Shop == ShopStatus_cl.StatusApproved;
+        }
+
+        if (account.block == true)
+            return false;
+
+        if (!PortalScope_cl.CanLoginHome(account.taikhoan, account.phanloai, account.permission))
+            return true;
+
+        return gianHangActiveKeys.Contains(accountKey);
+    }
+
+    private static bool IsShopAccount(taikhoan_tb account, string normalizedAccountKey, HashSet<string> shopActiveKeys)
+    {
+        if (account == null)
+            return false;
+
+        if (!string.IsNullOrEmpty(normalizedAccountKey) && shopActiveKeys != null && shopActiveKeys.Contains(normalizedAccountKey))
+            return true;
+
+        if (account.TrangThai_Shop == ShopStatus_cl.StatusApproved)
+            return true;
+
+        return string.Equals((account.phanloai ?? "").Trim(), ShopPartnerType, StringComparison.OrdinalIgnoreCase)
+               || ((account.permission ?? "").ToLowerInvariant()).Contains(ShopScopeToken);
+    }
+
+    private static string NormalizeAccountKey(string raw)
+    {
+        return (raw ?? "").Trim().ToLowerInvariant();
     }
 }

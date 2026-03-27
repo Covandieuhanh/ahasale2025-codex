@@ -45,7 +45,7 @@ public class AccountAuth_cl
             TaiKhoan = (row.taikhoan ?? "").Trim().ToLower(),
             MatKhau = row.matkhau ?? "",
             PhanLoai = row.phanloai ?? "",
-            Block = row.block ?? false,
+            Block = row.block == true,
             HanSuDung = row.hansudung
         };
     }

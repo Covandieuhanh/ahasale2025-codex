@@ -132,25 +132,17 @@ public partial class admin_uc_menu_left_uc : System.Web.UI.UserControl
 
     private bool IsRootAdminCurrent()
     {
-        string tkEnc = Session["taikhoan"] as string;
-        if (string.IsNullOrEmpty(tkEnc))
+        string tk = GianHangAdminContext_cl.ResolveDisplayAccountKey();
+        if (string.IsNullOrEmpty(tk))
             return false;
-
-        string tk = "";
-        try { tk = mahoa_cl.giaima_Bcorn(tkEnc); }
-        catch { tk = tkEnc; }
         return PermissionProfile_cl.IsRootAdmin(tk);
     }
 
     private bool CanManageHomeContentCurrent()
     {
-        string tkEnc = Session["taikhoan"] as string;
-        if (string.IsNullOrEmpty(tkEnc))
+        string tk = GianHangAdminContext_cl.ResolveDisplayAccountKey();
+        if (string.IsNullOrEmpty(tk))
             return false;
-
-        string tk = "";
-        try { tk = mahoa_cl.giaima_Bcorn(tkEnc); }
-        catch { tk = tkEnc; }
 
         if (PermissionProfile_cl.IsRootAdmin(tk))
             return true;
@@ -289,14 +281,7 @@ public partial class admin_uc_menu_left_uc : System.Web.UI.UserControl
 
                 using (dbDataContext db = new dbDataContext())
                 {
-                    string tkEnc = Session["taikhoan"] as string;
-                    string tk = "";
-                    if (!string.IsNullOrEmpty(tkEnc))
-                    {
-                        try { tk = mahoa_cl.giaima_Bcorn(tkEnc); }
-                        catch { tk = tkEnc; }
-                    }
-                    taikhoan_tb account = db.taikhoan_tbs.FirstOrDefault(x => x.taikhoan == tk);
+                    taikhoan_tb account = GianHangAdminContext_cl.ResolveDisplayAccount(db);
                     BuildLeftMenuPermissionFlags(account);
 
                     #region ĐẾM LỖI HỆ THỐNG CHƯA XỬ LÝ
@@ -310,12 +295,7 @@ public partial class admin_uc_menu_left_uc : System.Web.UI.UserControl
             }
             catch (Exception _ex)
             {
-                string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
-                if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không
-                    _tk = mahoa_cl.giaima_Bcorn(_tk);
-                else
-                    _tk = "";
-                Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
+                Log_cl.Add_Log(_ex.Message, GianHangAdminContext_cl.ResolveDisplayAccountKey(), _ex.StackTrace);
             }
         }
     }

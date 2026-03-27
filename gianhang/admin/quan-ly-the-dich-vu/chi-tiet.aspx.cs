@@ -235,7 +235,7 @@ public partial class badmin_Default : System.Web.UI.Page
         #endregion
         #region Check quyen theo nganh
         user = Session["user"].ToString();
-        user_parent = "admin";
+        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
         if (bcorn_class.check_quyen(user, "q12_3") == "" || bcorn_class.check_quyen(user, "n12_3") == "")
         {
             if (!string.IsNullOrWhiteSpace(Request.QueryString["id"]))

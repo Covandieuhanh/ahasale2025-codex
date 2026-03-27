@@ -51,7 +51,7 @@ public partial class thong_ke_bao_cao_inbienban : System.Web.UI.Page
         #endregion 
         #region Check quyen theo nganh
         user = Session["user"].ToString();
-        user_parent = "admin";
+        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
         if (bcorn_class.check_quyen(user, "q9_1") == "" || bcorn_class.check_quyen(user, "n9_1") == "")
         {
             if (!string.IsNullOrWhiteSpace(Request.QueryString["id"]))

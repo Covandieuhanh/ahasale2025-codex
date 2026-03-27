@@ -6,11 +6,11 @@ using System.Web.UI.WebControls;
 public partial class admin_phat_hanh_the : System.Web.UI.Page
 {
     private const string ViewAdd = "add";
-    private const int CardTypeUuDai = 1;
-    private const int CardTypeTieuDung = 2;
-    private const int CardTypeShopPartner = 3;
-    private const int CardTypeDongHanhHeSinhThai = 4;
-    private const int CardTypeLaoDong = 5;
+    private const int CardTypeUuDai = CardIssuance_cl.CardTypeUuDai;
+    private const int CardTypeTieuDung = CardIssuance_cl.CardTypeTieuDung;
+    private const int CardTypeShopPartner = CardIssuance_cl.CardTypeShopPartner;
+    private const int CardTypeDongHanhHeSinhThai = CardIssuance_cl.CardTypeDongHanhHeSinhThai;
+    private const int CardTypeLaoDong = CardIssuance_cl.CardTypeLaoDong;
 
     private string BuildListUrl()
     {
@@ -20,6 +20,21 @@ public partial class admin_phat_hanh_the : System.Web.UI.Page
     private string BuildAddUrl()
     {
         return ResolveUrl("~/admin/phat-hanh-the/them-moi.aspx");
+    }
+
+    private bool RedirectWhenLegacyCardFlowDisabled()
+    {
+        if (!CompanyShop_cl.HideLegacyAdminSystemProduct())
+            return false;
+
+        Session["thongbao"] = thongbao_class.metro_notifi_onload(
+            "Thông báo",
+            "Luồng phát hành/bán thẻ đã chuyển sang không gian /shop của tài khoản shop công ty.",
+            "2200",
+            "warning");
+        Response.Redirect("/admin/default.aspx", false);
+        Context.ApplicationInstance.CompleteRequest();
+        return true;
     }
 
     private void ShowAddPage(bool bindData)
@@ -35,6 +50,8 @@ public partial class admin_phat_hanh_the : System.Web.UI.Page
     protected void Page_Load(object sender, EventArgs e)
     {
         AdminRolePolicy_cl.RequireSuperAdmin();
+        if (RedirectWhenLegacyCardFlowDisabled())
+            return;
 
         try
         {
@@ -97,46 +114,22 @@ public partial class admin_phat_hanh_the : System.Web.UI.Page
 
     string GetTenTheByLoai(int loai)
     {
-        switch (loai)
-        {
-            case CardTypeUuDai: return "Thẻ ưu đãi";
-            case CardTypeTieuDung: return "Thẻ tiêu dùng";
-            case CardTypeShopPartner: return "Thẻ gian hàng đối tác";
-            case CardTypeDongHanhHeSinhThai: return "Thẻ đồng hành hệ sinh thái";
-            case CardTypeLaoDong: return "Thẻ lao động";
-            default: return "Thẻ #" + loai;
-        }
+        return CardIssuance_cl.GetCardName(loai);
     }
 
     private string ResolveAccountScope(taikhoan_tb account)
     {
-        if (account == null) return "";
-        return PortalScope_cl.ResolveScope(account.taikhoan, account.phanloai, account.permission);
+        return CardIssuance_cl.ResolveAccountScope(account);
     }
 
     private bool IsCardTypeAllowedForScope(string scope, int loaiThe)
     {
-        if (string.Equals(scope, PortalScope_cl.ScopeShop, StringComparison.OrdinalIgnoreCase))
-            return loaiThe == CardTypeShopPartner;
-
-        if (string.Equals(scope, PortalScope_cl.ScopeHome, StringComparison.OrdinalIgnoreCase))
-            return loaiThe == CardTypeUuDai
-                || loaiThe == CardTypeTieuDung
-                || loaiThe == CardTypeLaoDong
-                || loaiThe == CardTypeDongHanhHeSinhThai;
-
-        return false;
+        return CardIssuance_cl.IsCardTypeAllowedForScope(scope, loaiThe);
     }
 
     private string BuildInvalidCardTypeMessage(string scope)
     {
-        if (string.Equals(scope, PortalScope_cl.ScopeShop, StringComparison.OrdinalIgnoreCase))
-            return "Tài khoản gian hàng đối tác chỉ được phát hành thẻ gian hàng đối tác.";
-
-        if (string.Equals(scope, PortalScope_cl.ScopeHome, StringComparison.OrdinalIgnoreCase))
-            return "Tài khoản home chỉ được phát hành thẻ ưu đãi, thẻ tiêu dùng, thẻ lao động hoặc thẻ đồng hành hệ sinh thái.";
-
-        return "Tài khoản này không thuộc hệ home/gian hàng đối tác nên không thể phát hành thẻ.";
+        return CardIssuance_cl.BuildInvalidCardTypeMessage(scope);
     }
 
     private void BindCardTypesByScope(string scope)
@@ -293,38 +286,7 @@ public partial class admin_phat_hanh_the : System.Web.UI.Page
                         return;
                     }
 
-                    // 1) khóa thẻ cũ cùng (tk + loai) đang bật
-                    var olds = db.The_PhatHanh_tbs
-                        .Where(p => p.taikhoan == tk && p.LoaiThe == loai && p.TrangThai == true)
-                        .ToList();
-
-                    foreach (var x in olds)
-                    {
-                        x.TrangThai = false;
-                        x.NgayCapNhatTrangThai = now;
-                        x.NguoiCapNhatTrangThai = actor;
-                    }
-
-                    // 2) thêm thẻ mới (mặc định bật)
-                    The_PhatHanh_tb ob = new The_PhatHanh_tb();
-                    ob.idGuide = Guid.NewGuid();
-                    ob.taikhoan = tk;
-                    ob.LoaiThe = loai;
-                    ob.TenThe = tenThe;
-
-                    ob.NgayPhatHanh = now;
-                    ob.TrangThai = true;
-
-                    ob.NgayTao = now;
-                    ob.NguoiTao = actor;
-
-                    ob.NgayCapNhatTrangThai = now;
-                    ob.NguoiCapNhatTrangThai = actor;
-
-                    // PIN mặc định khi phát hành thẻ: 6868 (4 chữ số).
-                    acc.mapin_thanhtoan = PinSecurity_cl.HashPin("6868");
-
-                    db.The_PhatHanh_tbs.InsertOnSubmit(ob);
+                    CardIssuance_cl.IssueCard(db, acc, loai, actor, now);
                     db.SubmitChanges();
 
                     tran.Commit();

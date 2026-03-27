@@ -2,21 +2,35 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
 public partial class daugia_admin_default : Page
 {
     protected DauGiaService_cl.AuctionSummaryInfo Summary = new DauGiaService_cl.AuctionSummaryInfo();
+    private string CurrentHomeAccount = "";
+    private string CurrentAdminAccount = "";
+    private bool IsSystemAdminPortal = false;
 
     protected void Page_Load(object sender, EventArgs e)
     {
-        check_login_cl.check_login_admin("none", "none");
+        IsSystemAdminPortal = IsSystemAdminRequest();
+        if (!IsSystemAdminPortal)
+        {
+            Response.Redirect("/daugia/admin/portal.aspx", true);
+            return;
+        }
 
         using (dbDataContext db = new dbDataContext())
         {
             DauGiaBootstrap_cl.EnsureSchemaSafe(db);
-            EnsureAdminGate(db);
+            EnsurePortalGate(db);
+            if (CurrentHomeAccount == "" && CurrentAdminAccount == "")
+                return;
+
+            if (IsSystemAdminPortal && !AdminManagementSpace_cl.EnsureSelectedSpaceRouteAccess(this))
+                return;
 
             if (!IsPostBack)
             {
@@ -26,16 +40,116 @@ public partial class daugia_admin_default : Page
         }
     }
 
-    private void EnsureAdminGate(dbDataContext db)
+    private bool IsSystemAdminRequest()
     {
-        string adminUser = (AdminRolePolicy_cl.GetCurrentAdminUser() ?? "").Trim().ToLowerInvariant();
-        taikhoan_tb account = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == adminUser);
-        string permissionRaw = account == null ? "" : (account.permission ?? "");
+        string raw = (Request.QueryString["system"] ?? "").Trim().ToLowerInvariant();
+        return raw == "1" || raw == "true";
+    }
 
-        if (!DauGiaPolicy_cl.CanAccessAdmin(db, adminUser, permissionRaw))
+    private void EnsurePortalGate(dbDataContext db)
+    {
+        if (IsSystemAdminPortal)
         {
-            Session["thongbao"] = thongbao_class.metro_notifi_onload("Thông báo", "Bạn không đủ quyền quản trị module đấu giá.", "1600", "warning");
+            EnsureSystemAdminGate(db);
+            return;
+        }
+
+        EnsureHomeGate(db);
+    }
+
+    private void EnsureHomeGate(dbDataContext db)
+    {
+        string homeUser = ReadHomeAccount();
+        if (homeUser == "")
+        {
+            HomeSpaceAccess_cl.RedirectToHomeLogin(
+                this,
+                Request.RawUrl ?? "/daugia/admin/",
+                "Vui lòng đăng nhập tài khoản Home để truy cập không gian /daugia/admin.");
+            return;
+        }
+
+        taikhoan_tb account = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == homeUser);
+        if (account == null || !SpaceAccess_cl.CanAccessDauGia(db, account))
+        {
+            HomeSpaceAccess_cl.RedirectToAccessPage(this, ModuleSpace_cl.DauGia, Request.RawUrl ?? "/daugia/admin/");
+            return;
+        }
+
+        CurrentHomeAccount = homeUser;
+    }
+
+    private void EnsureSystemAdminGate(dbDataContext db)
+    {
+        check_login_cl.check_login_admin("none", "none");
+        string adminUser = ReadAdminAccount();
+        if (adminUser == "")
+            return;
+
+        taikhoan_tb account = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == adminUser);
+        if (!DauGiaPolicy_cl.CanAccessAdmin(db, adminUser, account == null ? "" : (account.permission ?? "")))
+        {
+            Session["thongbao"] = thongbao_class.metro_notifi_onload(
+                "Thông báo",
+                "Bạn không có quyền truy cập quản trị đấu giá.",
+                "1800",
+                "warning");
             Response.Redirect("/admin/default.aspx", true);
+            return;
+        }
+
+        CurrentAdminAccount = adminUser;
+    }
+
+    private string ReadHomeAccount()
+    {
+        string encrypted = "";
+        if (Session != null)
+            encrypted = Session["taikhoan_home"] as string;
+
+        if (string.IsNullOrWhiteSpace(encrypted) && Request != null && Request.Cookies != null)
+        {
+            HttpCookie ck = Request.Cookies["cookie_userinfo_home_bcorn"];
+            if (ck != null)
+                encrypted = ck["taikhoan"] ?? "";
+        }
+
+        if (string.IsNullOrWhiteSpace(encrypted))
+            return "";
+
+        try
+        {
+            return (mahoa_cl.giaima_Bcorn(encrypted) ?? "").Trim().ToLowerInvariant();
+        }
+        catch
+        {
+            return "";
+        }
+    }
+
+    private string ReadAdminAccount()
+    {
+        string encrypted = "";
+        if (Session != null)
+            encrypted = Session["taikhoan"] as string;
+
+        if (string.IsNullOrWhiteSpace(encrypted) && Request != null && Request.Cookies != null)
+        {
+            HttpCookie ck = Request.Cookies["cookie_userinfo_admin_bcorn"];
+            if (ck != null)
+                encrypted = ck["taikhoan"] ?? "";
+        }
+
+        if (string.IsNullOrWhiteSpace(encrypted))
+            return "";
+
+        try
+        {
+            return (mahoa_cl.giaima_Bcorn(encrypted) ?? "").Trim().ToLowerInvariant();
+        }
+        catch
+        {
+            return "";
         }
     }
 
@@ -65,6 +179,8 @@ public partial class daugia_admin_default : Page
 
         rptAuctions.DataSource = list;
         rptAuctions.DataBind();
+        rptAuctionCards.DataSource = list;
+        rptAuctionCards.DataBind();
         phEmpty.Visible = list.Count == 0;
     }
 
@@ -105,23 +221,32 @@ public partial class daugia_admin_default : Page
         if (!long.TryParse((e.CommandArgument ?? "").ToString(), out id) || id <= 0)
             return;
 
-        string adminUser = (AdminRolePolicy_cl.GetCurrentAdminUser() ?? "").Trim().ToLowerInvariant();
+        string actor = IsSystemAdminPortal ? CurrentAdminAccount : CurrentHomeAccount;
+        if (string.IsNullOrWhiteSpace(actor))
+            actor = IsSystemAdminPortal ? ReadAdminAccount() : ReadHomeAccount();
         using (dbDataContext db = new dbDataContext())
         {
             DauGiaBootstrap_cl.EnsureSchemaSafe(db);
+            EnsurePortalGate(db);
+            if (CurrentHomeAccount == "" && CurrentAdminAccount == "")
+                return;
+
+            if (string.IsNullOrWhiteSpace(actor))
+                actor = IsSystemAdminPortal ? CurrentAdminAccount : CurrentHomeAccount;
+
             string message;
             bool ok = false;
             string cssClass = "warning";
             switch ((e.CommandName ?? "").Trim().ToLowerInvariant())
             {
                 case "approve":
-                    ok = DauGiaService_cl.ApproveAuction(db, id, adminUser, true, out message);
+                    ok = DauGiaService_cl.ApproveAuction(db, id, actor, false, out message);
                     break;
                 case "reject":
-                    ok = DauGiaService_cl.RejectAuction(db, id, adminUser, "Admin từ chối phiên đấu giá.", out message);
+                    ok = DauGiaService_cl.RejectAuction(db, id, actor, "Admin từ chối phiên đấu giá.", out message);
                     break;
                 case "settle":
-                    ok = DauGiaService_cl.AdminSettle(db, id, adminUser, out message);
+                    ok = DauGiaService_cl.AdminSettle(db, id, actor, out message);
                     break;
                 default:
                     return;
@@ -136,11 +261,17 @@ public partial class daugia_admin_default : Page
 
     private void ShowAdminNotice(string message, string cssClass)
     {
-        Session["thongbao"] = thongbao_class.metro_notifi_onload(
-            "Thông báo",
-            string.IsNullOrWhiteSpace(message) ? "Thao tác đã thực hiện." : message,
-            "1800",
-            string.IsNullOrWhiteSpace(cssClass) ? "info" : cssClass);
+        string title = "Thông báo";
+        string body = string.IsNullOrWhiteSpace(message) ? "Thao tác đã thực hiện." : message;
+        string type = string.IsNullOrWhiteSpace(cssClass) ? "info" : cssClass;
+        if (IsSystemAdminPortal)
+        {
+            Session["thongbao"] = thongbao_class.metro_notifi_onload(title, body, "1800", type);
+        }
+        else
+        {
+            Session["notifi_home"] = thongbao_class.metro_notifi_onload(title, body, "1800", type);
+        }
         Response.Redirect(Request.RawUrl, true);
     }
 
@@ -148,7 +279,7 @@ public partial class daugia_admin_default : Page
     {
         double amount = 0;
         double.TryParse(amountObj == null ? "0" : amountObj.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out amount);
-        return amount.ToString("#,##0.00") + " E-AHA";
+        return amount.ToString("#,##0.00") + " Quyền";
     }
 
     protected string FormatDate(object dateObj)

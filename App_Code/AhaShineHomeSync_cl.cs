@@ -37,10 +37,10 @@ public static class AhaShineHomeSync_cl
         bv.content_post = post.content_post;
         bv.description = post.description;
         bv.image = post.image;
-        bv.bin = post.bin ?? false;
+        bv.bin = post.bin == true;
         bv.ngaytao = post.ngaytao ?? DateTime.Now;
         bv.nguoitao = string.IsNullOrEmpty(nguoitao) ? post.nguoitao ?? "" : nguoitao;
-        bv.noibat = post.noibat ?? false;
+        bv.noibat = post.noibat == true;
         bv.phanloai = postType;
 
         if (loai == "ctsp")

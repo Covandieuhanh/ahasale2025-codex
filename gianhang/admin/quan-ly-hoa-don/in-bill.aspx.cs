@@ -49,7 +49,7 @@ public partial class gianhang_hoa_don_in_bill_Default : System.Web.UI.Page
         }
         #endregion 
         user = Session["user"].ToString();
-        user_parent = "admin";
+        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
         string chinhanhId = (Session["chinhanh"] ?? "1").ToString();
 
         var q_cn = db.chinhanh_tables.Where(p => p.id.ToString() == chinhanhId);

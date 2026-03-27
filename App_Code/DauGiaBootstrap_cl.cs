@@ -46,6 +46,8 @@ BEGIN
         [gia_hien_tai] FLOAT NULL,
         [phi_luot] FLOAT NULL,
         [tien_dat_coc] FLOAT NULL,
+        [tien_dat_coc_uudai] FLOAT NULL,
+        [tien_dat_coc_tieudung] FLOAT NULL,
         [vi_dau_gia] FLOAT NULL,
         [so_luot_bid] INT NULL,
         [trang_thai] NVARCHAR(40) NULL,
@@ -54,6 +56,8 @@ BEGIN
         [winner_account] NVARCHAR(120) NULL,
         [winner_reserved_at] DATETIME NULL,
         [buyer_confirmed_at] DATETIME NULL,
+        [thanh_toan_uudai] FLOAT NULL,
+        [thanh_toan_tieudung] FLOAT NULL,
         [seller_confirmed_at] DATETIME NULL,
         [admin_settled_at] DATETIME NULL,
         [settlement_mode] NVARCHAR(40) NULL,
@@ -67,6 +71,26 @@ BEGIN
         [created_by] NVARCHAR(120) NULL,
         [updated_by] NVARCHAR(120) NULL
     );
+END
+
+IF COL_LENGTH('dbo.DG_Auction_tb', 'tien_dat_coc_uudai') IS NULL
+BEGIN
+    ALTER TABLE dbo.DG_Auction_tb ADD [tien_dat_coc_uudai] FLOAT NULL CONSTRAINT DF_DG_Auction_tien_dat_coc_uudai DEFAULT(0);
+END
+
+IF COL_LENGTH('dbo.DG_Auction_tb', 'tien_dat_coc_tieudung') IS NULL
+BEGIN
+    ALTER TABLE dbo.DG_Auction_tb ADD [tien_dat_coc_tieudung] FLOAT NULL CONSTRAINT DF_DG_Auction_tien_dat_coc_tieudung DEFAULT(0);
+END
+
+IF COL_LENGTH('dbo.DG_Auction_tb', 'thanh_toan_uudai') IS NULL
+BEGIN
+    ALTER TABLE dbo.DG_Auction_tb ADD [thanh_toan_uudai] FLOAT NULL CONSTRAINT DF_DG_Auction_thanh_toan_uudai DEFAULT(0);
+END
+
+IF COL_LENGTH('dbo.DG_Auction_tb', 'thanh_toan_tieudung') IS NULL
+BEGIN
+    ALTER TABLE dbo.DG_Auction_tb ADD [thanh_toan_tieudung] FLOAT NULL CONSTRAINT DF_DG_Auction_thanh_toan_tieudung DEFAULT(0);
 END
 
 IF OBJECT_ID('dbo.DG_Bid_tb', 'U') IS NULL

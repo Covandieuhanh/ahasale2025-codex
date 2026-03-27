@@ -9,6 +9,20 @@ using System.IO;
 public partial class taikhoan_add : System.Web.UI.Page
 {
     public string notifi, id, user, user_parent, sdt_kh;
+    public string personHubUrl = "/gianhang/admin/quan-ly-con-nguoi/Default.aspx";
+    public string personHubStatusLabel = "Chưa liên kết";
+    public string personHubStatusCss = "bg-gray fg-white";
+    public string personHubNote = "Mở hồ sơ người để liên kết hoặc tạo chờ liên kết theo số điện thoại này.";
+    public string personHubRelatedRolesHtml = "";
+    public string personHubAdminAccessLabel = "Không mở quyền /gianhang/admin ở vai trò thành viên / học viên";
+    public string personHubAdminAccessCss = "bg-gray fg-white";
+    public string personHubAdminAccessNote = "Vai trò thành viên / học viên chỉ là dữ liệu nghiệp vụ. Nếu cùng người này còn là nhân sự nội bộ thì quyền vào /gianhang/admin sẽ được quyết định ở hồ sơ nhân sự nội bộ đó.";
+    public string personHubImpactTitle = "Tác động khi xóa vai trò thành viên / học viên";
+    public string personHubImpactNote = "Xóa vai trò thành viên này sẽ không tự gỡ liên kết Home ở Hồ sơ người. Nếu cùng số điện thoại còn vai trò khác trong gian hàng thì hồ sơ trung tâm vẫn tiếp tục gom đúng người đó.";
+    public string sourceLifecycleLabel = "Đang dùng thành viên";
+    public string sourceLifecycleCss = "bg-green fg-white";
+    public string sourceLifecycleNote = "Vai trò thành viên / học viên này đang được dùng bình thường trong module nguồn.";
+    public bool sourceLifecycleIsInactive = false;
     dbDataContext db = new dbDataContext();
     string_class str_cl = new string_class();
     hocvien_class hv_cl = new hocvien_class();
@@ -21,6 +35,8 @@ public partial class taikhoan_add : System.Web.UI.Page
     public void main()
     {
         hocvien_table _ob = db.hocvien_tables.Where(p => p.id.ToString() == id && p.id_chinhanh == Session["chinhanh"].ToString()).First();
+        BindPersonHub(_ob.hoten, _ob.dienthoai);
+        BindMemberLifecycle(_ob);
         if (!IsPostBack)
         {
             txt_ngaythanhtoan.Text = DateTime.Now.ToShortDateString();
@@ -138,6 +154,109 @@ public partial class taikhoan_add : System.Web.UI.Page
 
     }
 
+    private void BindPersonHub(string displayName, string phone)
+    {
+        string normalizedPhone = AccountAuth_cl.NormalizePhone(phone);
+        if (string.IsNullOrWhiteSpace(normalizedPhone))
+        {
+            personHubUrl = "/gianhang/admin/quan-ly-con-nguoi/Default.aspx";
+            personHubStatusLabel = "Thiếu số điện thoại";
+            personHubStatusCss = "bg-gray fg-white";
+            personHubNote = "Cập nhật số điện thoại để thành viên này được gom vào hồ sơ người chung.";
+            return;
+        }
+
+        personHubUrl = GianHangAdminPersonHub_cl.BuildDetailUrl(normalizedPhone);
+        BindSourceAdminAccess(normalizedPhone);
+        personHubRelatedRolesHtml = BuildRelatedRolesHtml(normalizedPhone);
+        personHubImpactNote = BuildImpactNote(normalizedPhone);
+        GianHangAdminPersonHub_cl.PersonLinkInfo linkInfo = GianHangAdminPersonHub_cl.GetLinkInfo(db, user_parent, normalizedPhone, displayName);
+        if (linkInfo == null)
+            return;
+
+        personHubStatusLabel = linkInfo.StatusLabel;
+        personHubStatusCss = linkInfo.LinkCss;
+        if (linkInfo.LinkedHomeAccount != null)
+        {
+            string linkedName = string.IsNullOrWhiteSpace(linkInfo.LinkedHomeAccount.hoten)
+                ? (linkInfo.LinkedHomeAccount.taikhoan ?? "")
+                : linkInfo.LinkedHomeAccount.hoten;
+            personHubNote = "Đã liên kết với tài khoản Home " + linkedName + " • " + (linkInfo.LinkedHomeAccount.taikhoan ?? "");
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(linkInfo.PendingPhone))
+        {
+            personHubNote = "Đang chờ số " + linkInfo.PendingPhone + " đăng ký hoặc đăng nhập AhaSale để tự gắn.";
+            return;
+        }
+
+        personHubNote = "Mở hồ sơ người để liên kết hoặc tạo chờ liên kết theo số điện thoại này.";
+    }
+
+    private string BuildRelatedRolesHtml(string normalizedPhone)
+    {
+        IList<GianHangAdminPersonHub_cl.PersonSourceRef> sources = GianHangAdminPersonHub_cl.GetOtherSourcesForPhone(db, user_parent, normalizedPhone, "member", id);
+        if (sources == null || sources.Count == 0)
+            return "";
+
+        return string.Join("", sources.Select(p =>
+            "<div class='mt-2'>" +
+            "<a class='fg-cobalt' href='" + HttpUtility.HtmlAttributeEncode(p.DetailUrl ?? "#") + "'>" + HttpUtility.HtmlEncode((p.SourceLabel ?? "").Trim() == "" ? "Hồ sơ liên quan" : p.SourceLabel) + "</a>" +
+            "<span class='fg-gray'> • " + HttpUtility.HtmlEncode((p.Name ?? "").Trim() == "" ? (p.Phone ?? "") : p.Name) + "</span>" +
+            "<div class='fg-gray'><small>Vai trò: <strong>" + HttpUtility.HtmlEncode(p.RoleLabel ?? "") + "</strong></small></div>" +
+            "<div class='fg-gray'><small>Trạng thái nguồn: <span class='data-wrapper'><code class='" + HttpUtility.HtmlAttributeEncode(string.IsNullOrWhiteSpace(p.SourceLifecycleCss) ? "bg-green fg-white" : p.SourceLifecycleCss) + "'>" + HttpUtility.HtmlEncode(string.IsNullOrWhiteSpace(p.SourceLifecycleLabel) ? "Đang dùng ở nguồn" : p.SourceLifecycleLabel) + "</code></span></small></div>" +
+            "<div class='fg-gray'><small>Quyền /gianhang/admin: <span class='data-wrapper'><code class='" + HttpUtility.HtmlAttributeEncode(string.IsNullOrWhiteSpace(p.AdminAccessCss) ? "bg-gray fg-white" : p.AdminAccessCss) + "'>" + HttpUtility.HtmlEncode(string.IsNullOrWhiteSpace(p.AdminAccessLabel) ? "Không mở quyền /gianhang/admin ở nguồn này" : p.AdminAccessLabel) + "</code></span></small></div>" +
+            "</div>"));
+    }
+
+    private void BindSourceAdminAccess(string normalizedPhone)
+    {
+        GianHangAdminPersonHub_cl.PersonSourceRef sourceInfo = GianHangAdminPersonHub_cl.GetSourceInfo(db, user_parent, normalizedPhone, "member", id);
+        if (sourceInfo == null)
+            return;
+
+        personHubAdminAccessLabel = string.IsNullOrWhiteSpace(sourceInfo.AdminAccessLabel)
+            ? "Không mở quyền /gianhang/admin ở vai trò thành viên / học viên"
+            : sourceInfo.AdminAccessLabel;
+        personHubAdminAccessCss = string.IsNullOrWhiteSpace(sourceInfo.AdminAccessCss)
+            ? "bg-gray fg-white"
+            : sourceInfo.AdminAccessCss;
+        personHubAdminAccessNote = "Vai trò thành viên / học viên chỉ là dữ liệu nghiệp vụ. Nếu cùng người này còn là nhân sự nội bộ thì quyền vào /gianhang/admin sẽ được quyết định ở hồ sơ nhân sự nội bộ đó.";
+    }
+
+    private string BuildImpactNote(string normalizedPhone)
+    {
+        bool hasOtherRoles = !string.IsNullOrWhiteSpace(BuildRelatedRolesHtml(normalizedPhone));
+        return hasOtherRoles
+            ? "Xóa vai trò thành viên / học viên này sẽ không tự gỡ liên kết Home ở Hồ sơ người. Các vai trò khác cùng số điện thoại trong gian hàng vẫn tiếp tục được gom chung và giữ trạng thái liên kết hiện có."
+            : "Xóa vai trò thành viên / học viên này sẽ không tự gỡ liên kết Home ở Hồ sơ người. Nếu đây là vai trò nguồn cuối cùng thì hồ sơ trung tâm vẫn được giữ, chỉ chuyển sang trạng thái chưa còn vai trò nguồn.";
+    }
+
+    private void BindMemberLifecycle(hocvien_table member)
+    {
+        if (member == null)
+            return;
+
+        GianHangAdminSourceLifecycle_cl.SourceLifecycleInfo info = GianHangAdminSourceLifecycle_cl.GetInfo(
+            db,
+            user_parent,
+            "member",
+            member.id + "",
+            "Đang dùng thành viên",
+            "Đã ngừng dùng thành viên",
+            "Vai trò thành viên / học viên này đang được dùng bình thường trong module nguồn.",
+            "Vai trò thành viên / học viên này đang ở trạng thái ngừng dùng an toàn. Liên kết Home trung tâm và lịch sử nghiệp vụ vẫn được giữ.");
+
+        sourceLifecycleLabel = info == null || string.IsNullOrWhiteSpace(info.Label) ? "Đang dùng thành viên" : info.Label;
+        sourceLifecycleCss = info == null || string.IsNullOrWhiteSpace(info.Css) ? "bg-green fg-white" : info.Css;
+        sourceLifecycleNote = info == null || string.IsNullOrWhiteSpace(info.Note)
+            ? "Vai trò thành viên / học viên này đang được dùng bình thường trong module nguồn."
+            : info.Note;
+        sourceLifecycleIsInactive = info != null && info.IsInactive;
+        personHubImpactTitle = sourceLifecycleIsInactive ? "Tác động khi xóa thành viên đã ngừng dùng" : "Tác động khi xóa vai trò thành viên / học viên";
+    }
+
     protected void Page_Load(object sender, EventArgs e)
     {
         #region Check_Login
@@ -175,7 +294,7 @@ public partial class taikhoan_add : System.Web.UI.Page
         #endregion
         #region Check quyen theo nganh
         user = Session["user"].ToString();
-        user_parent = "admin";
+        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
         if (bcorn_class.check_quyen(user, "q14_3") == "" || bcorn_class.check_quyen(user, "n14_3") == "")
         {
             if (!string.IsNullOrWhiteSpace(Request.QueryString["id"]))
@@ -257,6 +376,7 @@ public partial class taikhoan_add : System.Web.UI.Page
                         else
                         {
                             hocvien_table _ob1 = db.hocvien_tables.Where(p => p.id.ToString() == id && p.id_chinhanh == Session["chinhanh"].ToString()).First();
+                            string _oldPhone = (_ob1.dienthoai ?? "").Trim();
 
                             bool _checkloi = false;
                             string _avt = _ob1.anhdaidien;
@@ -354,6 +474,7 @@ public partial class taikhoan_add : System.Web.UI.Page
                             if (_checkloi == false)
                             {
                                 db.SubmitChanges();
+                                GianHangAdminPersonHub_cl.SyncSourcePhoneState(db, user_parent, _oldPhone, _sdt, _fullname, user);
                                 Session["notifi"] = thongbao_class.metro_notifi_onload("Thông báo", "Cập nhật thành công.", "4000", "warning");
                                 Response.Redirect("/gianhang/admin/quan-ly-hoc-vien/Default.aspx");
                             }
@@ -385,6 +506,32 @@ public partial class taikhoan_add : System.Web.UI.Page
         db.SubmitChanges();
         main();
         ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Xóa ảnh cấp bằng thành công.", "4000", "warning"), true);
+    }
+
+    protected void but_ngung_hocvien_Click(object sender, EventArgs e)
+    {
+        if (!(bcorn_class.check_quyen(user, "q14_3") == "" || bcorn_class.check_quyen(user, "n14_3") == ""))
+        {
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Bạn không đủ quyền để đổi trạng thái thành viên.", "4000", "warning"), true);
+            return;
+        }
+
+        GianHangAdminSourceLifecycle_cl.SetInactive(db, user_parent, "member", id, user, "Thành viên / học viên được chuyển sang trạng thái ngừng dùng an toàn từ trang chi tiết.");
+        Session["notifi"] = thongbao_class.metro_notifi_onload("Thông báo", "Đã chuyển thành viên sang trạng thái ngừng dùng an toàn.", "3200", "warning");
+        Response.Redirect("/gianhang/admin/quan-ly-hoc-vien/edit.aspx?id=" + id);
+    }
+
+    protected void but_molai_hocvien_Click(object sender, EventArgs e)
+    {
+        if (!(bcorn_class.check_quyen(user, "q14_3") == "" || bcorn_class.check_quyen(user, "n14_3") == ""))
+        {
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Bạn không đủ quyền để đổi trạng thái thành viên.", "4000", "warning"), true);
+            return;
+        }
+
+        GianHangAdminSourceLifecycle_cl.SetActive(db, user_parent, "member", id, user, "Thành viên / học viên được mở lại từ trang chi tiết.");
+        Session["notifi"] = thongbao_class.metro_notifi_onload("Thông báo", "Đã mở lại trạng thái dùng của thành viên.", "3200", "success");
+        Response.Redirect("/gianhang/admin/quan-ly-hoc-vien/edit.aspx?id=" + id);
     }
 
 

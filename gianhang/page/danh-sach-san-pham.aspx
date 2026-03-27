@@ -28,12 +28,12 @@
                                 <div class="cell-lg-4 pl-3-lg pl-0 pr-3-lg pr-0 mt-10">
                                     <div class="h-100">
                                         <div>
-                                            <a class="fg-black fg-green-hover" href="/gianhang/page/chi-tiet-san-pham.aspx?idbv=<%#Eval("id") %>">
+                                            <a class="fg-black fg-green-hover" href="<%# BuildDetailUrl(Eval("id")) %>">
                                                 <img src="<%#Eval("image") %>" /></a>
                                         </div>
                                         <div class=" border bd-default border-top-none p-3">
                                             <div class=" fw-600 ellipsis-2">
-                                                <a class="fg-black fg-green-hover" href="/gianhang/page/chi-tiet-san-pham.aspx?idbv=<%#Eval("id") %>"><%#Eval("name") %></a>
+                                                <a class="fg-black fg-green-hover" href="<%# BuildDetailUrl(Eval("id")) %>"><%#Eval("name") %></a>
                                             </div>
                                             <div style="color: #808080" class="mt-1">
                                                 <%#Eval("description") %>
@@ -44,8 +44,8 @@
                                             <hr class="mt-3 mb-3" />
                                             <div class="text-right">
                                                
-                                                <a class="button secondary rounded" href='<%# AhaShineHomeRoutes_cl.CartUrl + "?id=" + Eval("id").ToString() %>'>Thêm vào giỏ</a>
-                                                <a class="button bg-emerald bg-darkEmerald-hover fg-white rounded" href='<%# AhaShineHomeRoutes_cl.CartUrl + "?id=" + Eval("id").ToString() + "&dh=ok" %>'>Đặt hàng</a>
+                                                <a class="button secondary rounded" href='<%# BuildCartUrl(Eval("id")) %>'>Thêm vào giỏ</a>
+                                                <a class="button bg-emerald bg-darkEmerald-hover fg-white rounded" href='<%# BuildCheckoutUrl(Eval("id")) %>'>Đặt hàng</a>
                                             </div>
                                         </div>
                                     </div>

@@ -1,4 +1,5 @@
 ﻿<%@ Control Language="C#" AutoEventWireup="true" CodeFile="DanhChoBan_MoiNhat_UC.ascx.cs" Inherits="Uc_Home_DanhChoBan_MoiNhat_UC" %>
+<%@ Register Src="~/Uc/Home/DanhMuc_icon_Home_UC.ascx" TagPrefix="uc1" TagName="DanhMuc_icon_Home_UC" %>
 
 <style>
     /* ===== Grid 6 (desktop), 4 (lg), 3 (md), 2 (mobile) ===== */
@@ -342,6 +343,10 @@
         color: #9aa0a6;
     }
 
+    .search-wrap .g-btn-inline-mobile {
+        display: none;
+    }
+
     .search-wrap .g-select {
         width: 100%;
         border: 0;
@@ -391,18 +396,18 @@
         z-index: 2000;
     }
 
-    /* ===== Desktop/tablet layout ===== */
+    /* ===== Desktop/tablet layout (same structure, responsive scale) ===== */
     @media (min-width: 576px) {
         .search-wrap .g-search {
             display: flex;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             background: #ffffff;
             border: 1px solid #e5ebf0;
-            border-radius: 20px;
+            border-radius: 18px;
             padding: 8px;
-            min-height: 60px;
+            min-height: 54px;
             box-shadow: 0 10px 24px rgba(15, 23, 42, .08);
             transition: box-shadow .18s ease, border-color .18s ease;
             overflow: visible;
@@ -416,34 +421,36 @@
         .search-wrap .g-seg {
             display: flex;
             align-items: center;
-            gap: 10px;
-            min-height: 46px;
-            padding: 0 14px;
-            flex: 1 1 100%;
+            gap: 8px;
+            min-height: 42px;
+            padding: 0 12px;
+            flex: 1 1 180px;
             position: relative;
             background: #f3f6f9;
-            border-radius: 16px;
+            border-radius: 14px;
         }
 
         .search-wrap .g-seg.g-query {
-            flex: 1 1 100%;
+            flex: 2 1 260px;
         }
 
         .search-wrap .g-seg.g-action {
-            flex: 1 1 100%;
+            flex: 0 0 auto;
             padding: 0;
-            min-height: auto;
+            min-height: 42px;
             background: transparent;
         }
 
         .search-wrap .g-seg + .g-seg {
             border-top: 0;
+            border-left: 0;
+            margin-left: 0;
         }
 
         .search-wrap .g-btn {
-            min-height: 44px;
-            padding: 0 22px;
-            border-radius: 14px;
+            min-height: 40px;
+            padding: 0 16px;
+            border-radius: 12px;
             border: 0;
             background: #2f8f46;
             color: #ffffff;
@@ -455,7 +462,7 @@
             gap: 6px;
             box-shadow: 0 8px 18px rgba(47, 143, 70, .28);
             white-space: nowrap;
-            width: 100%;
+            width: auto;
         }
 
         .search-wrap .g-btn:hover {
@@ -466,9 +473,10 @@
 
     @media (min-width: 992px) {
         .search-wrap .g-search {
-            flex-wrap: nowrap;
             align-items: center;
             border-radius: 22px;
+            min-height: 60px;
+            gap: 10px;
         }
 
         .search-wrap .g-seg {
@@ -496,7 +504,9 @@
         }
 
         .search-wrap .g-btn {
-            width: auto;
+            min-height: 44px;
+            padding: 0 22px;
+            border-radius: 14px;
         }
     }
 
@@ -541,6 +551,25 @@
 
     :root {
         --aha-home-root-search-height: 88px;
+    }
+
+    .hero-ct-like {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 220px;
+    }
+
+    .hero-ct-inner {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 16px 18px;
+    }
+
+    .hero-ct-title {
+        transform: translateY(-8px);
     }
 
     body.aha-home-root-pinned-search .page-wrapper {
@@ -653,6 +682,10 @@
         background: #ffb400;
     }
 
+    .home-feed-wrap {
+        margin-top: 14px;
+    }
+
     html[data-bs-theme="dark"] .ct-guest-auth-btn.ct-login {
         background: #0f172a;
         border-color: #223246;
@@ -669,9 +702,30 @@
         padding: 0 12px;
     }
 
+    .home-category-inline .dm-section {
+        margin-top: 10px !important;
+        margin-bottom: 12px !important;
+        transform: none !important;
+    }
+
     @media (max-width: 991.98px) {
         :root {
             --aha-home-root-search-height: 84px;
+        }
+
+        .hero-ct-like {
+            min-height: 132px;
+            height: 132px;
+        }
+
+        .hero-ct-inner {
+            padding: 0 14px 12px;
+        }
+
+        .hero-ct-title {
+            font-size: 26px;
+            line-height: 1.15;
+            transform: translateY(-4px);
         }
 
         .search-wrap.is-root-pinned.is-sticky-fixed .ct-shell {
@@ -760,9 +814,34 @@
             font-size: 12px;
             box-shadow: none;
         }
+
+        .search-wrap.is-compact .g-btn-inline-mobile {
+            min-height: 28px;
+            padding: 0 10px;
+            font-size: 11px;
+        }
     }
 
     @media (max-width: 575.98px) {
+        .hero-ct-like {
+            min-height: 96px;
+            height: 96px;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0 0 18px 18px;
+        }
+
+        .hero-ct-inner {
+            padding: 0 12px 10px;
+        }
+
+        .hero-ct-title {
+            font-size: 19px;
+            line-height: 1.15;
+            transform: translateY(-2px);
+        }
+
         .search-wrap {
             margin-top: 0;
             padding-top: 6px;
@@ -809,6 +888,8 @@
             flex: 1 1 100%;
             background: #ffffff;
             border-color: #e6ebf1;
+            gap: 10px;
+            padding-right: 6px;
         }
 
         .search-wrap .g-seg.g-cat {
@@ -835,6 +916,43 @@
             flex: 1 1 auto;
             min-width: 0;
             font-size: 14px;
+        }
+
+        .search-wrap .g-btn-inline-mobile {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 30px;
+            padding: 0 12px;
+            border-radius: 999px;
+            border: 1px solid #2f8f46;
+            background: #2f8f46;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            text-decoration: none;
+            white-space: nowrap;
+            flex: 0 0 auto;
+            box-shadow: 0 5px 12px rgba(47, 143, 70, .25);
+        }
+
+        .search-wrap .g-btn-inline-mobile:hover,
+        .search-wrap .g-btn-inline-mobile:focus {
+            background: #27793b;
+            border-color: #27793b;
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .search-wrap .g-seg.g-query .g-icon,
+        .search-wrap.in-header .g-seg.g-query .g-icon {
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 20px;
+            width: 20px;
+            opacity: 1;
+            color: #64748b;
         }
 
         .search-wrap .g-select {
@@ -903,7 +1021,7 @@
             display: none !important;
         }
 
-        .container-xl.mt-5 {
+        .home-feed-wrap {
             margin-top: 16px !important;
         }
 
@@ -991,19 +1109,19 @@
         }
 
         .hero-ct-like {
-            display: none !important;
+            box-shadow: inset 0 -14px 24px rgba(0,0,0,.08);
         }
     }
 </style>
 
 <asp:UpdatePanel ID="up_all" runat="server" UpdateMode="Conditional" ChildrenAsTriggers="true">
     <ContentTemplate>
-        <div id="homeSearchAnchor" class="home-search-anchor"></div>
         <section class="hero-ct-like">
             <div class="hero-ct-inner">
                 <h1 class="hero-ct-title">Giá Sale, gần bạn!</h1>
             </div>
         </section>
+        <div id="homeSearchAnchor" class="home-search-anchor"></div>
 
         <asp:Panel ID="pnlSearch" runat="server" DefaultButton="btn_Search">
             <section class="search-wrap">
@@ -1025,6 +1143,7 @@
                             <asp:TextBox ID="txt_Search" runat="server"
                                 CssClass="g-input"
                                 placeholder="Tìm sản phẩm..." />
+                            <button type="button" class="g-btn-inline-mobile" onclick="return AhaHomeSearchRedirect();">Tìm kiếm</button>
                         </div>
 
                         <div class="g-seg g-loc">
@@ -1044,6 +1163,10 @@
                 </div>
             </section>
         </asp:Panel>
+
+        <div class="home-category-inline">
+            <uc1:DanhMuc_icon_Home_UC runat="server" ID="DanhMuc_icon_Home_UC" />
+        </div>
 
 
         <script>
@@ -1164,12 +1287,12 @@
                     var headerHeight = header ? Math.round(header.getBoundingClientRect().height) : 56;
 
                     var isMobile = window.matchMedia('(max-width: 991.98px)').matches;
-                    var isSmallMobile = window.matchMedia('(max-width: 575.98px)').matches;
-                    var forcePinnedAtTop = true;
+                    var forcePinnedAtTop = false;
 
                     var host = document.getElementById('homeMobileSearchHost');
                     var anchor = document.getElementById('homeSearchAnchor');
-                    var useHost = !!(host && host.dataset && host.dataset.useSearchHost === '1');
+                    // Keep search in normal flow (below hero banner) across devices.
+                    var useHost = false;
                     if (useHost && anchor && isSmallMobile) {
                         var existing = host.querySelector('.search-wrap');
                         if (existing && existing !== wrap) {
@@ -1209,15 +1332,15 @@
                         var triggerTop = isFixed
                             ? spacer.getBoundingClientRect().top
                             : wrap.getBoundingClientRect().top;
-                        var shouldStick = true;
-                        var keepSpacer = shouldStick && !forcePinnedAtTop;
+                        var shouldStick = triggerTop <= stickyTop;
+                        var keepSpacer = shouldStick;
                         spacer.style.height = keepSpacer ? (wrap.offsetHeight + 'px') : '0px';
 
                     wrap.classList.toggle('is-sticky-fixed', shouldStick);
                     wrap.classList.toggle('is-sticky', shouldStick);
                     wrap.classList.toggle('is-root-pinned', forcePinnedAtTop && shouldStick);
                     wrap.classList.toggle('is-compact', shouldStick && isMobile);
-                    setPinnedLayoutClass(forcePinnedAtTop && shouldStick, wrap.offsetHeight);
+                    setPinnedLayoutClass(false, wrap.offsetHeight);
                     }
 
                     function queueUpdate() {
@@ -1435,7 +1558,7 @@
         </div>
 
         <!-- ============ LIST ============ -->
-        <div class="container-xl mt-5">
+        <div class="container-xl home-feed-wrap">
             <div class="card">
                 <div class="card-header">
                     <div class="card-title">

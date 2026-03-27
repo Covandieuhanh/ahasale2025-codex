@@ -108,6 +108,12 @@
                                 <div>
                                     <asp:TextBox ID="txt_dienthoai" runat="server" data-role="input"></asp:TextBox>
                                 </div>
+                                <div class="mt-2 p-3 border bd-cyan bg-light" style="border-radius: 14px;">
+                                    <div class="fw-700">Tự đưa vào Hồ sơ người</div>
+                                    <div class="mt-1 fg-gray">
+                                        Nếu chuyên gia này có số điện thoại, sau khi lưu hệ thống sẽ tự gom vào module <strong>Hồ sơ người</strong>. Việc liên kết tài khoản Home được thực hiện tập trung ở đó để các vai trò khác cùng số điện thoại tự đồng bộ theo.
+                                    </div>
+                                </div>
                             </div>
                             <div class="mt-3">
                                 <label class="fw-600">Zalo</label>
@@ -194,4 +200,3 @@
 <asp:Content ID="Content3" ContentPlaceHolderID="foot" runat="Server">
     <%=notifi %>
 </asp:Content>
-

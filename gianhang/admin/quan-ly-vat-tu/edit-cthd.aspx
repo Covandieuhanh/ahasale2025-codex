@@ -39,7 +39,7 @@
                                                 <div class="mt-3">
                                                     <label class="fw-600">Vật tư</label>
                                                     <%--<asp:DropDownList ID="ddl_sanpham" runat="server" AutoPostBack="true" OnSelectedIndexChanged="ddl_sanpham_SelectedIndexChanged"></asp:DropDownList>--%>
-                                                    <asp:TextBox ID="txt_tensanpham" runat="server" data-role="input" placeholder="Nhập và chọn tên sản phẩm" OnTextChanged="txt_tensanpham_TextChanged" AutoPostBack="true"></asp:TextBox></div>
+                                                    <asp:TextBox ID="txt_tensanpham" runat="server" data-role="input" placeholder="Nhập và chọn tên sản phẩm"></asp:TextBox></div>
                                                 <div class="mt-3">
                                                     <label class="fw-600">Đơn giá</label>
                                                     <asp:TextBox ID="txt_gia_sanpham" MaxLength="13" runat="server" data-role="input" onchange="format_sotien(this);"></asp:TextBox><%--autocomplete="off" --%>
@@ -121,5 +121,25 @@
         }
     </script>
     <%--<%=notifi %>--%>
+
+    <script src="/js/gianhang-invoice-fast.js?v=20260326a"></script>
+    <script>
+        (function () {
+            function bindFastUi() {
+                if (!window.ahaInvoiceFast) return;
+                window.ahaInvoiceFast.initItemLookup({
+                    endpoint: "/gianhang/admin/quan-ly-vat-tu/lookup-data.ashx",
+                    mode: "supply-item",
+                    inputId: "<%=txt_tensanpham.ClientID %>",
+                    priceId: "<%=txt_gia_sanpham.ClientID %>",
+                    unitId: "<%=txt_dvt.ClientID %>"
+                });
+            }
+            bindFastUi();
+            if (window.Sys && Sys.Application) {
+                Sys.Application.add_load(bindFastUi);
+            }
+        })();
+    </script>
 </asp:Content>
 

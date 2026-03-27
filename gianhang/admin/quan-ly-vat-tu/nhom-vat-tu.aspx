@@ -59,7 +59,12 @@
             <ContentTemplate>
                 <div class="row mt-1-minus <%--mt-0-lg-minus mt-12-minus--%>">
                     <div class="cell-md-6 order-2 order-md-1 mt-0">
-                        <asp:TextBox ID="txt_search" runat="server" data-role="input" data-prepend="<span class='mif mif-search'></span>" placeholder="Tìm kiếm" OnTextChanged="txt_search_TextChanged" AutoPostBack="true"></asp:TextBox>
+                        <div class="d-flex flex-align-center gap-2">
+                            <asp:TextBox ID="txt_search" runat="server" data-role="input" data-prepend="<span class='mif mif-search'></span>" placeholder="Tìm kiếm"></asp:TextBox>
+                            <asp:LinkButton ID="but_search" runat="server" CssClass="button" OnClick="but_search_Click" CausesValidation="false">
+                                <span class="mif mif-search"></span>
+                            </asp:LinkButton>
+                        </div>
                     </div>
                     <div class="cell-md-6 order-1 order-md-2 mt-0">
                         <div class="place-right">
@@ -82,7 +87,7 @@
                     </div>
                 </div>
 
-                <asp:TextBox ID="txt_show" Visible="false" runat="server" data-role="input" data-prepend="<span title='Hiển thị' class='mif mif-eye'></span>" data-clear-button="false" placeholder="Hiển thị" OnTextChanged="txt_show_TextChanged" AutoPostBack="true"></asp:TextBox>
+                <asp:TextBox ID="txt_show" Visible="false" runat="server" data-role="input" data-prepend="<span title='Hiển thị' class='mif mif-eye'></span>" data-clear-button="false" placeholder="Hiển thị"></asp:TextBox>
 
 
                 <div id="table-main">
@@ -137,6 +142,20 @@
     </div>
 </asp:Content>
 <asp:Content ID="Content3" ContentPlaceHolderID="foot" runat="Server">
-    <%--<%=notifi %>--%>
+    <script src="/js/gianhang-invoice-fast.js?v=20260326a"></script>
+    <script>
+        (function () {
+            function bindFastUi() {
+                if (!window.ahaInvoiceFast) return;
+                window.ahaInvoiceFast.initSearchSubmit({
+                    inputId: "<%=txt_search.ClientID %>",
+                    buttonId: "<%=but_search.ClientID %>"
+                });
+            }
+            bindFastUi();
+            if (window.Sys && Sys.Application) {
+                Sys.Application.add_load(bindFastUi);
+            }
+        })();
+    </script>
 </asp:Content>
-
