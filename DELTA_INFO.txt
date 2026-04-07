@@ -1,7 +1,0 @@
-SOURCE_ROOT=/Users/duccuongtran/Documents/Aha Sale 2025/localhost/ahasale.vn.localhost
-BASE_GIT_COMMIT=92b4b6a
-GENERATED_AT=2026-03-21T11:18:25.496309
-PACKAGE_KIND=delta_since_last_github_commit
-INCLUDED_COUNT=155
-IGNORED_LOCAL_ONLY_COUNT=3
-NOTE=Goi nay duoc tao tu source goc hien tai trong localhost/ahasale.vn.localhost va chi gom file runtime thay doi ke tu commit gan nhat trong repo.

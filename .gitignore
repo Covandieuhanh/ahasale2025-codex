@@ -27,3 +27,18 @@ note.txt
 ahasale.vn.2025.new.sln
 website.publishproj
 docker-compose.yml
+
+# Server cleanup artifacts that are not part of the live runtime
+ahasale-*.zip
+*.bak
+*.bak_*
+DELTA_*.txt
+MANIFEST.txt
+IGNORED_LOCAL_ONLY.txt
+Bin/Debug/Publish/
+Bin/roslyn/*.zip
+ckfinder/_source/
+ckfinder/_samples/
+ckeditor/ckfinder/_source/
+Uc/Home/*.backup-before-*
+Uc/Home/*.paging-backup-*
