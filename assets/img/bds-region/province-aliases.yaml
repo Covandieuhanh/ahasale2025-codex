@@ -1,0 +1,127 @@
+# ========================
+# CONFIG
+# ========================
+
+image_ratio:
+  - "1:1"
+  - "16:9"
+format: webp
+style:
+  - bright
+  - clean
+  - high contrast
+  - slightly cool tone
+overlay:
+  gradient: "black bottom fade 40%"
+  text_color: white
+  show_province_name: true
+  show_listing_count: optional
+
+naming:
+  prefix: province-
+  format: lowercase-no-accent
+
+search_pattern: "{keyword} vietnam landscape high quality"
+
+# ========================
+# DATA: 63 PROVINCES ALIAS
+# ========================
+# Canonical keys follow current website province slugs.
+# User-provided alias keys `tp-hcm` and `hue` are normalized to
+# `tp-ho-chi-minh` and `thua-thien-hue` for compatibility.
+
+aliases:
+  ha-noi: ho guom skyline
+  ha-giang: cao nguyen da dong van
+  cao-bang: thac ban gioc
+  bac-kan: ho ba be
+  tuyen-quang: ho na hang
+  lao-cai: sapa terrace rice field
+  yen-bai: mu cang chai terrace
+  thai-nguyen: doi che tea hill
+  lang-son: nui mau son
+  quang-ninh: ha long bay
+  bac-giang: tay yen tu mountain
+  phu-tho: den hung temple
+  vinh-phuc: tam dao mountain
+  bac-ninh: chua but thap
+  hai-duong: con son kiep bac
+  hai-phong: cat ba island
+  hung-yen: pho hien ancient town
+  thai-binh: rice field vietnam
+  ha-nam: tam chuc pagoda
+  nam-dinh: bui chu cathedral
+  ninh-binh: trang an landscape
+
+  thanh-hoa: thanh nha ho
+  nghe-an: cua lo beach
+  ha-tinh: thien cam beach
+  quang-binh: phong nha cave
+  quang-tri: thanh co quang tri
+  thua-thien-hue: kinh thanh hue
+  da-nang: dragon bridge
+  quang-nam: hoi an ancient town
+  quang-ngai: ly son island
+  binh-dinh: ky co beach
+  phu-yen: ghenh da dia
+  khanh-hoa: nha trang beach
+  ninh-thuan: thap cham tower
+  binh-thuan: mui ne sand dunes
+
+  kon-tum: kon tum wooden church
+  gia-lai: bien ho pleiku
+  dak-lak: buon ma thuot coffee
+  dak-nong: dray sap waterfall
+  lam-dong: da lat pine forest
+
+  tp-ho-chi-minh: landmark 81 skyline
+  binh-duong: industrial park vietnam
+  dong-nai: modern urban area vietnam
+  ba-ria-vung-tau: vung tau beach
+  tay-ninh: ba den mountain
+  binh-phuoc: rubber plantation
+
+  can-tho: cai rang floating market
+  an-giang: nui cam mountain
+  kien-giang: phu quoc island beach
+  ca-mau: mui ca mau
+  bac-lieu: wind power field
+  soc-trang: bat pagoda
+  hau-giang: mekong river rural
+  dong-thap: lotus field
+  tien-giang: floating market mekong
+  ben-tre: coconut garden
+  vinh-long: mekong island
+  tra-vinh: khmer pagoda
+  long-an: rice field mekong
+
+  # Additional slugs to keep full 63-province compatibility in current system.
+  dien-bien: muong thanh valley
+  hoa-binh: hoa binh lake
+  lai-chau: o quy ho pass
+  son-la: moc chau plateau
+
+# ========================
+# PROCESSING RULES
+# ========================
+
+processing_rules:
+  - "search image using keyword"
+  - "select best image: clear subject, bright lighting, not blurry"
+  - "crop center focus landmark; output 1:1 and 16:9"
+  - "apply color: increase brightness slightly, add cool tone, increase contrast"
+  - "apply overlay: dark gradient bottom"
+  - "export webp, optimized size <200kb"
+
+# ========================
+# OUTPUT EXAMPLE
+# ========================
+
+output_examples:
+  - province-ha-noi.webp
+  - province-da-nang.webp
+  - province-khanh-hoa.webp
+
+# ========================
+# END
+# ========================

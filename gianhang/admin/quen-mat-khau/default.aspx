@@ -129,7 +129,7 @@
             text-decoration: underline;
         }
 
-        @media (max-width: 576px) {
+        @media (max-width: 767px) {
             .gh-quen-shell {
                 padding: 84px 12px 60px;
             }
@@ -199,7 +199,7 @@
             <div class="container-fluid pos-fixed fixed-top bg-darkRed z-1 fg-white gh-quen-topbar">
                 <div class="fg-white container bg-transparent pl-0 pr-0" data-role="app-bar" data-expand-point="lg">
                     <uc1:SpaceLauncher runat="server" ID="spaceLauncher" ButtonCssClass="app-bar-item" />
-                    <a class="app-bar-item" href="/gianhang/admin/login.aspx" title="Quay lại"><span class="mif-arrow-left mr-3"></span>Quay lại đăng nhập</a>
+                    <a class="app-bar-item" href="<%=LegacyLoginUrl %>" title="Quay lại"><span class="mif-arrow-left mr-3"></span>Quay lại đăng nhập</a>
                 </div>
             </div>
 

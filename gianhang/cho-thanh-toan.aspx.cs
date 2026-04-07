@@ -44,7 +44,14 @@ public partial class gianhang_cho_thanh_toan : System.Web.UI.Page
 
     private void ConfigureWaitActions(string orderId)
     {
-        lnk_refresh_wait.NavigateUrl = ChoThanhToanUrl();
+        string safeOrderId = (orderId ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(safeOrderId))
+        {
+            lnk_refresh_wait.NavigateUrl = ChoThanhToanUrl();
+            return;
+        }
+
+        lnk_refresh_wait.NavigateUrl = ChoThanhToanUrl() + "?id=" + HttpUtility.UrlEncode(safeOrderId);
     }
 
     private void SetCardNotice(string htmlMessage)
@@ -59,6 +66,8 @@ public partial class gianhang_cho_thanh_toan : System.Web.UI.Page
     {
         if (state == null)
             return;
+
+        WalletPaymentSession_cl.PreparePending(Session, "gianhang", GetCurrentSellerAccount(), state.OrderId ?? string.Empty);
 
         ViewState["id_donhang"] = state.OrderId ?? string.Empty;
         Label4.Text = state.OrderId ?? string.Empty;
@@ -171,7 +180,7 @@ public partial class gianhang_cho_thanh_toan : System.Web.UI.Page
                 Session,
                 info.AccountKey,
                 string.Empty,
-                string.Empty,
+                ViewState["id_donhang"] == null ? string.Empty : ViewState["id_donhang"].ToString(),
                 LoginUrl(),
                 ChoThanhToanUrl(),
                 SellerDonBanUrl(),

@@ -96,7 +96,7 @@
                         <a class="app-bar-item" href="/gianhang/admin/quen-mat-khau/default.aspx" title="Quay lại"><span class="mif-arrow-left mr-3"></span>Quay lại</a>
                         <%--<a class="app-bar-item" href="#">Quên mật khẩu</a>--%>
                         <div class="app-bar-container ml-auto">
-                        <a class="app-bar-item" href="/gianhang/admin/login.aspx">Đăng nhập ngay</a>
+                        <a class="app-bar-item" href="<%=LegacyLoginUrl %>">Đăng nhập ngay</a>
                     </div>
                 </div>
             </div>

@@ -288,7 +288,7 @@
             margin-bottom: 6px;
         }
 
-        @media (max-width: 900px) {
+        @media (max-width: 767px) {
             .space-access-grid,
             .space-access-meta,
             .space-workspace-grid {

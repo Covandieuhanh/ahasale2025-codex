@@ -61,7 +61,12 @@ public static class GianHangCheckoutPage_cl
         }
 
         GianHangCheckoutView_cl.CheckoutPageState state =
-            GianHangCheckoutView_cl.BuildPageState(db, session, sellerAccount, linkContextTtlMinutes);
+            GianHangCheckoutView_cl.BuildPageState(
+                db,
+                session,
+                sellerAccount,
+                linkContextTtlMinutes,
+                rawOrderId);
         if (state == null || state.ShouldRedirectToSellerList)
         {
             return new LoadResult

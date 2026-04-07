@@ -243,7 +243,7 @@
             color: #d73a31;
         }
 
-        @media (max-width: 991px) {
+        @media (max-width: 767px) {
             .gh-center-title {
                 font-size: 26px;
             }

@@ -17,6 +17,8 @@ public partial class admin_quan_ly_email_shop_Default : System.Web.UI.Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
+        AdminAccessGuard_cl.RequireFeatureAccess("shop_email", "/admin/default.aspx?mspace=gianhang");
+
         Session["url_back"] = HttpContext.Current.Request.Url.AbsoluteUri.ToLower();
         AdminRolePolicy_cl.RequireShopOperationsManager();
 

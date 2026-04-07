@@ -1,8 +1,12 @@
 using System;
+using System.Web;
 using System.Web.UI;
 
 public partial class gianhang_tai_khoan_default : Page
 {
+    private const string DefaultAvatarPath = "/uploads/images/macdinh.jpg";
+    protected string StorefrontNoticeCssClass { get; private set; }
+
     protected void Page_Load(object sender, EventArgs e)
     {
         RootAccount_cl.RootAccountInfo info = GianHangContext_cl.EnsureCurrentAccess(this);
@@ -34,6 +38,10 @@ public partial class gianhang_tai_khoan_default : Page
             lit_account_key.Text = Server.HtmlEncode(info.AccountKey);
             lit_space_status.Text = info.CanAccessGianHang ? "Đang hoạt động" : "Chưa mở quyền";
             lit_contact_email.Text = Server.HtmlEncode(ResolveTextOrFallback(RootAccount_cl.ResolveContactEmail(info), "Chưa có email"));
+            txt_store_avatar.Text = (account.logo_shop ?? "").Trim();
+            lit_store_avatar_preview.Text = BuildStoreAvatarPreviewHtml(account.logo_shop);
+            txt_store_name.Text = (account.ten_shop ?? "").Trim();
+            txt_store_description.Text = (account.motangan_shop ?? "").Trim();
 
             lit_full_name.Text = Server.HtmlEncode(ResolveTextOrFallback(info.FullName, info.AccountKey));
             lit_account_type.Text = Server.HtmlEncode(ResolveTextOrFallback(info.AccountType, "Tài khoản Home"));
@@ -67,9 +75,63 @@ public partial class gianhang_tai_khoan_default : Page
         }
     }
 
+    protected void btn_save_storefront_Click(object sender, EventArgs e)
+    {
+        RootAccount_cl.RootAccountInfo info = GianHangContext_cl.EnsureCurrentAccess(this);
+        if (info == null)
+            return;
+
+        string normalizedStoreName = (txt_store_name.Text ?? "").Trim();
+        string normalizedDescription = (txt_store_description.Text ?? "").Trim();
+        string normalizedAvatar = (txt_store_avatar.Text ?? "").Trim();
+
+        if (normalizedStoreName == "")
+        {
+            SetStorefrontNotice("Tên gian hàng không được để trống.", false);
+            Helper_Tabler_cl.ShowToast(this.Page, "Tên gian hàng không được để trống.", "warning", true, 2200, "Thông báo");
+            return;
+        }
+
+        using (dbDataContext db = new dbDataContext())
+        {
+            taikhoan_tb account = RootAccount_cl.GetByAccountKey(db, info.AccountKey);
+            if (account == null)
+            {
+                Response.Redirect("/gianhang/default.aspx", false);
+                Context.ApplicationInstance.CompleteRequest();
+                return;
+            }
+
+            account.ten_shop = normalizedStoreName;
+            account.motangan_shop = normalizedDescription;
+            account.logo_shop = normalizedAvatar;
+            db.SubmitChanges();
+        }
+
+        SetStorefrontNotice("Đã cập nhật tên và mô tả gian hàng.", true);
+        Helper_Tabler_cl.ShowToast(this.Page, "Đã cập nhật thông tin gian hàng.", "success", true, 2200, "Thông báo");
+        BindPage(info);
+    }
+
     private static string ResolveTextOrFallback(string value, string fallback)
     {
         string text = (value ?? "").Trim();
         return text == "" ? fallback : text;
+    }
+
+    private void SetStorefrontNotice(string message, bool success)
+    {
+        ph_storefront_notice.Visible = !string.IsNullOrWhiteSpace(message);
+        lit_storefront_notice.Text = Server.HtmlEncode(message ?? "");
+        StorefrontNoticeCssClass = success ? "gh-account-alert--success" : "gh-account-alert--warning";
+    }
+
+    private static string BuildStoreAvatarPreviewHtml(string rawUrl)
+    {
+        string url = GianHangStorefront_cl.ResolveImageUrl((rawUrl ?? "").Trim());
+        if (string.IsNullOrWhiteSpace(url))
+            url = DefaultAvatarPath;
+
+        return "<img src='" + HttpUtility.HtmlAttributeEncode(url) + "' alt='Ảnh đại diện gian hàng' />";
     }
 }

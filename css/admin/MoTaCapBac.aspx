@@ -82,7 +82,7 @@
             flex: 1;
             min-width: 0;
         }
-        @media(max-width: 992px){
+        @media(max-width: 767px){
             .mota-row{ flex-direction: column; }
             .mota-left{
                 width: 100%;

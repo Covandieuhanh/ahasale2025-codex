@@ -1,4 +1,4 @@
-<%@ Page Title="Quản lý tin" Language="C#" MasterPageFile="~/MasterPage/Tabler/TablerHome.master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="gianhang_quan_ly_tin_Default" %>
+<%@ Page Title="Quản lý tin" Language="C#" MasterPageFile="~/MasterPage/Tabler/TablerGianHang.master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="gianhang_quan_ly_tin_Default" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head_truoc" runat="Server">
     <style>

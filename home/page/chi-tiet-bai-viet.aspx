@@ -233,7 +233,7 @@
             border-color: #223246;
         }
 
-        @media (max-width: 991px) {
+        @media (max-width: 767px) {
             .gallery-main { height: 340px; }
             .product-sidebar { position: static; }
             .related-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }

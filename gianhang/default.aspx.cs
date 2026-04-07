@@ -34,9 +34,14 @@ public partial class gianhang_Default : Page
         {
             using (dbDataContext db = new dbDataContext())
             {
+                GianHangSchema_cl.EnsureSchemaSafe(db);
                 taikhoan_tb account = RootAccount_cl.GetByAccountKey(db, info.AccountKey);
                 if (account == null)
                     return;
+                bool ledgerChanged = GianHangLedger_cl.EnsureSellerLedgerReady(db, info.AccountKey);
+                if (ledgerChanged)
+                    db.SubmitChanges();
+                GianHangLedger_cl.BalanceResult balance = GianHangLedger_cl.RecalculateBalances(db, info.AccountKey, false);
 
                 GianHangPublic_cl.StorefrontContextInfo context = GianHangPublic_cl.ResolveContext(db, Request);
                 GianHangStorefront_cl.StorefrontSummary summary = GianHangStorefront_cl.BuildSummary(db, account, Request.Url);
@@ -46,6 +51,7 @@ public partial class gianhang_Default : Page
 
                 lnk_storefront_profile_top.NavigateUrl = string.IsNullOrWhiteSpace(context.HomeUrl) ? summary.ProfileUrl : context.HomeUrl;
                 lnk_storefront_profile_top.Text = "Mở trang công khai";
+                lnk_storefront_profile_top.Visible = true;
 
                 lb_hero_title.Text = summary.StorefrontName;
                 if (string.IsNullOrWhiteSpace(lb_hero_desc.Text))
@@ -54,6 +60,10 @@ public partial class gianhang_Default : Page
                 lb_stat_products.Text = summary.ProductCount.ToString("#,##0");
                 lb_stat_services.Text = summary.ServiceCount.ToString("#,##0");
                 lb_stat_pending_orders.Text = summary.PendingOrderCount.ToString("#,##0");
+                lit_wallet_tieudung.Text = FormatRights(balance.TieuDung);
+                lit_wallet_uudai.Text = FormatRights(balance.UuDai);
+                lnk_wallet_tieudung.NavigateUrl = "/gianhang/ho-so-tieu-dung.aspx";
+                lnk_wallet_uudai.NavigateUrl = "/gianhang/ho-so-uu-dai.aspx";
 
                 ph_top_products.Visible = topProducts.Count > 0;
                 ph_empty_top_products.Visible = topProducts.Count == 0;
@@ -77,6 +87,8 @@ public partial class gianhang_Default : Page
             lb_stat_products.Text = "0";
             lb_stat_services.Text = "0";
             lb_stat_pending_orders.Text = "0";
+            lit_wallet_tieudung.Text = "0 A";
+            lit_wallet_uudai.Text = "0 A";
 
             ph_top_products.Visible = false;
             ph_empty_top_products.Visible = true;
@@ -145,6 +157,15 @@ public partial class gianhang_Default : Page
     private void BindAccessState(RootAccount_cl.RootAccountInfo info)
     {
         lit_account_key.Text = Server.HtmlEncode((info != null && info.IsAuthenticated ? info.AccountKey : "").Trim());
+        lb_hero_title.Text = "Không gian gian hàng";
+        lb_hero_desc.Text = "Không gian độc lập để đăng tin, nhận đơn và vận hành bán hàng trên AhaSale.";
+        lnk_storefront_profile_top.Visible = true;
+        lnk_storefront_profile_top.Text = "Trung tâm tài khoản";
+        lnk_storefront_profile_top.NavigateUrl = "/gianhang/tai-khoan/default.aspx";
+        lnk_storefront_profile_top.Target = string.Empty;
+        lnk_storefront_primary_cta.Visible = false;
+        lnk_storefront_secondary_cta.Visible = false;
+        lnk_storefront_tertiary_cta.Visible = false;
 
         string accessStatus = GianHangPolicy_cl.GetCurrentAccessStatus();
         lit_space_status.Text = Server.HtmlEncode(FormatStatus(accessStatus, info));
@@ -233,6 +254,11 @@ public partial class gianhang_Default : Page
         }
 
         return GianHangStorefront_cl.FormatCurrency(value);
+    }
+
+    private static string FormatRights(decimal? value)
+    {
+        return (value ?? 0m).ToString("#,##0.##") + " A";
     }
 
     private void ShowMessage(string message, string cssModifier)

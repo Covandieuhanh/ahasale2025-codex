@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <title>Trigger Seed Space Access</title>
     <style>
-        body { font-family: Arial, sans-serif; padding: 24px; background: #f7f9fc; }
+        body { font-family: "Be Vietnam Pro", "Segoe UI", Arial, sans-serif; padding: 24px; background: #f7f9fc; }
         .card { background: #ffffff; border: 1px solid #e1e7ef; border-radius: 10px; padding: 16px 20px; max-width: 720px; }
         .title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
         .muted { color: #667085; }

@@ -181,11 +181,7 @@
 
 
 /*end index*/
-@media (max-width: 575px) { /*sm*/
-}
-
-@media (max-width: 767px) { /*md*/
-
+@media (max-width: 767px) { /*mobile*/
 }
 
 .fs-bc-34-28 {
@@ -197,7 +193,7 @@
     font-size: 26px;
 }
 
-@media (max-width: 991px) { /*lg*/
+@media (max-width: 767px) { /*mobile*/
     .fs-bc-34-28 {
         font-size: 28px;
     }
@@ -229,9 +225,6 @@
     }
 }
 
-@media (max-width: 1199px) { /*xl*/
-
-}
 
 @media (max-width: 1451px) { /*xxl*/
 }

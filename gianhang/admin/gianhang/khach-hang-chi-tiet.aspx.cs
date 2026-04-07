@@ -93,15 +93,15 @@ public partial class gianhang_admin_gianhang_khach_hang_chi_tiet : System.Web.UI
         BookingCount = detail.BookingCount;
 
         string personKeyword = PhoneText != "--" ? PhoneText : CustomerTitle;
-        PersonHubUrl = "/gianhang/admin/quan-ly-con-nguoi/Default.aspx?keyword=" + Server.UrlEncode(personKeyword);
+        PersonHubUrl = GianHangRoutes_cl.BuildAdminLegacyPeopleHubUrl(personKeyword);
         NativeDetailUrl = GianHangRoutes_cl.BuildKhachHangChiTietUrl(detail.CustomerKey);
         NativeCustomersUrl = GianHangRoutes_cl.BuildKhachHangUrl();
 
         long legacyCustomerId = ResolveLegacyCustomerId((access.ChiNhanhId ?? "").Trim(), PhoneText);
         HasAdminMirror = legacyCustomerId > 0;
         AdminDetailUrl = HasAdminMirror
-            ? ("/gianhang/admin/quan-ly-khach-hang/chi-tiet.aspx?id=" + legacyCustomerId.ToString())
-            : ("/gianhang/admin/quan-ly-khach-hang/Default.aspx?keyword=" + Server.UrlEncode(personKeyword));
+            ? GianHangRoutes_cl.BuildAdminLegacyCustomerDetailUrl(legacyCustomerId)
+            : GianHangRoutes_cl.BuildAdminLegacyCustomersUrl(personKeyword);
         MirrorText = HasAdminMirror ? ("CRM admin #" + legacyCustomerId.ToString()) : "Chưa định danh trong CRM admin";
 
         rp_orders.DataSource = detail.RecentOrders.Select(item => new OrderRowView

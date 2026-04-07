@@ -22,19 +22,19 @@
             </section>
 
             <section class="storefront-footer__nav">
-                <div class="storefront-footer__heading"><%=FooterNavTitle %></div>
+                <div class="storefront-footer__heading">Khám phá nhanh</div>
                 <div class="storefront-footer__links">
                     <a href="<%=HomeUrl %>"><%=NavHomeText %></a>
                     <a href="<%=ServicesUrl %>"><%=QuickServiceText %></a>
                     <a href="<%=ProductsUrl %>"><%=QuickProductText %></a>
-                    <a href="<%=ArticlesUrl %>"><%=QuickArticleText %></a>
                     <a href="<%=BookingUrl %>"><%=NavBookingText %></a>
                     <a href="<%=CartUrl %>">Giỏ hàng</a>
                 </div>
             </section>
 
+            <% if (ShowFooterCategories) { %>
             <section class="storefront-footer__nav">
-                <div class="storefront-footer__heading"><%=FooterCategoryTitle %></div>
+                <div class="storefront-footer__heading">Danh mục nổi bật</div>
                 <div class="storefront-footer__links">
                     <asp:Repeater ID="Repeater1" runat="server">
                         <ItemTemplate>
@@ -43,9 +43,10 @@
                     </asp:Repeater>
                 </div>
             </section>
+            <% } %>
 
             <section class="storefront-footer__contact">
-                <div class="storefront-footer__heading"><%=FooterContactTitle %></div>
+                <div class="storefront-footer__heading">Liên hệ</div>
                 <% if (diachi != "") { %>
                 <div class="storefront-footer__contact-item"><span class="mif-location"></span><span><%=diachi %></span></div>
                 <% } %>
@@ -72,8 +73,9 @@
         <div class="storefront-footer__bottom">
             <div>Copyright © <%=CurrentYear %> <%=tencongty == "" ? HttpContext.Current.Request.Url.Host : tencongty %>.</div>
             <div class="storefront-footer__bottom-links">
-                <% if (FooterBottomPrimaryText != "") { %><a href="<%=FooterBottomPrimaryUrl %>" <%=FooterBottomPrimaryAttr %>><%=FooterBottomPrimaryText %></a><% } %>
-                <% if (FooterBottomSecondaryText != "") { %><a href="<%=FooterBottomSecondaryUrl %>"><%=FooterBottomSecondaryText %></a><% } %>
+                <a href="<%=ProductsUrl %>">Xem sản phẩm</a>
+                <a href="<%=BookingUrl %>">Đặt lịch</a>
+                <a href="<%=CartUrl %>">Giỏ hàng</a>
             </div>
         </div>
     </div>

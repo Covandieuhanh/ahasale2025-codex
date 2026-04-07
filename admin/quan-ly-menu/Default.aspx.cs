@@ -344,6 +344,8 @@ public partial class admin_Default : System.Web.UI.Page
     }
     protected void Page_Load(object sender, EventArgs e)
     {
+        AdminAccessGuard_cl.RequireFeatureAccess("home_menu", "/admin/default.aspx?mspace=content");
+
         if (!IsPostBack)
         {
             try

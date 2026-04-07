@@ -139,7 +139,7 @@
             font-style: italic;
         }
 
-        @media (max-width: 991px) {
+        @media (max-width: 767px) {
             .address-grid {
                 grid-template-columns: 1fr;
             }

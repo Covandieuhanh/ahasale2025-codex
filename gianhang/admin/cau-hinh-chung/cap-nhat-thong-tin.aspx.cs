@@ -10,6 +10,16 @@ public partial class admin_Default : System.Web.UI.Page
 {
     dbDataContext db = new dbDataContext();
     public string notifi;
+
+    private bool HasPermission(string permissionKey)
+    {
+        string currentUser = GianHangAdminContext_cl.ResolveDisplayAccountKey();
+        if (string.IsNullOrEmpty(currentUser) || string.IsNullOrEmpty(permissionKey))
+            return false;
+
+        return bcorn_class.check_quyen(currentUser, permissionKey) != "2";
+    }
+
     private config_thongtin_table EnsureThongTin()
     {
         config_thongtin_table ob = db.config_thongtin_tables.FirstOrDefault();
@@ -100,46 +110,16 @@ public partial class admin_Default : System.Web.UI.Page
     }
     protected void Page_Load(object sender, EventArgs e)
     {
-        #region Check_Login
-        string _quyen = "q1_3";
-        string _cookie_user = "", _cookie_pass = "";
-        if (Request.Cookies["save_user_admin_aka_1"] != null) _cookie_user = Request.Cookies["save_user_admin_aka_1"].Value;
-        if (Request.Cookies["save_pass_admin_aka_1"] != null) _cookie_pass = Request.Cookies["save_pass_admin_aka_1"].Value;
-        if (Session["user"] == null) Session["user"] = ""; if (Session["notifi"] == null) Session["notifi"] = "";if (Session["user"].ToString() == "") Response.Redirect("/gianhang/admin/f5_ss_admin.aspx");
-        string _url = Request.Url.GetLeftPart(UriPartial.Authority).ToLower();
-        string _kq = bcorn_class.check_login(Session["user"].ToString(), _cookie_user, _cookie_pass, _url, _quyen);
-        if (_kq != "")//nếu có thông báo --> có lỗi --> reset --> bắt login lại
-        {
-            if (_kq == "baotri") Response.Redirect("/baotri.aspx");
-            else
-            {
-                if (_kq == "1") Response.Redirect("/gianhang/admin/login.aspx");//hết Session, hết Cookie
-                else
-                {
-                    if (_kq == "2")//k đủ quyền
-                    {
-                        Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
-                        Response.Redirect("/gianhang/admin");
-                    }
-                    else
-                    {
-                        Session["notifi"] = _kq; Session["user"] = "";
-                        Response.Cookies["save_user_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Cookies["save_pass_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Cookies["save_url_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Redirect("/gianhang/admin/login.aspx");
-                    }
-                }
-            }
-        }
-        #endregion
+        GianHangAdminPageGuard_cl.AccessInfo access = GianHangAdminPageGuard_cl.EnsureAccess(this, db, "q1_3");
+        if (access == null)
+            return;
 
         main();
     }
 
     protected void Button1_Click(object sender, EventArgs e)
     {
-        if (bcorn_class.check_quyen(Session["user"].ToString(), "q1_3") == "2")
+        if (!HasPermission("q1_3"))
         {
             Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
             Response.Redirect("/gianhang/admin");
@@ -298,7 +278,7 @@ public partial class admin_Default : System.Web.UI.Page
 
     protected void Button2_Click(object sender, EventArgs e)
     {
-        if (bcorn_class.check_quyen(Session["user"].ToString(), "q1_3") == "2")
+        if (!HasPermission("q1_3"))
         {
             Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
             Response.Redirect("/gianhang/admin");
@@ -316,7 +296,7 @@ public partial class admin_Default : System.Web.UI.Page
 
     protected void Button3_Click(object sender, EventArgs e)
     {
-        if (bcorn_class.check_quyen(Session["user"].ToString(), "q1_3") == "2")
+        if (!HasPermission("q1_3"))
         {
             Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
             Response.Redirect("/gianhang/admin");
@@ -334,7 +314,7 @@ public partial class admin_Default : System.Web.UI.Page
 
     protected void Button4_Click(object sender, EventArgs e)
     {
-        if (bcorn_class.check_quyen(Session["user"].ToString(), "q1_3") == "2")
+        if (!HasPermission("q1_3"))
         {
             Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
             Response.Redirect("/gianhang/admin");
@@ -351,7 +331,7 @@ public partial class admin_Default : System.Web.UI.Page
     }
     protected void Button5_Click(object sender, EventArgs e)
     {
-        if (bcorn_class.check_quyen(Session["user"].ToString(), "q1_3") == "2")
+        if (!HasPermission("q1_3"))
         {
             Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
             Response.Redirect("/gianhang/admin");
@@ -368,7 +348,7 @@ public partial class admin_Default : System.Web.UI.Page
     }
     protected void Button6_Click(object sender, EventArgs e)
     {
-        if (bcorn_class.check_quyen(Session["user"].ToString(), "q1_3") == "2")
+        if (!HasPermission("q1_3"))
         {
             Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
             Response.Redirect("/gianhang/admin");

@@ -21,9 +21,9 @@
     </script>
 
     <link href="/Metro-UI-CSS-master/css/metro-all.min.css" rel="stylesheet" />
-    <link href="/assetscss/home-style.css" rel="stylesheet" />
+    <link href="/css/gianhang-home.css" rel="stylesheet" />
     <link href="/assetscss/login.css?v=2026-03-02.1" rel="stylesheet" />
-    <link href="/assetscss/aha-ui-refresh.css?v=2026-03-02.1" rel="stylesheet" />
+    <link href="/assetscss/gianhang-ui-refresh.css?v=2026-03-02.1" rel="stylesheet" />
     <link href="/assetscss/bcorn-with-metro.css" rel="stylesheet" />
     <link href="/assetscss/fix-metro.css" rel="stylesheet" />
 
@@ -1057,7 +1057,7 @@
 </form>
 
 <script src="/Metro-UI-CSS-master/js/metro.min.js"></script>
-<script src="/js/aha-ui-refresh.js?v=2026-03-07.2"></script>
+    <script src="/js/gianhang-ui-refresh.js?v=2026-03-07.2"></script>
 <script>
     function ahaWaitValidatePin() {
         var pinInput = document.getElementById("<%= txt_mapin.ClientID %>");

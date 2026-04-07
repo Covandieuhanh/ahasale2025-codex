@@ -98,7 +98,7 @@
             }
         }
 
-        @media (min-width: 900px) {
+        @media (min-width: 768px) {
             .daugia-create-summary {
                 grid-template-columns: repeat(3, minmax(0, 1fr));
             }

@@ -7,40 +7,39 @@ using System.Web.UI.WebControls;
 
 public partial class admin_quan_ly_menu_in_a4_doc : System.Web.UI.Page
 {
+    private bool HasAnyPermission(string user, params string[] permissionKeys)
+    {
+        if (string.IsNullOrWhiteSpace(user) || permissionKeys == null)
+            return false;
+
+        for (int i = 0; i < permissionKeys.Length; i++)
+        {
+            string permissionKey = (permissionKeys[i] ?? "").Trim();
+            if (permissionKey != "" && bcorn_class.check_quyen(user, permissionKey) == "")
+                return true;
+        }
+
+        return false;
+    }
+    private void RedirectToAdminHome()
+    {
+        Response.Redirect(GianHangAdminBridge_cl.BuildAdminHomeUrl(HttpContext.Current));
+    }
     protected void Page_Load(object sender, EventArgs e)
     {
-        #region Check_Login
-        string _quyen = "q4_1";
-        string _cookie_user = "", _cookie_pass = "";
-        if (Request.Cookies["save_user_admin_aka_1"] != null) _cookie_user = Request.Cookies["save_user_admin_aka_1"].Value;
-        if (Request.Cookies["save_pass_admin_aka_1"] != null) _cookie_pass = Request.Cookies["save_pass_admin_aka_1"].Value;
-        if (Session["user"] == null) Session["user"] = ""; if (Session["notifi"] == null) Session["notifi"] = "";if (Session["user"].ToString() == "") Response.Redirect("/gianhang/admin/f5_ss_admin.aspx");
-        string _url = Request.Url.GetLeftPart(UriPartial.Authority).ToLower();
-        string _kq = bcorn_class.check_login(Session["user"].ToString(), _cookie_user, _cookie_pass, _url, _quyen);
-        if (_kq != "")//nếu có thông báo --> có lỗi --> reset --> bắt login lại
+        if (!GianHangSystemAdminGuard_cl.EnsurePageAccess(this))
+            return;
+        dbDataContext db = new dbDataContext();
+        GianHangAdminPageGuard_cl.AccessInfo access = GianHangAdminPageGuard_cl.EnsureAccess(this, db, "none");
+        if (access == null)
+            return;
+
+        string currentUser = (access.User ?? "").Trim();
+        if (!HasAnyPermission(currentUser, "q4_1"))
         {
-            if (_kq == "baotri") Response.Redirect("/baotri.aspx");
-            else
-            {
-                if (_kq == "1") Response.Redirect("/gianhang/admin/login.aspx");//hết Session, hết Cookie
-                else
-                {
-                    if (_kq == "2")//k đủ quyền
-                    {
-                        Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
-                        Response.Redirect("/gianhang/admin");
-                    }
-                    else
-                    {
-                        Session["notifi"] = _kq; Session["user"] = "";
-                        Response.Cookies["save_user_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Cookies["save_pass_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Cookies["save_url_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Redirect("/gianhang/admin/login.aspx");
-                    }
-                }
-            }
+            Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
+            RedirectToAdminHome();
+            return;
         }
-        #endregion
     }
 }

@@ -121,7 +121,7 @@ body.dark-mode {
     line-height: 1;
 }
 
-@media (max-width: 1199.98px) {
+@media (max-width: 767.98px) {
     .home-account-name {
         max-width: 130px;
         font-size: 16px;
@@ -266,7 +266,7 @@ body.dark-mode {
     text-shadow: 0 10px 24px rgba(0,0,0,.25);
 }
 
-@media (max-width: 991.98px) {
+@media (max-width: 767.98px) {
     .hero-ct-like {
         height: 180px;
     }
@@ -587,7 +587,7 @@ body.dark-mode {
     }
 
 /* ===== MOBILE: nhỏ vừa, không xuống dòng ===== */
-@media (max-width: 991.98px) {
+@media (max-width: 767.98px) {
     :root {
         --aha-home-sticky-top: 60px;
     }
@@ -700,7 +700,7 @@ body.dark-mode {
 }
 
 /* ===== FIX MOBILE ACCOUNT OFFCANVAS ===== */
-@media (max-width: 991.98px) {
+@media (max-width: 767.98px) {
     #accountMenuCanvas .offcanvas-body {
         padding: 0 !important;
         overflow: hidden !important;
@@ -817,7 +817,7 @@ body.dark-mode {
         text-overflow: ellipsis !important;
     }
 
-@media (max-width: 991.98px) {
+@media (max-width: 767.98px) {
     .site-header .dropdown-menu.dm-scroll {
         max-height: calc(100vh - 160px);
     }
@@ -840,7 +840,7 @@ body.dark-mode {
     background: transparent;
 }
 
-@media (max-width: 991.98px) {
+@media (max-width: 767.98px) {
     .site-header .dropdown-menu.dm-scroll {
         max-height: calc(100vh - 160px) !important;
     }
@@ -883,7 +883,7 @@ body.dark-mode {
     color: inherit !important;
 }
 
-@media (max-width: 991.98px) {
+@media (max-width: 767.98px) {
     .site-header .dropdown-menu.dm-scroll .dm-scroll-host {
         max-height: calc(100vh - 160px);
     }
@@ -996,7 +996,7 @@ body.dark-mode {
 }
 
 /* mobile: offcanvas notif */
-@media (max-width: 991.98px) {
+@media (max-width: 767.98px) {
     #notifCanvas .offcanvas-body {
         padding: 0 !important;
         overflow: hidden !important;

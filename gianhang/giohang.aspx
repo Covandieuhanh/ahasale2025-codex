@@ -348,7 +348,7 @@
             font-size: 15px;
             font-weight: 700;
         }
-        @media (max-width: 991.98px) {
+        @media (max-width: 767.98px) {
             .gh-cart-layout {
                 grid-template-columns: 1fr;
             }

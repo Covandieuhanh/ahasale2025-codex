@@ -8,7 +8,7 @@ public partial class admin_tools_reindex_baiviet : Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
-        AdminRolePolicy_cl.RequireSuperAdmin();
+        AdminAccessGuard_cl.RequireFeatureAccess("admin_reindex_baiviet", "/admin/default.aspx?mspace=admin");
 
         if (!IsPostBack)
             ShowStatus();

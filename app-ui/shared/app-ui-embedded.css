@@ -1,0 +1,61 @@
+.app-embedded-runtime {
+    display: grid;
+    gap: 10px;
+}
+
+.app-embedded-runtime-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.app-embedded-runtime-copy {
+    min-width: 0;
+    display: grid;
+    gap: 6px;
+}
+
+.app-embedded-runtime-copy .app-page-title {
+    margin: 0;
+    font-size: 22px;
+}
+
+.app-embedded-runtime-copy .app-page-copy {
+    margin: 0;
+}
+
+.app-embedded-frame-shell {
+    border-radius: 18px;
+    border: 1px solid var(--app-soft-border);
+    background: #ffffff;
+    overflow: hidden;
+    box-shadow: 0 14px 30px -26px rgba(15, 23, 42, 0.5);
+}
+
+.app-embedded-frame-loading {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--app-soft-border);
+    color: var(--app-text-soft);
+    font-size: 12px;
+    line-height: 1.4;
+    font-weight: 700;
+}
+
+.app-embedded-frame-loading[hidden] {
+    display: none;
+}
+
+.app-embedded-frame {
+    width: 100%;
+    min-height: calc(100dvh - 220px);
+    border: 0;
+    background: #ffffff;
+    display: block;
+}
+
+@media (max-width: 360px) {
+    .app-embedded-runtime-head {
+        display: grid;
+    }
+}

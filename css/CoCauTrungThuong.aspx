@@ -6,7 +6,7 @@
     <title>Cơ cấu trúng thưởng</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
-        body{font-family:system-ui,Segoe UI,Roboto,Arial;background:#0f172a;color:#e5e7eb;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0}
+        body{font-family:"Be Vietnam Pro","Segoe UI",Arial;background:#0f172a;color:#e5e7eb;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0}
         .card{background:#111827;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:20px;max-width:420px;width:100%}
         h2{margin-top:0}
         .row{display:flex;gap:10px}

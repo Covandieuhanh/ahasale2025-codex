@@ -1,4 +1,4 @@
-<%@ Page Title="Đăng tin" Language="C#" MasterPageFile="~/MasterPage/Tabler/TablerHome.master" AutoEventWireup="true" CodeFile="Them.aspx.cs" Inherits="gianhang_quan_ly_tin_Them" %>
+<%@ Page Title="Đăng tin" Language="C#" MasterPageFile="~/MasterPage/Tabler/TablerGianHang.master" AutoEventWireup="true" CodeFile="Them.aspx.cs" Inherits="gianhang_quan_ly_tin_Them" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head_truoc" runat="Server">
     <style>
@@ -70,6 +70,32 @@
                         <div class="gh-field-note">Từ 0 đến 50%. Mức ưu đãi sẽ áp dụng khi thanh toán.</div>
                     </div>
 
+                    <div class="col-lg-6">
+                        <label class="form-label">Tỉnh/Thành - Quận/Huyện - Phường/Xã</label>
+                        <div class="row g-2">
+                            <div class="col-md-4">
+                                <select id="gh_tinh" class="form-select"></select>
+                            </div>
+                            <div class="col-md-4">
+                                <select id="gh_quan" class="form-select"></select>
+                            </div>
+                            <div class="col-md-4">
+                                <select id="gh_phuong" class="form-select"></select>
+                            </div>
+                        </div>
+                        <div class="gh-field-note">Chọn đủ 3 cấp để hiển thị đúng khu vực của sản phẩm hoặc dịch vụ.</div>
+                        <asp:HiddenField ID="hf_tinh" runat="server" />
+                        <asp:HiddenField ID="hf_quan" runat="server" />
+                        <asp:HiddenField ID="hf_phuong" runat="server" />
+                        <asp:HiddenField ID="hf_address_raw" runat="server" />
+                    </div>
+
+                    <div class="col-lg-6">
+                        <label class="form-label">Địa chỉ chi tiết</label>
+                        <asp:TextBox ID="txt_diachi_chitiet" runat="server" CssClass="form-control" TextMode="MultiLine" Rows="3" MaxLength="255" placeholder="Ví dụ: Số nhà, tên đường hoặc mô tả vị trí cụ thể"></asp:TextBox>
+                        <div class="gh-field-note">Địa chỉ đầy đủ sẽ được tự động ghép từ chi tiết + phường/xã + quận/huyện + tỉnh/thành.</div>
+                    </div>
+
                     <div class="col-lg-3">
                         <label class="form-label">Trạng thái hiển thị</label>
                         <div class="form-check form-switch mt-2">
@@ -100,6 +126,7 @@
 </asp:Content>
 
 <asp:Content ID="Content3" ContentPlaceHolderID="foot_sau" runat="Server">
+    <script src="<%= Helper_cl.VersionedUrl("~/js/aha-address-picker.js") %>"></script>
     <script>
         function uploadFile() {
             var fileInput = document.getElementById("fileInput");
@@ -142,5 +169,20 @@
             };
             xhr.send(formData);
         }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            if (!window.AhaAddressPicker) return;
+            AhaAddressPicker.init({
+                provinceSelectId: "gh_tinh",
+                districtSelectId: "gh_quan",
+                wardSelectId: "gh_phuong",
+                detailInputId: "<%= txt_diachi_chitiet.ClientID %>",
+                hiddenAddressId: "<%= hf_address_raw.ClientID %>",
+                hiddenProvinceId: "<%= hf_tinh.ClientID %>",
+                hiddenDistrictId: "<%= hf_quan.ClientID %>",
+                hiddenWardId: "<%= hf_phuong.ClientID %>",
+                rawAddressId: "<%= hf_address_raw.ClientID %>"
+            });
+        });
     </script>
 </asp:Content>

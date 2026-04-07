@@ -193,21 +193,7 @@ public partial class admin_duyet_gian_hang_doi_tac : System.Web.UI.Page
 
     private void EnsureCanAccessPage()
     {
-        check_login_cl.check_login_admin("none", "none");
-
-        using (dbDataContext db = new dbDataContext())
-        {
-            string tk = GetAdminName();
-            if (AdminRolePolicy_cl.CanApproveShopPartnerRegistration(db, tk))
-                return;
-        }
-
-        Session["thongbao"] = thongbao_class.metro_notifi_onload(
-            "Thông báo",
-            "Bạn không có quyền duyệt không gian gian hàng.",
-            "1800",
-            "warning");
-        Response.Redirect("/admin/default.aspx", true);
+        AdminAccessGuard_cl.RequireFeatureAccess("home_gianhang_space", "/admin/default.aspx?mspace=gianhang");
     }
 
     private static string GetHomeRequestStatusText(string status)

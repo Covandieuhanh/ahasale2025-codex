@@ -52,13 +52,13 @@ public static class GianHangSpaceNav_cl
                 StatusText = "Đang hoạt động",
                 AvatarUrl = GianHangStorefront_cl.ResolveAvatarUrl(account),
                 PublicUrl = summary.ProfileUrl,
-                HomeUrl = "/home/default.aspx",
-                ManageUrl = "/gianhang/quan-ly-tin/Default.aspx",
-                OrdersUrl = "/gianhang/don-ban.aspx",
-                BookingUrl = "/gianhang/quan-ly-lich-hen.aspx",
-                CustomersUrl = "/gianhang/khach-hang.aspx",
-                ReportUrl = "/gianhang/bao-cao.aspx",
-                Level2Url = "/gianhang/nang-cap-level2.aspx",
+                HomeUrl = "/gianhang/tai-khoan/default.aspx",
+                ManageUrl = GianHangRoutes_cl.BuildOwnerContentUrl(),
+                OrdersUrl = GianHangRoutes_cl.BuildOwnerOrdersUrl(),
+                BookingUrl = GianHangRoutes_cl.BuildOwnerBookingsUrl(),
+                CustomersUrl = GianHangRoutes_cl.BuildOwnerCustomersUrl(),
+                ReportUrl = GianHangRoutes_cl.BuildOwnerReportsUrl(),
+                Level2Url = GianHangRoutes_cl.BuildBridgeLevel2Url(),
                 ShowAdminUrl = info.CanAccessGianHangAdmin,
                 AdminUrl = "/gianhang/admin",
                 ActiveKey = ResolveActiveKey(path)
@@ -81,14 +81,14 @@ public static class GianHangSpaceNav_cl
             return "report";
         if (normalized.StartsWith("/gianhang/nang-cap-level2"))
             return "level2";
+        if (normalized.StartsWith("/gianhang/tai-khoan"))
+            return "home";
         if (normalized.StartsWith("/gianhang/public")
             || normalized.StartsWith("/gianhang/page/")
             || normalized.StartsWith("/gianhang/xem-san-pham")
             || normalized.StartsWith("/gianhang/xem-dich-vu")
             || normalized.StartsWith("/gianhang/giohang"))
             return "public";
-        if (normalized.StartsWith("/home"))
-            return "home";
         return string.Empty;
     }
 }

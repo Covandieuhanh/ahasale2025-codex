@@ -157,7 +157,7 @@
             }
         }
 
-        @media (min-width: 992px) {
+        @media (min-width: 768px) {
             .daugia-filter-bar {
                 width: auto;
             }

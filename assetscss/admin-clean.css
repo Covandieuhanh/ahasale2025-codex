@@ -12,7 +12,7 @@ body.admin-shell {
     --ui-shadow: 0 8px 18px rgba(19, 41, 61, 0.06);
     --ui-radius: 12px;
     --ui-radius-lg: 16px;
-    font-family: "Sarabun", "Segoe UI", "Noto Sans", sans-serif;
+    font-family: "Be Vietnam Pro", "Segoe UI", Arial, sans-serif;
     color: var(--ui-text);
     background: linear-gradient(180deg, #f7f9fb 0%, var(--ui-bg) 100%);
 }
@@ -148,7 +148,7 @@ body.admin-shell #nv .navview-menu .item-header {
 
 body.admin-shell #nv .navview-menu .caption,
 body.admin-shell #nv .navview-menu .item-header {
-    font-family: "Sarabun", "Segoe UI", "Noto Sans", sans-serif;
+    font-family: "Be Vietnam Pro", "Segoe UI", Arial, sans-serif;
     text-rendering: geometricPrecision;
 }
 
@@ -722,13 +722,13 @@ body.admin-smart-compact .admin-topbar #admin-ui-density-toggle .mif {
     display: inline-block;
 }
 
-@media (max-width: 1199.98px) {
+@media (max-width: 767.98px) {
     body.admin-shell .admin-content-inner {
         padding: 12px !important;
     }
 }
 
-@media (max-width: 991.98px) {
+@media (max-width: 767.98px) {
     body.admin-shell #nv .navview-pane {
         width: min(86vw, 320px);
     }
@@ -761,7 +761,7 @@ body.admin-smart-compact .admin-topbar #admin-ui-density-toggle .mif {
 
 }
 
-@media (max-width: 575.98px) {
+@media (max-width: 767.98px) {
     body.admin-shell .admin-content-inner {
         padding: 8px !important;
     }

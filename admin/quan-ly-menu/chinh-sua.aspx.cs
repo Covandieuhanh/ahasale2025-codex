@@ -6,6 +6,9 @@ public partial class admin_quan_ly_menu_chinh_sua : System.Web.UI.Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
+        if (!AdminAccessGuard_cl.EnsurePageAccess(this))
+            return;
+
         var overrides = new Dictionary<string, string>();
         overrides["view"] = "edit";
         overrides["id"] = (Request.QueryString["id"] ?? "").Trim();

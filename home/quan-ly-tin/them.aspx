@@ -3,7 +3,7 @@
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head_truoc" runat="Server">
     <style>
-        .wrap { max-width: 1200px; }
+        .page-shell-wide { max-width: 1200px; }
         .field-note { font-size: 13px; color: #6c7a89; margin-top: 6px; }
         .preview-grid img {
             width: 100px;
@@ -13,17 +13,30 @@
             border: 1px solid rgba(98,105,118,.18);
             margin: 6px 6px 0 0;
         }
+        .bds-posting-panel {
+            border: 1px solid rgba(22,163,74,.16);
+            border-radius: 18px;
+            padding: 18px;
+            background: linear-gradient(180deg, rgba(240,253,244,.95), rgba(255,255,255,.98));
+        }
+        .bds-posting-title {
+            font-size: 15px;
+            font-weight: 800;
+            color: #166534;
+            margin-bottom: 4px;
+        }
     </style>
 </asp:Content>
 
 <asp:Content ID="Content2" ContentPlaceHolderID="main" runat="Server">
-    <div class="container-xl wrap py-4">
+    <div class="container-xl page-shell-wide py-4">
         <asp:HiddenField ID="hf_anhphu" runat="server" />
         <div style="display: none">
             <asp:TextBox ID="txt_link_fileupload" runat="server"></asp:TextBox>
         </div>
 
         <div class="card shadow-sm">
+            <asp:HiddenField ID="hf_bds_category_ids" runat="server" />
             <div class="card-header d-flex align-items-center justify-content-between">
                 <div class="card-title fw-bold">ĐĂNG TIN MỚI</div>
                 <asp:HyperLink ID="lnk_back_top" runat="server" CssClass="btn btn-outline-secondary">
@@ -74,6 +87,102 @@
                             onfocus="AutoSelect(this)"
                             oninput="format_sotien_new(this)"
                             CssClass="form-control" Text="0" MaxLength="14"></asp:TextBox>
+                    </div>
+
+                    <div id="bdsPostingPanel" class="col-12" style="display:none;">
+                        <div class="bds-posting-panel">
+                            <div class="bds-posting-title">Thuộc tính riêng cho tin Bất động sản</div>
+                            <div class="text-muted small mb-3">Phần này là lớp metadata để listing/detail của <code>/bat-dong-san</code> hoạt động đúng kiểu Nhà Tốt. Vị trí vẫn dùng chung nhóm Tỉnh/Thành, Quận/Huyện, Phường/Xã bên dưới.</div>
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label">Nhu cầu</label>
+                                    <asp:DropDownList ID="ddl_bds_purpose" runat="server" CssClass="form-select">
+                                        <asp:ListItem Value="sale">Mua bán</asp:ListItem>
+                                        <asp:ListItem Value="rent">Cho thuê</asp:ListItem>
+                                    </asp:DropDownList>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Loại hình BĐS</label>
+                                    <asp:DropDownList ID="ddl_bds_property_type" runat="server" CssClass="form-select">
+                                        <asp:ListItem Value="apartment">Căn hộ</asp:ListItem>
+                                        <asp:ListItem Value="house">Nhà phố</asp:ListItem>
+                                        <asp:ListItem Value="land">Đất nền</asp:ListItem>
+                                        <asp:ListItem Value="office">Văn phòng</asp:ListItem>
+                                        <asp:ListItem Value="business-premises">Mặt bằng</asp:ListItem>
+                                    </asp:DropDownList>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">Diện tích (m²)</label>
+                                    <asp:TextBox ID="txt_bds_area" runat="server" CssClass="form-control" Text="0" MaxLength="10"></asp:TextBox>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">Phòng ngủ</label>
+                                    <asp:TextBox ID="txt_bds_bedrooms" runat="server" CssClass="form-control" Text="0" MaxLength="2"></asp:TextBox>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">Phòng tắm</label>
+                                    <asp:TextBox ID="txt_bds_bathrooms" runat="server" CssClass="form-control" Text="0" MaxLength="2"></asp:TextBox>
+                                </div>
+                                <div id="bdsRentDepositWrap" class="col-md-3">
+                                    <label class="form-label">Tiền cọc (VNĐ)</label>
+                                    <asp:TextBox ID="txt_bds_deposit" runat="server" CssClass="form-control" Text="0" MaxLength="14" oninput="format_sotien_new(this)"></asp:TextBox>
+                                </div>
+                                <div id="bdsRentTermWrap" class="col-md-2">
+                                    <label class="form-label">Kỳ hạn thuê (tháng)</label>
+                                    <asp:TextBox ID="txt_bds_rental_term" runat="server" CssClass="form-control" Text="0" MaxLength="3"></asp:TextBox>
+                                </div>
+                                <div id="bdsHouseFloorWrap" class="col-md-2">
+                                    <label class="form-label">Số tầng</label>
+                                    <asp:TextBox ID="txt_bds_floor_count" runat="server" CssClass="form-control" Text="0" MaxLength="2"></asp:TextBox>
+                                </div>
+                                <div id="bdsLandWidthWrap" class="col-md-2">
+                                    <label class="form-label">Ngang (m)</label>
+                                    <asp:TextBox ID="txt_bds_land_width" runat="server" CssClass="form-control" Text="0" MaxLength="10"></asp:TextBox>
+                                </div>
+                                <div id="bdsLandLengthWrap" class="col-md-2">
+                                    <label class="form-label">Dài (m)</label>
+                                    <asp:TextBox ID="txt_bds_land_length" runat="server" CssClass="form-control" Text="0" MaxLength="10"></asp:TextBox>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Pháp lý</label>
+                                    <asp:DropDownList ID="ddl_bds_legal" runat="server" CssClass="form-select">
+                                        <asp:ListItem Value="Sổ hồng riêng">Sổ hồng riêng</asp:ListItem>
+                                        <asp:ListItem Value="Sổ đỏ">Sổ đỏ</asp:ListItem>
+                                        <asp:ListItem Value="HĐMB / đang chờ sổ">HĐMB / đang chờ sổ</asp:ListItem>
+                                        <asp:ListItem Value="Hợp đồng thuê thương mại">Hợp đồng thuê thương mại</asp:ListItem>
+                                        <asp:ListItem Value="Chưa cập nhật">Chưa cập nhật</asp:ListItem>
+                                    </asp:DropDownList>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Nội thất / bàn giao</label>
+                                    <asp:DropDownList ID="ddl_bds_furnishing" runat="server" CssClass="form-select">
+                                        <asp:ListItem Value="Hoàn thiện">Hoàn thiện</asp:ListItem>
+                                        <asp:ListItem Value="Nội thất cơ bản">Nội thất cơ bản</asp:ListItem>
+                                        <asp:ListItem Value="Full nội thất">Full nội thất</asp:ListItem>
+                                        <asp:ListItem Value="Bàn giao thô">Bàn giao thô</asp:ListItem>
+                                        <asp:ListItem Value="Chưa cập nhật">Chưa cập nhật</asp:ListItem>
+                                    </asp:DropDownList>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Hướng</label>
+                                    <asp:DropDownList ID="ddl_bds_direction" runat="server" CssClass="form-select">
+                                        <asp:ListItem Value="">Chưa chọn</asp:ListItem>
+                                        <asp:ListItem Value="Đông">Đông</asp:ListItem>
+                                        <asp:ListItem Value="Tây">Tây</asp:ListItem>
+                                        <asp:ListItem Value="Nam">Nam</asp:ListItem>
+                                        <asp:ListItem Value="Bắc">Bắc</asp:ListItem>
+                                        <asp:ListItem Value="Đông Nam">Đông Nam</asp:ListItem>
+                                        <asp:ListItem Value="Đông Bắc">Đông Bắc</asp:ListItem>
+                                        <asp:ListItem Value="Tây Nam">Tây Nam</asp:ListItem>
+                                        <asp:ListItem Value="Tây Bắc">Tây Bắc</asp:ListItem>
+                                    </asp:DropDownList>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Tên dự án</label>
+                                    <asp:TextBox ID="txt_bds_project" runat="server" CssClass="form-control" MaxLength="250" placeholder="Nếu thuộc dự án thì nhập tên dự án"></asp:TextBox>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="col-lg-6">
@@ -321,6 +430,76 @@
                 hiddenWardId: "<%= hf_phuong.ClientID %>",
                 rawAddressId: "<%= hf_address_raw.ClientID %>"
             });
+        });
+
+        function isBdsCategorySelected() {
+            var ddl = document.getElementById("<%= ddl_DanhMuc.ClientID %>");
+            var hidden = document.getElementById("<%= hf_bds_category_ids.ClientID %>");
+            if (!ddl) return false;
+            var selectedValue = ddl.value || "";
+            var selectedText = "";
+            if (ddl.selectedIndex >= 0 && ddl.options[ddl.selectedIndex]) {
+                selectedText = (ddl.options[ddl.selectedIndex].text || "").toLowerCase();
+            }
+
+            var knownIds = (hidden && hidden.value ? hidden.value.split(",") : []).map(function (x) { return (x || "").trim(); }).filter(Boolean);
+            if (knownIds.indexOf(selectedValue) >= 0) return true;
+
+            return selectedText.indexOf("bất động sản") >= 0
+                || selectedText.indexOf("bat dong san") >= 0
+                || selectedText.indexOf("nhà đất") >= 0
+                || selectedText.indexOf("nha dat") >= 0;
+        }
+
+        function syncBdsPostingPanel() {
+            var panel = document.getElementById("bdsPostingPanel");
+            if (!panel) return;
+            var isVisible = isBdsCategorySelected();
+            panel.style.display = isVisible ? "" : "none";
+            if (!isVisible) return;
+
+            var purpose = document.getElementById("<%= ddl_bds_purpose.ClientID %>");
+            var propertyType = document.getElementById("<%= ddl_bds_property_type.ClientID %>");
+            var furnishing = document.getElementById("<%= ddl_bds_furnishing.ClientID %>");
+            var bedrooms = document.getElementById("<%= txt_bds_bedrooms.ClientID %>");
+            var bathrooms = document.getElementById("<%= txt_bds_bathrooms.ClientID %>");
+            var wrapRentDeposit = document.getElementById("bdsRentDepositWrap");
+            var wrapRentTerm = document.getElementById("bdsRentTermWrap");
+            var wrapHouseFloor = document.getElementById("bdsHouseFloorWrap");
+            var wrapLandWidth = document.getElementById("bdsLandWidthWrap");
+            var wrapLandLength = document.getElementById("bdsLandLengthWrap");
+            var purposeValue = purpose ? (purpose.value || "") : "";
+            var propertyTypeValue = propertyType ? (propertyType.value || "") : "";
+            var isRent = purposeValue === "rent";
+            var isLand = propertyTypeValue === "land";
+            var isHouse = propertyTypeValue === "house";
+            var noBedroomTypes = ["land", "office", "business-premises"];
+
+            if (wrapRentDeposit) wrapRentDeposit.style.display = isRent ? "" : "none";
+            if (wrapRentTerm) wrapRentTerm.style.display = isRent ? "" : "none";
+            if (wrapHouseFloor) wrapHouseFloor.style.display = isHouse ? "" : "none";
+            if (wrapLandWidth) wrapLandWidth.style.display = isLand ? "" : "none";
+            if (wrapLandLength) wrapLandLength.style.display = isLand ? "" : "none";
+
+            if (furnishing && isLand) furnishing.value = "Chưa cập nhật";
+            if (bedrooms && noBedroomTypes.indexOf(propertyTypeValue) >= 0) bedrooms.value = "0";
+            if (bathrooms && propertyTypeValue === "land") bathrooms.value = "0";
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            var ddl = document.getElementById("<%= ddl_DanhMuc.ClientID %>");
+            var purpose = document.getElementById("<%= ddl_bds_purpose.ClientID %>");
+            var propertyType = document.getElementById("<%= ddl_bds_property_type.ClientID %>");
+            if (ddl) {
+                ddl.addEventListener("change", syncBdsPostingPanel);
+            }
+            if (purpose) {
+                purpose.addEventListener("change", syncBdsPostingPanel);
+            }
+            if (propertyType) {
+                propertyType.addEventListener("change", syncBdsPostingPanel);
+            }
+            syncBdsPostingPanel();
         });
     </script>
 </asp:Content>

@@ -91,8 +91,50 @@ public partial class home_taikhoan : System.Web.UI.Page
             || refPath.StartsWith("/admin/he-thong-san-pham/ban-san-pham.aspx", StringComparison.OrdinalIgnoreCase);
     }
 
-    private string ResolveChoThanhToanTarget(bool isShopModeWithLogin)
+    private bool IsGianHangFlowReferrer()
     {
+        if (Request == null || Request.UrlReferrer == null)
+            return false;
+
+        string refPath = (Request.UrlReferrer.AbsolutePath ?? "").Trim();
+        if (string.IsNullOrEmpty(refPath))
+            return false;
+
+        return refPath.StartsWith("/gianhang/", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private bool TryGetPendingGianHangContext(out string sellerAccount, out string orderId)
+    {
+        sellerAccount = string.Empty;
+        orderId = string.Empty;
+
+        string spaceCode;
+        if (!WalletPaymentSession_cl.TryGetPending(Session, GianHangCheckoutPortal_cl.LinkContextTtlMinutes, out spaceCode, out sellerAccount, out orderId))
+            return false;
+
+        return string.Equals(spaceCode, "gianhang", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string ResolveGianHangWaitingOrderId(dbDataContext db, string sellerAccount)
+    {
+        if (db == null)
+            return string.Empty;
+
+        string account = (sellerAccount ?? string.Empty).Trim().ToLowerInvariant();
+        if (string.IsNullOrEmpty(account))
+            return string.Empty;
+
+        GianHangOrderRuntime_cl.OrderRuntime runtime = GianHangOrderRuntime_cl.ResolveLatestWaitingExchange(db, account, false);
+        if (runtime == null)
+            return string.Empty;
+
+        return (runtime.OrderId ?? string.Empty).Trim();
+    }
+
+    private string ResolveChoThanhToanTarget(bool isShopModeWithLogin, bool forceGianHangFlow)
+    {
+        if (forceGianHangFlow)
+            return "/gianhang/cho-thanh-toan.aspx";
         return isShopModeWithLogin ? "/shop/cho-thanh-toan" : "/home/cho-thanh-toan.aspx";
     }
 
@@ -197,7 +239,19 @@ public partial class home_taikhoan : System.Web.UI.Page
             if (!isShopModeWithLogin && hasShopCredential)
                 isShopModeWithLogin = true;
 
+            string pendingSellerAccount;
+            string pendingOrderId;
+            bool hasPendingGianHangContext = TryGetPendingGianHangContext(out pendingSellerAccount, out pendingOrderId);
+            string gianHangSessionAccount = GianHangContext_cl.ResolveSessionTaiKhoan(Session);
+
             string tkB = ResolveCurrentLoginAccount(hasShopCredential);
+            if (string.IsNullOrEmpty(tkB) && hasPendingGianHangContext)
+            {
+                string gianHangAccount = (gianHangSessionAccount ?? string.Empty).Trim().ToLowerInvariant();
+                string pendingAccount = (pendingSellerAccount ?? string.Empty).Trim().ToLowerInvariant();
+                tkB = !string.IsNullOrEmpty(gianHangAccount) ? gianHangAccount : pendingAccount;
+            }
+
             string fallbackUrl = ResolveFallbackUrl(db, payer, loaiThe);
 
             // Thẻ gian hàng đối tác:
@@ -239,13 +293,37 @@ public partial class home_taikhoan : System.Web.UI.Page
 
             // 8) B phải có đơn "Chờ Trao đổi"
             string tkBLower = (tkB ?? "").Trim().ToLowerInvariant();
-            var qWait = db.DonHang_tbs.FirstOrDefault(p =>
-                (p.nguoiban ?? "").ToLower() == tkBLower &&
-                (
-                    p.exchange_status == DonHangStateMachine_cl.Exchange_ChoTraoDoi
-                    || (p.exchange_status == null && p.trangthai == DonHangStateMachine_cl.Exchange_ChoTraoDoi)
-                ));
-            if (qWait == null)
+            bool forceGianHangFlow = hasPendingGianHangContext
+                || IsGianHangFlowReferrer()
+                || string.Equals((Request.QueryString["space"] ?? "").Trim(), "gianhang", StringComparison.OrdinalIgnoreCase);
+
+            string waitingOrderId = string.Empty;
+            if (forceGianHangFlow)
+            {
+                waitingOrderId = (pendingOrderId ?? string.Empty).Trim();
+                if (string.IsNullOrEmpty(waitingOrderId))
+                    waitingOrderId = ResolveGianHangWaitingOrderId(db, tkBLower);
+            }
+
+            if (string.IsNullOrEmpty(waitingOrderId))
+            {
+                var qWait = db.DonHang_tbs
+                    .Where(p => (p.nguoiban ?? "").ToLower() == tkBLower)
+                    .OrderByDescending(p => p.id)
+                    .ToList()
+                    .FirstOrDefault(p =>
+                    {
+                        string exchangeStatus = DonHangStateMachine_cl.NormalizeExchangeStatus(p.exchange_status);
+                        if (exchangeStatus == DonHangStateMachine_cl.Exchange_ChoTraoDoi)
+                            return true;
+
+                        return string.IsNullOrWhiteSpace(p.exchange_status)
+                            && DonHangStateMachine_cl.NormalizeExchangeStatus(p.trangthai) == DonHangStateMachine_cl.Exchange_ChoTraoDoi;
+                    });
+                waitingOrderId = qWait == null ? string.Empty : qWait.id.ToString();
+            }
+
+            if (string.IsNullOrEmpty(waitingOrderId))
             {
                 Response.Redirect(fallbackUrl, true);
                 return;
@@ -259,10 +337,10 @@ public partial class home_taikhoan : System.Web.UI.Page
                 tenThe,
                 keyGuid,
                 trangThai,
-                qWait.id.ToString()
+                waitingOrderId
             );
 
-            Response.Redirect(ResolveChoThanhToanTarget(isShopModeWithLogin), true);
+            Response.Redirect(ResolveChoThanhToanTarget(isShopModeWithLogin, forceGianHangFlow), true);
             return;
         }
     }

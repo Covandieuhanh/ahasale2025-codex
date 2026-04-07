@@ -11,6 +11,13 @@ public partial class admin_phat_hanh_the : System.Web.UI.Page
     private const int CardTypeShopPartner = CardIssuance_cl.CardTypeShopPartner;
     private const int CardTypeDongHanhHeSinhThai = CardIssuance_cl.CardTypeDongHanhHeSinhThai;
     private const int CardTypeLaoDong = CardIssuance_cl.CardTypeLaoDong;
+    private const int CardHistoryPageSize = 20;
+
+    private sealed class PagerItem
+    {
+        public int PageNumber { get; set; }
+        public bool IsCurrent { get; set; }
+    }
 
     private string BuildListUrl()
     {
@@ -49,7 +56,7 @@ public partial class admin_phat_hanh_the : System.Web.UI.Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
-        AdminRolePolicy_cl.RequireSuperAdmin();
+        AdminAccessGuard_cl.RequireFeatureAccess("issue_cards", "/admin/default.aspx?mspace=home");
         if (RedirectWhenLegacyCardFlowDisabled())
             return;
 
@@ -74,8 +81,13 @@ public partial class admin_phat_hanh_the : System.Web.UI.Page
 
             if (!IsPostBack)
             {
-                AdminRolePolicy_cl.RequireSuperAdmin();
+                AdminAccessGuard_cl.RequireFeatureAccess("issue_cards", "/admin/default.aspx?mspace=home");
                 ViewState["title"] = "Phát hành thẻ";
+                ViewState["current_page_cards"] = 1;
+                ViewState["total_page_cards"] = 1;
+                ViewState["search_cards"] = "";
+                if (txt_search_cards != null)
+                    txt_search_cards.Text = "";
                 if (!isAddView)
                     show_main();
             }
@@ -158,7 +170,7 @@ public partial class admin_phat_hanh_the : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("issue_cards", "/admin/default.aspx?mspace=home");
             Response.Redirect(BuildAddUrl(), false);
             Context.ApplicationInstance.CompleteRequest();
         }
@@ -224,19 +236,200 @@ public partial class admin_phat_hanh_the : System.Web.UI.Page
     }
 
     // ================== MAIN LIST (LINQ) ==================
+    private static string NormalizeSearchText(string value)
+    {
+        return (value ?? "").Trim().ToLowerInvariant();
+    }
+
+    private static bool ContainsKeyword(string source, string keyword)
+    {
+        if (string.IsNullOrEmpty(keyword))
+            return true;
+        if (string.IsNullOrEmpty(source))
+            return false;
+        return source.IndexOf(keyword, StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
+    private void BindCardPager(int totalPage, int currentPage)
+    {
+        if (rpt_pager_cards == null)
+            return;
+
+        if (totalPage < 1) totalPage = 1;
+        if (currentPage < 1) currentPage = 1;
+        if (currentPage > totalPage) currentPage = totalPage;
+
+        var pages = Enumerable.Range(1, totalPage)
+            .Select(p => new PagerItem
+            {
+                PageNumber = p,
+                IsCurrent = (p == currentPage)
+            })
+            .ToList();
+
+        rpt_pager_cards.DataSource = pages;
+        rpt_pager_cards.DataBind();
+    }
+
     void show_main()
     {
         using (dbDataContext db = new dbDataContext())
         {
-            var list = db.The_PhatHanh_tbs
+            int page = 1;
+            int totalPage = 1;
+            int.TryParse((ViewState["current_page_cards"] ?? "1").ToString(), out page);
+            if (page < 1) page = 1;
+
+            string keywordRaw = ((ViewState["search_cards"] ?? "").ToString() ?? "").Trim();
+            string keyword = NormalizeSearchText(keywordRaw);
+            if (txt_search_cards != null && txt_search_cards.Text != keywordRaw)
+                txt_search_cards.Text = keywordRaw;
+
+            var raw = db.The_PhatHanh_tbs
                 .OrderByDescending(p => p.NgayPhatHanh)
                 .ToList();
 
-            lb_show.Text = list.Count + " thẻ";
-            Repeater1.DataSource = list;
+            var accountKeys = raw
+                .Select(p => (p.taikhoan ?? "").Trim().ToLowerInvariant())
+                .Where(p => p != "")
+                .Distinct()
+                .ToList();
+
+            var homeNames = db.taikhoan_tbs
+                .Where(tk => accountKeys.Contains(tk.taikhoan))
+                .Select(tk => new { tk.taikhoan, tk.hoten })
+                .ToDictionary(x => (x.taikhoan ?? "").Trim().ToLowerInvariant(), x => (x.hoten ?? "").Trim());
+
+            var mapped = raw.Select(p =>
+            {
+                string tk = (p.taikhoan ?? "").Trim().ToLowerInvariant();
+                string tenHome = "";
+                if (tk != "" && homeNames.ContainsKey(tk))
+                    tenHome = homeNames[tk];
+                string trangThai = (p.TrangThai == true) ? "hoạt động" : "bị khóa";
+                string searchBlob = string.Join(" | ", new[]
+                {
+                    (p.taikhoan ?? ""),
+                    tenHome,
+                    (p.TenThe ?? ""),
+                    (p.NguoiTao ?? ""),
+                    trangThai,
+                    (p.NgayPhatHanh == null ? "" : ((DateTime)p.NgayPhatHanh).ToString("dd/MM/yyyy HH:mm")),
+                    (p.NgayTao == null ? "" : ((DateTime)p.NgayTao).ToString("dd/MM/yyyy HH:mm")),
+                    (p.NgayCapNhatTrangThai == null ? "" : ((DateTime)p.NgayCapNhatTrangThai).ToString("dd/MM/yyyy HH:mm")),
+                    p.idGuide.ToString()
+                });
+
+                return new
+                {
+                    Item = p,
+                    TenTaiKhoanHome = tenHome,
+                    SearchBlob = NormalizeSearchText(searchBlob)
+                };
+            })
+            .Where(x => ContainsKeyword(x.SearchBlob, keyword))
+            .ToList();
+
+            int total = mapped.Count;
+            totalPage = (total <= 0) ? 1 : (int)Math.Ceiling((double)total / CardHistoryPageSize);
+            if (page > totalPage) page = totalPage;
+            if (page < 1) page = 1;
+
+            int start = (page - 1) * CardHistoryPageSize;
+            var pageData = mapped
+                .Skip(start)
+                .Take(CardHistoryPageSize)
+                .Select((x, idx) => new
+                {
+                    Stt = start + idx + 1,
+                    x.Item.idGuide,
+                    x.Item.taikhoan,
+                    x.TenTaiKhoanHome,
+                    x.Item.TenThe,
+                    x.Item.NgayPhatHanh,
+                    x.Item.TrangThai,
+                    x.Item.NgayTao,
+                    x.Item.NguoiTao,
+                    x.Item.NgayCapNhatTrangThai
+                })
+                .ToList();
+
+            ViewState["current_page_cards"] = page;
+            ViewState["total_page_cards"] = totalPage;
+
+            if (total > 0)
+            {
+                int from = start + 1;
+                int to = start + pageData.Count;
+                lb_show.Text = from + "-" + to + " trong số " + total.ToString("#,##0");
+            }
+            else
+            {
+                lb_show.Text = "0-0/0";
+            }
+
+            if (but_prev_cards != null) but_prev_cards.Enabled = page > 1;
+            if (but_next_cards != null) but_next_cards.Enabled = page < totalPage;
+            BindCardPager(totalPage, page);
+
+            Repeater1.DataSource = pageData;
             Repeater1.DataBind();
             up_main.Update();
         }
+    }
+
+    protected void but_search_cards_Click(object sender, EventArgs e)
+    {
+        string keyword = "";
+        if (txt_search_cards != null)
+            keyword = (txt_search_cards.Text ?? "").Trim();
+        ViewState["search_cards"] = keyword;
+        ViewState["current_page_cards"] = 1;
+        show_main();
+    }
+
+    protected void but_clear_search_cards_Click(object sender, EventArgs e)
+    {
+        ViewState["search_cards"] = "";
+        if (txt_search_cards != null)
+            txt_search_cards.Text = "";
+        ViewState["current_page_cards"] = 1;
+        show_main();
+    }
+
+    protected void but_prev_cards_Click(object sender, EventArgs e)
+    {
+        int page = 1;
+        int.TryParse((ViewState["current_page_cards"] ?? "1").ToString(), out page);
+        page--;
+        if (page < 1) page = 1;
+        ViewState["current_page_cards"] = page;
+        show_main();
+    }
+
+    protected void but_next_cards_Click(object sender, EventArgs e)
+    {
+        int page = 1;
+        int totalPage = 1;
+        int.TryParse((ViewState["current_page_cards"] ?? "1").ToString(), out page);
+        int.TryParse((ViewState["total_page_cards"] ?? "1").ToString(), out totalPage);
+        page++;
+        if (page > totalPage) page = totalPage;
+        if (page < 1) page = 1;
+        ViewState["current_page_cards"] = page;
+        show_main();
+    }
+
+    protected void rpt_pager_cards_ItemCommand(object source, RepeaterCommandEventArgs e)
+    {
+        if (!string.Equals(e.CommandName, "page", StringComparison.OrdinalIgnoreCase))
+            return;
+
+        int page = 1;
+        int.TryParse((e.CommandArgument ?? "1").ToString(), out page);
+        if (page < 1) page = 1;
+        ViewState["current_page_cards"] = page;
+        show_main();
     }
 
 
@@ -246,7 +439,7 @@ public partial class admin_phat_hanh_the : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("issue_cards", "/admin/default.aspx?mspace=home");
 
             string tk = (ddl_taikhoan.SelectedValue ?? "").Trim();
             int loai;

@@ -1,10 +1,14 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Web;
 
 public static class GianHangLedger_cl
 {
+    private const string BackfillSessionPrefix = "gianhang_ledger_backfill_";
     public const string TagRoot = "|GIANHANG|";
     public const string TagCreditSeller = "|GIANHANG|CREDIT_SELLER|";
+    public const string TagDebitSeller = "|GIANHANG|DEBIT_SELLER|";
     public const string TagWithdraw = "|GIANHANG|WITHDRAW|";
 
     public sealed class BalanceResult
@@ -12,6 +16,57 @@ public static class GianHangLedger_cl
         public decimal TieuDung { get; set; }
         public decimal UuDai { get; set; }
         public bool Updated { get; set; }
+    }
+
+    public sealed class HistoryItem
+    {
+        public long Id { get; set; }
+        public DateTime? CreatedAt { get; set; }
+        public decimal AmountA { get; set; }
+        public bool IsCredit { get; set; }
+        public string OrderId { get; set; }
+        public string PublicOrderId { get; set; }
+        public string BuyerAccount { get; set; }
+        public string Note { get; set; }
+        public int WalletType { get; set; }
+    }
+
+    public sealed class HistoryPage
+    {
+        public BalanceResult Balance { get; set; }
+        public int TotalCount { get; set; }
+        public List<HistoryItem> Items { get; set; }
+    }
+
+    public sealed class ReversalResult
+    {
+        public decimal TieuDung { get; set; }
+        public decimal UuDai { get; set; }
+        public bool Changed { get; set; }
+    }
+
+    public static bool EnsureSellerLedgerReady(dbDataContext db, string seller)
+    {
+        if (db == null)
+            return false;
+
+        GianHangSchema_cl.EnsureSchemaSafe(db);
+
+        string sellerKey = NormalizeAccount(seller);
+        if (sellerKey == string.Empty)
+            return false;
+        string sessionKey = BackfillSessionPrefix + sellerKey;
+        HttpContext context = HttpContext.Current;
+
+        if (context != null && context.Session != null && context.Session[sessionKey] != null)
+            return false;
+
+        bool changed = BackfillSellerCredits(db, sellerKey) > 0;
+
+        if (context != null && context.Session != null)
+            context.Session[sessionKey] = true;
+
+        return changed;
     }
 
     public static bool HasCreditForOrder(dbDataContext db, string seller, string orderId, int loaiVi)
@@ -24,14 +79,15 @@ public static class GianHangLedger_cl
         if (sellerKey == string.Empty || safeOrderId == string.Empty)
             return false;
 
-        return db.LichSu_DongA_tbs.Any(x =>
-            x.taikhoan == sellerKey
-            && x.id_donhang == safeOrderId
-            && x.CongTru == true
-            && x.LoaiHoSo_Vi == loaiVi);
+        GianHangSchema_cl.EnsureSchemaSafe(db);
+
+        return QueryBySeller(db, sellerKey).Any(x =>
+            x.id_donhang == safeOrderId
+            && x.cong_tru == true
+            && x.loai_vi == loaiVi);
     }
 
-    public static bool AddSellerCreditFromOrder(dbDataContext db, string seller, string orderId, decimal amountA, int loaiVi, string note)
+    public static bool AddSellerCreditFromOrder(dbDataContext db, string seller, string orderId, decimal amountA, int loaiVi, string note, string publicOrderId, string buyerAccount)
     {
         if (db == null || amountA <= 0m)
             return false;
@@ -41,24 +97,26 @@ public static class GianHangLedger_cl
         if (sellerKey == string.Empty || safeOrderId == string.Empty)
             return false;
 
+        GianHangSchema_cl.EnsureSchemaSafe(db);
+
         if (HasCreditForOrder(db, sellerKey, safeOrderId, loaiVi))
             return false;
 
-        LichSu_DongA_tb item = new LichSu_DongA_tb();
-        item.taikhoan = sellerKey;
-        item.dongA = amountA;
-        item.ngay = AhaTime_cl.Now;
-        item.CongTru = true;
-        item.id_donhang = safeOrderId;
-        item.LoaiHoSo_Vi = loaiVi;
-        item.ghichu = string.Format("{0} {1}", TagCreditSeller, NormalizeText(note));
-        db.LichSu_DongA_tbs.InsertOnSubmit(item);
+        GH_HoSoQuyen_tb item = CreateEntry(
+            sellerKey,
+            loaiVi,
+            amountA,
+            true,
+            safeOrderId,
+            NormalizeText(publicOrderId) == string.Empty ? safeOrderId : NormalizeText(publicOrderId),
+            NormalizeAccount(buyerAccount),
+            string.Format("{0} {1}", TagCreditSeller, NormalizeText(note)));
 
-        ApplyBalanceDelta(db, sellerKey, loaiVi, amountA);
+        db.GetTable<GH_HoSoQuyen_tb>().InsertOnSubmit(item);
         return true;
     }
 
-    public static void AddSellerDebit(dbDataContext db, string seller, decimal amountA, int loaiVi, string note, string orderId)
+    public static void AddSellerDebit(dbDataContext db, string seller, decimal amountA, int loaiVi, string note, string orderId, string publicOrderId, string buyerAccount)
     {
         if (db == null || amountA <= 0m)
             return;
@@ -67,17 +125,19 @@ public static class GianHangLedger_cl
         if (sellerKey == string.Empty)
             return;
 
-        LichSu_DongA_tb item = new LichSu_DongA_tb();
-        item.taikhoan = sellerKey;
-        item.dongA = amountA;
-        item.ngay = AhaTime_cl.Now;
-        item.CongTru = false;
-        item.id_donhang = NormalizeText(orderId);
-        item.LoaiHoSo_Vi = loaiVi;
-        item.ghichu = string.Format("{0} {1}", TagRoot, NormalizeText(note));
-        db.LichSu_DongA_tbs.InsertOnSubmit(item);
+        GianHangSchema_cl.EnsureSchemaSafe(db);
 
-        ApplyBalanceDelta(db, sellerKey, loaiVi, -amountA);
+        GH_HoSoQuyen_tb item = CreateEntry(
+            sellerKey,
+            loaiVi,
+            amountA,
+            false,
+            NormalizeText(orderId),
+            NormalizeText(publicOrderId),
+            NormalizeAccount(buyerAccount),
+            string.Format("{0} {1}", TagDebitSeller, NormalizeText(note)));
+
+        db.GetTable<GH_HoSoQuyen_tb>().InsertOnSubmit(item);
     }
 
     public static BalanceResult RecalculateBalances(dbDataContext db, string seller, bool updateDb)
@@ -90,41 +150,87 @@ public static class GianHangLedger_cl
         if (sellerKey == string.Empty)
             return result;
 
-        IQueryable<LichSu_DongA_tb> entries = QueryGianHangEntries(db, sellerKey);
+        GianHangSchema_cl.EnsureSchemaSafe(db);
 
-        decimal addTieuDung = entries.Where(x => x.LoaiHoSo_Vi == 1 && x.CongTru == true)
-            .Select(x => (decimal?)x.dongA).Sum() ?? 0m;
-        decimal subTieuDung = entries.Where(x => x.LoaiHoSo_Vi == 1 && x.CongTru == false)
-            .Select(x => (decimal?)x.dongA).Sum() ?? 0m;
-        decimal addUuDai = entries.Where(x => x.LoaiHoSo_Vi == 2 && x.CongTru == true)
-            .Select(x => (decimal?)x.dongA).Sum() ?? 0m;
-        decimal subUuDai = entries.Where(x => x.LoaiHoSo_Vi == 2 && x.CongTru == false)
-            .Select(x => (decimal?)x.dongA).Sum() ?? 0m;
+        IQueryable<GH_HoSoQuyen_tb> entries = QueryBySeller(db, sellerKey);
+
+        decimal addTieuDung = entries.Where(x => x.loai_vi == 1 && x.cong_tru == true)
+            .Select(x => (decimal?)x.so_quyen).Sum() ?? 0m;
+        decimal subTieuDung = entries.Where(x => x.loai_vi == 1 && x.cong_tru == false)
+            .Select(x => (decimal?)x.so_quyen).Sum() ?? 0m;
+        decimal addUuDai = entries.Where(x => x.loai_vi == 2 && x.cong_tru == true)
+            .Select(x => (decimal?)x.so_quyen).Sum() ?? 0m;
+        decimal subUuDai = entries.Where(x => x.loai_vi == 2 && x.cong_tru == false)
+            .Select(x => (decimal?)x.so_quyen).Sum() ?? 0m;
 
         result.TieuDung = addTieuDung - subTieuDung;
         result.UuDai = addUuDai - subUuDai;
+        result.Updated = false;
+        return result;
+    }
 
-        if (!updateDb)
+    public static HistoryPage LoadHistoryPage(dbDataContext db, string seller, int loaiVi, string keyword, int page, int pageSize)
+    {
+        HistoryPage result = new HistoryPage
+        {
+            Balance = new BalanceResult(),
+            Items = new List<HistoryItem>(),
+            TotalCount = 0
+        };
+
+        if (db == null)
             return result;
 
-        taikhoan_tb account = db.taikhoan_tbs.FirstOrDefault(x => x.taikhoan == sellerKey);
-        if (account == null)
+        string sellerKey = NormalizeAccount(seller);
+        if (sellerKey == string.Empty)
             return result;
 
-        bool changed = false;
-        if ((account.HoSo_TieuDung_ShopOnly ?? 0m) != result.TieuDung)
+        GianHangSchema_cl.EnsureSchemaSafe(db);
+
+        bool changed = EnsureSellerLedgerReady(db, sellerKey);
+        if (changed)
+            db.SubmitChanges();
+
+        result.Balance = RecalculateBalances(db, sellerKey, false);
+
+        if (pageSize <= 0)
+            pageSize = 30;
+        if (page <= 0)
+            page = 1;
+
+        string safeKeyword = NormalizeText(keyword);
+        IQueryable<GH_HoSoQuyen_tb> query = QueryBySeller(db, sellerKey).Where(x => x.loai_vi == loaiVi);
+
+        if (safeKeyword != string.Empty)
         {
-            account.HoSo_TieuDung_ShopOnly = result.TieuDung;
-            changed = true;
+            query = query.Where(x =>
+                (x.id_donhang != null && x.id_donhang.Contains(safeKeyword))
+                || (x.public_order_id != null && x.public_order_id.Contains(safeKeyword))
+                || (x.buyer_account != null && x.buyer_account.Contains(safeKeyword))
+                || (x.ghi_chu != null && x.ghi_chu.Contains(safeKeyword)));
         }
 
-        if ((account.HoSo_UuDai_ShopOnly ?? 0m) != result.UuDai)
-        {
-            account.HoSo_UuDai_ShopOnly = result.UuDai;
-            changed = true;
-        }
+        result.TotalCount = query.Count();
+        result.Items = query
+            .OrderByDescending(x => x.ngay_tao)
+            .ThenByDescending(x => x.id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToList()
+            .Select(x => new HistoryItem
+            {
+                Id = x.id,
+                CreatedAt = x.ngay_tao,
+                AmountA = x.so_quyen ?? 0m,
+                IsCredit = x.cong_tru ?? false,
+                OrderId = x.id_donhang,
+                PublicOrderId = x.public_order_id,
+                BuyerAccount = x.buyer_account,
+                Note = x.ghi_chu,
+                WalletType = x.loai_vi ?? 0
+            })
+            .ToList();
 
-        result.Updated = changed;
         return result;
     }
 
@@ -136,6 +242,8 @@ public static class GianHangLedger_cl
         string sellerKey = NormalizeAccount(seller);
         if (sellerKey == string.Empty)
             return 0;
+
+        GianHangSchema_cl.EnsureSchemaSafe(db);
 
         int added = 0;
         var invoices = GianHangInvoice_cl.LoadStorefrontInvoicesWithRuntime(db, sellerKey, 500, 5000);
@@ -167,34 +275,97 @@ public static class GianHangLedger_cl
             if (publicOrderId == string.Empty)
                 publicOrderId = orderId;
 
-            if (tieuDung > 0m)
+            if (tieuDung > 0m && !HasCreditForOrder(db, sellerKey, orderId, 1))
             {
-                bool ok = AddSellerCreditFromOrder(
-                    db,
+                db.GetTable<GH_HoSoQuyen_tb>().InsertOnSubmit(CreateEntry(
                     sellerKey,
-                    orderId,
-                    tieuDung,
                     1,
-                    string.Format("Ban don hang so {0} (Ho so tieu dung gian hang) [Backfill]", publicOrderId));
-                if (ok)
-                    added++;
+                    tieuDung,
+                    true,
+                    orderId,
+                    publicOrderId,
+                    buyerKey,
+                    string.Format("{0} Ban don hang so {1} (Ho so tieu dung gian hang) [Backfill]", TagCreditSeller, publicOrderId)));
+                added++;
             }
 
-            if (uuDai > 0m)
+            if (uuDai > 0m && !HasCreditForOrder(db, sellerKey, orderId, 2))
             {
-                bool ok = AddSellerCreditFromOrder(
-                    db,
+                db.GetTable<GH_HoSoQuyen_tb>().InsertOnSubmit(CreateEntry(
                     sellerKey,
-                    orderId,
-                    uuDai,
                     2,
-                    string.Format("Ban don hang so {0} (Ho so uu dai gian hang) [Backfill]", publicOrderId));
-                if (ok)
-                    added++;
+                    uuDai,
+                    true,
+                    orderId,
+                    publicOrderId,
+                    buyerKey,
+                    string.Format("{0} Ban don hang so {1} (Ho so uu dai gian hang) [Backfill]", TagCreditSeller, publicOrderId)));
+                added++;
             }
         }
 
         return added;
+    }
+
+    public static ReversalResult ReverseSellerCreditsForOrder(dbDataContext db, string seller, string orderId, string publicOrderId, string buyerAccount)
+    {
+        ReversalResult result = new ReversalResult();
+        if (db == null)
+            return result;
+
+        string sellerKey = NormalizeAccount(seller);
+        string safeOrderId = NormalizeText(orderId);
+        if (sellerKey == string.Empty || safeOrderId == string.Empty)
+            return result;
+
+        GianHangSchema_cl.EnsureSchemaSafe(db);
+
+        List<GH_HoSoQuyen_tb> items = QueryBySeller(db, sellerKey)
+            .Where(x => x.id_donhang == safeOrderId)
+            .ToList();
+
+        decimal creditTieuDung = items.Where(x => (x.loai_vi ?? 0) == 1 && x.cong_tru == true).Sum(x => x.so_quyen ?? 0m);
+        decimal debitTieuDung = items.Where(x => (x.loai_vi ?? 0) == 1 && x.cong_tru == false).Sum(x => x.so_quyen ?? 0m);
+        decimal creditUuDai = items.Where(x => (x.loai_vi ?? 0) == 2 && x.cong_tru == true).Sum(x => x.so_quyen ?? 0m);
+        decimal debitUuDai = items.Where(x => (x.loai_vi ?? 0) == 2 && x.cong_tru == false).Sum(x => x.so_quyen ?? 0m);
+
+        decimal needReverseTieuDung = creditTieuDung - debitTieuDung;
+        decimal needReverseUuDai = creditUuDai - debitUuDai;
+        string safePublicOrderId = NormalizeText(publicOrderId);
+        if (safePublicOrderId == string.Empty)
+            safePublicOrderId = safeOrderId;
+
+        if (needReverseTieuDung > 0m)
+        {
+            AddSellerDebit(
+                db,
+                sellerKey,
+                needReverseTieuDung,
+                1,
+                string.Format("Hoan tra ho so quyen tieu dung cho don {0} do huy giao dich", safePublicOrderId),
+                safeOrderId,
+                safePublicOrderId,
+                buyerAccount);
+            result.TieuDung = needReverseTieuDung;
+            result.Changed = true;
+        }
+
+        if (needReverseUuDai > 0m)
+        {
+            AddSellerDebit(
+                db,
+                sellerKey,
+                needReverseUuDai,
+                2,
+                string.Format("Hoan tra ho so quyen uu dai cho don {0} do huy giao dich", safePublicOrderId),
+                safeOrderId,
+                safePublicOrderId,
+                buyerAccount);
+            result.UuDai = needReverseUuDai;
+            result.Changed = true;
+        }
+
+        return result;
     }
 
     private static bool IsCreditableInvoice(GH_HoaDon_tb invoice)
@@ -224,27 +395,24 @@ public static class GianHangLedger_cl
         return invoice.id > 0 ? invoice.id.ToString() : string.Empty;
     }
 
-    private static IQueryable<LichSu_DongA_tb> QueryGianHangEntries(dbDataContext db, string sellerKey)
+    private static IQueryable<GH_HoSoQuyen_tb> QueryBySeller(dbDataContext db, string sellerKey)
     {
-        return db.LichSu_DongA_tbs.Where(x =>
-            x.taikhoan == sellerKey
-            && (
-                (x.ghichu != null && x.ghichu.Contains(TagRoot))
-                || (x.ghichu != null && x.ghichu.Contains(TagCreditSeller))
-                || (x.id_donhang != null && x.id_donhang != "" && x.ghichu != null && x.ghichu.Contains("gian hang"))
-            ));
+        return db.GetTable<GH_HoSoQuyen_tb>().Where(x => x.shop_taikhoan == sellerKey);
     }
 
-    private static void ApplyBalanceDelta(dbDataContext db, string sellerKey, int loaiVi, decimal delta)
+    private static GH_HoSoQuyen_tb CreateEntry(string sellerKey, int loaiVi, decimal amountA, bool isCredit, string orderId, string publicOrderId, string buyerAccount, string note)
     {
-        taikhoan_tb account = db.taikhoan_tbs.FirstOrDefault(x => x.taikhoan == sellerKey);
-        if (account == null)
-            return;
-
-        if (loaiVi == 1)
-            account.HoSo_TieuDung_ShopOnly = (account.HoSo_TieuDung_ShopOnly ?? 0m) + delta;
-        else if (loaiVi == 2)
-            account.HoSo_UuDai_ShopOnly = (account.HoSo_UuDai_ShopOnly ?? 0m) + delta;
+        GH_HoSoQuyen_tb item = new GH_HoSoQuyen_tb();
+        item.shop_taikhoan = sellerKey;
+        item.loai_vi = loaiVi;
+        item.so_quyen = amountA;
+        item.cong_tru = isCredit;
+        item.id_donhang = NormalizeText(orderId);
+        item.public_order_id = NormalizeText(publicOrderId);
+        item.buyer_account = NormalizeAccount(buyerAccount);
+        item.ghi_chu = NormalizeText(note);
+        item.ngay_tao = AhaTime_cl.Now;
+        return item;
     }
 
     private static string NormalizeAccount(string value)

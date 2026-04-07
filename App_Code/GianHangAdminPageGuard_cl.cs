@@ -132,7 +132,7 @@ public static class GianHangAdminPageGuard_cl
         {
         }
 
-        return new AccessInfo
+        AccessInfo info = new AccessInfo
         {
             User = ((ctx == null || ctx.Session == null ? "" : (ctx.Session["user"] ?? "") + "") ?? "").Trim(),
             OwnerAccountKey = ownerAccountKey,
@@ -141,6 +141,8 @@ public static class GianHangAdminPageGuard_cl
             NganhId = ((ctx == null || ctx.Session == null ? "" : (ctx.Session["nganh"] ?? "") + "") ?? "").Trim(),
             RoleLabel = GianHangAdminContext_cl.ResolveCurrentRoleLabel()
         };
+        WorkspaceContext_cl.SetCurrent(GianHangWorkspacePolicy_cl.BuildContext(info, page.Request));
+        return info;
     }
 
     private static void ExpireCookie(HttpResponse response, string cookieName)

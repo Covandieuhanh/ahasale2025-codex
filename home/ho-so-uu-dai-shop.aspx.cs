@@ -43,9 +43,8 @@ public partial class home_lich_su_quyen_uu_dai : System.Web.UI.Page
     {
         if (db == null || string.IsNullOrWhiteSpace(tk)) return;
 
-        bool changed = false;
         var result = ShopOnlyLedger_cl.RecalculateBalances(db, tk, true);
-        if (result.Updated) changed = true;
+        bool changed = result.Updated;
 
         string sessionKey = "shoponly_sync_" + tk;
         if (Session[sessionKey] == null)
@@ -59,9 +58,19 @@ public partial class home_lich_su_quyen_uu_dai : System.Web.UI.Page
             db.SubmitChanges();
     }
 
+    private bool IsRelevantShopOnlyEntry(string note)
+    {
+        string normalized = (note ?? string.Empty).ToLowerInvariant();
+        if (normalized.Contains(ShopOnlyLedger_cl.TagRoot.ToLowerInvariant())
+            || normalized.Contains(ShopOnlyLedger_cl.TagCreditSeller.ToLowerInvariant()))
+            return true;
+
+        return false;
+    }
+
     public void set_dulieu_macdinh()
     {
-        ViewState["current_page_lsgd_home"] = "1";
+        ViewState["current_page_lsgd_home"] = HomePager_cl.ResolvePage(Request).ToString();
     }
 
     #region main - phân trang - tìm kiếm
@@ -73,10 +82,6 @@ public partial class home_lich_su_quyen_uu_dai : System.Web.UI.Page
             var list_all = (from ob1 in db.LichSu_DongA_tbs.Where(p =>
                   p.taikhoan == ViewState["taikhoan"].ToString()
                   && p.LoaiHoSo_Vi == 2
-                  && (
-                      (p.ghichu != null && p.ghichu.Contains("|SHOPONLY|"))
-                      || (p.id_donhang != null && p.id_donhang != "")
-                  )
               )
                             join ob2 in db.taikhoan_tbs on ob1.taikhoan equals ob2.taikhoan into Group1
                             from ob2 in Group1.DefaultIfEmpty()
@@ -88,7 +93,9 @@ public partial class home_lich_su_quyen_uu_dai : System.Web.UI.Page
                                 ob1.CongTru,
                                 ob1.ghichu,
                                 ob1.id_donhang
-                            }).AsQueryable();
+                            }).AsEnumerable()
+                              .Where(p => IsRelevantShopOnlyEntry(p.ghichu))
+                              .AsQueryable();
 
 
 
@@ -116,11 +123,18 @@ public partial class home_lich_su_quyen_uu_dai : System.Web.UI.Page
             int show = 30; if (show <= 0) show = 30;
             int current_page = int.Parse(ViewState["current_page_lsgd_home"].ToString());
             int total_page = number_of_page_class.return_total_page(_Tong_Record, show);
+            if (total_page < 1) total_page = 1;
 
             if (current_page < 1) current_page = 1;
             else if (current_page > total_page) current_page = total_page;
 
             ViewState["total_page"] = total_page;
+
+            litPager.Text = HomePager_cl.RenderPager(Request, current_page, total_page);
+            but_xemtiep.Visible = false;
+            but_xemtiep1.Visible = false;
+            but_quaylai.Visible = false;
+            but_quaylai1.Visible = false;
 
             // buttons
             bool canNext = current_page < total_page;

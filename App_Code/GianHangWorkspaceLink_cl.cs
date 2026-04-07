@@ -167,6 +167,14 @@ public static class GianHangWorkspaceLink_cl
 
             ApplyProduct(context, legacy, product, stringHelper);
             context.Db.SubmitChanges();
+            TrySyncLegacyPostToHome(context.Db, legacy);
+            if (legacy.id_baiviet.HasValue
+                && legacy.id_baiviet.Value > 0
+                && (!product.id_baiviet.HasValue || product.id_baiviet.Value != legacy.id_baiviet.Value))
+            {
+                product.id_baiviet = legacy.id_baiviet.Value;
+                context.Db.SubmitChanges();
+            }
             SaveMapping(context.Db, context.OwnerAccountKey, SourceTypeProduct, sourceId, LegacyTypePost, legacy.id.ToString());
             context.ProductMap[sourceId] = new MirrorMapRow
             {
@@ -196,6 +204,7 @@ public static class GianHangWorkspaceLink_cl
             legacy.bin = true;
             legacy.hienthi = false;
             context.Db.SubmitChanges();
+            TrySyncLegacyPostToHome(context.Db, legacy);
         }
     }
 
@@ -438,7 +447,9 @@ public static class GianHangWorkspaceLink_cl
         legacy.phanloai = isService ? "ctdv" : "ctsp";
         legacy.id_nganh = context.NganhId ?? "";
         legacy.id_chinhanh = context.ChiNhanhId;
-        legacy.id_baiviet = product.id_baiviet;
+        // Preserve existing linkage once home post id was established.
+        if (product.id_baiviet.HasValue && product.id_baiviet.Value > 0)
+            legacy.id_baiviet = product.id_baiviet;
 
         if (isService)
         {
@@ -922,6 +933,21 @@ public static class GianHangWorkspaceLink_cl
     private static string NormalizePhone(string raw)
     {
         return AccountAuth_cl.NormalizePhone(raw) ?? "";
+    }
+
+    private static void TrySyncLegacyPostToHome(dbDataContext db, web_post_table legacy)
+    {
+        if (db == null || legacy == null)
+            return;
+
+        try
+        {
+            AhaShineHomeSync_cl.SyncPost(db, legacy);
+        }
+        catch (Exception ex)
+        {
+            Log_cl.Add_Log(ex.Message, "gianhang_workspace_home_sync", ex.StackTrace);
+        }
     }
 
     private static void EnsureSchemaSafe(dbDataContext db)

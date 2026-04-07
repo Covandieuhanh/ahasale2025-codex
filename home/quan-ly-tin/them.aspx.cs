@@ -63,6 +63,24 @@ public partial class home_quan_ly_bai_Them : System.Web.UI.Page
         ddl_loai_tin.SelectedValue = AccountVisibility_cl.PostTypeProduct;
     }
 
+    private void BindBatDongSanOptions()
+    {
+        if (ddl_bds_purpose.Items.Count == 0)
+        {
+            ddl_bds_purpose.Items.Add(new ListItem("Mua bán", "sale"));
+            ddl_bds_purpose.Items.Add(new ListItem("Cho thuê", "rent"));
+        }
+
+        if (ddl_bds_property_type.Items.Count == 0)
+        {
+            ddl_bds_property_type.Items.Add(new ListItem("Căn hộ", "apartment"));
+            ddl_bds_property_type.Items.Add(new ListItem("Nhà phố", "house"));
+            ddl_bds_property_type.Items.Add(new ListItem("Đất nền", "land"));
+            ddl_bds_property_type.Items.Add(new ListItem("Văn phòng", "office"));
+            ddl_bds_property_type.Items.Add(new ListItem("Mặt bằng", "business-premises"));
+        }
+    }
+
     private bool IsDuyetGianHangDoiTac()
     {
         string tk = (PortalRequest_cl.GetCurrentAccount() ?? "").Trim().ToLowerInvariant();
@@ -117,12 +135,37 @@ public partial class home_quan_ly_bai_Them : System.Web.UI.Page
             LoadDanhMuc();
             BindCompanyShopOptions(isCompanyShopPortal);
             BindLoaiTinOptions();
+            BindBatDongSanOptions();
+            ApplyIncomingDefaults();
         }
     }
 
     private void LoadDanhMuc()
     {
         dm_cl.Show_DanhMuc(2, 3, ddl_DanhMuc, false, "web", "135");
+        using (dbDataContext db = new dbDataContext())
+        {
+            hf_bds_category_ids.Value = BatDongSanMetadata_cl.GetRealEstateCategoryIdsCsv(db);
+        }
+    }
+
+    private void ApplyIncomingDefaults()
+    {
+        string category = (Request.QueryString["category"] ?? "").Trim().ToLowerInvariant();
+        string purpose = (Request.QueryString["purpose"] ?? "").Trim().ToLowerInvariant();
+
+        if (purpose == "rent" && ddl_bds_purpose.Items.FindByValue("rent") != null)
+            ddl_bds_purpose.SelectedValue = "rent";
+
+        if (category != "bat-dong-san")
+            return;
+
+        using (dbDataContext db = new dbDataContext())
+        {
+            string bdsCategoryId = BatDongSanMetadata_cl.FindRealEstateCategoryId(db);
+            if (bdsCategoryId != "" && ddl_DanhMuc.Items.FindByValue(bdsCategoryId) != null)
+                ddl_DanhMuc.SelectedValue = bdsCategoryId;
+        }
     }
 
     protected void but_submit_Click(object sender, EventArgs e)
@@ -250,6 +293,86 @@ public partial class home_quan_ly_bai_Them : System.Web.UI.Page
                 return;
             }
 
+            bool isBatDongSan = BatDongSanMetadata_cl.IsRealEstateCategory(db, idMenu);
+            string bdsPurpose = BatDongSanMetadata_cl.NormalizePurpose(ddl_bds_purpose.SelectedValue);
+            string bdsPropertyType = BatDongSanMetadata_cl.NormalizePropertyType(ddl_bds_property_type.SelectedValue);
+            decimal bdsAreaValue = BatDongSanMetadata_cl.ParseArea(txt_bds_area.Text);
+            int bdsBedrooms = Number_cl.Check_Int32((txt_bds_bedrooms.Text ?? "").Trim());
+            int bdsBathrooms = Number_cl.Check_Int32((txt_bds_bathrooms.Text ?? "").Trim());
+            string bdsLegal = (ddl_bds_legal.SelectedValue ?? "").Trim();
+            string bdsFurnishing = (ddl_bds_furnishing.SelectedValue ?? "").Trim();
+            string bdsProject = (txt_bds_project.Text ?? "").Trim();
+            decimal bdsDepositAmount = BatDongSanMetadata_cl.ParseDecimal(txt_bds_deposit.Text);
+            int bdsRentalTermMonths = Number_cl.Check_Int32((txt_bds_rental_term.Text ?? "").Trim());
+            int bdsFloorCount = Number_cl.Check_Int32((txt_bds_floor_count.Text ?? "").Trim());
+            decimal bdsLandWidth = BatDongSanMetadata_cl.ParseDecimal(txt_bds_land_width.Text);
+            decimal bdsLandLength = BatDongSanMetadata_cl.ParseDecimal(txt_bds_land_length.Text);
+            string bdsDirection = (ddl_bds_direction.SelectedValue ?? "").Trim();
+
+            if (isBatDongSan)
+            {
+                if (bdsAreaValue <= 0)
+                {
+                    Helper_Tabler_cl.ShowModal(this.Page, "Tin bất động sản bắt buộc phải có diện tích hợp lệ.", "Thông báo", true, "warning");
+                    return;
+                }
+
+                if (string.Equals(bdsPropertyType, "land", StringComparison.OrdinalIgnoreCase))
+                {
+                    bdsBedrooms = 0;
+                    bdsBathrooms = 0;
+                    bdsFurnishing = "Chưa cập nhật";
+                    if (bdsLandWidth <= 0 || bdsLandLength <= 0)
+                    {
+                        Helper_Tabler_cl.ShowModal(this.Page, "Đất nền cần nhập Ngang và Dài hợp lệ.", "Thông báo", true, "warning");
+                        return;
+                    }
+                }
+
+                if (string.Equals(bdsPropertyType, "office", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(bdsPropertyType, "business-premises", StringComparison.OrdinalIgnoreCase))
+                {
+                    bdsBedrooms = 0;
+                }
+
+                if (string.Equals(bdsPropertyType, "house", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (bdsFloorCount <= 0)
+                    {
+                        Helper_Tabler_cl.ShowModal(this.Page, "Nhà phố cần nhập số tầng.", "Thông báo", true, "warning");
+                        return;
+                    }
+                }
+                else
+                {
+                    bdsFloorCount = 0;
+                }
+
+                if (!string.Equals(bdsPropertyType, "land", StringComparison.OrdinalIgnoreCase))
+                {
+                    bdsLandWidth = 0;
+                    bdsLandLength = 0;
+                }
+
+                if (!string.Equals(bdsPurpose, "rent", StringComparison.OrdinalIgnoreCase))
+                {
+                    bdsDepositAmount = 0;
+                    bdsRentalTermMonths = 0;
+                }
+                else
+                {
+                    if (bdsDepositAmount <= 0 || bdsRentalTermMonths <= 0)
+                    {
+                        Helper_Tabler_cl.ShowModal(this.Page, "Tin cho thuê cần nhập tiền cọc và kỳ hạn thuê.", "Thông báo", true, "warning");
+                        return;
+                    }
+                }
+
+                selectedLoaiTin = AccountVisibility_cl.PostTypeProduct;
+                if (!isInternal)
+                    phanloaiBaiViet = AccountVisibility_cl.PostTypeProduct;
+            }
+
             BaiViet_tb ob = new BaiViet_tb();
             ob.name = name;
             ob.name_en = nameEn;
@@ -277,6 +400,33 @@ public partial class home_quan_ly_bai_Them : System.Web.UI.Page
             CompanyShop_cl.SetPlatformSharePercent(ob, appliedPlatformSharePercent);
             db.BaiViet_tbs.InsertOnSubmit(ob);
             db.SubmitChanges();
+
+            if (isBatDongSan)
+            {
+                BatDongSanMetadata_cl.Upsert(db, new BatDongSanMetadata_cl.PostMetadata
+                {
+                    PostId = ob.id,
+                    ListingPurpose = bdsPurpose,
+                    PropertyType = bdsPropertyType,
+                    AreaValue = bdsAreaValue,
+                    DepositAmount = bdsDepositAmount,
+                    RentalTermMonths = bdsRentalTermMonths,
+                        FloorCount = bdsFloorCount,
+                        LandWidth = bdsLandWidth,
+                        LandLength = bdsLandLength,
+                        HouseDirection = bdsDirection,
+                        LegalStatus = bdsLegal,
+                        FurnishingStatus = bdsFurnishing,
+                        BedroomCount = bdsBedrooms,
+                    BathroomCount = bdsBathrooms,
+                    ProjectName = bdsProject,
+                    ProvinceName = tinh,
+                    DistrictName = quan,
+                    WardName = phuong,
+                    AddressLine = fullAddress
+                });
+            }
+
             ShopToAhaShinePostSync_cl.SyncTradePost(db, ob);
 
             string dsAnhPhu = (hf_anhphu.Value ?? "").Trim();

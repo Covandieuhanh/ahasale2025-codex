@@ -5,6 +5,9 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
+        if (!AdminAccessGuard_cl.EnsurePageAccess(this))
+            return;
+
         var overrides = new Dictionary<string, string>();
         overrides["view"] = "sell";
         overrides["mode"] = "page";

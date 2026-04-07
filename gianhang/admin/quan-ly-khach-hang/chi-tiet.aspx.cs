@@ -9,6 +9,20 @@ using System.IO;
 public partial class taikhoan_add : System.Web.UI.Page
 {
     public string id, sdt, notifi, user, user_parent;
+    private bool HasAnyPermission(params string[] permissionKeys)
+    {
+        if (string.IsNullOrWhiteSpace(user) || permissionKeys == null)
+            return false;
+
+        for (int i = 0; i < permissionKeys.Length; i++)
+        {
+            string permissionKey = (permissionKeys[i] ?? "").Trim();
+            if (permissionKey != "" && bcorn_class.check_quyen(user, permissionKey) == "")
+                return true;
+        }
+
+        return false;
+    }
     public string personHubUrl = "/gianhang/admin/quan-ly-con-nguoi/Default.aspx";
     public string personHubStatusLabel = "Chưa liên kết";
     public string personHubStatusCss = "bg-gray fg-white";
@@ -52,41 +66,18 @@ public partial class taikhoan_add : System.Web.UI.Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
-        #region Check_Login
-        string _quyen = "q8_1";
-        string _cookie_user = "", _cookie_pass = "";
-        if (Request.Cookies["save_user_admin_aka_1"] != null) _cookie_user = Request.Cookies["save_user_admin_aka_1"].Value;
-        if (Request.Cookies["save_pass_admin_aka_1"] != null) _cookie_pass = Request.Cookies["save_pass_admin_aka_1"].Value;
-        if (Session["user"] == null) Session["user"] = ""; if (Session["notifi"] == null) Session["notifi"] = ""; if (Session["user"].ToString() == "") Response.Redirect("/gianhang/admin/f5_ss_admin.aspx");
-        string _url = Request.Url.GetLeftPart(UriPartial.Authority).ToLower();
-        string _kq = bcorn_class.check_login(Session["user"].ToString(), _cookie_user, _cookie_pass, _url, _quyen);
-        if (_kq != "")//nếu có thông báo --> có lỗi --> reset --> bắt login lại
+        GianHangAdminPageGuard_cl.AccessInfo access = GianHangAdminPageGuard_cl.EnsureAccess(this, db, "none");
+        if (access == null)
+            return;
+
+        user = (access.User ?? "").Trim();
+        user_parent = access.OwnerAccountKey;
+        if (!HasAnyPermission("q8_1"))
         {
-            if (_kq == "baotri") Response.Redirect("/baotri.aspx");
-            else
-            {
-                if (_kq == "1") Response.Redirect("/gianhang/admin/login.aspx");//hết Session, hết Cookie
-                else
-                {
-                    if (_kq == "2")//k đủ quyền
-                    {
-                        Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
-                        Response.Redirect("/gianhang/admin");
-                    }
-                    else
-                    {
-                        Session["notifi"] = _kq; Session["user"] = "";
-                        Response.Cookies["save_user_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Cookies["save_pass_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Cookies["save_url_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Redirect("/gianhang/admin/login.aspx");
-                    }
-                }
-            }
+            Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
+            Response.Redirect("/gianhang/admin");
+            return;
         }
-        #endregion
-        user = Session["user"].ToString();
-        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
         if (!string.IsNullOrWhiteSpace(Request.QueryString["id"]))
         {
             id = Request.QueryString["id"].ToString().Trim();
@@ -658,6 +649,12 @@ public partial class taikhoan_add : System.Web.UI.Page
 
     protected void button1_Click(object sender, EventArgs e)
     {
+        if (!HasAnyPermission("q8_3"))
+        {
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Bạn không đủ quyền để cập nhật khách hàng.", "false", "false", "OK", "alert", ""), true);
+            return;
+        }
+
         bspa_data_khachhang_table _ob = db.bspa_data_khachhang_tables.Where(p => p.id.ToString() == id && p.id_chinhanh == Session["chinhanh"].ToString()).First();
         string _sdt_old = _ob.sdt;
         string _tenkhachhang = str_cl.VietHoa_ChuCai_DauTien(txt_hoten.Text.Trim().ToLower());
@@ -747,7 +744,7 @@ public partial class taikhoan_add : System.Web.UI.Page
     }
     protected void Button2_Click(object sender, EventArgs e)
     {
-        if (bcorn_class.check_quyen(Session["user"].ToString(), "q8_3") == "2")
+        if (!HasAnyPermission("q8_3"))
         {
             ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", ""), true);
         }
@@ -767,7 +764,7 @@ public partial class taikhoan_add : System.Web.UI.Page
 
     protected void but_ngung_khachhang_Click(object sender, EventArgs e)
     {
-        if (bcorn_class.check_quyen(user, "q8_3") != "")
+        if (!HasAnyPermission("q8_3"))
         {
             ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Bạn không đủ quyền để đổi trạng thái khách hàng.", "4000", "warning"), true);
             return;
@@ -780,7 +777,7 @@ public partial class taikhoan_add : System.Web.UI.Page
 
     protected void but_molai_khachhang_Click(object sender, EventArgs e)
     {
-        if (bcorn_class.check_quyen(user, "q8_3") != "")
+        if (!HasAnyPermission("q8_3"))
         {
             ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Bạn không đủ quyền để đổi trạng thái khách hàng.", "4000", "warning"), true);
             return;
@@ -793,8 +790,7 @@ public partial class taikhoan_add : System.Web.UI.Page
 
     protected void but_xoa_ghichu_Click(object sender, ImageClickEventArgs e)
     {
-
-        if (bcorn_class.check_quyen(user, "q8_3") == "")
+        if (HasAnyPermission("q8_3"))
         {
             int _count = 0;
             for (int i = 0; i < list_id_split_ghichu.Count; i++)
@@ -830,6 +826,12 @@ public partial class taikhoan_add : System.Web.UI.Page
 
     protected void Button3_Click(object sender, EventArgs e)
     {
+        if (!HasAnyPermission("q8_3"))
+        {
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Bạn không đủ quyền để tạo ghi chú.", "false", "false", "OK", "alert", ""), true);
+            return;
+        }
+
         string _ghichu = txt_noidung_ghichu.Text.Trim();
         if (_ghichu == "")
             ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng nhập nội dung ghi chú.", "false", "false", "OK", "alert", ""), true);
@@ -837,7 +839,7 @@ public partial class taikhoan_add : System.Web.UI.Page
         {
             ghichu_khachhang_table _ob = new ghichu_khachhang_table();
             _ob.ngaytao = DateTime.Now;
-            _ob.nguoitao = Session["user"].ToString();
+            _ob.nguoitao = user;
             _ob.ghichu = _ghichu;
             _ob.sdt = sdt;
 
@@ -853,6 +855,12 @@ public partial class taikhoan_add : System.Web.UI.Page
 
     protected void Button4_Click(object sender, EventArgs e)
     {
+        if (!HasAnyPermission("q8_3"))
+        {
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Bạn không đủ quyền để tạo đơn thuốc.", "false", "false", "OK", "alert", ""), true);
+            return;
+        }
+
         string _ghichu = txt_ghichu_donthuoc.Text.Trim();
         if (_ghichu == "")
             ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Vui lòng nhập nội dung đơn thuốc.", "false", "false", "OK", "alert", ""), true);
@@ -860,7 +868,7 @@ public partial class taikhoan_add : System.Web.UI.Page
         {
             donthuoc_khachhang_table _ob = new donthuoc_khachhang_table();
             _ob.ngaytao = DateTime.Now;
-            _ob.nguoitao = Session["user"].ToString();
+            _ob.nguoitao = user;
             _ob.ghichu = _ghichu;
             _ob.sdt = sdt;
             _ob.noitaikham = txt_noitamkham.Text.Trim();
@@ -880,7 +888,7 @@ public partial class taikhoan_add : System.Web.UI.Page
 
     protected void but_xoa_donthuoc_Click(object sender, ImageClickEventArgs e)
     {
-        if (bcorn_class.check_quyen(user, "q8_3") == "")
+        if (HasAnyPermission("q8_3"))
         {
             int _count = 0;
             for (int i = 0; i < list_id_split_donthuoc.Count; i++)
@@ -919,10 +927,16 @@ public partial class taikhoan_add : System.Web.UI.Page
 
     protected void them_hinhanh_truocsau_Click(object sender, EventArgs e)
     {
+        if (!HasAnyPermission("q8_3"))
+        {
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Bạn không đủ quyền để thêm ảnh trước sau.", "false", "false", "OK", "alert", ""), true);
+            return;
+        }
+
         string _ghichu = txt_ghichu_hinhanh_truocsau.Text.Trim();
         hinhanh_truocsau_khachhang_table _ob = new hinhanh_truocsau_khachhang_table();
         _ob.ngaytao = DateTime.Now;
-        _ob.nguoitao = Session["user"].ToString();
+        _ob.nguoitao = user;
         _ob.ghichu = _ghichu;
         _ob.sdt = sdt;
         _ob.hinhanh_truoc = "";
@@ -957,7 +971,7 @@ public partial class taikhoan_add : System.Web.UI.Page
 
     protected void but_xoa_hinhanh_truocsau_Click(object sender, ImageClickEventArgs e)
     {
-        if (bcorn_class.check_quyen(user, "q8_3") == "")
+        if (HasAnyPermission("q8_3"))
         {
             int _count = 0;
             for (int i = 0; i < list_id_split_hinhanh.Count; i++)
@@ -997,7 +1011,7 @@ public partial class taikhoan_add : System.Web.UI.Page
     {
         string _id_thedv = "";
         int _count = 0;
-        if (bcorn_class.check_quyen(user, "q7_2") == "")
+        if (HasAnyPermission("q7_2"))
         {
             //đảm bảo rằng chỉ chọn 1 lần 1 thẻ dv
             for (int i = 0; i < list_id_split_thedv.Count; i++)
@@ -1081,7 +1095,7 @@ public partial class taikhoan_add : System.Web.UI.Page
                                     _ob_hd.ds_dichvu = 0; _ob_hd.ds_sanpham = 0; _ob_hd.sauck_dichvu = 0; _ob_hd.sauck_sanpham = 0;
                                     _ob_hd.tongtien_ck_hoadon = 0;
                                     _ob_hd.km1_ghichu = "";
-                                    _ob_hd.nguoitao = Session["user"].ToString();
+                                    _ob_hd.nguoitao = user;
                                     _ob_hd.nguongoc = "App";
                                     if (co_ngu_canh_datlich)
                                         _ob_hd.ghichu = datlich_lienket_class.dam_bao_ghi_chu_datlich(_ob_hd.ghichu, id_datlich_lienket, "Sử dụng thẻ từ", ten_dichvu_datlich);
@@ -1138,7 +1152,7 @@ public partial class taikhoan_add : System.Web.UI.Page
 
                                     _ob.kyhieu = "dichvu";
                                     _ob.user_parent = user_parent;
-                                    _ob.nguoitao = Session["user"].ToString();
+                                    _ob.nguoitao = user;
                                     _ob.danhgia_nhanvien_lamdichvu = txt_danhgia_dichvu_lamdv.Text.Trim();
                                     _ob.danhgia_5sao_dv = Request.Form["danhgia_5sao_nhanvien_dv_lamdv"];
 

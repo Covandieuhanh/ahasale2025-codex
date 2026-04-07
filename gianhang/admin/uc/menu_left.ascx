@@ -10,74 +10,16 @@
         </div>
     </div>
 
-    <%-- <div class="suggest-box">
-        <input id="search" list="suggestions" type="text" data-role="input" data-clear-button="true" data-search-button="false" placeholder="Tìm nhanh..." autocomplete="off" onkeypress="if (event.keyCode==13) return false;">
-        <datalist id="suggestions">
-            <!-- Các suggestion sẽ được thêm từ JavaScript -->
-        </datalist>
+    <asp:PlaceHolder ID="ph_space_access_summary" runat="server" Visible="false">
+        <div class="admin-nav-space-summary">
+            <div class="admin-nav-space-summary-title">Đây là lối tắt truy cập các không gian tại Aha Sale</div>
+            <div class="admin-nav-space-summary-list">
+                <asp:Literal ID="lit_space_access_summary" runat="server" />
+            </div>
+        </div>
+    </asp:PlaceHolder>
 
-        <script>
-            // Bao gồm đoạn mã trong hàm tự chạyq
-            (function () {
-                var suggestionsArray = [
-                    { label: "Quản lý menu", link: "/gianhang/admin/quan-ly-menu/default.aspx" },
-                    { label: "Quản lý bài viết", link: "/gianhang/admin/quan-ly-bai-viet/default.aspx" },
-                    // Các suggestion khác tương ứng
-                ];
-
-                var searchInput = document.getElementById("search");
-
-                // Sự kiện khi người dùng nhập
-                searchInput.addEventListener("input", function () {
-                    var keyword = searchInput.value.toLowerCase();
-                    updateSuggestions(keyword);
-                });
-
-                // Sự kiện khi người dùng chọn một suggestion
-                searchInput.addEventListener("change", function () {
-                    var selectedValue = searchInput.value.toLowerCase();
-                    navigateToLink(selectedValue);
-                });
-
-                // Hàm cập nhật danh sách gợi ý
-                function updateSuggestions(keyword) {
-                    var datalist = document.getElementById("suggestions");
-                    // Xóa các option hiện tại
-                    datalist.innerHTML = "";
-
-                    // Lặp qua mảng và thêm các suggestion thỏa mãn từ khóa
-                    suggestionsArray.forEach(function (suggestion) {
-                        var lowerSuggestion = suggestion.label.toLowerCase();
-                        if (lowerSuggestion.includes(keyword)) {
-                            var option = document.createElement("option");
-                            option.value = suggestion.label;
-                            datalist.appendChild(option);
-                        }
-                    });
-                }
-
-                // Hàm điều hướng đến link tương ứng
-                function navigateToLink(selectedValue) {
-                    // Tìm suggestion có giá trị trùng khớp
-                    var selectedSuggestion = suggestionsArray.find(function (suggestion) {
-                        return suggestion.label.toLowerCase() === selectedValue;
-                    });
-
-                    // Nếu tìm thấy suggestion, điều hướng đến link
-                    if (selectedSuggestion) {
-                        window.location.href = selectedSuggestion.link;
-                    }
-                }
-            })();
-        </script>
-
-        <button class="holder">
-            <span class="mif-search fg-white"></span>
-        </button>
-    </div>--%>
-
-
-    <ul class="navview-menu" id="side-menu">
+    <ul class="navview-menu" id="side-menu" style="display: none;">
         <% if (ShowLeftGroupAdmin()) { %>
         <li class="item-header">QUẢN LÝ ADMIN</li>
         <% if (ShowAdminDashboardTab()) { %>

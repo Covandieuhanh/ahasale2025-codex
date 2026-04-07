@@ -85,7 +85,7 @@ public static class GianHangLegacyOrder_cl
         return QueryBySeller(db, sellerAccount)
             .Where(p =>
                 ((p.exchange_status ?? string.Empty).Trim() == DonHangStateMachine_cl.Exchange_ChoTraoDoi)
-                || (string.IsNullOrWhiteSpace(p.exchange_status)
+                || (((p.exchange_status ?? string.Empty).Trim() == string.Empty)
                     && (p.trangthai ?? string.Empty).Trim() == DonHangStateMachine_cl.Exchange_ChoTraoDoi))
             .OrderByDescending(p => p.id)
             .FirstOrDefault();
@@ -97,7 +97,7 @@ public static class GianHangLegacyOrder_cl
             .Where(p =>
                 p.id != excludedOrderId
                 && (((p.exchange_status ?? string.Empty).Trim() == DonHangStateMachine_cl.Exchange_ChoTraoDoi)
-                    || (string.IsNullOrWhiteSpace(p.exchange_status)
+                    || (((p.exchange_status ?? string.Empty).Trim() == string.Empty)
                         && (p.trangthai ?? string.Empty).Trim() == DonHangStateMachine_cl.Exchange_ChoTraoDoi)))
             .OrderByDescending(p => p.id)
             .FirstOrDefault();

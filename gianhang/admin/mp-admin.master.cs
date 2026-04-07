@@ -9,6 +9,9 @@ public partial class admin_MasterPageAdmin : System.Web.UI.MasterPage
 {
     protected void Page_Load(object sender, EventArgs e)
     {
+        if (!GianHangSystemAdminGuard_cl.EnsurePageAccess(this.Page))
+            return;
+
         if (!IsPostBack)
         {
             try

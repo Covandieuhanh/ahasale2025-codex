@@ -6,11 +6,16 @@
     Inherits="home_danh_gia_tu_toi" %>
 
 <asp:Content ID="Content2" ContentPlaceHolderID="main" runat="server">
+    <style>
+        .page-shell-narrow {
+            max-width: 992px;
+        }
+    </style>
 
     <asp:UpdatePanel ID="upMain" runat="server" UpdateMode="Conditional">
         <ContentTemplate>
 
-            <div class="container py-4" style="max-width: 992px">
+            <div class="container page-shell-narrow py-4">
 
                 <h3 class="mb-4 text-primary">Đánh giá từ tôi</h3>
 

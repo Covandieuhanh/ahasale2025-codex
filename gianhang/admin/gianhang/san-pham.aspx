@@ -41,7 +41,7 @@
         .gh-catalog-link{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:0 12px;border-radius:12px;border:1px solid #dbe2ea;background:#fff;color:#16331d!important;font-size:12px;font-weight:800;text-decoration:none!important}
         .gh-catalog-link--primary{border-color:#cfe0ff;background:#eef5ff}
         .gh-catalog-empty{padding:22px 12px;color:#6b7280;text-align:center}
-        @media (max-width:991px){.gh-catalog-title{font-size:26px}.gh-catalog-filters{grid-template-columns:1fr}}
+        @media (max-width:767px){.gh-catalog-title{font-size:26px}.gh-catalog-filters{grid-template-columns:1fr}}
     </style>
 </asp:Content>
 

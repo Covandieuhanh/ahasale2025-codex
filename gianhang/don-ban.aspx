@@ -1,4 +1,4 @@
-<%@ Page Title="Đơn bán" Language="C#" MasterPageFile="~/MasterPage/Tabler/TablerHome.master" AutoEventWireup="true" CodeFile="don-ban.aspx.cs" Inherits="gianhang_don_ban" %>
+<%@ Page Title="Đơn bán" Language="C#" MasterPageFile="~/MasterPage/Tabler/TablerGianHang.master" AutoEventWireup="true" CodeFile="don-ban.aspx.cs" Inherits="gianhang_don_ban" %>
 
 <asp:Content ID="ContentHeadTruoc" ContentPlaceHolderID="head_truoc" runat="Server">
 </asp:Content>
@@ -240,7 +240,7 @@
             .pos-create-cart td:nth-child(2) .fw-semibold{ word-break:break-word; }
             .pos-create-search .img-60,.pos-create-cart .img-60{ width:52px; height:52px; }
         }
-        @media (max-width: 991.98px){
+        @media (max-width: 767.98px){
             .pos-shell-title{ font-size:24px; }
             .pos-create-surface{ padding:12px; border-radius:14px; }
         }
@@ -485,7 +485,7 @@
                                         </div>
                                         <div class="pos-paybar-actions">
                                             <a id="lnk_back_bottom" runat="server" class="pos-link-cancel">Quay lại</a>
-                                            <asp:Button ID="but_taodon" runat="server" Text="TẠO ĐƠN" CssClass="btn btn-primary" OnClick="but_taodon_Click" />
+                                            <a id="lnk_taodon" runat="server" class="btn btn-primary">TẠO ĐƠN</a>
                                         </div>
                                     </div>
                                 </div>

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 628" role="img" aria-label="binh-dinh region cover">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="hsl(90,56%,26%)"/>
+      <stop offset="58%" stop-color="hsl(126,60%,22%)"/>
+      <stop offset="100%" stop-color="hsl(174,62%,18%)"/>
+    </linearGradient>
+    <linearGradient id="overlay" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0%" stop-color="rgba(8,20,38,.78)"/>
+      <stop offset="100%" stop-color="rgba(8,20,38,.14)"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="628" fill="url(#bg)"/>
+  <circle cx="1020" cy="122" r="92" fill="rgba(245,176,65,.58)"/>
+  <path d="M0,448 C180,380 360,486 560,438 C768,390 956,428 1200,352 L1200,628 L0,628 Z" fill="rgba(255,255,255,.12)"/>
+  <path d="M0,498 C220,436 430,542 640,490 C852,438 1030,472 1200,430 L1200,628 L0,628 Z" fill="rgba(6,16,30,.45)"/>
+  <rect x="120" y="300" width="88" height="196" rx="8" fill="rgba(255,255,255,.10)"/>
+  <polygon points="108,300 220,300 270,496 58,496" fill="rgba(255,255,255,.10)"/>
+  <rect x="430" y="258" width="70" height="238" rx="8" fill="rgba(255,255,255,.12)"/>
+  <polygon points="408,258 522,258 586,496 344,496" fill="rgba(255,255,255,.12)"/>
+  <rect x="790" y="238" width="98" height="258" rx="8" fill="rgba(255,255,255,.11)"/>
+  <polygon points="768,238 910,238 978,496 694,496" fill="rgba(255,255,255,.11)"/>
+  <rect width="1200" height="628" fill="url(#overlay)"/>
+</svg>

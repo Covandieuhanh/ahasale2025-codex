@@ -23,15 +23,10 @@ public partial class admin_duyet_yeu_cau_len_cap : System.Web.UI.Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
+        AdminAccessGuard_cl.RequireFeatureAccess("home_point_approval", "/admin/default.aspx?mspace=home");
+
         if (!IsPostBack)
         {
-            string allApprovalPermission = string.Join("|", new[]
-            {
-                PermissionProfile_cl.HoSoUuDai,
-                PermissionProfile_cl.HoSoLaoDong,
-                PermissionProfile_cl.HoSoGanKet
-            });
-            check_login_cl.check_login_admin(allApprovalPermission, allApprovalPermission);
             txt_timkiem.Text = "";
             ddl_trangthai.SelectedValue = "";
             LoadDanhSach();

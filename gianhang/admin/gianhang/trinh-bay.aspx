@@ -28,7 +28,7 @@
         .gh-present-link span { display:block; margin-top:3px; color:#6b7280; font-size:13px; line-height:1.5; }
         .gh-present-link em { font-style:normal; font-weight:900; color:#7c3aed; }
         .gh-present-note { margin-top:16px; padding:14px 16px; border-radius:16px; background:#faf5ff; border:1px solid #e9d5ff; color:#6b21a8; font-size:14px; line-height:1.6; }
-        @media (max-width:991px) { .gh-present-title{font-size:26px;} }
+        @media (max-width:767px) { .gh-present-title{font-size:26px;} }
     </style>
 </asp:Content>
 

@@ -191,13 +191,7 @@
 
     <asp:UpdateProgress ID="up_prog" runat="server" AssociatedUpdatePanelID="up_main">
         <ProgressTemplate>
-            <div class="bg-dark fixed-top h-100 w-100" style="opacity: 0.8; z-index: 99999!important">
-                <div style="padding-top: 45vh;">
-                    <div class="mx-auto color-style activity-atom" data-role="activity" data-type="atom" data-style="color" data-role-activity="true">
-                        <span class="electron"></span><span class="electron"></span><span class="electron"></span>
-                    </div>
-                </div>
-            </div>
+            <div class="admin-inline-progress" role="status" aria-live="polite"><span class="admin-inline-progress-spinner"></span><span class="admin-inline-progress-text">Đang xử lý...</span></div>
         </ProgressTemplate>
     </asp:UpdateProgress>
 </asp:Content>

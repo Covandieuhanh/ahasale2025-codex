@@ -58,7 +58,7 @@ public partial class gianhang_admin_gianhang_hoa_don_dien_tu : System.Web.UI.Pag
         HubUrl = GianHangRoutes_cl.BuildAdminWorkspaceHubUrl();
         OrdersUrl = GianHangRoutes_cl.BuildAdminWorkspaceOrdersUrl();
         BuyerFlowUrl = GianHangRoutes_cl.BuildAdminWorkspaceBuyerFlowUrl();
-        LegacyInvoiceUrl = "/gianhang/admin/quan-ly-hoa-don/Default.aspx?workspace=gianhang";
+        LegacyInvoiceUrl = GianHangRoutes_cl.BuildAdminLegacyInvoiceListUrl();
 
         if (!IsPostBack)
             txt_search.Text = (Request.QueryString["keyword"] ?? string.Empty).Trim();
@@ -133,7 +133,7 @@ public partial class gianhang_admin_gianhang_hoa_don_dien_tu : System.Web.UI.Pag
                 StatusCss = ResolveStatusCss(invoice),
                 TotalText = GianHangReport_cl.FormatCurrency(GianHangInvoice_cl.ResolveTotalAmount(invoice)) + " đ",
                 HasLegacyMirror = legacyId > 0,
-                LegacyUrl = legacyId > 0 ? "/gianhang/admin/quan-ly-hoa-don/chi-tiet.aspx?id=" + legacyId.ToString() : string.Empty,
+                LegacyUrl = legacyId > 0 ? GianHangRoutes_cl.BuildAdminLegacyInvoiceDetailUrl(legacyId) : string.Empty,
                 PublicUrl = GianHangRoutes_cl.BuildElectronicInvoiceUrl(previewKey),
                 PreviewUrl = GianHangRoutes_cl.BuildAdminWorkspaceElectronicInvoiceUrl() + "?id=" + Server.UrlEncode(previewKey) + (keyword == string.Empty ? string.Empty : "&keyword=" + Server.UrlEncode(keyword)),
                 PreviewKey = previewKey
@@ -177,7 +177,7 @@ public partial class gianhang_admin_gianhang_hoa_don_dien_tu : System.Web.UI.Pag
         PreviewPublicUrl = GianHangRoutes_cl.BuildElectronicInvoiceUrl(selectedKey);
 
         long previewLegacyId = GianHangWorkspaceLink_cl.ResolveLegacyInvoiceId(db, ownerAccountKey, nativeInvoice.id);
-        PreviewLegacyUrl = previewLegacyId > 0 ? "/gianhang/admin/quan-ly-hoa-don/chi-tiet.aspx?id=" + previewLegacyId.ToString() : string.Empty;
+        PreviewLegacyUrl = previewLegacyId > 0 ? GianHangRoutes_cl.BuildAdminLegacyInvoiceDetailUrl(previewLegacyId) : string.Empty;
         ph_preview.Visible = true;
         ph_preview_legacy.Visible = previewLegacyId > 0;
         ph_no_preview.Visible = false;

@@ -14,6 +14,9 @@ public partial class gianhang_person_hub_default : System.Web.UI.Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
+        if (!GianHangSystemAdminGuard_cl.EnsurePageAccess(this))
+            return;
+
         if (!AdvancedAdminAccessGate_cl.EnsurePageAccess(this))
             return;
 

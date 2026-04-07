@@ -11,14 +11,35 @@ public partial class admin_Default2 : System.Web.UI.Page
     dbDataContext db = new dbDataContext();
     random_class rd_cl = new random_class();
     public string notifi, meta, user, email;
+    public string LegacyLoginUrl { get; private set; }
+
+    private bool TryBootstrapFromHomeWorkspace()
+    {
+        string homeAccount;
+        string deniedMessage;
+        if (!GianHangAdminBridge_cl.EnsureLegacyAdminSessionFromCurrentHome(db, out homeAccount, out deniedMessage))
+            return false;
+
+        Response.Redirect(GianHangAdminBridge_cl.ResolvePreferredAdminRedirectUrl(HttpContext.Current, "", "/gianhang/admin"), false);
+        HttpContext current = HttpContext.Current;
+        if (current != null && current.ApplicationInstance != null)
+            current.ApplicationInstance.CompleteRequest();
+        return true;
+    }
+
     protected void Page_Load(object sender, EventArgs e)
     {
-        if (Session["user"].ToString() != "")
+        LegacyLoginUrl = GianHangAdminBridge_cl.BuildLegacyAdminLoginUrl(HttpContext.Current, "");
+
+        if (Session["user"] == null) Session["user"] = "";
+        if (Session["notifi"] == null) Session["notifi"] = "";
+
+        if ((Session["user"] + "").Trim() == "" && TryBootstrapFromHomeWorkspace())
+            return;
+
+        if ((Session["user"] + "").Trim() != "")
         {
-            if (Request.Cookies["save_url_admin_aka_1"] != null)
-                Response.Redirect(Request.Cookies["save_url_admin_aka_1"].Value);
-            else
-                Response.Redirect("/gianhang/admin");
+            Response.Redirect(GianHangAdminBridge_cl.ResolvePreferredAdminRedirectUrl(HttpContext.Current, "", "/gianhang/admin"));
         }
 
         if (!IsPostBack)

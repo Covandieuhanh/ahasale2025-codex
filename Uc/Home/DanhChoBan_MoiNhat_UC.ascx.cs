@@ -13,8 +13,27 @@ using System.Web.UI.WebControls; // ✅ BẮT BUỘC – FIX lỗi ListItem
 public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
 {
     private static readonly string_class SearchStringHelper = new string_class();
+    private const int SearchLookupCacheSeconds = 600;
+    private const int GuestLatestFeedCacheSeconds = 120;
+    private const int DefaultPageSize = 24;
+    private const int MaxPageSize = 60;
+    private const int HomeFeedLinkedBdsStride = 5;
+    private const int UnifiedSearchBdsStride = 4;
     // ===== QUY ƯỚC: 1 A = 1000 VNĐ =====
     private const decimal VND_PER_A = 1000m;
+
+    private sealed class SearchLookupItem
+    {
+        public string Value { get; set; }
+        public string Text { get; set; }
+    }
+
+    private sealed class GuestLatestFeedCachePayload
+    {
+        public List<TinItem> Items { get; set; }
+        public int TotalCount { get; set; }
+        public Dictionary<string, string> LocationMap { get; set; }
+    }
 
     // ====== PUBLIC PROPS ======
     /// <summary>
@@ -44,6 +63,18 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
     {
         get { return (ViewState["uc_title"] ?? "Mới nhất").ToString(); }
         set { ViewState["uc_title"] = string.IsNullOrWhiteSpace(value) ? "Mới nhất" : value.Trim(); }
+    }
+
+    public int ResultCount
+    {
+        get { return ViewState["uc_result_count"] == null ? 0 : Convert.ToInt32(ViewState["uc_result_count"]); }
+        private set { ViewState["uc_result_count"] = value; }
+    }
+
+    public string SearchSummary
+    {
+        get { return (ViewState["uc_search_summary"] ?? "").ToString(); }
+        private set { ViewState["uc_search_summary"] = value ?? ""; }
     }
 
     /// <summary>Bật/tắt kebab</summary>
@@ -90,77 +121,76 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
         ddl_Category.Items.Clear();
         ddl_Category.Items.Add(new ListItem("Danh mục", ""));
 
-        SqlTransientGuard_cl.Execute(() =>
-        {
-            using (dbDataContext db = new dbDataContext())
+        List<SearchLookupItem> children = Helper_cl.RuntimeCacheGetOrAdd<List<SearchLookupItem>>(
+            "home:search:category_children:v2",
+            SearchLookupCacheSeconds,
+            () =>
             {
-                // 1) tìm root "Danh mục" (level 1) theo kyhieu + bin
-                var root = db.DanhMuc_tbs.FirstOrDefault(p =>
-                    p.id_level == 1 &&
-                    p.bin == false &&
-                    p.kyhieu_danhmuc == "web" &&
-                    (
-                        (p.name != null && p.name.Trim().ToLower() == "danh mục") ||
-                        (p.name_en != null && (p.name_en.Trim().ToLower() == "danh-muc" || p.name_en.Trim().ToLower() == "danhmuc"))
-                    )
-                );
-
-                IQueryable<DanhMuc_tb> query;
-                if (root != null)
+                return SqlTransientGuard_cl.Execute(() =>
                 {
-                    // 2) chỉ lấy con trực tiếp của root Danh mục
-                    query = db.DanhMuc_tbs
-                        .Where(p =>
-                            p.id_parent == root.id.ToString() &&
+                    using (dbDataContext db = new dbDataContext())
+                    {
+                        var root = db.DanhMuc_tbs.FirstOrDefault(p =>
+                            p.id_level == 1 &&
                             p.bin == false &&
-                            p.kyhieu_danhmuc == "web");
-                }
-                else
-                {
-                    // Fallback: nếu chưa có root Danh mục thì lấy các mục level 2.
-                    query = db.DanhMuc_tbs
-                        .Where(p =>
-                            p.id_level == 2 &&
-                            p.bin == false &&
-                            p.kyhieu_danhmuc == "web");
-                }
+                            p.kyhieu_danhmuc == "web" &&
+                            (
+                                (p.name != null && p.name.Trim().ToLower() == "danh mục") ||
+                                (p.name_en != null && (p.name_en.Trim().ToLower() == "danh-muc" || p.name_en.Trim().ToLower() == "danhmuc"))
+                            )
+                        );
 
-                var children = query
-                    .OrderBy(p => p.rank)
-                    .ToList();
+                        IQueryable<DanhMuc_tb> query = root != null
+                            ? db.DanhMuc_tbs.Where(p => p.id_parent == root.id.ToString() && p.bin == false && p.kyhieu_danhmuc == "web")
+                            : db.DanhMuc_tbs.Where(p => p.id_level == 2 && p.bin == false && p.kyhieu_danhmuc == "web");
 
-                foreach (var dm in children)
-                {
-                    ddl_Category.Items.Add(new ListItem(dm.name, dm.id.ToString()));
-                }
-            }
-        });
+                        return query
+                            .OrderBy(p => p.rank)
+                            .Select(p => new SearchLookupItem
+                            {
+                                Value = p.id.ToString(),
+                                Text = p.name
+                            })
+                            .ToList();
+                    }
+                });
+            });
+
+        foreach (SearchLookupItem dm in children ?? new List<SearchLookupItem>())
+            ddl_Category.Items.Add(new ListItem(dm.Text, dm.Value));
     }
 
     private void LoadThanhPho_Search()
     {
         if (ddl_Location == null) return;
 
-        SqlTransientGuard_cl.Execute(() =>
-        {
-            using (dbDataContext db = new dbDataContext())
+        List<SearchLookupItem> list = Helper_cl.RuntimeCacheGetOrAdd<List<SearchLookupItem>>(
+            "home:search:locations:v2",
+            SearchLookupCacheSeconds,
+            () =>
             {
-                var list = db.ThanhPhos
-                    .ToList()
-                    .Select(tp => new
+                return SqlTransientGuard_cl.Execute(() =>
+                {
+                    using (dbDataContext db = new dbDataContext())
                     {
-                        tp.id,
-                        Ten = TinhThanhDisplay_cl.Format(tp.Ten)
-                    })
-                    .ToList();
-                ddl_Location.DataSource = list;
-                ddl_Location.DataTextField = "Ten";
-                ddl_Location.DataValueField = "id";
-                ddl_Location.DataBind();
-                ddl_Location.Items.Insert(0, new ListItem("Tất cả", ""));
-                ddl_Location.SelectedIndex = 0;
-            }
-        });
+                        return db.ThanhPhos
+                            .ToList()
+                            .Select(tp => new SearchLookupItem
+                            {
+                                Value = tp.id.ToString(),
+                                Text = TinhThanhDisplay_cl.Format(tp.Ten)
+                            })
+                            .ToList();
+                    }
+                });
+            });
+
+        ddl_Location.DataSource = list;
+        ddl_Location.DataTextField = "Text";
+        ddl_Location.DataValueField = "Value";
+        ddl_Location.DataBind();
+        ddl_Location.Items.Insert(0, new ListItem("Tất cả", ""));
+        ddl_Location.SelectedIndex = 0;
     }
 
     // =========================================================
@@ -224,6 +254,9 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
         string qRaw = (Request.QueryString["q"] ?? "").Trim();
         string cat = (Request.QueryString["cat"] ?? "").Trim();
         string loc = (Request.QueryString["loc"] ?? "").Trim();
+        string province = (Request.QueryString["province"] ?? "").Trim();
+        string district = (Request.QueryString["district"] ?? "").Trim();
+        string ward = (Request.QueryString["ward"] ?? "").Trim();
         string type = (Request.QueryString["type"] ?? "").Trim().ToLower();
 
         if (!string.IsNullOrWhiteSpace(qRaw))
@@ -232,13 +265,32 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
         if (!string.IsNullOrWhiteSpace(cat) && ddl_Category.Items.FindByValue(cat) != null)
             ddl_Category.SelectedValue = cat;
 
-        if (!string.IsNullOrWhiteSpace(loc) && ddl_Location.Items.FindByValue(loc) != null)
-            ddl_Location.SelectedValue = loc;
+        string selectedLoc = !string.IsNullOrWhiteSpace(province) ? province : loc;
+        if (!string.IsNullOrWhiteSpace(selectedLoc) && ddl_Location.Items.FindByValue(selectedLoc) != null)
+            ddl_Location.SelectedValue = selectedLoc;
+
+        if (hfProvinceCode != null) hfProvinceCode.Value = selectedLoc;
+        if (hfDistrictCode != null) hfDistrictCode.Value = district;
+        if (hfWardCode != null) hfWardCode.Value = ward;
+        if (hfLocationDisplay != null)
+        {
+            string display = "";
+            if (!string.IsNullOrWhiteSpace(selectedLoc) && ddl_Location.Items.FindByValue(selectedLoc) != null)
+                display = ddl_Location.Items.FindByValue(selectedLoc).Text;
+            hfLocationDisplay.Value = display;
+        }
 
         if (string.IsNullOrWhiteSpace(type))
             type = "all";
 
         ViewState["search_type"] = type;
+
+        if (txt_Search != null && string.IsNullOrWhiteSpace(txt_Search.Text))
+        {
+            string qSlug = (Request.QueryString["qslug"] ?? "").Trim();
+            if (!string.IsNullOrWhiteSpace(qSlug))
+                txt_Search.Text = AhaSearchRoutes_cl.ToKeywordFromSlug(qSlug);
+        }
     }
 
     private string ResolveSearchType()
@@ -246,9 +298,22 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
         string type = (ViewState["search_type"] ?? "").ToString().Trim().ToLower();
         if (string.IsNullOrWhiteSpace(type))
             type = (Request.QueryString["type"] ?? "").Trim().ToLower();
-        if (string.IsNullOrWhiteSpace(type))
-            type = "all";
-        return type;
+        return NormalizeSearchTypeLocal(type);
+    }
+
+    private static string NormalizeSearchTypeLocal(string rawType)
+    {
+        string value = (rawType ?? "").Trim().ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(value))
+            return "all";
+
+        if (value == "service" || value == "dichvu" || value == "dịchvụ")
+            return "service";
+
+        if (value == "product" || value == "sanpham" || value == "sảnphẩm")
+            return "product";
+
+        return "all";
     }
 
     private void ApplyGuestMobileAuthVisibility()
@@ -264,7 +329,88 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
 
     public void set_dulieu_macdinh()
     {
-        ViewState[VS_PageKey] = "1";
+        ViewState[VS_PageKey] = ResolveRequestedPage().ToString();
+    }
+
+    private int ResolveRequestedPage()
+    {
+        int page = 1;
+        int parsed;
+        if (int.TryParse((Request.QueryString["page"] ?? "").Trim(), out parsed) && parsed > 0)
+            page = parsed;
+        return page;
+    }
+
+    private int ResolveRequestedPageSize()
+    {
+        int pageSize = DefaultPageSize;
+        int parsed;
+        if (int.TryParse((Request.QueryString["pageSize"] ?? "").Trim(), out parsed))
+            pageSize = parsed;
+        if (pageSize < 8) pageSize = 8;
+        if (pageSize > MaxPageSize) pageSize = MaxPageSize;
+        return pageSize;
+    }
+
+    private string BuildPageUrl(int page, int pageSize)
+    {
+        if (page < 1) page = 1;
+        if (pageSize < 8) pageSize = DefaultPageSize;
+        if (pageSize > MaxPageSize) pageSize = MaxPageSize;
+
+        var qs = HttpUtility.ParseQueryString(Request.QueryString.ToString());
+        qs["page"] = page.ToString();
+        qs["pageSize"] = pageSize.ToString();
+
+        string path = (Request.Url == null ? Request.RawUrl : Request.Url.AbsolutePath) ?? "/";
+        return path + "?" + qs.ToString();
+    }
+
+    private void BindPager(int currentPage, int totalPages, int pageSize)
+    {
+        if (litPager == null)
+            return;
+
+        if (totalPages <= 1)
+        {
+            litPager.Text = string.Empty;
+            return;
+        }
+
+        var sb = new System.Text.StringBuilder();
+        sb.Append("<nav class=\"aha-feed-pager\" aria-label=\"Phân trang\">");
+
+        if (currentPage > 1)
+            sb.AppendFormat("<a class=\"pg-link\" href=\"{0}\" aria-label=\"Trang trước\">&laquo; Trước</a>", ResolveUrl(BuildPageUrl(currentPage - 1, pageSize)));
+
+        int start = Math.Max(1, currentPage - 2);
+        int end = Math.Min(totalPages, currentPage + 2);
+
+        if (start > 1)
+        {
+            sb.AppendFormat("<a class=\"pg-link\" href=\"{0}\">1</a>", ResolveUrl(BuildPageUrl(1, pageSize)));
+            if (start > 2) sb.Append("<span class=\"pg-dots\">...</span>");
+        }
+
+        for (int i = start; i <= end; i++)
+        {
+            if (i == currentPage)
+                sb.AppendFormat("<span class=\"pg-current\" aria-current=\"page\">{0}</span>", i);
+            else
+                sb.AppendFormat("<a class=\"pg-link\" href=\"{0}\">{1}</a>", ResolveUrl(BuildPageUrl(i, pageSize)), i);
+        }
+
+        if (end < totalPages)
+        {
+            if (end < totalPages - 1) sb.Append("<span class=\"pg-dots\">...</span>");
+            sb.AppendFormat("<a class=\"pg-link\" href=\"{0}\">{1}</a>", ResolveUrl(BuildPageUrl(totalPages, pageSize)), totalPages);
+        }
+
+        if (currentPage < totalPages)
+            sb.AppendFormat("<a class=\"pg-link\" href=\"{0}\" aria-label=\"Trang sau\">Sau &raquo;</a>", ResolveUrl(BuildPageUrl(currentPage + 1, pageSize)));
+
+        sb.Append("</nav>");
+        litPager.Text = sb.ToString();
     }
 
     // ===== FILTER DANH MỤC + CON =====
@@ -297,6 +443,9 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
 
     public void HienThiTinMoi(dbDataContext db, bool reset = false)
     {
+        if (TryBindCachedGuestHomepageFeed(reset))
+            return;
+
         BaiVietSearchSchema_cl.EnsureSchemaSafe(db);
 
         string idmn = this.Idmn;
@@ -748,47 +897,559 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
 
         list_all = list_all.OrderByDescending(p => p.ngaytao);
 
-        int show = 30; if (show <= 0) show = 30;
+        int show = ResolveRequestedPageSize();
+        if (show <= 0) show = DefaultPageSize;
 
-        int current_page = 1;
-        if (ViewState[VS_PageKey] != null)
-            current_page = int.Parse(ViewState[VS_PageKey].ToString());
+        int current_page = ResolveRequestedPage();
 
-        int total_record = list_all.Count();
+        List<TinItem> bdsSearchItems = new List<TinItem>();
+        bool shouldMergeUnifiedBdsSearch = ShouldMergeUnifiedBdsSearch(db, keyword, selectedDanhMuc, thanhPho);
+        if (shouldMergeUnifiedBdsSearch)
+            bdsSearchItems = BuildUnifiedBdsSearchTinItems(db, keyword, selectedDanhMuc, thanhPho, current_page * show);
+
+        bool shouldMixLinkedBds = !shouldMergeUnifiedBdsSearch && ShouldMixLinkedBdsIntoHomeFeed();
+        List<TinItem> linkedBdsItems = shouldMixLinkedBds ? BuildLinkedBdsTinItems(db, current_page * show) : new List<TinItem>();
+        int linkedBdsCount = shouldMixLinkedBds ? LinkedFeedStore_cl.GetActiveCount(db) : 0;
+
+        int total_record = list_all.Count() + linkedBdsCount + (shouldMergeUnifiedBdsSearch ? bdsSearchItems.Count : 0);
+        ResultCount = total_record;
         int total_page = number_of_page_class.return_total_page(total_record, show);
         if (total_page <= 0) total_page = 1;
 
         if (reset)
         {
-            current_page = 1;
-            ViewState[VS_PageKey] = "1";
-            Session[SS_LoadedKey] = new List<TinItem>();
+            current_page = ResolveRequestedPage();
+            if (current_page < 1) current_page = 1;
         }
 
-        var list_split = list_all.Skip((current_page - 1) * show).Take(show).ToList();
+        if (current_page > total_page)
+            current_page = total_page;
+        if (current_page < 1)
+            current_page = 1;
+        ViewState[VS_PageKey] = current_page.ToString();
 
-        var loaded = Session[SS_LoadedKey] as List<TinItem>;
-        if (loaded == null) loaded = new List<TinItem>();
+        List<TinItem> list_split;
+        if (shouldMergeUnifiedBdsSearch)
+        {
+            int neededCombined = current_page * show;
+            List<TinItem> primaryItems = list_all.Take(neededCombined).ToList();
+            List<TinItem> combinedItems = InterleaveTinItems(primaryItems, bdsSearchItems.Take(neededCombined).ToList(), UnifiedSearchBdsStride, neededCombined);
+            list_split = combinedItems.Skip((current_page - 1) * show).Take(show).ToList();
+        }
+        else if (shouldMixLinkedBds)
+        {
+            int neededCombined = current_page * show;
+            List<TinItem> primaryItems = list_all.Take(neededCombined).ToList();
+            List<TinItem> combinedItems = InterleaveTinItems(primaryItems, linkedBdsItems, HomeFeedLinkedBdsStride, neededCombined);
+            list_split = combinedItems.Skip((current_page - 1) * show).Take(show).ToList();
+        }
+        else
+        {
+            list_split = list_all.Skip((current_page - 1) * show).Take(show).ToList();
+        }
 
-        foreach (var it in list_split)
-            if (!loaded.Any(x => x.id == it.id)) loaded.Add(it);
-
-        Session[SS_LoadedKey] = loaded;
+        list_split = DeduplicateTinItemsForRender(list_split);
 
         if (thanhPhoMap == null)
             thanhPhoMap = db.ThanhPhos.ToDictionary(p => p.id, p => p.Ten);
-        foreach (var it in loaded)
+        foreach (var it in list_split)
         {
             string name = TinhThanhDisplay_cl.ResolveNameFromId(it.ThanhPho, thanhPhoMap);
             it.ThanhPhoDisplay = TinhThanhDisplay_cl.Format(name);
         }
 
-        RepeaterTin.DataSource = loaded;
-        RepeaterTin.DataBind();
+        NormalizeTinItemsForBind(list_split);
 
-        but_xemthem.Visible = current_page < total_page;
+        SearchSummary = BuildSearchSummary(keyword, selectedDanhMuc, thanhPho, db, thanhPhoMap);
+
+        RepeaterTin.DataSource = list_split;
+        RepeaterTin.DataBind();
+        BindPager(current_page, total_page, show);
+        if (but_xemthem != null) but_xemthem.Visible = false;
 
         up_all.Update();
+    }
+
+    private bool TryBindCachedGuestHomepageFeed(bool reset)
+    {
+        if (!IsGuestHomepageInitialFeedRequest(reset))
+            return false;
+
+        GuestLatestFeedCachePayload payload = Helper_cl.RuntimeCacheGetOrAdd<GuestLatestFeedCachePayload>(
+            "home:latest-feed:guest:v2",
+            GuestLatestFeedCacheSeconds,
+            BuildGuestLatestFeedCachePayload);
+
+        if (payload == null || payload.Items == null)
+            return false;
+
+        List<TinItem> loaded = payload.Items
+            .Select(CloneTinItem)
+            .ToList();
+
+        Dictionary<string, string> locationMap = payload.LocationMap ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (TinItem item in loaded)
+        {
+            string name;
+            if (locationMap.TryGetValue(item.ThanhPho ?? "", out name))
+                item.ThanhPhoDisplay = TinhThanhDisplay_cl.Format(name);
+        }
+
+        int show = ResolveRequestedPageSize();
+        int currentPage = ResolveRequestedPage();
+        if (currentPage < 1) currentPage = 1;
+        int totalPages = number_of_page_class.return_total_page(payload.TotalCount, show);
+        if (totalPages <= 0) totalPages = 1;
+        if (currentPage > totalPages) currentPage = totalPages;
+
+        var pageItems = loaded.Skip((currentPage - 1) * show).Take(show).ToList();
+        pageItems = DeduplicateTinItemsForRender(pageItems);
+        NormalizeTinItemsForBind(pageItems);
+
+        ViewState[VS_PageKey] = currentPage.ToString();
+        ResultCount = payload.TotalCount;
+        SearchSummary = "";
+        RepeaterTin.DataSource = pageItems;
+        RepeaterTin.DataBind();
+        BindPager(currentPage, totalPages, show);
+        if (but_xemthem != null) but_xemthem.Visible = false;
+        up_all.Update();
+        return true;
+    }
+
+    private bool IsGuestHomepageInitialFeedRequest(bool reset)
+    {
+        if (!reset)
+            return false;
+        if (ResolveRequestedPage() != 1)
+            return false;
+        if (ResolveRequestedPageSize() != DefaultPageSize)
+            return false;
+        if (!string.IsNullOrWhiteSpace(Idmn) || !string.IsNullOrWhiteSpace(tin_theo_doi) || !string.IsNullOrWhiteSpace(lich_su_xem_tin))
+            return false;
+        if (!string.IsNullOrWhiteSpace(Convert.ToString(ViewState["taikhoan"])))
+            return false;
+        if (!string.IsNullOrWhiteSpace(txt_Search != null ? txt_Search.Text : ""))
+            return false;
+        if (!string.IsNullOrWhiteSpace(ddl_Category != null ? ddl_Category.SelectedValue : ""))
+            return false;
+        if (!string.IsNullOrWhiteSpace(ddl_Location != null ? ddl_Location.SelectedValue : ""))
+            return false;
+        if (hfProvinceCode != null && !string.IsNullOrWhiteSpace(hfProvinceCode.Value))
+            return false;
+        if (hfDistrictCode != null && !string.IsNullOrWhiteSpace(hfDistrictCode.Value))
+            return false;
+        if (hfWardCode != null && !string.IsNullOrWhiteSpace(hfWardCode.Value))
+            return false;
+        if (!string.IsNullOrWhiteSpace(Session["HiddenPostIds"] as string))
+            return false;
+        return true;
+    }
+
+    private GuestLatestFeedCachePayload BuildGuestLatestFeedCachePayload()
+    {
+        return SqlTransientGuard_cl.Execute(() =>
+        {
+            using (dbDataContext db = new dbDataContext())
+            {
+                var visible = AccountVisibility_cl.FilterVisibleTradePosts(db, db.BaiViet_tbs);
+                int totalCount = visible.Count();
+                int linkedCount = 0;
+
+                List<TinItem> items = visible
+                    .OrderByDescending(p => p.ngaytao)
+                    .Select(p => new TinItem
+                    {
+                        id = p.id,
+                        image = p.image,
+                        name = p.name,
+                        name_en = p.name_en,
+                        name_khongdau = p.name_khongdau,
+                        IsTheoDoi = false,
+                        ThanhPho = (p.ThanhPho ?? "Không có"),
+                        ngaytao = p.ngaytao,
+                        giaban = p.giaban,
+                        nguoitao = p.nguoitao,
+                        description = p.description,
+                        description_khongdau = p.description_khongdau,
+                        soluong_daban = p.soluong_daban,
+                        LuotTruyCap = (p.LuotTruyCap ?? 0),
+                        TenMenu = "",
+                        TenMenu2 = "",
+                        phanloai = p.phanloai
+                    })
+                    .ToList();
+
+                if (ShouldMixLinkedBdsIntoHomeFeed())
+                {
+                    List<TinItem> linkedItems = BuildLinkedBdsTinItems(db, DefaultPageSize);
+                    linkedCount = LinkedFeedStore_cl.GetActiveCount(db);
+                    items = InterleaveTinItems(items.Take(DefaultPageSize).ToList(), linkedItems, HomeFeedLinkedBdsStride, DefaultPageSize);
+                }
+                else
+                {
+                    items = items.Take(DefaultPageSize).ToList();
+                }
+                items = DeduplicateTinItemsForRender(items);
+
+                Dictionary<string, string> locationMap = db.ThanhPhos
+                    .ToDictionary(p => p.id.ToString(), p => p.Ten, StringComparer.OrdinalIgnoreCase);
+
+                return new GuestLatestFeedCachePayload
+                {
+                    Items = items,
+                    TotalCount = totalCount + linkedCount,
+                    LocationMap = locationMap
+                };
+            }
+        });
+    }
+
+    private bool ShouldMixLinkedBdsIntoHomeFeed()
+    {
+        if (!string.IsNullOrWhiteSpace(Idmn) || !string.IsNullOrWhiteSpace(tin_theo_doi) || !string.IsNullOrWhiteSpace(lich_su_xem_tin))
+            return false;
+        if (!string.Equals(ResolveSearchType(), "all", StringComparison.OrdinalIgnoreCase))
+            return false;
+        if (!string.IsNullOrWhiteSpace(txt_Search != null ? txt_Search.Text : ""))
+            return false;
+        if (!string.IsNullOrWhiteSpace(ddl_Category != null ? ddl_Category.SelectedValue : ""))
+            return false;
+        if (!string.IsNullOrWhiteSpace(ddl_Location != null ? ddl_Location.SelectedValue : ""))
+            return false;
+        if (hfProvinceCode != null && !string.IsNullOrWhiteSpace(hfProvinceCode.Value))
+            return false;
+        if (hfDistrictCode != null && !string.IsNullOrWhiteSpace(hfDistrictCode.Value))
+            return false;
+        if (hfWardCode != null && !string.IsNullOrWhiteSpace(hfWardCode.Value))
+            return false;
+        if (!string.IsNullOrWhiteSpace(Session["HiddenPostIds"] as string))
+            return false;
+        return true;
+    }
+
+    private bool ShouldMergeUnifiedBdsSearch(dbDataContext db, string keyword, string categoryId, string provinceId)
+    {
+        string path = (Request == null ? "" : (Request.Path ?? "")).Trim().ToLowerInvariant();
+        if (path == "/tim-kiem" || path.EndsWith("/home/tim-kiem.aspx", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (!string.IsNullOrWhiteSpace(keyword))
+            return true;
+
+        if (!string.IsNullOrWhiteSpace(provinceId))
+            return true;
+
+        return IsBatDongSanCategory(db, categoryId);
+    }
+
+    private bool IsBatDongSanCategory(dbDataContext db, string categoryId)
+    {
+        if (db == null || string.IsNullOrWhiteSpace(categoryId))
+            return false;
+
+        string catId = categoryId.Trim();
+        DanhMuc_tb category = db.DanhMuc_tbs.FirstOrDefault(p => p.id.ToString() == catId);
+        if (category == null)
+            return false;
+
+        string name = ((category.name ?? "") + " " + (category.name_en ?? "")).Trim().ToLowerInvariant();
+        return name.Contains("bat dong san")
+            || name.Contains("bất động sản")
+            || name.Contains("bat-dong-san")
+            || name.Contains("nha dat")
+            || name.Contains("nhà đất")
+            || name.Contains("nha-dat");
+    }
+
+    private List<TinItem> BuildLinkedBdsTinItems(dbDataContext db, int take)
+    {
+        if (db == null)
+            return new List<TinItem>();
+
+        int safeTake = take <= 0 ? DefaultPageSize : (take > 500 ? 500 : take);
+        LinkedFeedStore_cl.EnsureSchema(db);
+        return LinkedFeedStore_cl.GetActiveForSearch(db, safeTake)
+            .Select(MapLinkedBdsToTinItem)
+            .Where(x => x != null)
+            .ToList();
+    }
+
+    private TinItem MapLinkedBdsToTinItem(LinkedFeedStore_cl.LinkedPost row)
+    {
+        if (row == null || string.IsNullOrWhiteSpace(row.Title))
+            return null;
+
+        string priceText = string.IsNullOrWhiteSpace(row.PriceText) ? "Liên hệ" : row.PriceText.Trim();
+        string areaText = string.IsNullOrWhiteSpace(row.AreaText) ? "" : (" · " + row.AreaText.Trim());
+        string province = (row.Province ?? "").Trim();
+        string district = (row.District ?? "").Trim();
+        string location = string.IsNullOrWhiteSpace(district) ? province : (district + ", " + province);
+        string sourceLabel = BatDongSanService_cl.ResolveLinkedSourceLabel(row.Source);
+
+        return new TinItem
+        {
+            id = -row.Id,
+            image = BatDongSanService_cl.BuildLinkedImageProxyUrl(row.Id, 0),
+            name = row.Title.Trim(),
+            name_en = BatDongSanService_cl.Slugify(row.Title),
+            name_khongdau = "",
+            ThanhPho = province,
+            ThanhPhoDisplay = location,
+            ngaytao = row.PublishedAt,
+            giaban = null,
+            nguoitao = "bds_linked_feed",
+            description = string.IsNullOrWhiteSpace(row.Summary) ? ((sourceLabel + " · " + priceText + areaText).Trim()) : row.Summary.Trim(),
+            description_khongdau = "",
+            soluong_daban = null,
+            LuotTruyCap = 0,
+            TenMenu = "BĐS liên kết",
+            TenMenu2 = string.IsNullOrWhiteSpace(sourceLabel) ? "" : ("<span class='pl-3 mif-chevron-right'></span>" + sourceLabel),
+            IsTheoDoi = false,
+            phanloai = "bds_linked",
+            DetailUrl = "/bat-dong-san/chi-tiet.aspx?linkedId=" + row.Id.ToString(),
+            DisplayPriceText = priceText,
+            IsLinkedBds = true,
+            SourceLabel = sourceLabel
+        };
+    }
+
+    private List<TinItem> BuildUnifiedBdsSearchTinItems(dbDataContext db, string keyword, string categoryId, string provinceId, int take)
+    {
+        if (db == null)
+            return new List<TinItem>();
+
+        string provinceSlug = ResolveProvinceSlug(db, provinceId);
+        bool categoryIsBds = IsBatDongSanCategory(db, categoryId);
+        bool hasInput = !string.IsNullOrWhiteSpace(keyword) || !string.IsNullOrWhiteSpace(provinceSlug) || categoryIsBds;
+        if (!hasInput)
+            return new List<TinItem>();
+
+        var query = new BatDongSanService_cl.ListingQuery
+        {
+            Keyword = (keyword ?? "").Trim(),
+            Province = provinceSlug,
+            Sort = "relevance"
+        };
+
+        return BatDongSanSearch_cl.QueryUnifiedListings(query)
+            .Take(take <= 0 ? DefaultPageSize : take)
+            .Select(MapBdsListingToTinItem)
+            .Where(x => x != null)
+            .ToList();
+    }
+
+    private string ResolveProvinceSlug(dbDataContext db, string provinceId)
+    {
+        string raw = (provinceId ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(raw))
+            return "";
+
+        ThanhPho province = db.ThanhPhos.FirstOrDefault(p => p.id.ToString() == raw);
+        if (province == null)
+            return "";
+
+        return BatDongSanService_cl.Slugify(province.Ten);
+    }
+
+    private TinItem MapBdsListingToTinItem(BatDongSanService_cl.ListingItem item)
+    {
+        if (item == null || string.IsNullOrWhiteSpace(item.Title))
+            return null;
+
+        string location = "";
+        if (!string.IsNullOrWhiteSpace(item.District) && !string.IsNullOrWhiteSpace(item.Province))
+            location = item.District.Trim() + ", " + item.Province.Trim();
+        else if (!string.IsNullOrWhiteSpace(item.Province))
+            location = item.Province.Trim();
+        else if (!string.IsNullOrWhiteSpace(item.AddressText))
+            location = item.AddressText.Trim();
+
+        string sourceLabel = item.IsLinked
+            ? (item.LinkedSource ?? "Nguồn liên kết")
+            : "Tin bất động sản";
+
+        return new TinItem
+        {
+            id = item.IsLinked ? -item.Id : item.Id,
+            image = string.IsNullOrWhiteSpace(item.ThumbnailUrl) ? BatDongSanService_cl.DefaultBdsFallbackImage : item.ThumbnailUrl,
+            name = item.Title.Trim(),
+            name_en = item.Slug,
+            name_khongdau = "",
+            ThanhPho = item.Province ?? "",
+            ThanhPhoDisplay = location,
+            ngaytao = item.IsLinked ? (DateTime?)null : AhaTime_cl.Now,
+            giaban = null,
+            nguoitao = item.IsLinked ? "bds_linked_feed" : "bds_native_listing",
+            description = string.IsNullOrWhiteSpace(item.Description) ? BatDongSanService_cl.BuildListingMeta(item) : item.Description.Trim(),
+            description_khongdau = "",
+            soluong_daban = null,
+            LuotTruyCap = 0,
+            TenMenu = "Bất động sản",
+            TenMenu2 = string.IsNullOrWhiteSpace(sourceLabel) ? "" : ("<span class='pl-3 mif-chevron-right'></span>" + sourceLabel),
+            IsTheoDoi = false,
+            phanloai = "bds_search",
+            DetailUrl = BatDongSanService_cl.BuildListingUrl(item),
+            DisplayPriceText = string.IsNullOrWhiteSpace(item.PriceText) ? "Liên hệ" : item.PriceText.Trim(),
+            IsLinkedBds = true,
+            SourceLabel = sourceLabel
+        };
+    }
+
+    private static List<TinItem> InterleaveTinItems(List<TinItem> primary, List<TinItem> secondary, int stride, int maxTake)
+    {
+        var result = new List<TinItem>();
+        primary = primary ?? new List<TinItem>();
+        secondary = secondary ?? new List<TinItem>();
+        if (stride <= 0) stride = 5;
+        if (maxTake <= 0) maxTake = int.MaxValue;
+
+        int i = 0;
+        int j = 0;
+        int sinceSecondary = 0;
+
+        while (result.Count < maxTake && (i < primary.Count || j < secondary.Count))
+        {
+            if (i < primary.Count)
+            {
+                result.Add(primary[i++]);
+                sinceSecondary++;
+                if (result.Count >= maxTake)
+                    break;
+            }
+
+            if (sinceSecondary >= stride && j < secondary.Count)
+            {
+                result.Add(secondary[j++]);
+                sinceSecondary = 0;
+            }
+            else if (i >= primary.Count && j < secondary.Count)
+            {
+                result.Add(secondary[j++]);
+                sinceSecondary = 0;
+            }
+        }
+
+        return result;
+    }
+
+    private static TinItem CloneTinItem(TinItem item)
+    {
+        if (item == null)
+            return null;
+
+        return new TinItem
+        {
+            id = item.id,
+            image = item.image,
+            name = item.name,
+            name_en = item.name_en,
+            name_khongdau = item.name_khongdau,
+            ThanhPho = item.ThanhPho,
+            ThanhPhoDisplay = item.ThanhPhoDisplay,
+            ngaytao = item.ngaytao,
+            ngayxem = item.ngayxem,
+            giaban = item.giaban,
+            nguoitao = item.nguoitao,
+            description = item.description,
+            description_khongdau = item.description_khongdau,
+            soluong_daban = item.soluong_daban,
+            LuotTruyCap = item.LuotTruyCap,
+            TenMenu = item.TenMenu,
+            TenMenu2 = item.TenMenu2,
+            IsTheoDoi = item.IsTheoDoi,
+            phanloai = item.phanloai,
+            DetailUrl = item.DetailUrl,
+            DisplayPriceText = item.DisplayPriceText,
+            IsLinkedBds = item.IsLinkedBds,
+            SourceLabel = item.SourceLabel
+        };
+    }
+
+    private static List<TinItem> DeduplicateTinItemsForRender(IEnumerable<TinItem> source)
+    {
+        List<TinItem> result = new List<TinItem>();
+        if (source == null)
+            return result;
+
+        HashSet<string> seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (TinItem item in source)
+        {
+            if (item == null)
+                continue;
+
+            string key = BuildTinItemRenderKey(item);
+            if (!seen.Add(key))
+                continue;
+
+            result.Add(item);
+        }
+
+        return result;
+    }
+
+    private static string BuildTinItemRenderKey(TinItem item)
+    {
+        if (item == null)
+            return "";
+
+        if (item.IsLinkedBds)
+        {
+            string linkedUrl = (item.DetailUrl ?? "").Trim().ToLowerInvariant();
+            string linkedName = ((item.name_en ?? item.name) ?? "").Trim().ToLowerInvariant();
+            return "linked|" + linkedUrl + "|" + linkedName;
+        }
+
+        string owner = (item.nguoitao ?? "").Trim().ToLowerInvariant();
+        string postType = (item.phanloai ?? "").Trim().ToLowerInvariant();
+        string slug = (item.name_en ?? "").Trim().ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(slug))
+            slug = (item.name ?? "").Trim().ToLowerInvariant();
+        string price = item.giaban.HasValue ? item.giaban.Value.ToString("0.##") : "";
+        string image = (item.image ?? "").Trim().ToLowerInvariant();
+
+        if (string.IsNullOrWhiteSpace(owner) && string.IsNullOrWhiteSpace(slug))
+            return "id|" + item.id.ToString();
+
+        return string.Join("|", "post", owner, postType, slug, price, image);
+    }
+
+    private void NormalizeTinItemsForBind(List<TinItem> items)
+    {
+        if (items == null)
+            return;
+
+        foreach (TinItem item in items)
+        {
+            if (item == null)
+                continue;
+
+            if (string.IsNullOrWhiteSpace(item.DetailUrl))
+                item.DetailUrl = BuildDefaultTinDetailUrl(item);
+
+            if (string.IsNullOrWhiteSpace(item.DisplayPriceText))
+                item.DisplayPriceText = item.giaban.HasValue ? item.giaban.Value.ToString("#,##0") + " đ" : "Liên hệ";
+
+            if (string.IsNullOrWhiteSpace(item.ThanhPhoDisplay))
+                item.ThanhPhoDisplay = TinhThanhDisplay_cl.Format(item.ThanhPho);
+        }
+    }
+
+    private string BuildDefaultTinDetailUrl(TinItem item)
+    {
+        if (item == null)
+            return "/";
+
+        string slug = (item.name_en ?? "").Trim().ToLowerInvariant();
+        if (string.IsNullOrEmpty(slug))
+        {
+            slug = (item.name ?? "").Trim().ToLowerInvariant();
+            slug = Regex.Replace(slug, @"[^a-z0-9\-]+", "-").Trim('-');
+        }
+        if (string.IsNullOrEmpty(slug))
+            slug = "san-pham";
+
+        return "/" + slug + "-" + item.id.ToString() + ".html";
     }
 
     public void AddItemtoSession(object sender, EventArgs e)
@@ -862,19 +1523,31 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
         string keyword = (txt_Search != null ? txt_Search.Text : "").Trim();
         string danhMuc = (ddl_Category != null ? ddl_Category.SelectedValue : "");
         string thanhPho = (ddl_Location != null ? ddl_Location.SelectedValue : "");
+        string province = (hfProvinceCode != null ? hfProvinceCode.Value : "");
+        string district = (hfDistrictCode != null ? hfDistrictCode.Value : "");
+        string ward = (hfWardCode != null ? hfWardCode.Value : "");
         string type = ResolveSearchType();
 
         var qs = HttpUtility.ParseQueryString(string.Empty);
         if (!string.IsNullOrWhiteSpace(keyword)) qs["q"] = keyword;
         if (!string.IsNullOrWhiteSpace(danhMuc)) qs["cat"] = danhMuc;
         if (!string.IsNullOrWhiteSpace(thanhPho)) qs["loc"] = thanhPho;
+        if (string.IsNullOrWhiteSpace(province)) province = thanhPho;
+        if (!string.IsNullOrWhiteSpace(province)) qs["province"] = province;
+        if (!string.IsNullOrWhiteSpace(district)) qs["district"] = district;
+        if (!string.IsNullOrWhiteSpace(ward)) qs["ward"] = ward;
         if (!string.IsNullOrWhiteSpace(type)) qs["type"] = type;
         qs["page"] = "1";
 
-        string url = "/home/tim-kiem.aspx";
-        string query = qs.ToString();
-        if (!string.IsNullOrWhiteSpace(query))
-            url += "?" + query;
+        string url = AhaSearchRoutes_cl.BuildSearchUrl(
+            keyword,
+            danhMuc,
+            thanhPho,
+            province,
+            district,
+            ward,
+            type,
+            "1");
 
         var sm = ScriptManager.GetCurrent(Page);
         if (sm != null && sm.IsInAsyncPostBack)
@@ -889,17 +1562,50 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
         }
     }
 
+    private string BuildSearchSummary(string keyword, string categoryId, string thanhPho, dbDataContext db, Dictionary<long, string> thanhPhoMap)
+    {
+        string summary = "";
+
+        if (!string.IsNullOrWhiteSpace(keyword))
+            summary = "Tu khoa: " + keyword.Trim();
+
+        if (!string.IsNullOrWhiteSpace(categoryId))
+        {
+            string categoryName = db.DanhMuc_tbs
+                .Where(dm => dm.id.ToString() == categoryId)
+                .Select(dm => dm.name)
+                .FirstOrDefault() ?? "";
+            if (!string.IsNullOrWhiteSpace(categoryName))
+                summary = AppendSummaryPart(summary, "Danh muc: " + categoryName.Trim());
+        }
+
+        if (!string.IsNullOrWhiteSpace(thanhPho))
+        {
+            string locationName = TinhThanhDisplay_cl.ResolveNameFromId(thanhPho, thanhPhoMap);
+            locationName = TinhThanhDisplay_cl.Format(locationName);
+            if (!string.IsNullOrWhiteSpace(locationName))
+                summary = AppendSummaryPart(summary, "Dia diem: " + locationName);
+        }
+
+        return summary;
+    }
+
+    private static string AppendSummaryPart(string summary, string part)
+    {
+        if (string.IsNullOrWhiteSpace(part))
+            return summary ?? "";
+        if (string.IsNullOrWhiteSpace(summary))
+            return part.Trim();
+        return summary.Trim() + " | " + part.Trim();
+    }
+
     protected void but_xemthem_Click(object sender, EventArgs e)
     {
-        int current_page = 1;
-        if (ViewState[VS_PageKey] != null)
-            current_page = int.Parse(ViewState[VS_PageKey].ToString());
-
-        current_page++;
-        ViewState[VS_PageKey] = current_page.ToString();
-
-        using (dbDataContext db = new dbDataContext())
-            HienThiTinMoi(db);
+        int currentPage = ResolveRequestedPage();
+        int pageSize = ResolveRequestedPageSize();
+        string url = BuildPageUrl(currentPage + 1, pageSize);
+        Response.Redirect(url, false);
+        Context.ApplicationInstance.CompleteRequest();
     }
 
     private string ToTimeAgoOrDate(object ngayTaoObj)
@@ -994,18 +1700,29 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
 
             PlaceHolder phKebab = (PlaceHolder)e.Item.FindControl("ph_kebab");
             if (phKebab != null) phKebab.Visible = EnableKebab;
+            LinkButton btnHeart = (LinkButton)e.Item.FindControl("btnHeart");
 
             Button btnBanSanPham = (Button)e.Item.FindControl("but_bansanphamnay");
             Button btnTraoDoi = (Button)e.Item.FindControl("but_traodoi");
             Button btnThemVaoGio = (Button)e.Item.FindControl("but_themvaogio");
             PlaceHolder phActions = (PlaceHolder)e.Item.FindControl("ph_actions");
+            Literal litSourceBadge = (Literal)e.Item.FindControl("litSourceBadge");
 
             bool showButtons = true;
             bool isService = false;
+            bool isLinkedBds = Convert.ToBoolean(DataBinder.Eval(dataItem, "IsLinkedBds") ?? false);
 
             string postType = Convert.ToString(DataBinder.Eval(dataItem, "phanloai")) ?? "";
             if (string.Equals(postType.Trim(), AccountVisibility_cl.PostTypeService, StringComparison.OrdinalIgnoreCase))
                 isService = true;
+
+            if (litSourceBadge != null)
+            {
+                string sourceLabel = Convert.ToString(DataBinder.Eval(dataItem, "SourceLabel")) ?? "";
+                litSourceBadge.Text = isLinkedBds
+                    ? ("<span class=\"sp-source-badge\">BĐS liên kết" + (string.IsNullOrWhiteSpace(sourceLabel) ? "" : (": " + HttpUtility.HtmlEncode(sourceLabel))) + "</span>")
+                    : "";
+            }
 
             if (ViewState["taikhoan"] == null || string.IsNullOrEmpty(ViewState["taikhoan"].ToString()))
             {
@@ -1016,6 +1733,13 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
                 string nguoitao = Convert.ToString(DataBinder.Eval(dataItem, "nguoitao"));
                 if (nguoitao == ViewState["taikhoan"].ToString())
                     showButtons = false;
+            }
+
+            if (isLinkedBds)
+            {
+                showButtons = false;
+                if (phKebab != null) phKebab.Visible = false;
+                if (btnHeart != null) btnHeart.Visible = false;
             }
 
             // Tính năng bán chéo đã tắt phía home.
@@ -1648,6 +2372,10 @@ public partial class Uc_Home_DanhChoBan_MoiNhat_UC : System.Web.UI.UserControl
         public string TenMenu2 { get; set; }
         public bool IsTheoDoi { get; set; }
         public string phanloai { get; set; }
+        public string DetailUrl { get; set; }
+        public string DisplayPriceText { get; set; }
+        public bool IsLinkedBds { get; set; }
+        public string SourceLabel { get; set; }
     }
 
     [WebMethod]

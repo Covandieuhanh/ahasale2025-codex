@@ -1,0 +1,421 @@
+.app-shell-gianhang {
+    background:
+        radial-gradient(circle at top left, var(--app-page-glow), transparent 22%),
+        linear-gradient(180deg, var(--app-shell-soft) 0%, rgba(255,255,255,0) 26%),
+        #ffffff;
+}
+
+.app-topbar-gianhang {
+    background: linear-gradient(180deg, var(--app-topbar-start) 0%, var(--app-topbar-mid) 72%, rgba(255,255,255,0) 100%);
+}
+
+.app-search-pill-gianhang {
+    border: 1px solid var(--app-soft-border);
+}
+
+.app-gianhang-dot {
+    display: block;
+    width: 14px;
+    height: 14px;
+    border-radius: 999px;
+    background: var(--space-600);
+    box-shadow: 0 0 0 5px var(--app-soft-surface);
+}
+
+.app-gianhang-hero {
+    padding: 20px 18px;
+    border-radius: 28px;
+    background: linear-gradient(135deg, var(--app-hero-start), var(--app-hero-mid) 58%, var(--app-hero-end) 115%);
+    color: var(--app-hero-text);
+    box-shadow: 0 20px 42px var(--app-soft-shadow);
+    position: relative;
+    overflow: hidden;
+}
+
+.app-gianhang-hero::after {
+    content: "";
+    position: absolute;
+    right: -34px;
+    bottom: -56px;
+    width: 180px;
+    height: 180px;
+    border-radius: 40px;
+    background: rgba(255, 255, 255, 0.12);
+    transform: rotate(24deg);
+}
+
+.app-gianhang-hero .app-hero-stat-grid {
+    position: relative;
+    z-index: 1;
+}
+
+.app-gianhang-kicker {
+    display: inline-flex;
+    min-height: 32px;
+    align-items: center;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.16);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.app-gianhang-headline {
+    margin: 14px 0 10px;
+    font-size: clamp(24px, 7vw, 28px);
+    line-height: 1.12;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+}
+
+.app-gianhang-support {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--app-hero-text);
+    opacity: 0.88;
+}
+
+.app-gianhang-focus-strip {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.app-gianhang-focus-card {
+    padding: 16px;
+    min-height: 98px;
+    border-radius: 24px;
+    background: linear-gradient(180deg, #ffffff, var(--space-50));
+    box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
+    border: 1px solid var(--app-soft-border);
+}
+
+.app-gianhang-focus-label {
+    display: block;
+    color: var(--app-text-soft);
+    font-size: 12px;
+    line-height: 1.45;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.app-gianhang-focus-value {
+    display: block;
+    margin-top: 8px;
+    color: var(--app-accent-strong);
+    font-size: 18px;
+    line-height: 1.25;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+}
+
+.app-quick-action-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.app-quick-action-card {
+    display: flex;
+    align-items: flex-end;
+    min-height: 92px;
+    padding: 16px;
+    border-radius: 22px;
+    border: 0;
+    text-align: left;
+    font-family: inherit;
+    font-size: 15px;
+    line-height: 1.35;
+    font-weight: 800;
+    background: var(--space-50);
+    color: var(--space-700);
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
+    text-decoration: none;
+}
+
+.app-quick-action-card.is-primary {
+    background: linear-gradient(135deg, var(--space-600), var(--space-500));
+    color: var(--app-hero-text);
+    box-shadow: 0 16px 30px var(--app-soft-shadow);
+}
+
+.app-metric-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.app-gianhang-priority-strip {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.app-gianhang-priority-card {
+    padding: 16px;
+    min-height: 116px;
+    border-radius: 24px;
+    background: linear-gradient(180deg, var(--space-50), #ffffff);
+    border: 1px solid var(--app-soft-border);
+    box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
+}
+
+.app-gianhang-priority-eyebrow {
+    display: inline-flex;
+    min-height: 28px;
+    align-items: center;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: var(--space-100);
+    color: var(--space-700);
+    font-size: 11px;
+    line-height: 1;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.app-gianhang-priority-title {
+    margin: 12px 0 0;
+    color: var(--app-accent-strong);
+    font-size: 18px;
+    line-height: 1.24;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+}
+
+.app-gianhang-priority-copy {
+    margin: 8px 0 0;
+    color: var(--app-text-soft);
+    font-size: 13px;
+    line-height: 1.5;
+    font-weight: 700;
+}
+
+.app-metric-card {
+    min-height: 108px;
+    padding: 16px 14px;
+    border-radius: 24px;
+    background: linear-gradient(180deg, #ffffff, var(--space-50));
+    box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
+}
+
+.app-metric-value {
+    display: block;
+    font-size: 28px;
+    line-height: 1;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    color: var(--app-accent-strong);
+}
+
+.app-metric-label {
+    display: block;
+    margin-top: 10px;
+    color: var(--app-text-soft);
+    font-size: 13px;
+    line-height: 1.45;
+    font-weight: 700;
+}
+
+.app-ops-list,
+.app-conversation-list {
+    display: grid;
+    gap: 12px;
+}
+
+.app-ops-card,
+.app-conversation-card {
+    padding: 15px;
+    border-radius: 24px;
+    background: #ffffff;
+    box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
+    border: 1px solid var(--app-soft-border);
+}
+
+.app-ops-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.app-ops-title,
+.app-conversation-name {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.32;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+}
+
+.app-ops-meta,
+.app-conversation-topic {
+    margin: 8px 0 0;
+    color: var(--app-text-soft);
+    font-size: 14px;
+    line-height: 1.5;
+    font-weight: 700;
+}
+
+.app-status-pill {
+    flex: 0 0 auto;
+    min-height: 32px;
+    padding: 0 12px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.app-status-pill.is-live {
+    background: var(--space-100);
+    color: var(--space-700);
+}
+
+.app-status-pill.is-warn {
+    background: var(--space-100);
+    color: var(--space-700);
+}
+
+.app-status-pill.is-pending {
+    background: var(--space-50);
+    color: var(--space-700);
+}
+
+.app-ops-foot,
+.app-conversation-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.app-ops-stat,
+.app-conversation-state {
+    font-size: 13px;
+    line-height: 1.4;
+    font-weight: 800;
+    color: var(--space-600);
+}
+
+.app-ops-time,
+.app-conversation-time {
+    font-size: 12px;
+    line-height: 1.4;
+    font-weight: 700;
+    color: var(--app-text-soft);
+}
+
+.app-post-cta-gianhang {
+    background: var(--space-600);
+    color: #ffffff;
+    box-shadow: 0 18px 34px var(--app-soft-shadow);
+}
+
+@media (max-width: 360px) {
+    .app-gianhang-hero {
+        padding: 20px 18px;
+        border-radius: 24px;
+    }
+
+    .app-gianhang-headline {
+        font-size: 24px;
+    }
+
+    .app-gianhang-focus-strip,
+    .app-quick-action-grid,
+    .app-metric-row,
+    .app-gianhang-priority-strip {
+        grid-template-columns: 1fr;
+    }
+
+    .app-gianhang-focus-card,
+    .app-gianhang-priority-card,
+    .app-metric-card {
+        min-height: auto;
+    }
+
+    .app-ops-row,
+    .app-ops-foot,
+    .app-conversation-foot {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+@media (min-width: 361px) and (max-width: 420px) {
+    .app-gianhang-focus-strip,
+    .app-gianhang-priority-strip {
+        grid-template-columns: 1fr;
+    }
+
+    .app-quick-action-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .app-metric-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+.app-ui-gianhang-detail .app-detail-panel {
+    border: 1px solid var(--app-soft-border);
+    box-shadow: 0 16px 32px var(--app-soft-shadow);
+}
+
+.app-ui-gianhang-detail .app-detail-hero {
+    position: relative;
+}
+
+.app-ui-gianhang-detail .app-detail-hero::after {
+    content: "Điều hành gian hàng";
+    position: absolute;
+    inset: auto auto 18px 18px;
+    right: auto;
+    height: auto;
+    min-height: 34px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.16);
+    color: var(--app-hero-text);
+    display: inline-flex;
+    align-items: center;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.app-ui-gianhang-detail .app-detail-btn.is-primary {
+    background: var(--space-600);
+    color: #ffffff;
+}
+
+.app-ui-gianhang-detail .app-detail-btn.is-secondary {
+    background: var(--space-100);
+    color: var(--space-700);
+}
+
+.app-ui-gianhang-detail .app-detail-pill {
+    background: var(--app-emphasis-surface);
+    color: var(--app-emphasis-text);
+}
+
+.app-ui-gianhang .app-empty-state,
+.app-ui-gianhang-detail .app-empty-state {
+    background: linear-gradient(180deg, var(--space-50), #ffffff);
+    border: 1px solid var(--app-soft-border);
+}
+
+.app-ui-gianhang-detail .app-empty-icon {
+    background: linear-gradient(135deg, var(--space-100), #ffffff);
+    color: var(--space-700);
+}

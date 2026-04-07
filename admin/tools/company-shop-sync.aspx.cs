@@ -7,7 +7,7 @@ public partial class admin_tools_company_shop_sync : Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
-        AdminRolePolicy_cl.RequireSuperAdmin();
+        AdminAccessGuard_cl.RequireFeatureAccess("admin_company_shop_sync", "/admin/default.aspx?mspace=admin");
 
         if (!IsPostBack)
             BindStatus(false);

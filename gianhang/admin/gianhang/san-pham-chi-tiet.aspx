@@ -28,7 +28,7 @@
         .gh-item-badge--hidden{background:#f3f4f6;color:#6b7280}
         .gh-item-content{padding:18px 20px;border-radius:18px;background:#f8fbff;border:1px solid #dbeafe;color:#1f2937;line-height:1.75}
         .gh-item-empty{padding:28px 18px;text-align:center;color:#6b7280}
-        @media (max-width:991px){.gh-item-title{font-size:26px}.gh-item-grid{grid-template-columns:1fr}}
+        @media (max-width:767px){.gh-item-title{font-size:26px}.gh-item-grid{grid-template-columns:1fr}}
     </style>
 </asp:Content>
 

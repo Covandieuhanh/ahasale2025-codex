@@ -27,6 +27,20 @@ public partial class taikhoan_add : System.Web.UI.Page
     giangvien_class gv_cl = new giangvien_class();
     datetime_class dt_cl = new datetime_class();
     nganh_class nganh_cl = new nganh_class();
+    private bool HasAnyPermission(params string[] permissionKeys)
+    {
+        if (string.IsNullOrWhiteSpace(user) || permissionKeys == null)
+            return false;
+
+        for (int i = 0; i < permissionKeys.Length; i++)
+        {
+            string permissionKey = (permissionKeys[i] ?? "").Trim();
+            if (permissionKey != "" && bcorn_class.check_quyen(user, permissionKey) == "")
+                return true;
+        }
+
+        return false;
+    }
 
     public void main()
     {
@@ -49,7 +63,7 @@ public partial class taikhoan_add : System.Web.UI.Page
             DropDownList5.DataBind();
             DropDownList5.Items.Insert(0, new ListItem("Chọn", ""));
             DropDownList5.SelectedIndex = nganh_cl.return_index(_ob.chuyenmon);
-            if (bcorn_class.check_quyen(user, "q15_3") == "")//neu la quyen cap chi nhanh
+            if (HasAnyPermission("q15_3"))//neu la quyen cap chi nhanh
             {
                 
             }
@@ -179,44 +193,14 @@ public partial class taikhoan_add : System.Web.UI.Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
-        #region Check_Login
-        string _quyen = "none";
-        string _cookie_user = "", _cookie_pass = "";
-        if (Request.Cookies["save_user_admin_aka_1"] != null) _cookie_user = Request.Cookies["save_user_admin_aka_1"].Value;
-        if (Request.Cookies["save_pass_admin_aka_1"] != null) _cookie_pass = Request.Cookies["save_pass_admin_aka_1"].Value;
-        if (Session["user"] == null) Session["user"] = ""; if (Session["notifi"] == null) Session["notifi"] = ""; if (Session["user"].ToString() == "") Response.Redirect("/gianhang/admin/f5_ss_admin.aspx");
-        string _url = Request.Url.GetLeftPart(UriPartial.Authority).ToLower();
-        string _kq = bcorn_class.check_login(Session["user"].ToString(), _cookie_user, _cookie_pass, _url, _quyen);
-        if (_kq != "")//nếu có thông báo --> có lỗi --> reset --> bắt login lại
-        {
-            if (_kq == "baotri") Response.Redirect("/baotri.aspx");
-            else
-            {
-                if (_kq == "1") Response.Redirect("/gianhang/admin/login.aspx");//hết Session, hết Cookie
-                else
-                {
-                    if (_kq == "2")//k đủ quyền
-                    {
-                        Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
-                        Response.Redirect("/gianhang/admin");
-                    }
-                    else
-                    {
-                        Session["notifi"] = _kq; Session["user"] = "";
-                        Response.Cookies["save_user_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Cookies["save_pass_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Cookies["save_url_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Redirect("/gianhang/admin/login.aspx");
-                    }
-                }
-            }
-        }
-        #endregion
+        GianHangAdminPageGuard_cl.AccessInfo access = GianHangAdminPageGuard_cl.EnsureAccess(this, db, "none");
+        if (access == null)
+            return;
 
         #region Check quyen theo nganh
-        user = Session["user"].ToString();
-        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
-        if (bcorn_class.check_quyen(user, "q15_3") == "" || bcorn_class.check_quyen(user, "n15_3") == "")
+        user = (access.User ?? "").Trim();
+        user_parent = access.OwnerAccountKey;
+        if (HasAnyPermission("q15_3", "n15_3"))
         {
                 if (!string.IsNullOrWhiteSpace(Request.QueryString["id"]))
                 {
@@ -249,6 +233,12 @@ public partial class taikhoan_add : System.Web.UI.Page
 
     protected void button1_Click1(object sender, EventArgs e)
     {
+        if (!HasAnyPermission("q15_3", "n15_3"))
+        {
+            notifi = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để cập nhật chuyên gia.", "false", "false", "OK", "alert", "");
+            return;
+        }
+
         string _fullname = str_cl.VietHoa_ChuCai_DauTien(str_cl.remove_blank(txt_hoten.Text.Trim().ToLower()));
         string _ngaysinh = txt_ngaysinh.Text;
         string _email = txt_email.Text.ToLower().Trim();
@@ -342,6 +332,12 @@ public partial class taikhoan_add : System.Web.UI.Page
     }
     protected void Button2_Click(object sender, EventArgs e)//xóa ảnh đại diện
     {
+        if (!HasAnyPermission("q15_3", "n15_3"))
+        {
+            notifi = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để xóa ảnh đại diện chuyên gia.", "false", "false", "OK", "alert", "");
+            return;
+        }
+
         giangvien_table _ob = db.giangvien_tables.Where(p => p.id.ToString() == id && p.id_chinhanh == Session["chinhanh"].ToString()).First();
         if (_ob.anhdaidien != "/uploads/images/macdinh.jpg")
         {
@@ -355,11 +351,23 @@ public partial class taikhoan_add : System.Web.UI.Page
 
     protected void but_ngung_giangday_Click(object sender, EventArgs e)
     {
+        if (!HasAnyPermission("q15_3", "n15_3"))
+        {
+            notifi = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để ngừng giảng dạy chuyên gia.", "false", "false", "OK", "alert", "");
+            return;
+        }
+
         UpdateLecturerStatusQuick("Ngưng giảng dạy", "Đã chuyển chuyên gia sang trạng thái ngừng giảng dạy.");
     }
 
     protected void but_molai_giangday_Click(object sender, EventArgs e)
     {
+        if (!HasAnyPermission("q15_3", "n15_3"))
+        {
+            notifi = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để mở lại chuyên gia.", "false", "false", "OK", "alert", "");
+            return;
+        }
+
         UpdateLecturerStatusQuick("Đang giảng dạy", "Đã mở lại chuyên gia để tiếp tục sử dụng.");
     }
 

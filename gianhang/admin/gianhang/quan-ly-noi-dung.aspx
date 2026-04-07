@@ -19,7 +19,7 @@
         .gh-admin-content__badge{display:inline-flex;align-items:center;min-height:28px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap}.gh-admin-content__badge--product{background:#e8f3ff;color:#1d4ed8}.gh-admin-content__badge--service{background:#eefcf4;color:#15803d}.gh-admin-content__badge--visible{background:#ecfdf3;color:#15803d}.gh-admin-content__badge--hidden{background:#f3f4f6;color:#6b7280}
         .gh-admin-content__actions-list{display:flex;gap:8px;flex-wrap:wrap}.gh-admin-content__action-link{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:0 12px;border-radius:12px;border:1px solid #dbe2ea;background:#fff;color:#16331d!important;font-size:12px;font-weight:800;text-decoration:none!important}.gh-admin-content__action-link--primary{border-color:#cfead3;background:#f5fff6}
         .gh-admin-content__empty{padding:22px 12px;color:#6b7280;text-align:center}
-        @media (max-width:991px){.gh-admin-content__filters{grid-template-columns:1fr}.gh-admin-content__title{font-size:26px}}
+        @media (max-width:767px){.gh-admin-content__filters{grid-template-columns:1fr}.gh-admin-content__title{font-size:26px}}
     </style>
 </asp:Content>
 

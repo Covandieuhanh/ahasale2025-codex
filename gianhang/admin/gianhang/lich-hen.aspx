@@ -14,7 +14,7 @@
         .gh-admin-bookings__badge{display:inline-flex;align-items:center;min-height:28px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap}.gh-admin-bookings__badge--pending{background:#fff7ed;color:#c2410c}.gh-admin-bookings__badge--confirmed{background:#eff6ff;color:#1d4ed8}.gh-admin-bookings__badge--done{background:#ecfdf3;color:#15803d}.gh-admin-bookings__badge--cancelled{background:#f3f4f6;color:#6b7280}
         .gh-admin-bookings__actions-list{display:flex;gap:8px;flex-wrap:wrap}.gh-admin-bookings__action-link{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:0 12px;border-radius:12px;border:1px solid #e5d5ff;background:#fff;color:#3b0764!important;font-size:12px;font-weight:800;text-decoration:none!important}.gh-admin-bookings__action-link--primary{background:#faf5ff}
         .gh-admin-bookings__empty{padding:22px 12px;color:#6b7280;text-align:center}
-        @media (max-width:991px){.gh-admin-bookings__filters{grid-template-columns:1fr}.gh-admin-bookings__title{font-size:26px}}
+        @media (max-width:767px){.gh-admin-bookings__filters{grid-template-columns:1fr}.gh-admin-bookings__title{font-size:26px}}
     </style>
 </asp:Content>
 

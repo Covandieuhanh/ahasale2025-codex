@@ -10,6 +10,21 @@ public partial class admin_Default2 : System.Web.UI.Page
     taikhoan_class tk_cl = new taikhoan_class();
     dbDataContext db = new dbDataContext();
     public string notifi, meta;
+
+    private bool TryBootstrapFromHomeWorkspace()
+    {
+        string homeAccount;
+        string deniedMessage;
+        if (!GianHangAdminBridge_cl.EnsureLegacyAdminSessionFromCurrentHome(db, out homeAccount, out deniedMessage))
+            return false;
+
+        Response.Redirect(GianHangAdminBridge_cl.ResolvePreferredAdminRedirectUrl(HttpContext.Current, "", "/gianhang/admin"), false);
+        HttpContext current = HttpContext.Current;
+        if (current != null && current.ApplicationInstance != null)
+            current.ApplicationInstance.CompleteRequest();
+        return true;
+    }
+
     protected void Page_Load(object sender, EventArgs e)
     {
         //Session["user"] = ""; Session["title"] = "";
@@ -25,8 +40,11 @@ public partial class admin_Default2 : System.Web.UI.Page
         if (Session["notifi"] == null) Session["notifi"] = "";
         if (Session["user_parent"] == null) Session["user_parent"] = "admin";
 
+        if ((Session["user"] + "").Trim() == "" && TryBootstrapFromHomeWorkspace())
+            return;
+
         if (Session["user"].ToString() != "")
-            Response.Redirect("/gianhang/admin");
+            Response.Redirect(GianHangAdminBridge_cl.ResolvePreferredAdminRedirectUrl(HttpContext.Current, "", "/gianhang/admin"));
 
         if (!IsPostBack)
         {
@@ -185,7 +203,7 @@ public partial class admin_Default2 : System.Web.UI.Page
                 Session["user_parent"] = string.IsNullOrWhiteSpace(userParent) ? "admin" : userParent;
                 Session["nganh"] = adminAcc == null || string.IsNullOrWhiteSpace(adminAcc.id_nganh) ? ResolveNganhId(id_chinhanh) : adminAcc.id_nganh;
                 Session["notifi"] = thongbao_class.metro_notifi_onload("Thông báo", "Đăng nhập thành công.", "2000", "warning");
-                Response.Redirect("/gianhang/admin");
+                Response.Redirect(GianHangAdminBridge_cl.ResolvePreferredAdminRedirectUrl(HttpContext.Current, "", "/gianhang/admin"));
             }
         }
     }

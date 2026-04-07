@@ -329,7 +329,7 @@ public partial class home_Default : System.Web.UI.Page
 
     public void set_dulieu_macdinh()
     {
-        ViewState["current_page_danhmuc_home"] = "1";
+        ViewState["current_page_danhmuc_home"] = HomePager_cl.ResolvePage(Request).ToString();
     }
 
     public void ShowCuaHang(dbDataContext db)
@@ -430,10 +430,17 @@ public partial class home_Default : System.Web.UI.Page
 
         int current_page = int.Parse(ViewState["current_page_danhmuc_home"].ToString());
         int total_page = number_of_page_class.return_total_page(_Tong_Record, show);
+        if (total_page < 1) total_page = 1;
         if (current_page < 1) current_page = 1;
         else if (current_page > total_page) current_page = total_page;
 
         ViewState["total_page"] = total_page;
+
+        litPager.Text = HomePager_cl.RenderPager(Request, current_page, total_page);
+        but_xemtiep.Visible = false;
+        but_xemtiep1.Visible = false;
+        but_quaylai.Visible = false;
+        but_quaylai1.Visible = false;
 
         if (current_page >= total_page)
         {

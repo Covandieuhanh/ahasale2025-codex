@@ -34,6 +34,11 @@ BEGIN
         gia_von BIGINT NULL,
         loai NVARCHAR(20) NULL,
         id_danhmuc NVARCHAR(50) NULL,
+        dia_diem NVARCHAR(255) NULL,
+        dia_chi_tinh NVARCHAR(150) NULL,
+        dia_chi_quan NVARCHAR(150) NULL,
+        dia_chi_phuong NVARCHAR(150) NULL,
+        dia_chi_chi_tiet NVARCHAR(MAX) NULL,
         bin BIT NULL,
         ngay_tao DATETIME NULL,
         ngay_cap_nhat DATETIME NULL,
@@ -68,6 +73,31 @@ END
 IF COL_LENGTH('dbo.GH_SanPham_tb', 'phan_tram_uu_dai') IS NULL
 BEGIN
     ALTER TABLE dbo.GH_SanPham_tb ADD phan_tram_uu_dai INT NULL;
+END
+
+IF COL_LENGTH('dbo.GH_SanPham_tb', 'dia_diem') IS NULL
+BEGIN
+    ALTER TABLE dbo.GH_SanPham_tb ADD dia_diem NVARCHAR(255) NULL;
+END
+
+IF COL_LENGTH('dbo.GH_SanPham_tb', 'dia_chi_tinh') IS NULL
+BEGIN
+    ALTER TABLE dbo.GH_SanPham_tb ADD dia_chi_tinh NVARCHAR(150) NULL;
+END
+
+IF COL_LENGTH('dbo.GH_SanPham_tb', 'dia_chi_quan') IS NULL
+BEGIN
+    ALTER TABLE dbo.GH_SanPham_tb ADD dia_chi_quan NVARCHAR(150) NULL;
+END
+
+IF COL_LENGTH('dbo.GH_SanPham_tb', 'dia_chi_phuong') IS NULL
+BEGIN
+    ALTER TABLE dbo.GH_SanPham_tb ADD dia_chi_phuong NVARCHAR(150) NULL;
+END
+
+IF COL_LENGTH('dbo.GH_SanPham_tb', 'dia_chi_chi_tiet') IS NULL
+BEGIN
+    ALTER TABLE dbo.GH_SanPham_tb ADD dia_chi_chi_tiet NVARCHAR(MAX) NULL;
 END
 
 IF NOT EXISTS (
@@ -318,6 +348,43 @@ BEGIN
     ALTER TABLE dbo.GH_HoaDon_ChiTiet_tb ADD phan_tram_uu_dai INT NULL;
 END
 
+IF OBJECT_ID('dbo.GH_HoSoQuyen_tb', 'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.GH_HoSoQuyen_tb
+    (
+        id BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        shop_taikhoan NVARCHAR(100) NOT NULL,
+        loai_vi INT NULL,
+        so_quyen DECIMAL(18,2) NULL,
+        cong_tru BIT NULL,
+        id_donhang NVARCHAR(50) NULL,
+        public_order_id NVARCHAR(50) NULL,
+        buyer_account NVARCHAR(100) NULL,
+        ghi_chu NVARCHAR(MAX) NULL,
+        ngay_tao DATETIME NULL
+    );
+END
+
+IF COL_LENGTH('dbo.GH_HoSoQuyen_tb', 'public_order_id') IS NULL
+BEGIN
+    ALTER TABLE dbo.GH_HoSoQuyen_tb ADD public_order_id NVARCHAR(50) NULL;
+END
+
+IF COL_LENGTH('dbo.GH_HoSoQuyen_tb', 'buyer_account') IS NULL
+BEGIN
+    ALTER TABLE dbo.GH_HoSoQuyen_tb ADD buyer_account NVARCHAR(100) NULL;
+END
+
+IF COL_LENGTH('dbo.GH_HoSoQuyen_tb', 'ghi_chu') IS NULL
+BEGIN
+    ALTER TABLE dbo.GH_HoSoQuyen_tb ADD ghi_chu NVARCHAR(MAX) NULL;
+END
+
+IF COL_LENGTH('dbo.GH_HoSoQuyen_tb', 'ngay_tao') IS NULL
+BEGIN
+    ALTER TABLE dbo.GH_HoSoQuyen_tb ADD ngay_tao DATETIME NULL;
+END
+
 IF NOT EXISTS (
     SELECT 1 FROM sys.indexes 
     WHERE name = 'IX_GH_HoaDon_shop' AND object_id = OBJECT_ID('dbo.GH_HoaDon_tb')
@@ -340,6 +407,22 @@ IF NOT EXISTS (
 )
 BEGIN
     CREATE INDEX IX_GH_HoaDonCT_hoadon ON dbo.GH_HoaDon_ChiTiet_tb(id_hoadon);
+END
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.indexes
+    WHERE name = 'IX_GH_HoSoQuyen_shop' AND object_id = OBJECT_ID('dbo.GH_HoSoQuyen_tb')
+)
+BEGIN
+    CREATE INDEX IX_GH_HoSoQuyen_shop ON dbo.GH_HoSoQuyen_tb(shop_taikhoan, loai_vi, ngay_tao);
+END
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.indexes
+    WHERE name = 'IX_GH_HoSoQuyen_order' AND object_id = OBJECT_ID('dbo.GH_HoSoQuyen_tb')
+)
+BEGIN
+    CREATE INDEX IX_GH_HoSoQuyen_order ON dbo.GH_HoSoQuyen_tb(shop_taikhoan, id_donhang, loai_vi, cong_tru);
 END
 
 IF COL_LENGTH('dbo.DonHang_ChiTiet_tb', 'gh_product_id') IS NULL

@@ -25,7 +25,7 @@ public partial class badmin_uc_menu_dropdown : System.Web.UI.UserControl
 
     protected void Page_Load(object sender, EventArgs e)
     {
-        user = (Session["user"] ?? "").ToString();
+        user = GianHangAdminContext_cl.ResolveDisplayAccountKey();
         user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
         if (Session["index_loc_phanloai_baiviet"] == null) Session["index_loc_phanloai_baiviet"] = "1";
         if (!IsPostBack)
@@ -215,5 +215,7 @@ public partial class badmin_uc_menu_dropdown : System.Web.UI.UserControl
 
             default: a0 = "active"; Session["title"] = "Trang chủ"; break;
         }
+
+        Session["title"] = GianHangAdminRouteMap_cl.ResolveTitle(Request);
     }
 }

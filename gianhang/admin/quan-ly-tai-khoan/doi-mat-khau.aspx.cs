@@ -8,84 +8,78 @@ using System.IO;
 
 public partial class gianhang_taikhoan_doi_mat_khau : System.Web.UI.Page
 {
-    public string notifi, user, url_back;
+    public string notifi, user, url_back, current_user;
     taikhoan_class tk_cl = new taikhoan_class();
     dbDataContext db = new dbDataContext();
     public string txt_oldpass = "", txt_pass1 = "", txt_pass2 = "";
+
+    private bool HasAnyPermission(params string[] permissionKeys)
+    {
+        string actor = (current_user ?? "").Trim();
+        if (string.IsNullOrEmpty(actor))
+            return false;
+
+        foreach (string permissionKey in permissionKeys)
+        {
+            if (!string.IsNullOrEmpty(permissionKey) && bcorn_class.check_quyen(actor, permissionKey) == "")
+                return true;
+        }
+
+        return false;
+    }
+
+    private bool IsCurrentRootAdmin()
+    {
+        return string.Equals((current_user ?? "").Trim(), "admin", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void RedirectToAdminHome()
+    {
+        Response.Redirect(GianHangAdminBridge_cl.BuildAdminHomeUrl(HttpContext.Current));
+    }
     protected void Page_Load(object sender, EventArgs e)
     {
-        #region Check_Login
-        string _quyen = "none";
-        string _cookie_user = "", _cookie_pass = "";
-        if (Request.Cookies["save_user_admin_aka_1"] != null) _cookie_user = Request.Cookies["save_user_admin_aka_1"].Value;
-        if (Request.Cookies["save_pass_admin_aka_1"] != null) _cookie_pass = Request.Cookies["save_pass_admin_aka_1"].Value;
-        if (Session["user"] == null) Session["user"] = ""; if (Session["notifi"] == null) Session["notifi"] = "";if (Session["user"].ToString() == "") Response.Redirect("/gianhang/admin/f5_ss_admin.aspx");
-        string _url = Request.Url.GetLeftPart(UriPartial.Authority).ToLower();
-        string _kq = bcorn_class.check_login(Session["user"].ToString(), _cookie_user, _cookie_pass, _url, _quyen);
-        if (_kq != "")//nếu có thông báo --> có lỗi --> reset --> bắt login lại
-        {
-            if (_kq == "baotri") Response.Redirect("/baotri.aspx");
-            else
-            {
-                if (_kq == "1") Response.Redirect("/gianhang/admin/login.aspx");//hết Session, hết Cookie
-                else
-                {
-                    if (_kq == "2")//k đủ quyền
-                    {
-                        Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
-                        Response.Redirect("/gianhang/admin");
-                    }
-                    else
-                    {
-                        Session["notifi"] = _kq; Session["user"] = "";
-                        Response.Cookies["save_user_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Cookies["save_pass_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Cookies["save_url_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Redirect("/gianhang/admin/login.aspx");
-                    }
-                }
-            }
-        }
-        #endregion
+        GianHangAdminPageGuard_cl.AccessInfo access = GianHangAdminPageGuard_cl.EnsureAccess(this, db, "none");
+        if (access == null)
+            return;
+
         #region Check quyen theo nganh
         string qsUser = (Request.QueryString["user"] ?? "").Trim();
         user = qsUser;
-        if (bcorn_class.check_quyen(Session["user"].ToString(), "q2_3") == "" || bcorn_class.check_quyen(Session["user"].ToString(), "n2_3") == "" || user == Session["user"].ToString())
+        current_user = (access.User ?? "").Trim();
+        if (HasAnyPermission("q2_3", "n2_3") || string.Equals(user, current_user, StringComparison.OrdinalIgnoreCase))
         {
             if (!string.IsNullOrWhiteSpace(qsUser))
             {
                 user = qsUser;
                 if (tk_cl.exist_user(user))
                 {
-                    if (user == "admin" && Session["user"].ToString() != "admin")
+                    if (user == "admin" && !IsCurrentRootAdmin())
                     {
                         Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không thể đổi mật khẩu cho admin.", "false", "false", "OK", "alert", "");
-                        Response.Redirect("/gianhang/admin");
+                        RedirectToAdminHome();
                     }
                     else
                     {
-                        if (Request.Cookies["save_url_admin_aka_1"] != null)
-                            url_back = Request.Cookies["save_url_admin_aka_1"].Value;
-                        else
-                            url_back = "/gianhang/admin";
+                        url_back = GianHangAdminBridge_cl.ResolvePreferredAdminRedirectUrl(HttpContext.Current, "", "/gianhang/admin");
                     }
                 }
                 else
                 {
                     Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Trang bạn yêu cầu không hợp lệ.", "false", "false", "OK", "alert", "");
-                    Response.Redirect("/gianhang/admin");
+                    RedirectToAdminHome();
                 }
             }
             else
             {
                 Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Trang bạn yêu cầu không hợp lệ.", "false", "false", "OK", "alert", "");
-                Response.Redirect("/gianhang/admin");
+                RedirectToAdminHome();
             }
         }
         else
         {
             Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
-            Response.Redirect("/gianhang/admin");
+            RedirectToAdminHome();
         }
         #endregion
 
@@ -95,6 +89,13 @@ public partial class gianhang_taikhoan_doi_mat_khau : System.Web.UI.Page
 
     protected void button1_Click1(object sender, EventArgs e)
     {
+        if (!(HasAnyPermission("q2_3", "n2_3") || string.Equals(user, current_user, StringComparison.OrdinalIgnoreCase)))
+        {
+            Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
+            RedirectToAdminHome();
+            return;
+        }
+
         taikhoan_table_2023 q = tk_cl.return_object(user);
         //string _oldpass = Request.Form["txt_oldpass"];
         string _pass1 = Request.Form["txt_pass1"];

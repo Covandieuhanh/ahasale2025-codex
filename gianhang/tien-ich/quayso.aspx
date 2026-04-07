@@ -11,7 +11,7 @@
     <link rel="icon" href="/uploads/Images/favicon.png" type="image/x-icon" />
     <style>
         .title-1 {
-            font-family: "Segoe UI",SegoeUI,"Helvetica Neue",Helvetica,Arial,sans-serif !important;
+            font-family: "Be Vietnam Pro", "Segoe UI", Arial, sans-serif !important;
             font-weight: 600;
             font-size: 36px;
         }

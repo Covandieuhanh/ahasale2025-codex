@@ -14,6 +14,20 @@ public partial class admin_api_usdt_bridge_credit : Page
         Response.Cache.SetCacheability(HttpCacheability.NoCache);
         Response.Cache.SetNoStore();
 
+        if (!string.Equals(Request.HttpMethod, "POST", StringComparison.OrdinalIgnoreCase))
+        {
+            Response.StatusCode = 405;
+            Response.StatusDescription = "Method Not Allowed";
+            Response.AddHeader("Allow", "POST");
+            WriteJson(405, new
+            {
+                ok = false,
+                status = "method_not_allowed",
+                message = "Only POST is supported."
+            });
+            return;
+        }
+
         if (!USDTBridgeConfig_cl.Enabled)
         {
             WriteJson(503, new

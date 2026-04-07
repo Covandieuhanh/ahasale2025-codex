@@ -14,11 +14,11 @@ public partial class admin_MoTaCapBac : System.Web.UI.Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
+        AdminAccessGuard_cl.RequireFeatureAccess("tier_reference", "/admin/default.aspx?mspace=home");
+
         if (!IsPostBack)
         {
             Session["url_back"] = System.Web.HttpContext.Current.Request.Url.AbsoluteUri;
-
-            check_login_cl.check_login_admin("none", "none");
 
             string _tk = Session["taikhoan"] as string;
             if (!string.IsNullOrEmpty(_tk)) _tk = mahoa_cl.giaima_Bcorn(_tk);
@@ -117,7 +117,7 @@ public partial class admin_MoTaCapBac : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminAccessGuard_cl.RequireFeatureAccess("tier_reference", "/admin/default.aspx?mspace=home");
 
             LinkButton lk = (LinkButton)sender;
             int id = int.Parse(lk.CommandArgument);
@@ -161,7 +161,7 @@ public partial class admin_MoTaCapBac : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminAccessGuard_cl.RequireFeatureAccess("tier_reference", "/admin/default.aspx?mspace=home");
 
             if (ViewState["selected_id"] == null)
             {
@@ -216,7 +216,7 @@ public partial class admin_MoTaCapBac : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminAccessGuard_cl.RequireFeatureAccess("tier_reference", "/admin/default.aspx?mspace=home");
 
             BindList();
 

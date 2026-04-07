@@ -31,7 +31,7 @@
         .gh-wc-badge--muted{background:#f3f4f6;color:#6b7280}
         .gh-wc-link{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:0 12px;border-radius:12px;border:1px solid #dbe2ea;background:#fff;color:#123047!important;font-size:12px;font-weight:800;text-decoration:none!important}
         .gh-wc-empty{padding:28px 18px;text-align:center;color:#6b7280}
-        @media (max-width:991px){.gh-wc-title{font-size:26px}}
+        @media (max-width:767px){.gh-wc-title{font-size:26px}}
     </style>
 </asp:Content>
 

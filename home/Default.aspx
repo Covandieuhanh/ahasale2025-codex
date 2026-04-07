@@ -1824,6 +1824,7 @@
                                 <div class="ms-auto d-flex align-items-center gap-2">
                                     <div class="text-muted small d-none d-md-block">
                                         <asp:Label ID="lb_show" runat="server" Text=""></asp:Label>
+                                        <asp:Literal ID="litPager" runat="server"></asp:Literal>
                                     </div>
 
                                     <asp:LinkButton ID="but_quaylai" OnClick="but_quaylai_Click" runat="server" CssClass="btn btn-outline-secondary btn-sm">

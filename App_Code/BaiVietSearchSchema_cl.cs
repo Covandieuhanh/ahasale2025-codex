@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 public static class BaiVietSearchSchema_cl
 {
     private static bool _schemaEnsured;
+    private static bool? _hasSearchColumns;
     private static readonly object SyncRoot = new object();
     private static readonly object BackfillLock = new object();
     private static DateTime _lastBackfillUtc = DateTime.MinValue;
@@ -30,6 +31,8 @@ public static class BaiVietSearchSchema_cl
     public static bool HasSearchColumns(dbDataContext db)
     {
         if (db == null) return false;
+        if (_hasSearchColumns.HasValue)
+            return _hasSearchColumns.Value;
 
         try
         {
@@ -39,10 +42,12 @@ SELECT CASE
     WHEN COL_LENGTH('dbo.BaiViet_tb', 'description_khongdau') IS NULL THEN 0
     ELSE 1
 END AS ok").FirstOrDefault();
-            return flag == 1;
+            _hasSearchColumns = (flag == 1);
+            return _hasSearchColumns.Value;
         }
         catch
         {
+            _hasSearchColumns = false;
             return false;
         }
     }
@@ -73,6 +78,7 @@ END;";
             }
 
             _schemaEnsured = true;
+            _hasSearchColumns = true;
         }
     }
 

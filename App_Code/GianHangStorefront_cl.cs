@@ -162,7 +162,9 @@ public static class GianHangStorefront_cl
 
     public static string ResolveAvatarUrl(taikhoan_tb account)
     {
-        string avatar = account == null ? "" : (account.anhdaidien ?? "").Trim();
+        string avatar = account == null ? "" : (account.logo_shop ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(avatar))
+            avatar = account == null ? "" : (account.anhdaidien ?? "").Trim();
         if (string.IsNullOrWhiteSpace(avatar))
             return "/uploads/images/macdinh.jpg";
         return ResolveImageUrl(avatar);
@@ -218,15 +220,12 @@ public static class GianHangStorefront_cl
         if (item == null)
             return GianHangRoutes_cl.BuildDashboardUrl();
 
-        if (IsService(item))
-            return GianHangRoutes_cl.BuildDatLichUrl(item.Id, GianHangRoutes_cl.BuildDashboardUrl());
-
         return GianHangRoutes_cl.BuildTaoDonUrl(item.Id, GianHangRoutes_cl.BuildDashboardUrl());
     }
 
     public static string BuildActionText(ProductCardView item)
     {
-        return IsService(item) ? "Đặt lịch" : "Tạo đơn";
+        return "Tạo đơn";
     }
 
     public static bool IsService(ProductCardView item)

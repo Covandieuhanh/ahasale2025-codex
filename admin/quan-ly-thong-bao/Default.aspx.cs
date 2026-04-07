@@ -116,7 +116,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
 
     private void ShowFilterViewFromQuery()
     {
-        AdminRolePolicy_cl.RequireSuperAdmin();
+        AdminAccessGuard_cl.RequireFeatureAccess("notifications", "/admin/default.aspx?mspace=admin");
         HideOtherPanels();
         pn_loc.Visible = true;
         up_loc.Update();
@@ -125,7 +125,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
 
     private void ShowExportViewFromQuery()
     {
-        AdminRolePolicy_cl.RequireSuperAdmin();
+        AdminAccessGuard_cl.RequireFeatureAccess("notifications", "/admin/default.aspx?mspace=admin");
         HideOtherPanels();
 
         check_list_page.Items.Clear();
@@ -143,7 +143,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
 
     private void ShowPrintViewFromQuery()
     {
-        AdminRolePolicy_cl.RequireSuperAdmin();
+        AdminAccessGuard_cl.RequireFeatureAccess("notifications", "/admin/default.aspx?mspace=admin");
         HideOtherPanels();
         pn_in.Visible = true;
         up_in.Update();
@@ -256,7 +256,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
             try
             {
                 Session["url_back"] = HttpContext.Current.Request.Url.AbsoluteUri;
-                AdminRolePolicy_cl.RequireSuperAdmin();
+                AdminAccessGuard_cl.RequireFeatureAccess("notifications", "/admin/default.aspx?mspace=admin");
 
                 //Nó k kịp lưu vì nó tải trang này trước khi load menu-left
                 //if (Session["title"] != null)
@@ -432,7 +432,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("notifications", "/admin/default.aspx?mspace=admin");
             ViewState["current_page_qltb"] = int.Parse(ViewState["current_page_qltb"].ToString()) - 1;
             #region LƯU TRANG HIỆN TẠI
             // Lấy cookie "cookie_qltb" từ Request.Cookies
@@ -464,7 +464,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("notifications", "/admin/default.aspx?mspace=admin");
             ViewState["current_page_qltb"] = int.Parse(ViewState["current_page_qltb"].ToString()) + 1;
             #region LƯU TRANG HIỆN TẠI
             // Lấy cookie "cookie_qltb" từ Request.Cookies
@@ -496,7 +496,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("notifications", "/admin/default.aspx?mspace=admin");
             ViewState["current_page_qltb"] = 1;
             show_main();
         }
@@ -519,7 +519,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("notifications", "/admin/default.aspx?mspace=admin");
             RedirectTo(BuildListUrl(true));
         }
         catch (Exception _ex)
@@ -539,7 +539,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("notifications", "/admin/default.aspx?mspace=admin");
             RedirectTo(BuildListUrl());
         }
         catch (Exception _ex)
@@ -558,7 +558,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("notifications", "/admin/default.aspx?mspace=admin");
             RedirectTo(BuildListUrl());
         }
         catch (Exception _ex)
@@ -580,7 +580,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("notifications", "/admin/default.aspx?mspace=admin");
             string view = (Request.QueryString["view"] ?? "").Trim().ToLowerInvariant();
             if (view == ViewExport)
                 RedirectTo(BuildListUrl());
@@ -604,7 +604,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("notifications", "/admin/default.aspx?mspace=admin");
             bool _chonmuc = false, _chonPage = false;
 
             foreach (ListItem item in check_list_excel.Items)
@@ -843,7 +843,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("notifications", "/admin/default.aspx?mspace=admin");
             // Kiểm tra trạng thái của checkbox "Chọn tất cả"
             bool isChecked = check_all_excel.Checked;
 
@@ -869,7 +869,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("notifications", "/admin/default.aspx?mspace=admin");
             // Kiểm tra xem tất cả các mục trong CheckBoxList đã được chọn hay chưa
             bool allSelected = true;
 
@@ -901,7 +901,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("notifications", "/admin/default.aspx?mspace=admin");
             // Kiểm tra trạng thái của checkbox "Chọn tất cả"
             bool isChecked = check_all_page.Checked;
 
@@ -927,7 +927,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("notifications", "/admin/default.aspx?mspace=admin");
             // Kiểm tra xem tất cả các mục trong CheckBoxList đã được chọn hay chưa
             bool allSelected = true;
 
@@ -1038,7 +1038,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("notifications", "/admin/default.aspx?mspace=admin");
             string view = (Request.QueryString["view"] ?? "").Trim().ToLowerInvariant();
             if (view == ViewFilter)
                 RedirectTo(BuildListUrl());
@@ -1061,7 +1061,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("notifications", "/admin/default.aspx?mspace=admin");
             if (Request.Cookies["cookie_qltb"] != null)//nếu có ck r thì lưu giá trị mới
             {
                 HttpCookie _ck = Request.Cookies["cookie_qltb"];
@@ -1093,7 +1093,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("notifications", "/admin/default.aspx?mspace=admin");
             if (Request.Cookies["cookie_qltb"] != null)
                 Response.Cookies["cookie_qltb"].Expires = AhaTime_cl.Now.AddYears(-1);
             RedirectTo(BuildListUrl());
@@ -1117,7 +1117,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("notifications", "/admin/default.aspx?mspace=admin");
 
             var selectedIds = new List<string>(); // Danh sách để lưu trữ ID của các mục đã được chọn
 
@@ -1220,7 +1220,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("notifications", "/admin/default.aspx?mspace=admin");
 
             var selectedIds = new List<string>(); // Danh sách để lưu trữ ID của các mục đã được chọn
 
@@ -1283,7 +1283,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("notifications", "/admin/default.aspx?mspace=admin");
 
             var selectedIds = new List<string>(); // Danh sách để lưu trữ ID của các mục đã được chọn
 
@@ -1346,7 +1346,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("notifications", "/admin/default.aspx?mspace=admin");
 
             var selectedIds = new List<string>(); // Danh sách để lưu trữ ID của các mục đã được chọn
 
@@ -1408,7 +1408,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("notifications", "/admin/default.aspx?mspace=admin");
 
             var selectedIds = new List<string>(); // Danh sách để lưu trữ ID của các mục đã được chọn
 
@@ -1473,7 +1473,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("notifications", "/admin/default.aspx?mspace=admin");
             string view = (Request.QueryString["view"] ?? "").Trim().ToLowerInvariant();
             if (view == ViewPrint)
                 RedirectTo(BuildListUrl());
@@ -1499,7 +1499,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();//reset control
+            AdminAccessGuard_cl.RequireFeatureAccess("notifications", "/admin/default.aspx?mspace=admin");//reset control
                                                              //ddl_DanhMuc.DataSource = null;
                                                              //ddl_DanhMuc.DataBind();
                                                              //ẩn form
@@ -1521,7 +1521,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("notifications", "/admin/default.aspx?mspace=admin");
             RedirectTo("/admin/quan-ly-thong-bao/in.aspx");
         }
         catch (Exception _ex)
@@ -1544,7 +1544,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("notifications", "/admin/default.aspx?mspace=admin");
             ViewState["sapxep_thongbao"] = "1";
             but_sapxep_moinhat.CssClass = "info small rounded";
             but_sapxep_chuadoc.CssClass = "light small rounded";
@@ -1567,7 +1567,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("notifications", "/admin/default.aspx?mspace=admin");
             ViewState["sapxep_thongbao"] = "2";
             but_sapxep_moinhat.CssClass = "light small rounded";
             but_sapxep_chuadoc.CssClass = "info small rounded";
@@ -1589,7 +1589,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("notifications", "/admin/default.aspx?mspace=admin");
             LinkButton button = (LinkButton)sender;
             string _id = button.CommandArgument;
             string taiKhoan = GetCurrentAdminAccount();
@@ -1622,7 +1622,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("notifications", "/admin/default.aspx?mspace=admin");
             LinkButton button = (LinkButton)sender;
             string _id = button.CommandArgument;
             string taiKhoan = GetCurrentAdminAccount();
@@ -1654,7 +1654,7 @@ public partial class admin_quan_ly_thong_bao_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("notifications", "/admin/default.aspx?mspace=admin");
             LinkButton button = (LinkButton)sender;
             string _id = button.CommandArgument;
             string taiKhoan = GetCurrentAdminAccount();

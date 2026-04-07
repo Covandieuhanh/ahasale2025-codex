@@ -197,9 +197,6 @@
         background-color: #e8f8fd
     }
     /*fix-colum-table*/
-    @media (max-width: 575px) { /*sm*/
-    }
-
     @media (max-width: 767px) { /*md*/
         .logo-login-badmin {
             width: 130px;
@@ -220,13 +217,7 @@
         }
     }
 
-    @media (max-width: 991px) { /*lg*/
-        .w-form-hide-max {
-            max-width: 100% !important;
-        }
-    }
-
-    @media (max-width: 1199px) { /*xl*/
+    @media (max-width: 767px) {
         .w-form-hide-max {
             max-width: calc(100% - 52px);
         }
@@ -314,7 +305,7 @@
     display: flex;
 }
 
-@media screen and (min-width: 1200px) {
+@media screen and (min-width: 768px) {
     .navview .pull-button + .app-title {
         display: flex;
     }

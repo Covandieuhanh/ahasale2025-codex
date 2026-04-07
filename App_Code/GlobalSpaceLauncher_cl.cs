@@ -73,6 +73,8 @@ public static class GlobalSpaceLauncher_cl
         else
             AppendActiveEntries(db, html, info, currentSpace, selectedWorkspaceOwner);
 
+        AppendAppUiEntry(html, currentPath);
+
         model.AccountKey = info.AccountKey ?? "";
         model.AccountName = string.IsNullOrWhiteSpace(info.FullName) ? (info.AccountKey ?? "") : info.FullName;
         model.CurrentScope = context.Scope ?? "";
@@ -219,7 +221,7 @@ public static class GlobalSpaceLauncher_cl
         {
             AppendLink(
                 html,
-                "Truy cập không gian gian hàng đối tác",
+                "Truy cập không gian gian hàng",
                 "/gianhang/",
                 BuildApprovedHint(ModuleSpace_cl.GianHang),
                 string.Equals(currentSpace, ModuleSpace_cl.GianHang, StringComparison.OrdinalIgnoreCase),
@@ -466,6 +468,24 @@ public static class GlobalSpaceLauncher_cl
             HttpUtility.HtmlAttributeEncode(url),
             HttpUtility.HtmlEncode(label),
             HttpUtility.HtmlEncode(hint ?? ""));
+    }
+
+    private static void AppendAppUiEntry(StringBuilder html, string currentPath)
+    {
+        if (html == null)
+            return;
+
+        string normalizedPath = NormalizePath(currentPath);
+        bool active = normalizedPath == "/app-ui"
+            || normalizedPath.StartsWith("/app-ui/", StringComparison.OrdinalIgnoreCase);
+
+        AppendLink(
+            html,
+            "Truy cập Giao diện App",
+            "/app-ui/default.aspx",
+            "Giao diện app độc lập để triển khai thực tế",
+            active,
+            false);
     }
 
     private static string ResolveAdminUrl(dbDataContext db, string accountKey)

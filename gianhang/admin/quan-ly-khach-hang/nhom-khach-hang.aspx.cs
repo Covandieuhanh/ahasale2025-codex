@@ -16,42 +16,19 @@ public partial class badmin_Default : System.Web.UI.Page
     List<string> list_id_split;
     #endregion
 
+    private bool HasPermission(string permissionKey)
+    {
+        string currentUser = (user ?? "").Trim();
+        return !string.IsNullOrWhiteSpace(currentUser) && bcorn_class.check_quyen(currentUser, permissionKey) != "2";
+    }
+
     protected void Page_Load(object sender, EventArgs e)
     {
-        #region Check_Login
-        string _quyen = "q8_5";
-        string _cookie_user = "", _cookie_pass = "";
-        if (Request.Cookies["save_user_admin_aka_1"] != null) _cookie_user = Request.Cookies["save_user_admin_aka_1"].Value;
-        if (Request.Cookies["save_pass_admin_aka_1"] != null) _cookie_pass = Request.Cookies["save_pass_admin_aka_1"].Value;
-        if (Session["user"] == null) Session["user"] = ""; if (Session["notifi"] == null) Session["notifi"] = ""; if (Session["user"].ToString() == "") Response.Redirect("/gianhang/admin/f5_ss_admin.aspx");
-        string _url = Request.Url.GetLeftPart(UriPartial.Authority).ToLower();
-        string _kq = bcorn_class.check_login(Session["user"].ToString(), _cookie_user, _cookie_pass, _url, _quyen);
-        if (_kq != "")//nếu có thông báo --> có lỗi --> reset --> bắt login lại
-        {
-            if (_kq == "baotri") Response.Redirect("/baotri.aspx");
-            else
-            {
-                if (_kq == "1") Response.Redirect("/gianhang/admin/login.aspx");//hết Session, hết Cookie
-                else
-                {
-                    if (_kq == "2")//k đủ quyền
-                    {
-                        Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
-                        Response.Redirect("/gianhang/admin");
-                    }
-                    else
-                    {
-                        Session["notifi"] = _kq; Session["user"] = "";
-                        Response.Cookies["save_user_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Cookies["save_pass_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Cookies["save_url_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Redirect("/gianhang/admin/login.aspx");
-                    }
-                }
-            }
-        }
-        #endregion 
-        user = Session["user"].ToString();
+        GianHangAdminPageGuard_cl.AccessInfo access = GianHangAdminPageGuard_cl.EnsureAccess(this, db, "q8_5");
+        if (access == null)
+            return;
+
+        user = (access.User ?? "").Trim();
         user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
         if (!IsPostBack)
         {
@@ -158,6 +135,12 @@ public partial class badmin_Default : System.Web.UI.Page
 
     protected void but_form_themnhomthuchi_Click(object sender, EventArgs e)
     {
+        if (!HasPermission("q8_5"))
+        {
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Bạn không đủ quyền để thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", ""), true);
+            return;
+        }
+
         string _tennhom = txt_tennhom.Text.Trim();
 
         if (_tennhom == "")
@@ -186,6 +169,12 @@ public partial class badmin_Default : System.Web.UI.Page
 
     protected void but_save_Click(object sender, ImageClickEventArgs e)
     {
+        if (!HasPermission("q8_5"))
+        {
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Bạn không đủ quyền để thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", ""), true);
+            return;
+        }
+
         for (int i = 0; i < list_id_split.Count; i++)
         {
             string _id = list_id_split[i].Replace("check_", "");
@@ -207,6 +196,12 @@ public partial class badmin_Default : System.Web.UI.Page
 
     protected void but_xoa_Click(object sender, ImageClickEventArgs e)
     {
+        if (!HasPermission("q8_5"))
+        {
+            ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_dialog("Thông báo", "Bạn không đủ quyền để thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", ""), true);
+            return;
+        }
+
         for (int i = 0; i < list_id_split.Count; i++)
         {
             if (Request.Form[list_id_split[i]] == "on")

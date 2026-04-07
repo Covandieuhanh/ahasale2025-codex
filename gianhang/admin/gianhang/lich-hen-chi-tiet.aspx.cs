@@ -38,6 +38,7 @@ public partial class gianhang_admin_gianhang_lich_hen_chi_tiet : System.Web.UI.P
         BookingsUrl = GianHangRoutes_cl.BuildAdminWorkspaceBookingsUrl();
         CustomersUrl = GianHangRoutes_cl.BuildAdminWorkspaceCustomersUrl();
         NativeBookingsUrl = GianHangRoutes_cl.BuildBookingManagementUrl();
+        AdminDetailUrl = GianHangRoutes_cl.BuildAdminLegacyBookingsUrl();
 
         long nativeId;
         if (!long.TryParse((Request.QueryString["id"] ?? "").Trim(), out nativeId) || nativeId <= 0)
@@ -71,12 +72,12 @@ public partial class gianhang_admin_gianhang_lich_hen_chi_tiet : System.Web.UI.P
         long legacyId = GianHangWorkspaceLink_cl.ResolveLegacyBookingId(db, ownerAccountKey, booking.id);
         if (legacyId > 0)
         {
-            AdminDetailUrl = "/gianhang/admin/quan-ly-khach-hang/sua-lich-hen.aspx?id=" + legacyId.ToString();
+            AdminDetailUrl = GianHangRoutes_cl.BuildAdminLegacyBookingDetailUrl(legacyId);
             MirrorText = "Lịch hẹn admin #" + legacyId.ToString();
         }
 
         string personKeyword = PhoneText != "--" ? PhoneText : CustomerName;
-        PersonHubUrl = "/gianhang/admin/quan-ly-con-nguoi/Default.aspx?keyword=" + Server.UrlEncode(personKeyword);
+        PersonHubUrl = GianHangRoutes_cl.BuildAdminLegacyPeopleHubUrl(personKeyword);
         CustomersUrl = GianHangRoutes_cl.BuildAdminWorkspaceCustomersUrl() + "?keyword=" + Server.UrlEncode(personKeyword);
 
         if (booking.id_dichvu.HasValue && booking.id_dichvu.Value > 0)

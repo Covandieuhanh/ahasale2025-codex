@@ -22,75 +22,75 @@ public partial class gianhang_taikhoan_detail : System.Web.UI.Page
     string_class str_cl = new string_class();
     datetime_class dt_cl = new datetime_class();
     public string hoten;
+    private bool HasAnyPermission(string currentUser, params string[] permissionKeys)
+    {
+        if (string.IsNullOrWhiteSpace(currentUser) || permissionKeys == null)
+            return false;
+
+        for (int i = 0; i < permissionKeys.Length; i++)
+        {
+            string permissionKey = (permissionKeys[i] ?? "").Trim();
+            if (permissionKey != "" && bcorn_class.check_quyen(currentUser, permissionKey) == "")
+                return true;
+        }
+
+        return false;
+    }
+
+    private bool IsCurrentRootAdmin(string currentUser)
+    {
+        return string.Equals((currentUser ?? "").Trim(), "admin", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void RedirectToAdminHome()
+    {
+        Response.Redirect(GianHangAdminBridge_cl.BuildAdminHomeUrl(HttpContext.Current));
+    }
     protected void Page_Load(object sender, EventArgs e)
     {
-        #region Check_Login
-        string _quyen = "none";
-        string _cookie_user = "", _cookie_pass = "";
-        if (Request.Cookies["save_user_admin_aka_1"] != null) _cookie_user = Request.Cookies["save_user_admin_aka_1"].Value;
-        if (Request.Cookies["save_pass_admin_aka_1"] != null) _cookie_pass = Request.Cookies["save_pass_admin_aka_1"].Value;
-        if (Session["user"] == null) Session["user"] = ""; if (Session["notifi"] == null) Session["notifi"] = "";if (Session["user"].ToString() == "") Response.Redirect("/gianhang/admin/f5_ss_admin.aspx");
-        string _url = Request.Url.GetLeftPart(UriPartial.Authority).ToLower();
-        string _kq = bcorn_class.check_login(Session["user"].ToString(), _cookie_user, _cookie_pass, _url, _quyen);
-        if (_kq != "")//nếu có thông báo --> có lỗi --> reset --> bắt login lại
-        {
-            if (_kq == "baotri") Response.Redirect("/baotri.aspx");
-            else
-            {
-                if (_kq == "1") Response.Redirect("/gianhang/admin/login.aspx");//hết Session, hết Cookie
-                else
-                {
-                    if (_kq == "2")//k đủ quyền
-                    {
-                        Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
-                        Response.Redirect("/gianhang/admin");
-                    }
-                    else
-                    {
-                        Session["notifi"] = _kq; Session["user"] = "";
-                        Response.Cookies["save_user_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Cookies["save_pass_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Cookies["save_url_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Redirect("/gianhang/admin/login.aspx");
-                    }
-                }
-            }
-        }
-        #endregion
+        GianHangAdminPageGuard_cl.AccessInfo access = GianHangAdminPageGuard_cl.EnsureAccess(this, db, "none");
+        if (access == null)
+            return;
 
         #region Check quyen theo nganh
         string qsUser = (Request.QueryString["user"] ?? "").Trim();
         user = qsUser;
-        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
-        if (bcorn_class.check_quyen(Session["user"].ToString(), "q2_2") == "" || bcorn_class.check_quyen(Session["user"].ToString(), "n2_2") == "" || user == Session["user"].ToString())
+        string currentUser = (access.User ?? "").Trim();
+        user_parent = access.OwnerAccountKey;
+        if (HasAnyPermission(currentUser, "q2_2", "n2_2") || string.Equals(user, currentUser, StringComparison.OrdinalIgnoreCase))
         {
             if (!string.IsNullOrWhiteSpace(qsUser))
             {
                 user = qsUser;
                 if (tk_cl.exist_user(user))
                 {
+                    if (string.Equals(user, "admin", StringComparison.OrdinalIgnoreCase) && !IsCurrentRootAdmin(currentUser))
+                    {
+                        Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không thể xem tài khoản admin.", "false", "false", "OK", "alert", "");
+                        RedirectToAdminHome();
+                    }
+                    else
+                    {
                         main();
-                        if (Request.Cookies["save_url_admin_aka_1"] != null)
-                            url_back = Request.Cookies["save_url_admin_aka_1"].Value;
-                        else
-                            url_back = "/gianhang/admin";
+                        url_back = GianHangAdminBridge_cl.ResolvePreferredAdminRedirectUrl(HttpContext.Current, "", "/gianhang/admin");
+                    }
                 }
                 else
                 {
                     Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Trang bạn yêu cầu không hợp lệ.", "false", "false", "OK", "alert", "");
-                    Response.Redirect("/gianhang/admin");
+                    RedirectToAdminHome();
                 }
             }
             else
             {
                 Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Trang bạn yêu cầu không hợp lệ.", "false", "false", "OK", "alert", "");
-                Response.Redirect("/gianhang/admin");
+                RedirectToAdminHome();
             }
         }
         else
         {
             Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
-            Response.Redirect("/gianhang/admin");
+            RedirectToAdminHome();
         }
         #endregion
        
@@ -107,7 +107,7 @@ public partial class gianhang_taikhoan_detail : System.Web.UI.Page
         if (_ob == null)
         {
             Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Không tìm thấy tài khoản cần xem.", "false", "false", "OK", "alert", "");
-            Response.Redirect("/gianhang/admin");
+            RedirectToAdminHome();
             return;
         }
         if (!IsPostBack)
@@ -248,12 +248,13 @@ public partial class gianhang_taikhoan_detail : System.Web.UI.Page
 
     protected void but_khoa_Click(object sender, EventArgs e)
     {
-        if (bcorn_class.check_quyen(Session["user"].ToString(), "q2_3") == ""|| bcorn_class.check_quyen(Session["user"].ToString(), "n2_3") == "")// ="": có quyền; =2: k có quyền
+        string currentUser = GianHangAdminContext_cl.ResolveDisplayAccountKey();
+        if (HasAnyPermission(currentUser, "q2_3", "n2_3"))// ="": có quyền; =2: k có quyền
         {
-            if (user == "admin" && Session["user"].ToString() != "admin")
+            if (string.Equals(user, "admin", StringComparison.OrdinalIgnoreCase) && !IsCurrentRootAdmin(currentUser))
             {
                 Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không thể khóa tài khoản admin.", "false", "false", "OK", "alert", "");
-                Response.Redirect("/gianhang/admin");
+                RedirectToAdminHome();
             }
             else
             {
@@ -278,12 +279,13 @@ public partial class gianhang_taikhoan_detail : System.Web.UI.Page
 
     protected void but_mokhoa_Click(object sender, EventArgs e)
     {
-        if (bcorn_class.check_quyen(Session["user"].ToString(), "q2_3") == "" || bcorn_class.check_quyen(Session["user"].ToString(), "n2_3") == "")// ="": có quyền; =2: k có quyền
+        string currentUser = GianHangAdminContext_cl.ResolveDisplayAccountKey();
+        if (HasAnyPermission(currentUser, "q2_3", "n2_3"))// ="": có quyền; =2: k có quyền
         {
-            if (user == "admin" && Session["user"].ToString() != "admin")
+            if (string.Equals(user, "admin", StringComparison.OrdinalIgnoreCase) && !IsCurrentRootAdmin(currentUser))
             {
                 Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không thể mở khóa tài khoản admin.", "false", "false", "OK", "alert", "");
-                Response.Redirect("/gianhang/admin");
+                RedirectToAdminHome();
             }
             else
             {

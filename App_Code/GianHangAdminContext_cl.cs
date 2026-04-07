@@ -5,11 +5,26 @@ public static class GianHangAdminContext_cl
 {
     public static bool IsHomeManagedSession()
     {
+        if (WorkspaceContext_cl.IsCurrentWorkspace(GianHangWorkspacePolicy_cl.WorkspaceKey))
+        {
+            WorkspaceContext_cl.WorkspaceSessionContext current = WorkspaceContext_cl.GetCurrent();
+            if (current != null && current.IsManagedWorkspace)
+                return true;
+        }
+
         return ResolveCurrentHomeAccountKey() != "";
     }
 
     public static string ResolveCurrentHomeAccountKey()
     {
+        WorkspaceContext_cl.WorkspaceSessionContext current = WorkspaceContext_cl.GetCurrent();
+        if (current != null && WorkspaceContext_cl.IsCurrentWorkspace(GianHangWorkspacePolicy_cl.WorkspaceKey))
+        {
+            string homeKey = Normalize(current.HomeAccountKey);
+            if (homeKey != "")
+                return homeKey;
+        }
+
         HttpContext ctx = HttpContext.Current;
         if (ctx == null || ctx.Session == null)
             return "";
@@ -19,6 +34,14 @@ public static class GianHangAdminContext_cl
 
     public static string ResolveCurrentOwnerAccountKey()
     {
+        WorkspaceContext_cl.WorkspaceSessionContext current = WorkspaceContext_cl.GetCurrent();
+        if (current != null && WorkspaceContext_cl.IsCurrentWorkspace(GianHangWorkspacePolicy_cl.WorkspaceKey))
+        {
+            string ownerKey = Normalize(current.OwnerAccountKey);
+            if (ownerKey != "")
+                return ownerKey;
+        }
+
         HttpContext ctx = HttpContext.Current;
         if (ctx != null && ctx.Session != null)
         {
@@ -36,6 +59,14 @@ public static class GianHangAdminContext_cl
 
     public static string ResolveCurrentLegacyUser()
     {
+        WorkspaceContext_cl.WorkspaceSessionContext current = WorkspaceContext_cl.GetCurrent();
+        if (current != null && WorkspaceContext_cl.IsCurrentWorkspace(GianHangWorkspacePolicy_cl.WorkspaceKey))
+        {
+            string legacyUser = Normalize(current.LegacyUser);
+            if (legacyUser != "")
+                return legacyUser;
+        }
+
         HttpContext ctx = HttpContext.Current;
         if (ctx == null || ctx.Session == null)
             return "";
@@ -54,13 +85,21 @@ public static class GianHangAdminContext_cl
 
     public static string ResolveCurrentRoleLabel()
     {
+        WorkspaceContext_cl.WorkspaceSessionContext current = WorkspaceContext_cl.GetCurrent();
+        if (current != null && WorkspaceContext_cl.IsCurrentWorkspace(GianHangWorkspacePolicy_cl.WorkspaceKey))
+        {
+            string currentRole = (current.RoleLabel ?? "").Trim();
+            if (currentRole != "")
+                return currentRole;
+        }
+
         HttpContext ctx = HttpContext.Current;
         if (ctx == null || ctx.Session == null)
             return "";
 
-        string role = ((ctx.Session["gianhang_admin_role"] ?? "") + "").Trim();
-        if (role != "")
-            return role;
+        string sessionRole = ((ctx.Session["gianhang_admin_role"] ?? "") + "").Trim();
+        if (sessionRole != "")
+            return sessionRole;
 
         string mode = ResolveCurrentMode();
         if (mode == "owner")

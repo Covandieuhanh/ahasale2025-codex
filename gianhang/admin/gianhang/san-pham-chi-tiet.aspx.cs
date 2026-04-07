@@ -39,6 +39,7 @@ public partial class gianhang_admin_gianhang_san_pham_chi_tiet : System.Web.UI.P
         ProductsUrl = GianHangRoutes_cl.BuildAdminWorkspaceProductsUrl();
         ContentUrl = GianHangRoutes_cl.BuildAdminWorkspaceContentUrl();
         OrdersUrl = GianHangRoutes_cl.BuildAdminWorkspaceOrdersUrl();
+        AdminEditUrl = GianHangRoutes_cl.BuildAdminLegacyArticlesUrl("sp");
 
         int nativeId;
         if (!int.TryParse((Request.QueryString["id"] ?? string.Empty).Trim(), out nativeId) || nativeId <= 0)

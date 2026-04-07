@@ -46,7 +46,7 @@ public partial class uc_menu_top : System.Web.UI.UserControl
     public string spaceCustomersUrl = "/gianhang/khach-hang.aspx";
     public string spaceReportUrl = "/gianhang/bao-cao.aspx";
     public string spaceLevel2Url = "/gianhang/nang-cap-level2.aspx";
-    public string spaceHomeUrl = "/home/default.aspx";
+    public string spaceHomeUrl = "/gianhang/tai-khoan/default.aspx";
     public string spaceAdminUrl = "/gianhang/admin";
     public bool showSpaceAdmin;
 
@@ -225,7 +225,7 @@ public partial class uc_menu_top : System.Web.UI.UserControl
         spaceCustomersUrl = "/gianhang/khach-hang.aspx";
         spaceReportUrl = "/gianhang/bao-cao.aspx";
         spaceLevel2Url = "/gianhang/nang-cap-level2.aspx";
-        spaceHomeUrl = "/home/default.aspx";
+        spaceHomeUrl = "/gianhang/tai-khoan/default.aspx";
         spaceAdminUrl = "/gianhang/admin";
         showSpaceAdmin = false;
         activeSpaceKey = ResolveSpaceKey(Request == null || Request.Url == null ? string.Empty : Request.Url.AbsolutePath);

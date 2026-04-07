@@ -15,19 +15,23 @@ public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
     post_class po_cl = new post_class();
     datetime_class dt_cl = new datetime_class();
     nganh_class nganh_cl = new nganh_class();
-
-    private void EnsureLegacyAdminSession()
+    private bool HasAnyPermission(string user, params string[] permissionKeys)
     {
-        if (Session == null)
-            return;
+        if (string.IsNullOrWhiteSpace(user) || permissionKeys == null)
+            return false;
 
-        string legacyUser = (Session["user"] ?? "").ToString().Trim();
-        if (legacyUser != "")
-            return;
+        for (int i = 0; i < permissionKeys.Length; i++)
+        {
+            string permissionKey = (permissionKeys[i] ?? "").Trim();
+            if (permissionKey != "" && bcorn_class.check_quyen(user, permissionKey) == "")
+                return true;
+        }
 
-        string homeAccount;
-        string deniedMessage;
-        GianHangAdminBridge_cl.EnsureLegacyAdminSessionFromCurrentHome(db, out homeAccount, out deniedMessage);
+        return false;
+    }
+    private void RedirectToAdminHome()
+    {
+        Response.Redirect(GianHangAdminBridge_cl.BuildAdminHomeUrl(HttpContext.Current));
     }
 
     #region phân trang
@@ -36,41 +40,17 @@ public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
     #endregion
     protected void Page_Load(object sender, EventArgs e)
     {
-        EnsureLegacyAdminSession();
+        GianHangAdminPageGuard_cl.AccessInfo access = GianHangAdminPageGuard_cl.EnsureAccess(this, db, "none");
+        if (access == null)
+            return;
 
-        #region Check_Login
-        string _quyen = "q4_1";
-        string _cookie_user = "", _cookie_pass = "";
-        if (Request.Cookies["save_user_admin_aka_1"] != null) _cookie_user = Request.Cookies["save_user_admin_aka_1"].Value;
-        if (Request.Cookies["save_pass_admin_aka_1"] != null) _cookie_pass = Request.Cookies["save_pass_admin_aka_1"].Value;
-        if (Session["user"] == null) Session["user"] = ""; if (Session["notifi"] == null) Session["notifi"] = ""; if (Session["user"].ToString() == "") Response.Redirect("/gianhang/admin/f5_ss_admin.aspx");
-        string _url = Request.Url.GetLeftPart(UriPartial.Authority).ToLower();
-        string _kq = bcorn_class.check_login(Session["user"].ToString(), _cookie_user, _cookie_pass, _url, _quyen);
-        if (_kq != "")//nếu có thông báo --> có lỗi --> reset --> bắt login lại
+        string currentUser = (access.User ?? "").Trim();
+        if (!HasAnyPermission(currentUser, "q4_1"))
         {
-            if (_kq == "baotri") Response.Redirect("/baotri.aspx");
-            else
-            {
-                if (_kq == "1") Response.Redirect("/gianhang/admin/login.aspx");//hết Session, hết Cookie
-                else
-                {
-                    if (_kq == "2")//k đủ quyền
-                    {
-                        Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
-                        Response.Redirect("/gianhang/admin");
-                    }
-                    else
-                    {
-                        Session["notifi"] = _kq; Session["user"] = "";
-                        Response.Cookies["save_user_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Cookies["save_pass_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Cookies["save_url_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Redirect("/gianhang/admin/login.aspx");
-                    }
-                }
-            }
+            Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
+            RedirectToAdminHome();
+            return;
         }
-        #endregion
 
         var q = db.web_post_tables.Where(p => p.id_chinhanh == Session["chinhanh"].ToString());
 
@@ -322,10 +302,11 @@ public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
     #region button click
     protected void but_luu_Click(object sender, EventArgs e)
     {
-        if (bcorn_class.check_quyen(Session["user"].ToString(), "q4_3") == "2")
+        string currentUser = GianHangAdminContext_cl.ResolveDisplayAccountKey();
+        if (!HasAnyPermission(currentUser, "q4_3"))
         {
             Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
-            Response.Redirect("/gianhang/admin");
+            RedirectToAdminHome();
         }
         else
         {
@@ -357,10 +338,11 @@ public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
     }
     protected void but_del_Click(object sender, EventArgs e)
     {
-        if (bcorn_class.check_quyen(Session["user"].ToString(), "q4_4") == "2")
+        string currentUser = GianHangAdminContext_cl.ResolveDisplayAccountKey();
+        if (!HasAnyPermission(currentUser, "q4_4"))
         {
             Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
-            Response.Redirect("/gianhang/admin");
+            RedirectToAdminHome();
         }
         else
         {
@@ -397,10 +379,11 @@ public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
     }
     protected void but_xoavinhvien_Click(object sender, EventArgs e)
     {
-        if (bcorn_class.check_quyen(Session["user"].ToString(), "q4_5") == "2")
+        string currentUser = GianHangAdminContext_cl.ResolveDisplayAccountKey();
+        if (!HasAnyPermission(currentUser, "q4_5"))
         {
             Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
-            Response.Redirect("/gianhang/admin");
+            RedirectToAdminHome();
         }
         else
         {
@@ -430,10 +413,11 @@ public partial class badmin_quan_ly_menu_Default : System.Web.UI.Page
     }
     protected void but_khoiphuc_Click(object sender, EventArgs e)
     {
-        if (bcorn_class.check_quyen(Session["user"].ToString(), "q4_6") == "2")
+        string currentUser = GianHangAdminContext_cl.ResolveDisplayAccountKey();
+        if (!HasAnyPermission(currentUser, "q4_6"))
         {
             Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
-            Response.Redirect("/gianhang/admin");
+            RedirectToAdminHome();
         }
         else
         {

@@ -8,6 +8,14 @@ using System.Web.UI.WebControls;
 
 public partial class MasterPage_Tabler_Tabler2 : System.Web.UI.MasterPage
 {
+    private const int BrandingCacheSeconds = 300;
+
+    private sealed class CachedBrandingHtml
+    {
+        public string IconsHtml { get; set; }
+        public string HeaderCenterLogoUrl { get; set; }
+    }
+
     private static string NormalizeLocalReturnUrl(string raw)
     {
         string url = HttpUtility.UrlDecode(raw ?? "") ?? "";
@@ -53,23 +61,25 @@ public partial class MasterPage_Tabler_Tabler2 : System.Web.UI.MasterPage
                     #region Favicon & icon mobile
                     string scopeKey = PortalBranding_cl.ResolveScopeKeyFromRequest(Request);
                     bool isShopPortal = scopeKey == PortalBranding_cl.ScopeShop;
-                    PortalBranding_cl.ScopeBrandingSnapshot branding = PortalBranding_cl.LoadScopeBranding(db, scopeKey, true);
+                    string manifestPath = isShopPortal ? "~/manifest-shop.ashx" : "~/manifest.ashx";
+                    string manifestUrl = string.Format("{0}://{1}{2}", Request.Url.Scheme, Request.Url.Authority, Helper_cl.VersionedUrl(manifestPath));
+                    string brandingCacheKey = "home_master_branding_html:" + scopeKey + ":" + Request.Url.Authority.ToLowerInvariant();
+                    CachedBrandingHtml brandingHtml = Helper_cl.RuntimeCacheGetOrAdd<CachedBrandingHtml>(brandingCacheKey, BrandingCacheSeconds, () =>
+                    {
+                        PortalBranding_cl.ScopeBrandingSnapshot branding = PortalBranding_cl.LoadScopeBranding(db, scopeKey, true);
+                        string fallbackIcon = PortalBranding_cl.ResolveDefaultIconPath(scopeKey);
+                        string iconUrl = BuildAbsoluteUrl(PortalBranding_cl.ResolveFaviconPath(branding, scopeKey), PortalBranding_cl.DefaultHomeIconPath);
+                        string appleTouchIconUrl = BuildAbsoluteUrl(PortalBranding_cl.ResolveHeaderLogoPath(branding, scopeKey), fallbackIcon);
+                        string pwaIcon192Url = appleTouchIconUrl;
+                        string pwaIcon512Url = appleTouchIconUrl;
+                        string startupImageUrl = appleTouchIconUrl;
+                        string appName = isShopPortal ? "AhaSale Shop" : "AhaSale";
+                        string themeColor = isShopPortal ? "#ff5b2e" : "#10b981";
 
-                    string fallbackIcon = PortalBranding_cl.ResolveDefaultIconPath(scopeKey);
-                    string iconUrl = BuildAbsoluteUrl(PortalBranding_cl.ResolveFaviconPath(branding, scopeKey), PortalBranding_cl.DefaultHomeIconPath);
-                    string appleTouchIconUrl = BuildAbsoluteUrl(PortalBranding_cl.ResolveHeaderLogoPath(branding, scopeKey), fallbackIcon);
-                    string pwaIcon192Url = appleTouchIconUrl;
-                    string pwaIcon512Url = appleTouchIconUrl;
-                    string manifestPath = isShopPortal ? "/manifest-shop.ashx" : "/manifest.ashx";
-                    string manifestUrl = string.Format("{0}://{1}{2}?v=20260324", Request.Url.Scheme, Request.Url.Authority, manifestPath);
-                    string startupImageUrl = appleTouchIconUrl;
-                    string appName = isShopPortal ? "AhaSale Shop" : "AhaSale";
-                    string themeColor = isShopPortal ? "#ff5b2e" : "#10b981";
-
-                    if (Context != null)
-                        Context.Items["AhaHeaderCenterLogoUrl"] = appleTouchIconUrl;
-
-                    string iconsHtml = string.Format(@"
+                        return new CachedBrandingHtml
+                        {
+                            HeaderCenterLogoUrl = appleTouchIconUrl,
+                            IconsHtml = string.Format(@"
                 <!-- Favicon -->
                 <link rel='icon' href='{0}' sizes='16x16' type='image/x-icon'>
                 <link rel='icon' href='{1}' sizes='32x32' type='image/x-icon'>
@@ -98,9 +108,14 @@ public partial class MasterPage_Tabler_Tabler2 : System.Web.UI.MasterPage
                 <meta name='msapplication-TileColor' content='{11}'>
                 <meta name='msapplication-TileImage' content='{3}'>
                 <link rel='apple-touch-startup-image' href='{10}'>
-                ", iconUrl, iconUrl, iconUrl, appleTouchIconUrl, appleTouchIconUrl, appleTouchIconUrl, appleTouchIconUrl, pwaIcon192Url, pwaIcon512Url, manifestUrl, startupImageUrl, themeColor, appName);
+                ", iconUrl, iconUrl, iconUrl, appleTouchIconUrl, appleTouchIconUrl, appleTouchIconUrl, appleTouchIconUrl, pwaIcon192Url, pwaIcon512Url, manifestUrl, startupImageUrl, themeColor, appName)
+                        };
+                    });
 
-                    literal_fav_icon.Text = iconsHtml;
+                    if (Context != null)
+                        Context.Items["AhaHeaderCenterLogoUrl"] = brandingHtml == null ? "" : (brandingHtml.HeaderCenterLogoUrl ?? "");
+
+                    literal_fav_icon.Text = brandingHtml == null ? "" : (brandingHtml.IconsHtml ?? "");
                     #endregion
                     #region lưu nội dung thông báo nếu có
                     if (Session["thongbao_home"] != null)

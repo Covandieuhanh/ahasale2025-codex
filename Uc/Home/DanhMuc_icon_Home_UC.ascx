@@ -6,9 +6,9 @@
       <div class="dm-grid">
         <asp:Repeater ID="Repeater1" runat="server">
           <ItemTemplate>
-            <a class="dm-item" href='/<%# Eval("name_en") %>-<%# Eval("id") %>'>
+            <a class="dm-item" href='<%# ResolveCategoryUrl(Eval("name_en"), Eval("id")) %>'>
               <span class="dm-img">
-                <img src='<%# string.IsNullOrWhiteSpace((Eval("image") + "").Trim()) ? "/uploads/images/macdinh.jpg" : (Eval("image") + "").Trim() %>' alt="<%# Eval("name") %>" loading="lazy" />
+                <img src='<%# ResolveCategoryImage(Eval("image")) %>' alt="<%# Eval("name") %>" loading="lazy" />
               </span>
               <span class="dm-name"><%# Eval("name") %></span>
             </a>
@@ -95,16 +95,8 @@
   overflow:hidden;
 }
 
-/* TABLET: giảm cột để vẫn khít */
-@media (max-width: 1200px){
-  .dm-grid{ grid-template-columns:repeat(7, minmax(0, 1fr)); }
-}
-@media (max-width: 992px){
-  .dm-grid{ grid-template-columns:repeat(6, minmax(0, 1fr)); }
-}
-
-/* MOBILE/TABLET: 2 hàng cố định + kéo ngang (clean) */
-@media (max-width: 991.98px){
+/* MOBILE: 2 hàng cố định + kéo ngang (clean) */
+@media (max-width: 767.98px){
   .dm-section{
     margin-top: 8px !important;
     transform: none !important;

@@ -152,7 +152,7 @@
             color: #0078D7;
             cursor: pointer;
             font-size: 14px;
-            font-family: 'Segoe UI', sans-serif;
+            font-family: "Be Vietnam Pro", "Segoe UI", Arial, sans-serif;
         }
 
         .paging-button.active {

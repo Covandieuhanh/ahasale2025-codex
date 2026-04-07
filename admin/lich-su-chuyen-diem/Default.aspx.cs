@@ -8,11 +8,11 @@ using System.Web.UI.WebControls;
 
 public partial class admin_lich_su_chuyen_diem_Default : System.Web.UI.Page
 {
-    private const string TabTieuDung = "tieu-dung";
-    private const string TabUuDai = "uu-dai";
-    private const string TabLaoDong = "lao-dong";
-    private const string TabGanKet = "gan-ket";
-    private const string TabShopOnly = "shop-only";
+    private const string TabTieuDung = AdminDataScope_cl.TransferTabCore;
+    private const string TabUuDai = AdminDataScope_cl.TransferTabCustomer;
+    private const string TabLaoDong = AdminDataScope_cl.TransferTabDevelopment;
+    private const string TabGanKet = AdminDataScope_cl.TransferTabEcosystem;
+    private const string TabShopOnly = AdminDataScope_cl.TransferTabShopOnly;
     private const string ViewTransfer = "transfer";
     private const int PageSize = 30;
     private const string ShopOnlyMarker = "|SHOPONLY|";
@@ -95,7 +95,10 @@ public partial class admin_lich_su_chuyen_diem_Default : System.Web.UI.Page
     // ======================================================
     protected void Page_Load(object sender, EventArgs e)
     {
-        check_login_cl.check_login_admin("none", "none");
+        string routeFeatureKey = AdminRouteMap_cl.ResolveFeatureKey(Request);
+        if (string.IsNullOrWhiteSpace(routeFeatureKey))
+            routeFeatureKey = "core_assets";
+        AdminAccessGuard_cl.RequireFeatureAccess(routeFeatureKey, "/admin/default.aspx");
 
         if (!IsPostBack)
         {
@@ -141,8 +144,13 @@ public partial class admin_lich_su_chuyen_diem_Default : System.Web.UI.Page
     private string NormalizeTab(string tab)
     {
         string t = (tab ?? "").Trim().ToLower();
-        if (t == TabTieuDung || t == TabUuDai || t == TabLaoDong || t == TabGanKet || t == TabShopOnly)
+        if (t == TabTieuDung)
             return t;
+
+        string normalized = AdminDataScope_cl.NormalizeTransferTab(t);
+        if (!string.IsNullOrEmpty(normalized))
+            return normalized;
+
         return "";
     }
 

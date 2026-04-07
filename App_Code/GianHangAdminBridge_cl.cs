@@ -4,6 +4,71 @@ using System.Web;
 
 public static class GianHangAdminBridge_cl
 {
+    private static string TryNormalizeAdminReturnUrl(string rawReturnUrl)
+    {
+        return check_login_cl.NormalizeUnifiedReturnUrl(rawReturnUrl);
+    }
+
+    public static string NormalizeAdminReturnUrl(string rawReturnUrl, string fallbackUrl)
+    {
+        string fallback = string.IsNullOrWhiteSpace(fallbackUrl) ? "/gianhang/admin" : fallbackUrl.Trim();
+        string safe = TryNormalizeAdminReturnUrl(rawReturnUrl);
+        return string.IsNullOrWhiteSpace(safe) ? fallback : safe;
+    }
+
+    public static string ResolvePreferredAdminRedirectUrl(HttpContext ctx, string rawReturnUrl, string fallbackUrl)
+    {
+        string fallback = NormalizeAdminReturnUrl(rawReturnUrl, fallbackUrl);
+        if (ctx == null)
+            return fallback;
+
+        string[] candidates = new[]
+        {
+            rawReturnUrl,
+            ctx.Request == null ? "" : (ctx.Request.QueryString["return_url"] ?? ctx.Request.QueryString["returnUrl"] ?? ""),
+            ctx.Session == null ? "" : ((ctx.Session["url_back_home"] ?? "").ToString()),
+            app_cookie_policy_class.read_cookie(ctx, app_cookie_policy_class.admin_return_url_cookie),
+            app_cookie_policy_class.read_cookie(ctx, app_cookie_policy_class.home_return_url_cookie),
+            ctx.Request != null && ctx.Request.UrlReferrer != null ? ctx.Request.UrlReferrer.PathAndQuery : ""
+        };
+
+        foreach (string candidate in candidates)
+        {
+            string normalized = TryNormalizeAdminReturnUrl(candidate);
+            if (!string.IsNullOrWhiteSpace(normalized))
+                return normalized;
+        }
+
+        return fallback;
+    }
+
+    public static string BuildLegacyAdminLoginUrl(HttpContext ctx, string rawReturnUrl)
+    {
+        string normalized = ResolvePreferredAdminRedirectUrl(ctx, rawReturnUrl, "/gianhang/admin");
+        string safe = TryNormalizeAdminReturnUrl(normalized);
+        if (string.IsNullOrWhiteSpace(safe))
+            return "/gianhang/admin/login.aspx";
+
+        return "/gianhang/admin/login.aspx?return_url=" + HttpUtility.UrlEncode(safe);
+    }
+
+    public static string BuildAdminHomeUrl(HttpContext ctx)
+    {
+        return ResolvePreferredAdminRedirectUrl(ctx, "", "/gianhang/admin");
+    }
+
+    public static string ResolveSessionRecoveryUrl(HttpContext ctx, string fallbackUrl)
+    {
+        if (ctx != null)
+        {
+            string homeAccount = ReadHomeAccountFromSessionOrCookie();
+            if (!string.IsNullOrWhiteSpace(homeAccount))
+                return ResolvePreferredAdminRedirectUrl(ctx, ctx.Request == null ? "" : ctx.Request.RawUrl, fallbackUrl);
+        }
+
+        return "/gianhang/admin/f5_ss_admin.aspx";
+    }
+
     public static void ClearLegacyAdminSession()
     {
         HttpContext ctx = HttpContext.Current;

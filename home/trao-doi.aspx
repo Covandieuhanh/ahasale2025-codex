@@ -513,7 +513,7 @@
             to { transform: rotate(360deg); }
         }
 
-        @media (max-width: 991.98px) {
+        @media (max-width: 767.98px) {
             .exchange-page {
                 padding: 12px;
                 border-radius: 14px;

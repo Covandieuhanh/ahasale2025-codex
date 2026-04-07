@@ -7,6 +7,30 @@ using System.Web.UI.WebControls;
 
 public partial class admin_quan_ly_tai_khoan_phan_quyen : System.Web.UI.Page
 {
+    private string GetCurrentAdminUser()
+    {
+        string tkEnc = Session["taikhoan"] as string;
+        if (string.IsNullOrEmpty(tkEnc))
+            return "";
+
+        try { return mahoa_cl.giaima_Bcorn(tkEnc); }
+        catch { return tkEnc; }
+    }
+
+    private taikhoan_tb FindAccountByUsername(dbDataContext db, string taiKhoan)
+    {
+        if (db == null) return null;
+        string tk = (taiKhoan ?? "").Trim();
+        if (tk == "") return null;
+
+        taikhoan_tb acc = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == tk);
+        if (acc != null) return acc;
+
+        return db.taikhoan_tbs
+            .AsEnumerable()
+            .FirstOrDefault(p => string.Equals((p.taikhoan ?? "").Trim(), tk, StringComparison.OrdinalIgnoreCase));
+    }
+
     private string NormalizeFilterAccountType(string raw)
     {
         string type = (raw ?? "").Trim();
@@ -15,10 +39,7 @@ public partial class admin_quan_ly_tai_khoan_phan_quyen : System.Web.UI.Page
 
     private string NormalizeFilterScope(string raw)
     {
-        string scope = (raw ?? "").Trim().ToLowerInvariant();
-        if (scope == "admin" || scope == "home" || scope == "shop")
-            return scope;
-        return "";
+        return AdminDataScope_cl.NormalizeAccountScope(raw);
     }
 
     private string NormalizeFilterAdminRole(string raw)
@@ -40,9 +61,25 @@ public partial class admin_quan_ly_tai_khoan_phan_quyen : System.Web.UI.Page
         Context.ApplicationInstance.CompleteRequest();
     }
 
+    private bool CanAccessPermissionTarget(dbDataContext db, taikhoan_tb account)
+    {
+        if (db == null || account == null)
+            return false;
+
+        string tkAdmin = GetCurrentAdminUser();
+        if (string.IsNullOrWhiteSpace(tkAdmin))
+            return false;
+
+        string scope = PortalScope_cl.ResolveScope(account.taikhoan, account.phanloai, account.permission);
+        return string.Equals(scope, PortalScope_cl.ScopeAdmin, StringComparison.OrdinalIgnoreCase)
+            && AdminRolePolicy_cl.CanManageAdminAccounts(db, tkAdmin);
+    }
+
     private string BuildListUrl()
     {
-        string scope = NormalizeFilterScope(Request.QueryString["scope"]);
+        string scope = AdminDataScope_cl.ResolveEffectiveAccountScope(
+            Request.QueryString["scope"],
+            Request.QueryString["fscope"]);
         string filterType = NormalizeFilterAccountType(Request.QueryString["ftype"]);
         string filterScope = NormalizeFilterScope(Request.QueryString["fscope"]);
         string filterAdminRole = NormalizeFilterAdminRole(Request.QueryString["frole"]);
@@ -166,7 +203,7 @@ public partial class admin_quan_ly_tai_khoan_phan_quyen : System.Web.UI.Page
 
         using (dbDataContext db = new dbDataContext())
         {
-            taikhoan_tb account = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == tk);
+            taikhoan_tb account = FindAccountByUsername(db, tk);
             if (account == null)
             {
                 ShowMessage("Không tìm thấy tài khoản cần phân quyền.", "error");
@@ -177,6 +214,12 @@ public partial class admin_quan_ly_tai_khoan_phan_quyen : System.Web.UI.Page
             if (!string.Equals(targetScope, PortalScope_cl.ScopeAdmin, StringComparison.OrdinalIgnoreCase))
             {
                 ShowMessage("Chỉ tài khoản thuộc hệ admin mới được phân quyền tại màn này.", "error");
+                return;
+            }
+
+            if (!CanAccessPermissionTarget(db, account))
+            {
+                ShowMessage("Bạn không có quyền phân quyền cho tài khoản này.", "error");
                 return;
             }
 
@@ -220,8 +263,7 @@ public partial class admin_quan_ly_tai_khoan_phan_quyen : System.Web.UI.Page
     protected void Page_Load(object sender, EventArgs e)
     {
         Session["url_back"] = HttpContext.Current.Request.Url.AbsoluteUri;
-        check_login_cl.check_login_admin("none", "none");
-        AdminRolePolicy_cl.RequireSuperAdmin();
+        AdminAccessGuard_cl.RequireFeatureAccess("admin_accounts", "/admin/default.aspx?mspace=admin");
 
         if (!IsPostBack)
         {
@@ -241,7 +283,7 @@ public partial class admin_quan_ly_tai_khoan_phan_quyen : System.Web.UI.Page
 
     protected void ddl_admin_permission_preset_SelectedIndexChanged(object sender, EventArgs e)
     {
-        AdminRolePolicy_cl.RequireSuperAdmin();
+        AdminAccessGuard_cl.RequireFeatureAccess("admin_accounts", "/admin/default.aspx?mspace=admin");
         ApplyAdminPermissionPreset(ddl_admin_permission_preset.SelectedValue);
     }
 
@@ -317,7 +359,7 @@ public partial class admin_quan_ly_tai_khoan_phan_quyen : System.Web.UI.Page
 
     protected void but_phanquyen_Click(object sender, EventArgs e)
     {
-        AdminRolePolicy_cl.RequireSuperAdmin();
+        AdminAccessGuard_cl.RequireFeatureAccess("admin_accounts", "/admin/default.aspx?mspace=admin");
         string tk = (ViewState["tk_phanquyen"] ?? "").ToString().Trim();
         if (string.IsNullOrWhiteSpace(tk))
         {
@@ -333,7 +375,7 @@ public partial class admin_quan_ly_tai_khoan_phan_quyen : System.Web.UI.Page
 
         using (dbDataContext db = new dbDataContext())
         {
-            taikhoan_tb account = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == tk);
+            taikhoan_tb account = FindAccountByUsername(db, tk);
             if (account == null)
             {
                 ShowMessage("Không tìm thấy tài khoản cần lưu phân quyền.", "error");
@@ -344,6 +386,12 @@ public partial class admin_quan_ly_tai_khoan_phan_quyen : System.Web.UI.Page
             if (!string.Equals(existingScope, PortalScope_cl.ScopeAdmin, StringComparison.OrdinalIgnoreCase))
             {
                 ShowMessage("Tài khoản này không thuộc hệ admin nên không áp dụng phân quyền admin.", "error");
+                return;
+            }
+
+            if (!CanAccessPermissionTarget(db, account))
+            {
+                ShowMessage("Bạn không có quyền phân quyền cho tài khoản này.", "error");
                 return;
             }
 

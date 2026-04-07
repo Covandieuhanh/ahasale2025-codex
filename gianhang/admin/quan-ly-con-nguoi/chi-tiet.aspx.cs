@@ -20,8 +20,16 @@ public partial class gianhang_person_hub_detail : System.Web.UI.Page
     private string OwnerAccountKey = "";
     private string NormalizedPhone = "";
 
+    private string ResolveActor()
+    {
+        return GianHangAdminContext_cl.ResolveDisplayAccountKey();
+    }
+
     protected void Page_Load(object sender, EventArgs e)
     {
+        if (!GianHangSystemAdminGuard_cl.EnsurePageAccess(this))
+            return;
+
         if (!AdvancedAdminAccessGate_cl.EnsurePageAccess(this))
             return;
 
@@ -88,7 +96,7 @@ public partial class gianhang_person_hub_detail : System.Web.UI.Page
                 NormalizedPhone,
                 txt_home_account_link.Text,
                 DisplayName,
-                (Session["user"] ?? "") + "",
+                ResolveActor(),
                 out message);
 
             if (ok)
@@ -113,7 +121,7 @@ public partial class gianhang_person_hub_detail : System.Web.UI.Page
                 OwnerAccountKey,
                 NormalizedPhone,
                 DisplayName,
-                (Session["user"] ?? "") + "",
+                ResolveActor(),
                 out message);
 
             if (ok)
@@ -137,7 +145,7 @@ public partial class gianhang_person_hub_detail : System.Web.UI.Page
                 db,
                 OwnerAccountKey,
                 NormalizedPhone,
-                (Session["user"] ?? "") + "",
+                ResolveActor(),
                 out message);
 
             if (ok)

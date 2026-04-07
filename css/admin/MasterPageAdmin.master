@@ -34,17 +34,17 @@
     <asp:Literal ID="literal_fav_icon" runat="server"></asp:Literal>
 
     <%--css nguồn--%>
-    <link href="/Metro-UI-CSS-master/css/metro-all.min.css" rel="stylesheet" />
-    <link href="/Metro-UI-CSS-master/css/icons.css" rel="stylesheet" />
+    <link href="<%= Helper_cl.VersionedUrl(\"~/Metro-UI-CSS-master/css/metro-all.min.css\") %>" rel="stylesheet" />
+    <link href="<%= Helper_cl.VersionedUrl(\"~/Metro-UI-CSS-master/css/icons.css\") %>" rel="stylesheet" />
     <%--dành riêng cho trang admin--%>
-    <link href="/css/admin-style.css" rel="stylesheet" />
+    <link href="<%= Helper_cl.VersionedUrl(\"~/css/admin-style.css\") %>" rel="stylesheet" />
     <%--viết thêm dựa vào metro--%>
-    <link href="/css/bcorn-with-metro.css" rel="stylesheet" />
+    <link href="<%= Helper_cl.VersionedUrl(\"~/css/bcorn-with-metro.css\") %>" rel="stylesheet" />
     <%--sửa lại css metro theo ý mình--%>
-    <link href="/css/fix-metro.css" rel="stylesheet" />
-    <link href="/css/admin-unified.css?v=2026-03-02.3" rel="stylesheet" />
-    <link href="/css/admin-clean.css?v=2026-03-03.12" rel="stylesheet" />
-    <link href="/css/admin-home-sync.css?v=2026-03-06.2" rel="stylesheet" />
+    <link href="<%= Helper_cl.VersionedUrl(\"~/css/fix-metro.css\") %>" rel="stylesheet" />
+    <link href="<%= Helper_cl.VersionedUrl(\"~/css/admin-unified.css\") %>" rel="stylesheet" />
+    <link href="<%= Helper_cl.VersionedUrl(\"~/css/admin-clean.css\") %>" rel="stylesheet" />
+    <link href="<%= Helper_cl.VersionedUrl(\"~/css/admin-home-sync.css\") %>" rel="stylesheet" />
     <!-- jquery nên để trước các js khác -->
     <%--<script src="/js/jquery-3.7.1.min.js"></script>--%>
     <asp:ContentPlaceHolder ID="head" runat="server"></asp:ContentPlaceHolder>

@@ -1,4 +1,18 @@
-﻿
+﻿@import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap");
+
+:root {
+    --aha-global-font-family: "Be Vietnam Pro", "Segoe UI", Arial, sans-serif;
+}
+
+html,
+body,
+input,
+button,
+select,
+textarea {
+    font-family: var(--aha-global-font-family) !important;
+}
+
 .clr-float {
     clear: both !important;
 }
@@ -50,7 +64,7 @@ select { /*để select dropdown hiển thị đẹp trên điện thoại*/
     width: 100% !important;
     /*display: block !important;*/
     padding: 0 0.75rem !important;
-    font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", "Roboto", "Ubuntu", "Helvetica Neue", sans-serif !important;
+    font-family: var(--aha-global-font-family) !important;
     font-size: 1rem !important;
     height: 36px !important;
     line-height: 36px !important;
@@ -63,21 +77,3 @@ select { /*để select dropdown hiển thị đẹp trên điện thoại*/
     z-index: 0;
 }
 
-@media (max-width: 575px) { /*sm*/
-
-}
-
-@media (max-width: 767px) { /*md*/
-
-}
-
-@media (max-width: 991px) { /*lg*/
-
-}
-
-@media (max-width: 1199px) { /*xl*/
-
-}
-
-@media (max-width: 1451px) { /*xxl*/
-}

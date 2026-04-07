@@ -1,6 +1,5 @@
 <%@ Control Language="C#" AutoEventWireup="true" CodeFile="menu_top.ascx.cs" Inherits="admin_uc_menu_top_uc" %>
 <%@ Register Src="~/gianhang/admin/uc/menu_dropdown.ascx" TagPrefix="uc1" TagName="menudropdown" %>
-<%@ Register Src="~/Uc/Shared/SpaceLauncher_uc.ascx" TagPrefix="uc2" TagName="SpaceLauncher" %>
 
 <div data-role="charms" data-position="right" id="thongbao-charms" style="width: 320px; background-color: #fff; overflow: auto;" class="p-0 m-0 shadow-1 charms right-side">
     <div style="height: 52px; line-height: 55px" class="bg-orange fg-white">
@@ -148,8 +147,10 @@
 
 <div data-role="appbar" class="fg-white bg-nmenutop-bc admin-topbar" data-expand-point="lg" style="position: fixed; top: 0; z-index: 3">
 
-    <uc2:SpaceLauncher runat="server" ID="spaceLauncher" ButtonCssClass="app-bar-item fg-white" />
     <a href="#" class="app-bar-item d-block d-none-lg" id="paneToggle"><span class="mif-menu"></span></a>
+    <a class="admin-topbar-brand-mobile" href="/gianhang/admin/default.aspx" aria-label="AhaSale admin">
+        <img src="/uploads/images/favicon.png" alt="AhaSale admin" />
+    </a>
 
     <a class="app-bar-item fg-white admin-topbar-home" href="/gianhang/admin/default.aspx"><span class="mif mif-home"></span></a>
     <a class="app-bar-item fg-white d-block-lg d-none fw-600 admin-topbar-title" style="z-index: 10!important" href="/gianhang/admin/default.aspx"><%=ViewState["title"] %></a>

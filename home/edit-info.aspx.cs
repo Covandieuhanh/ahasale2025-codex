@@ -256,6 +256,11 @@ public partial class home_edit_info : System.Web.UI.Page
         get { return (ViewState["prefer_shop_tab"] as bool?) ?? false; }
     }
 
+    private bool ShouldManageStorefrontInGianHangOnly()
+    {
+        return true;
+    }
+
     protected string GetTabClass(bool isShop)
     {
         bool active = PreferShopTab == isShop;
@@ -285,10 +290,11 @@ public partial class home_edit_info : System.Web.UI.Page
         }
 
         // ✅ xác định lock shop
-        bool lockShop = IsShopLocked(db, tk);
+        bool lockShop = IsShopLocked(db, tk) || ShouldManageStorefrontInGianHangOnly();
         ViewState["lock_shop"] = lockShop;
 
-        // ✅ UI: ẩn tab + ẩn form cửa hàng nếu lock
+        // Gian hàng được chỉnh riêng trong /gianhang/tai-khoan/default.aspx
+        // để không còn đè dữ liệu storefront từ hồ sơ Home.
         phTabCuaHang.Visible = !lockShop;
         phShopEdit.Visible = !lockShop;
         phShopLockedNote.Visible = lockShop;
@@ -787,16 +793,7 @@ public partial class home_edit_info : System.Web.UI.Page
         string _b6 = ResolveProfileAddress();
         string _b7 = txt_gioithieu.Text.Trim();
 
-        // ===== cửa hàng =====
-        string _c1 = txt_link_fileupload1.Text.Trim();
-        string _c2 = txt_link_fileupload2.Text.Trim();
-        string _c3 = TextBox2.Text.Trim();
-        string _c4 = TextBox3.Text.Trim();
-        string _c5 = TextBox10.Text.Trim();
-        string _c7 = TextBox5.Text.Trim();
-        string _c8 = ResolveShopAddress();
-
-        bool lockShop = (ViewState["lock_shop"] as bool?) ?? false;
+        bool lockShop = true;
 
         using (dbDataContext db = new dbDataContext())
         {
@@ -810,18 +807,6 @@ public partial class home_edit_info : System.Web.UI.Page
             q.email = _b4;
             q.diachi = _b6;
             q.gioithieu = _b7;
-
-            // ✅ chỉ cập nhật shop khi KHÔNG khóa
-            if (!lockShop)
-            {
-                q.logo_shop = _c1;
-                q.anhbia_shop = _c2;
-                q.ten_shop = _c3;
-                q.sdt_shop = _c4;
-                q.email_shop = _c5;
-                q.motangan_shop = _c7;
-                q.diachi_shop = _c8;
-            }
 
             bool isShopAccount = ShopSlug_cl.IsShopAccount(db, q);
             var currentProfileSettings = HomeProfileSetting_cl.GetSettings(db, q.taikhoan, isShopAccount);

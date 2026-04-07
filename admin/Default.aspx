@@ -58,6 +58,51 @@
 
         <section class="admin-role-home-section">
             <div class="admin-role-home-section-head">
+                <h2><asp:Label ID="lb_admin_home_quick_title" runat="server" /></h2>
+                <p><asp:Label ID="lb_admin_home_quick_description" runat="server" /></p>
+            </div>
+            <asp:Panel ID="pn_admin_quick_empty" runat="server" CssClass="admin-role-home-empty" Visible="false">
+                <asp:Label ID="lb_admin_quick_empty" runat="server" />
+            </asp:Panel>
+            <div class="admin-role-home-quick-grid">
+                <asp:Repeater ID="rpt_admin_home_quick_actions" runat="server">
+                    <ItemTemplate>
+                        <article class="admin-role-home-quick-card">
+                            <h3><%# Eval("Title") %></h3>
+                            <p><%# Eval("Description") %></p>
+                            <asp:HyperLink ID="hl_admin_quick_open" runat="server" NavigateUrl='<%# Eval("Url") %>' CssClass="button light"><%# Eval("CtaLabel") %></asp:HyperLink>
+                        </article>
+                    </ItemTemplate>
+                </asp:Repeater>
+            </div>
+        </section>
+
+        <section class="admin-role-home-section">
+            <div class="admin-role-home-section-head">
+                <h2><asp:Label ID="lb_admin_home_pending_title" runat="server" /></h2>
+                <p><asp:Label ID="lb_admin_home_pending_description" runat="server" /></p>
+            </div>
+            <asp:Panel ID="pn_admin_pending_empty" runat="server" CssClass="admin-role-home-empty" Visible="false">
+                <asp:Label ID="lb_admin_pending_empty" runat="server" />
+            </asp:Panel>
+            <div class="admin-role-home-pending-grid">
+                <asp:Repeater ID="rpt_admin_home_pending" runat="server">
+                    <ItemTemplate>
+                        <article class='admin-role-home-pending-card <%# (bool)Eval("HasPending") ? "admin-role-home-pending-card-hot" : "admin-role-home-pending-card-cool" %>'>
+                            <div class="admin-role-home-pending-head">
+                                <h3><%# Eval("Title") %></h3>
+                                <span class="admin-role-home-pending-count"><%# Eval("CountText") %></span>
+                            </div>
+                            <p><%# Eval("Description") %></p>
+                            <asp:HyperLink ID="hl_admin_pending_open" runat="server" NavigateUrl='<%# Eval("Url") %>' CssClass="button light"><%# Eval("CtaLabel") %></asp:HyperLink>
+                        </article>
+                    </ItemTemplate>
+                </asp:Repeater>
+            </div>
+        </section>
+
+        <section class="admin-role-home-section">
+            <div class="admin-role-home-section-head">
                 <h2><asp:Label ID="lb_admin_home_notes_title" runat="server" /></h2>
                 <p><asp:Label ID="lb_admin_home_notes_description" runat="server" /></p>
             </div>

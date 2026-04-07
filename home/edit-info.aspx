@@ -3,7 +3,7 @@
 <asp:Content ID="Content1" ContentPlaceHolderID="head_truoc" runat="Server">
     <asp:Literal ID="literal_meta" runat="server"></asp:Literal>
     <style>
-        .wrap { max-width: 1200px; }
+        .page-shell-wide { max-width: 1200px; }
         .overlay-loading{
             position:fixed; inset:0; background:rgba(0,0,0,.6);
             z-index:99999; display:flex; align-items:center; justify-content:center;
@@ -292,7 +292,7 @@
         <ContentTemplate>
             <asp:Panel ID="Panel1" runat="server" DefaultButton="but_capnhat">
 
-                <div class="container-xl wrap py-4">
+    <div class="container-xl page-shell-wide py-4">
                     <div class="row g-3">
 
                         <!-- left profile card đã ẩn theo yêu cầu để gọn giao diện -->
@@ -519,7 +519,7 @@
                                         <asp:PlaceHolder ID="phShopLockedNote" runat="server" Visible="false">
                                             <div class="<%= GetPaneClass(true) %>" id="target_ch" role="tabpanel">
                                                 <div class="alert alert-warning">
-                                                    Tài khoản hiện tại <b>không thuộc phạm vi gian hàng đối tác</b> nên không thể chỉnh sửa thông tin cửa hàng.
+                                                    Thông tin storefront của gian hàng đã được tách khỏi hồ sơ Home. Vui lòng vào <b>/gianhang/tai-khoan/default.aspx</b> để chỉnh tên gian hàng, mô tả và ảnh đại diện của gian hàng.
                                                 </div>
                                             </div>
                                         </asp:PlaceHolder>

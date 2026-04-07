@@ -12,12 +12,12 @@
         }
         *{box-sizing:border-box}
         body{
-            margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+            margin:0;font-family:"Be Vietnam Pro","Segoe UI",Arial;
             background: radial-gradient(1000px 600px at 50% -10%, #1f2937 0%, var(--bg) 55%);
             color:#e5e7eb; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:16px;
         }
         .container{width:100%;max-width:1100px;display:grid;grid-template-columns:1.2fr 1fr;gap:20px}
-        @media (max-width:900px){.container{grid-template-columns:1fr}}
+        @media (max-width:767px){.container{grid-template-columns:1fr}}
         .card{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
               border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:18px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
         .title{margin:0 0 12px;font-size:20px;font-weight:700}
@@ -39,7 +39,7 @@
             position:absolute;top:50%;right:-14px;transform:translateY(-50%);
             width:0;height:0;border-left:18px solid var(--danger);border-top:12px solid transparent;border-bottom:12px solid transparent;
         }
-        @media (max-width:900px){
+        @media (max-width:767px){
             .pin{left:50%;right:auto;top:-6px;transform:translate(-50%,0) rotate(90deg)}
         }
         .actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
@@ -109,7 +109,7 @@
     const TWO_PI = Math.PI * 2;
     const mod = (x, m) => ((x % m) + m) % m;
     // 0 rad = mũi tên bên phải; 3π/2 rad = mũi tên ở trên (chỉ xuống)
-    const pinAngle = () => (window.innerWidth <= 900 ? (3 * Math.PI / 2) : 0);
+    const pinAngle = () => (window.innerWidth <= 767 ? (3 * Math.PI / 2) : 0);
 
     const rand = (a, b) => Math.random() * (b - a) + a;
     const easeOutCubic = t => 1 - Math.pow(1 - t, 3);

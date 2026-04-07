@@ -7,6 +7,24 @@ public partial class gianhang_quan_ly_tin_Them : System.Web.UI.Page
 {
     private readonly DanhMuc_cl _danhMuc = new DanhMuc_cl();
 
+    private static string NormalizeProvinceName(string value)
+    {
+        string name = (value ?? "").Trim();
+        if (string.IsNullOrEmpty(name))
+            return "";
+
+        if (name.StartsWith("Tỉnh ", StringComparison.OrdinalIgnoreCase))
+            name = name.Substring(5);
+        else if (name.StartsWith("Thành phố ", StringComparison.OrdinalIgnoreCase))
+            name = name.Substring(10);
+        else if (name.StartsWith("TP. ", StringComparison.OrdinalIgnoreCase))
+            name = name.Substring(4);
+        else if (name.StartsWith("TP ", StringComparison.OrdinalIgnoreCase))
+            name = name.Substring(3);
+
+        return name.Trim();
+    }
+
     protected void Page_Load(object sender, EventArgs e)
     {
         RootAccount_cl.RootAccountInfo info = GianHangContext_cl.EnsureCurrentAccess(this);
@@ -66,6 +84,11 @@ public partial class gianhang_quan_ly_tin_Them : System.Web.UI.Page
             txt_giaban.Text = string.Format("{0:#,##0}", item.gia_ban ?? 0m);
             int phanTramUuDai = GianHangProduct_cl.ResolveDiscountPercent(item);
             txt_phantram_uu_dai.Text = phanTramUuDai.ToString();
+            hf_tinh.Value = item.dia_chi_tinh ?? "";
+            hf_quan.Value = item.dia_chi_quan ?? "";
+            hf_phuong.Value = item.dia_chi_phuong ?? "";
+            txt_diachi_chitiet.Text = item.dia_chi_chi_tiet ?? "";
+            hf_address_raw.Value = item.dia_diem ?? "";
             chk_hidden.Checked = item.bin == true;
 
             string loai = GianHangProduct_cl.NormalizeLoai(item.loai);
@@ -90,6 +113,14 @@ public partial class gianhang_quan_ly_tin_Them : System.Web.UI.Page
         string description = (txt_description.Text ?? "").Trim();
         string content = (txt_noidung.Text ?? "").Trim();
         string image = (txt_link_fileupload.Text ?? "").Trim();
+        string tinh = (hf_tinh.Value ?? "").Trim();
+        string quan = (hf_quan.Value ?? "").Trim();
+        string phuong = (hf_phuong.Value ?? "").Trim();
+        string chiTiet = (txt_diachi_chitiet.Text ?? "").Trim();
+        string diaDiem = AddressFormat_cl.BuildFullAddress(chiTiet, phuong, quan, tinh);
+        if (string.IsNullOrWhiteSpace(diaDiem))
+            diaDiem = (hf_address_raw.Value ?? "").Trim();
+        string diaChiTinh = NormalizeProvinceName(tinh);
         string loai = (ddl_loai.SelectedValue ?? GianHangProduct_cl.LoaiSanPham).Trim().ToLowerInvariant();
         string idDanhMuc = (ddl_danhmuc.SelectedValue ?? "").Trim();
 
@@ -119,6 +150,18 @@ public partial class gianhang_quan_ly_tin_Them : System.Web.UI.Page
             return;
         }
 
+        if (string.IsNullOrWhiteSpace(tinh) || string.IsNullOrWhiteSpace(quan) || string.IsNullOrWhiteSpace(phuong))
+        {
+            Helper_Tabler_cl.ShowModal(this.Page, "Vui lòng chọn đầy đủ Tỉnh/Thành, Quận/Huyện và Phường/Xã.", "Thông báo", true, "warning");
+            return;
+        }
+
+        if (chiTiet.Length < 4)
+        {
+            Helper_Tabler_cl.ShowModal(this.Page, "Vui lòng nhập địa chỉ chi tiết.", "Thông báo", true, "warning");
+            return;
+        }
+
         int? editId = CurrentEditId();
 
         using (dbDataContext db = new dbDataContext())
@@ -137,6 +180,11 @@ public partial class gianhang_quan_ly_tin_Them : System.Web.UI.Page
                 phanTramUuDai,
                 loai,
                 idDanhMuc,
+                diaDiem,
+                diaChiTinh,
+                quan,
+                phuong,
+                chiTiet,
                 chk_hidden.Checked);
 
             if (saved == null)

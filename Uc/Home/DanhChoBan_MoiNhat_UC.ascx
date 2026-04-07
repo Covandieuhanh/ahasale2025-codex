@@ -1,4 +1,4 @@
-﻿<%@ Control Language="C#" AutoEventWireup="true" CodeFile="DanhChoBan_MoiNhat_UC.ascx.cs" Inherits="Uc_Home_DanhChoBan_MoiNhat_UC" %>
+<%@ Control Language="C#" AutoEventWireup="true" CodeFile="DanhChoBan_MoiNhat_UC.ascx.cs" Inherits="Uc_Home_DanhChoBan_MoiNhat_UC" %>
 <%@ Register Src="~/Uc/Home/DanhMuc_icon_Home_UC.ascx" TagPrefix="uc1" TagName="DanhMuc_icon_Home_UC" %>
 
 <style>
@@ -14,11 +14,11 @@
         box-sizing: border-box;
     }
 
-    @media (max-width: 575.98px) {
+    @media (max-width: 620px) {
         .grid-5-item { width: calc((100% - 12px) / 2); }
     }
 
-    @media (min-width: 576px) and (max-width: 767.98px) {
+    @media (min-width: 620.02px) and (max-width: 767.98px) {
         .grid-5-item { width: calc((100% - 12px) / 2); }
     }
 
@@ -118,6 +118,23 @@
         margin-top: 6px;
         color: #d63939;
         font-weight: 700;
+    }
+
+    .sp-source-badge {
+        display: inline-flex;
+        align-items: center;
+        max-width: 100%;
+        margin-top: 8px;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: #eef8f1;
+        color: #176a4a;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .sp-meta {
@@ -339,6 +356,155 @@
         color: #1f2937;
     }
 
+    /* ===== Suggest panel (Chợ Tốt style) ===== */
+    .search-wrap .g-query { position: relative; }
+
+    .search-suggest-panel {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(100% + 4px);
+        background: #fff;
+        border: 1px solid #dfe1e5;
+        border-radius: 12px;
+        box-shadow: 0 12px 32px rgba(32,33,36,.16);
+        overflow: hidden;
+        display: none;
+        z-index: 3500;
+    }
+
+    .search-suggest-panel.is-open { display: block; }
+
+    .search-suggest-scroll {
+        max-height: 420px;
+        overflow-y: auto;
+        padding: 6px 0;
+    }
+
+    .search-suggest-section {
+        padding: 6px 0;
+    }
+
+    .search-suggest-section + .search-suggest-section {
+        border-top: 1px solid #eef2f7;
+    }
+
+    .search-suggest-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 8px 16px 6px;
+    }
+
+    .search-suggest-label {
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        color: #6b7280;
+    }
+
+    .search-suggest-action {
+        border: 0;
+        background: transparent;
+        color: #43b02a;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        padding: 0;
+    }
+
+    .search-suggest-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 16px;
+        cursor: pointer;
+    }
+
+    .search-suggest-remove {
+        border: 0;
+        background: transparent;
+        color: #9ca3af;
+        padding: 4px;
+        line-height: 1;
+        cursor: pointer;
+        border-radius: 999px;
+        flex: 0 0 auto;
+    }
+
+    .search-suggest-remove:hover {
+        color: #111827;
+        background: #eef2f7;
+    }
+
+    .g-location-clear {
+        width: 26px;
+        height: 26px;
+        border: 0;
+        border-radius: 999px;
+        background: #eef2f7;
+        color: #4b5563;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        flex: 0 0 auto;
+    }
+
+    .g-location-clear:hover {
+        background: #dbe4ec;
+        color: #111827;
+    }
+
+    .g-location-clear[hidden] {
+        display: none !important;
+    }
+
+    .search-suggest-item:hover,
+    .search-suggest-item.is-active {
+        background: #f5f7fa;
+    }
+
+    .search-suggest-text {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .search-suggest-title {
+        font-weight: 700;
+        color: #111827;
+        line-height: 1.25rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .search-suggest-meta {
+        margin-top: 2px;
+        color: #6b7280;
+        font-size: 13px;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .search-suggest-empty {
+        padding: 14px 16px;
+        color: #9aa0a6;
+        font-size: 14px;
+    }
+
+    .search-suggest-badge {
+        background: #eef2f7;
+        color: #374151;
+        border-radius: 10px;
+        padding: 2px 8px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
     .search-wrap .g-input::placeholder {
         color: #9aa0a6;
     }
@@ -347,12 +513,59 @@
         display: none;
     }
 
+    .search-wrap .g-btn-inline-mobile i {
+        font-size: 17px;
+        line-height: 1;
+    }
+
     .search-wrap .g-select {
         width: 100%;
         border: 0;
         background: transparent;
         font-size: 15px;
         color: #1f2937;
+    }
+
+    .search-wrap .ct-shell {
+        width: 100%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .search-wrap .g-location-trigger {
+        border: 0 !important;
+        outline: 0;
+        box-shadow: none !important;
+        background: transparent;
+        width: 100%;
+        min-height: 38px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0;
+        cursor: pointer;
+        text-align: left;
+    }
+
+    .search-wrap .g-location-label {
+        flex: 1 1 auto;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: #1f2937;
+        font-weight: 600;
+    }
+
+    .search-wrap .g-location-caret {
+        color: #6b7280;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .search-wrap .g-seg.is-missing {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 1px rgba(239, 68, 68, .25);
     }
 
     .search-wrap .g-seg .choices {
@@ -396,11 +609,103 @@
         z-index: 2000;
     }
 
+    /* Danh mục dropdown kiểu Chợ Tốt: radio ở bên phải */
+    .search-wrap .g-seg.g-cat .choices {
+        position: relative;
+    }
+
+    .search-wrap .g-seg.g-cat .choices__list--dropdown {
+        border-radius: 16px;
+        border: 1px solid #e3e8ef;
+        box-shadow: 0 16px 30px rgba(15, 23, 42, .18);
+        background: #ffffff;
+        width: max-content;
+        min-width: max(320px, 100%);
+        max-width: calc(100vw - 24px);
+        overflow-y: hidden !important;
+        overflow-x: hidden !important;
+    }
+
+    .search-wrap .g-seg.g-cat .choices__list {
+        max-height: min(62vh, 440px);
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }
+
+    .search-wrap .g-seg.g-cat .choices__item--choice {
+        position: relative;
+        display: flex;
+        align-items: center;
+        min-height: 52px;
+        padding: 10px 48px 10px 16px;
+        font-size: 16px;
+        line-height: 1.15;
+        color: #111827;
+        white-space: nowrap;
+        border-bottom: 1px solid #f0f3f7;
+    }
+
+    .search-wrap .g-seg.g-cat .choices__item--choice:last-child {
+        border-bottom: 0;
+    }
+
+    .search-wrap .g-seg.g-cat .choices__item--choice::after {
+        content: "";
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        border: 2px solid #c7cbd1;
+        background: #ffffff;
+        box-sizing: border-box;
+    }
+
+    .search-wrap .g-seg.g-cat .choices__item--choice.is-selected {
+        color: #0f2f19;
+        font-weight: 700;
+        background: #f6fbf8;
+    }
+
+    .search-wrap .g-seg.g-cat .choices__item--choice.is-selected::after {
+        border-color: #2f8f46;
+        background: #2f8f46;
+        content: "\2713";
+        color: #ffffff;
+        font-size: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 900;
+    }
+
+    .search-wrap .g-seg.g-cat .choices__item--choice.is-highlighted {
+        background: #f4f7fa;
+    }
+
     /* ===== Desktop/tablet layout (same structure, responsive scale) ===== */
-    @media (min-width: 576px) {
-        .search-wrap .g-search {
+    @media (min-width: 620.02px) {
+        .search-wrap {
             display: flex;
-            flex-wrap: nowrap;
+            justify-content: center;
+        }
+
+        .search-wrap .ct-shell {
+            width: min(calc(100% - 24px), 1040px) !important;
+            max-width: 1040px !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            left: auto !important;
+            right: auto !important;
+            transform: none !important;
+            position: relative;
+        }
+
+        .search-wrap .g-search {
+            display: grid;
+            grid-template-columns: minmax(108px, 1fr) minmax(180px, 1.7fr) minmax(220px, 2fr) auto;
             align-items: center;
             gap: 8px;
             background: #ffffff;
@@ -424,21 +729,32 @@
             gap: 8px;
             min-height: 42px;
             padding: 0 12px;
-            flex: 1 1 180px;
             position: relative;
             background: #f3f6f9;
             border-radius: 14px;
+            min-width: 0;
+            width: 100%;
         }
 
         .search-wrap .g-seg.g-query {
-            flex: 2 1 260px;
+            width: 100%;
         }
 
         .search-wrap .g-seg.g-action {
-            flex: 0 0 auto;
+            width: auto;
             padding: 0;
             min-height: 42px;
             background: transparent;
+        }
+
+        .search-wrap .g-input,
+        .search-wrap .g-location-label,
+        .search-wrap .g-seg .choices__item--selectable,
+        .search-wrap .g-seg .choices__placeholder {
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .search-wrap .g-seg + .g-seg {
@@ -469,6 +785,16 @@
             background: #27793b;
             color: #ffffff;
         }
+
+        /* Desktop: keep popup panels detached from search shell */
+        .search-wrap .g-seg.g-cat .choices__list--dropdown {
+            top: calc(100% + 8px) !important;
+            margin-top: 2px !important;
+        }
+
+        .search-wrap .g-query .search-suggest-panel {
+            top: calc(100% + 10px) !important;
+        }
     }
 
     @media (min-width: 992px) {
@@ -477,16 +803,16 @@
             border-radius: 22px;
             min-height: 60px;
             gap: 10px;
+            grid-template-columns: minmax(132px, 1fr) minmax(260px, 1.75fr) minmax(320px, 2.1fr) auto;
         }
 
         .search-wrap .g-seg {
-            flex: 1 1 220px;
             min-height: 50px;
             padding: 0 16px;
         }
 
         .search-wrap .g-seg.g-query {
-            flex: 2 1 360px;
+            width: 100%;
         }
 
         .search-wrap .g-seg + .g-seg {
@@ -496,7 +822,7 @@
         }
 
         .search-wrap .g-seg.g-action {
-            flex: 0 0 auto;
+            width: auto;
             padding: 0;
             min-height: 50px;
             border-top: 0;
@@ -551,25 +877,73 @@
 
     :root {
         --aha-home-root-search-height: 88px;
+        --aha-home-mobile-chip-height: 0px;
     }
 
     .hero-ct-like {
         display: flex;
         align-items: center;
         justify-content: center;
-        min-height: 220px;
+        min-height: 292px;
+        margin: 0;
+        border-radius: 0 0 28px 28px;
+        background-image: url('<%= Helper_cl.VersionedUrl("~/uploads/images/home-banner-20260328.png") %>') !important;
+        background-position: center 52% !important;
+        background-size: cover !important;
+        background-repeat: no-repeat !important;
+        box-shadow: 0 16px 32px rgba(23, 94, 67, .14) !important;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .hero-ct-like::before,
+    .hero-ct-like::after {
+        content: none !important;
+        display: none !important;
+        background: none !important;
+    }
+
+    .home-fixed-shortcuts {
+        display: none;
+    }
+
+    @media (min-width: 620.02px) {
+        html.aha-bds-chip-below-topbar .home-fixed-shortcuts {
+            position: fixed;
+            top: calc(var(--aha-header-offset, 54px) + 8px);
+            left: 12px;
+            right: 12px;
+            z-index: 1045;
+            display: flex !important;
+            align-items: center;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        html.aha-bds-chip-below-topbar .home-fixed-shortcuts .hero-mobile-bds-shortcut {
+            display: inline-flex;
+            align-items: center;
+            min-height: 34px;
+            padding: 0 14px;
+            border-radius: 999px;
+            text-decoration: none !important;
+            font-size: 13px;
+            font-weight: 800;
+            color: #ffffff !important;
+            background: rgba(15, 23, 42, .26);
+            border: 1px solid rgba(255, 255, 255, .28);
+            box-shadow: 0 10px 20px rgba(15, 23, 42, .16);
+            backdrop-filter: blur(10px);
+            pointer-events: auto;
+        }
     }
 
     .hero-ct-inner {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0 16px 18px;
+        display: none !important;
     }
 
     .hero-ct-title {
-        transform: translateY(-8px);
+        display: none !important;
     }
 
     body.aha-home-root-pinned-search .page-wrapper {
@@ -702,13 +1076,24 @@
         padding: 0 12px;
     }
 
+    @media (min-width: 620.02px) {
+        .search-wrap.is-root-pinned.is-sticky-fixed .ct-shell {
+            width: min(calc(100% - 24px), 1040px) !important;
+            max-width: 1040px !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+    }
+
     .home-category-inline .dm-section {
         margin-top: 10px !important;
         margin-bottom: 12px !important;
         transform: none !important;
     }
 
-    @media (max-width: 991.98px) {
+    @media (max-width: 620px) {
         :root {
             --aha-home-root-search-height: 84px;
         }
@@ -822,14 +1207,45 @@
         }
     }
 
-    @media (max-width: 575.98px) {
+    @media (max-width: 620px) {
         .hero-ct-like {
-            min-height: 96px;
-            height: 96px;
+            min-height: 144px;
+            height: 144px;
             display: flex !important;
             align-items: center;
             justify-content: center;
-            border-radius: 0 0 18px 18px;
+            border-radius: 0 0 24px 24px;
+            background-position: 50% 50%;
+            background-size: cover;
+        }
+
+        .home-fixed-shortcuts {
+            position: fixed;
+            top: calc(var(--aha-header-offset, 54px) + 8px);
+            left: 12px;
+            right: 12px;
+            z-index: 1045;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        .hero-mobile-bds-shortcut {
+            display: inline-flex;
+            align-items: center;
+            min-height: 32px;
+            padding: 0 12px;
+            border-radius: 999px;
+            text-decoration: none !important;
+            font-size: 12px;
+            font-weight: 800;
+            color: #ffffff !important;
+            background: rgba(15, 23, 42, .26);
+            border: 1px solid rgba(255, 255, 255, .26);
+            box-shadow: 0 10px 20px rgba(15, 23, 42, .16);
+            backdrop-filter: blur(10px);
+            pointer-events: auto;
         }
 
         .hero-ct-inner {
@@ -837,9 +1253,7 @@
         }
 
         .hero-ct-title {
-            font-size: 19px;
-            line-height: 1.15;
-            transform: translateY(-2px);
+            display: none;
         }
 
         .search-wrap {
@@ -856,13 +1270,13 @@
 
         .search-wrap .g-search {
             display: flex;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             align-items: center;
             background: #ffffff;
             border: 1px solid #e5ebf0;
             box-shadow: 0 8px 18px rgba(15, 23, 42, .12);
-            gap: 8px;
-            padding: 8px;
+            gap: 6px;
+            padding: 6px;
             border-radius: 16px;
         }
 
@@ -885,21 +1299,23 @@
 
         .search-wrap .g-seg.g-query {
             order: 1;
-            flex: 1 1 100%;
+            flex: 1 1 auto;
             background: #ffffff;
             border-color: #e6ebf1;
-            gap: 10px;
-            padding-right: 6px;
+            gap: 8px;
+            padding-right: 4px;
         }
 
         .search-wrap .g-seg.g-cat {
             order: 2;
-            flex: 1 1 calc(50% - 6px);
+            flex: 0 0 auto;
+            min-width: 108px;
+            max-width: 132px;
+            padding: 0 10px;
         }
 
         .search-wrap .g-seg.g-loc {
-            order: 3;
-            flex: 1 1 calc(50% - 6px);
+            display: none !important;
         }
 
         .search-wrap .g-seg.g-action {
@@ -922,18 +1338,25 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-height: 30px;
-            padding: 0 12px;
+            width: 38px;
+            min-width: 38px;
+            height: 38px;
+            min-height: 38px;
+            padding: 0;
             border-radius: 999px;
             border: 1px solid #2f8f46;
             background: #2f8f46;
             color: #fff;
-            font-size: 12px;
+            font-size: 15px;
             font-weight: 700;
             text-decoration: none;
             white-space: nowrap;
             flex: 0 0 auto;
             box-shadow: 0 5px 12px rgba(47, 143, 70, .25);
+        }
+
+        .search-wrap .g-btn-inline-mobile .g-btn-inline-label {
+            display: none;
         }
 
         .search-wrap .g-btn-inline-mobile:hover,
@@ -978,6 +1401,35 @@
             display: flex;
             align-items: center;
             min-width: 0;
+        }
+
+        .search-wrap .g-seg.g-cat .choices__list--single .choices__item--selectable,
+        .search-wrap .g-seg.g-cat .choices__list--single .choices__placeholder {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 84px;
+            display: inline-block;
+        }
+
+        .search-wrap .g-seg.g-cat .choices__list--dropdown {
+            width: min(92vw, 360px) !important;
+            min-width: min(92vw, 360px) !important;
+            max-width: calc(100vw - 16px) !important;
+            left: auto !important;
+            right: 0 !important;
+            top: calc(100% + 8px) !important;
+        }
+
+        .search-wrap .g-seg.g-cat .choices__list--dropdown .choices__item--choice {
+            max-width: none !important;
+            overflow: visible !important;
+            text-overflow: clip !important;
+            white-space: nowrap !important;
+        }
+
+        .search-wrap .g-query .search-suggest-panel {
+            top: calc(100% + 12px) !important;
         }
 
         .search-wrap.in-header {
@@ -1108,14 +1560,80 @@
             display: none;
         }
 
-        .hero-ct-like {
-            box-shadow: inset 0 -14px 24px rgba(0,0,0,.08);
-        }
+        .hero-ct-like { box-shadow: 0 16px 32px rgba(23, 94, 67, .14); }
+    }
+
+    /* Modal chọn khu vực kiểu Chợ Tốt */
+    .ct-loc-modal { position: fixed; inset: 0; z-index: 2500; display: none; }
+    .ct-loc-modal.is-open { display: block; }
+    .ct-loc-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.32); }
+    .ct-loc-dialog { position: absolute; left: 12px; right: 12px; bottom: 12px; top: 12px; background: #fff; border-radius: 22px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 22px 48px rgba(15,23,42,.28); }
+    @media (min-width: 768px) { .ct-loc-dialog { left: 50%; right: auto; width: 540px; top: 80px; transform: translateX(-50%); } }
+    .ct-loc-header { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid #eef2f7; }
+    .ct-loc-title { flex: 1 1 auto; text-align: center; font-size: 20px; font-weight: 800; }
+    .ct-loc-body { flex: 1 1 auto; display: flex; flex-direction: column; overflow: hidden; }
+    .ct-loc-tabs { display: grid; grid-template-columns: repeat(3,1fr); border-bottom: 1px solid #eef2f7; }
+    .ct-loc-tab { padding: 10px 12px; text-align: center; font-weight: 700; color: #4b5563; cursor: pointer; }
+    .ct-loc-tab.is-active { color: #111827; border-bottom: 3px solid #43b02a; }
+    .ct-loc-search { padding: 10px 14px; }
+    .ct-loc-search input { width: 100%; border: 1px solid #e5ebf0; border-radius: 14px; padding: 10px 12px; font-size: 15px; }
+    .ct-loc-list { flex: 1 1 auto; overflow-y: auto; padding: 4px 0 10px; }
+    .ct-loc-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; cursor: pointer; }
+    .ct-loc-item:hover { background: #f5f7fa; }
+    .ct-loc-radio { width: 20px; height: 20px; border: 2px solid #d0d7de; border-radius: 50%; box-sizing: border-box; }
+    .ct-loc-item.is-selected .ct-loc-radio { border-color: #43b02a; box-shadow: inset 0 0 0 6px #43b02a; }
+    .ct-loc-footer { padding: 12px 16px; border-top: 1px solid #eef2f7; display: flex; justify-content: flex-end; }
+    .ct-loc-apply { min-width: 130px; min-height: 44px; border: 0; border-radius: 14px; background: #43b02a; color: #fff; font-weight: 800; box-shadow: 0 10px 20px rgba(67,176,42,.24); }
+
+    .aha-feed-pager {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 16px;
+    }
+
+    .aha-feed-pager .pg-link,
+    .aha-feed-pager .pg-current {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 36px;
+        height: 36px;
+        padding: 0 12px;
+        border-radius: 10px;
+        border: 1px solid #d8e1ea;
+        text-decoration: none !important;
+        font-weight: 700;
+        color: #243b53;
+        background: #ffffff;
+    }
+
+    .aha-feed-pager .pg-link:hover {
+        background: #f6f9fc;
+        border-color: #c9d6e2;
+        color: #102a43;
+    }
+
+    .aha-feed-pager .pg-current {
+        background: #2f8f46;
+        border-color: #2f8f46;
+        color: #ffffff;
+    }
+
+    .aha-feed-pager .pg-dots {
+        color: #7b8794;
+        font-weight: 700;
+        padding: 0 2px;
     }
 </style>
 
 <asp:UpdatePanel ID="up_all" runat="server" UpdateMode="Conditional" ChildrenAsTriggers="true">
     <ContentTemplate>
+        <div class="home-fixed-shortcuts" aria-label="Lối tắt nhanh">
+            <a href="/bat-dong-san" class="hero-mobile-bds-shortcut" title="Bất động sản">Bất động sản</a>
+        </div>
         <section class="hero-ct-like">
             <div class="hero-ct-inner">
                 <h1 class="hero-ct-title">Giá Sale, gần bạn!</h1>
@@ -1135,20 +1653,44 @@
                     <div class="g-search">
                         <div class="g-seg g-cat">
                             <span class="g-icon"><i class="ti ti-layout-grid"></i></span>
-                            <asp:DropDownList ID="ddl_Category" runat="server" CssClass="g-select js-choices" data-choices-search="1" data-choices-placeholder="Tìm danh mục" />
+                            <asp:DropDownList ID="ddl_Category" runat="server" CssClass="g-select js-choices" data-choices-search="0" data-choices-placeholder="Chọn danh mục" />
                         </div>
 
                         <div class="g-seg g-query">
                             <span class="g-icon"><i class="ti ti-search"></i></span>
                             <asp:TextBox ID="txt_Search" runat="server"
                                 CssClass="g-input"
-                                placeholder="Tìm sản phẩm..." />
-                            <button type="button" class="g-btn-inline-mobile" onclick="return AhaHomeSearchRedirect();">Tìm kiếm</button>
+                                placeholder="Tìm sản phẩm..."
+                                autocomplete="off"
+                                role="combobox"
+                                aria-autocomplete="list"
+                                aria-haspopup="listbox"
+                                aria-expanded="false"
+                                aria-controls="homeSuggestList"
+                                aria-activedescendant="" />
+                            <button type="button" class="g-btn-inline-mobile" onclick="return AhaHomeSearchRedirect();" aria-label="Tìm kiếm">
+                                <i class="ti ti-search" aria-hidden="true"></i>
+                                <span class="g-btn-inline-label">Tìm kiếm</span>
+                            </button>
+                            <div id="homeSuggestPanel" class="search-suggest-panel" aria-live="polite" role="listbox">
+                                <div class="search-suggest-scroll" id="homeSuggestList"></div>
+                            </div>
                         </div>
 
                         <div class="g-seg g-loc">
-                            <span class="g-icon"><i class="ti ti-map-pin"></i></span>
-                            <asp:DropDownList ID="ddl_Location" runat="server" CssClass="g-select js-choices" data-choices-search="1" data-choices-placeholder="Tìm tỉnh thành" />
+                            <button type="button" class="g-location-trigger" onclick="openLocationPicker(); return false;" aria-haspopup="dialog" aria-controls="homeLocationModal">
+                                <span class="g-icon"><i class="ti ti-map-pin"></i></span>
+                                <span id="homeLocationLabel" class="g-location-label">Địa điểm</span>
+                                <span class="g-location-caret"><i class="ti ti-chevron-down"></i></span>
+                            </button>
+                            <button type="button" id="homeLocationClearBtn" class="g-location-clear" onclick="clearHomeLocation(); return false;" aria-label="Xóa địa điểm" hidden>
+                                <i class="ti ti-x"></i>
+                            </button>
+                            <asp:DropDownList ID="ddl_Location" runat="server" CssClass="g-location-hidden" Style="display:none" />
+                            <asp:HiddenField ID="hfProvinceCode" runat="server" />
+                            <asp:HiddenField ID="hfDistrictCode" runat="server" />
+                            <asp:HiddenField ID="hfWardCode" runat="server" />
+                            <asp:HiddenField ID="hfLocationDisplay" runat="server" />
                         </div>
 
                         <div class="g-seg g-action">
@@ -1168,11 +1710,97 @@
             <uc1:DanhMuc_icon_Home_UC runat="server" ID="DanhMuc_icon_Home_UC" />
         </div>
 
+        <div id="homeLocationModal" class="ct-loc-modal" aria-hidden="true">
+            <div class="ct-loc-backdrop" onclick="closeLocationPicker()"></div>
+            <div class="ct-loc-dialog" role="dialog" aria-modal="true" aria-labelledby="ctLocTitle">
+                <div class="ct-loc-header">
+                    <button type="button" class="btn btn-link p-0" onclick="closeLocationPicker()" aria-label="Đóng"><i class="ti ti-arrow-left"></i></button>
+                    <div id="ctLocTitle" class="ct-loc-title">Khu vực</div>
+                    <div style="width:32px;"></div>
+                </div>
+                <div class="ct-loc-body">
+                    <div class="ct-loc-tabs">
+                        <div id="ctLocTabProvince" class="ct-loc-tab is-active" onclick="switchLocLevel('province')">Tỉnh thành</div>
+                        <div id="ctLocTabDistrict" class="ct-loc-tab" onclick="switchLocLevel('district')">Quận huyện</div>
+                        <div id="ctLocTabWard" class="ct-loc-tab" onclick="switchLocLevel('ward')">Phường xã</div>
+                    </div>
+                    <div class="ct-loc-search">
+                        <input id="ctLocSearchInput" type="text" placeholder="Tìm nhanh..." oninput="filterLocList()" />
+                    </div>
+                    <div id="ctLocList" class="ct-loc-list"></div>
+                </div>
+                <div class="ct-loc-footer">
+                    <button type="button" class="ct-loc-apply" onclick="applyLocationPicker()">Áp dụng</button>
+                </div>
+            </div>
+        </div>
+
 
         <script>
+            var AHA_CHOICES_CSS_ID = 'aha-choices-css';
+            var AHA_CHOICES_JS_ID = 'aha-choices-js';
+            var AHA_CHOICES_CSS_HREF = 'https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css';
+            var AHA_CHOICES_JS_HREF = 'https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js';
+            var ahaChoicesLoading = false;
+            var ahaChoicesQueue = [];
+
+            function flushChoicesReady(ok) {
+                var queue = ahaChoicesQueue.slice(0);
+                ahaChoicesQueue = [];
+                ahaChoicesLoading = false;
+                queue.forEach(function (fn) {
+                    try { fn(ok); } catch (e) { }
+                });
+            }
+
+            function ensureChoicesAssets(callback) {
+                if (typeof callback !== 'function') callback = function () { };
+                if (typeof window.Choices !== 'undefined') {
+                    callback(true);
+                    return;
+                }
+
+                ahaChoicesQueue.push(callback);
+                if (ahaChoicesLoading) return;
+                ahaChoicesLoading = true;
+
+                if (!document.getElementById(AHA_CHOICES_CSS_ID)) {
+                    var css = document.createElement('link');
+                    css.id = AHA_CHOICES_CSS_ID;
+                    css.rel = 'stylesheet';
+                    css.href = AHA_CHOICES_CSS_HREF;
+                    document.head.appendChild(css);
+                }
+
+                var existing = document.getElementById(AHA_CHOICES_JS_ID);
+                if (existing) {
+                    existing.addEventListener('load', function () { flushChoicesReady(true); });
+                    existing.addEventListener('error', function () { flushChoicesReady(false); });
+                    return;
+                }
+
+                var script = document.createElement('script');
+                script.id = AHA_CHOICES_JS_ID;
+                script.src = AHA_CHOICES_JS_HREF;
+                script.defer = true;
+                script.onload = function () { flushChoicesReady(true); };
+                script.onerror = function () { flushChoicesReady(false); };
+                document.head.appendChild(script);
+            }
+
             // Init Choices (safe for WebForms partial postback)
             function initChoices() {
-                document.querySelectorAll('.js-choices').forEach(function (el) {
+                var selects = document.querySelectorAll('.js-choices');
+                if (!selects.length) return;
+
+                if (typeof window.Choices === 'undefined') {
+                    ensureChoicesAssets(function (ok) {
+                        if (ok) initChoices();
+                    });
+                    return;
+                }
+
+                selects.forEach(function (el) {
                     if (el.tagName !== 'SELECT') return;
 
                     if (el.dataset.choicesDone) return;
@@ -1189,63 +1817,936 @@
                 });
             }
 
-            function bindMobileQuickFilters() {
-                var ddlCat = document.getElementById('<%= ddl_Category.ClientID %>');
-                var ddlLoc = document.getElementById('<%= ddl_Location.ClientID %>');
-                var txtSearch = document.getElementById('<%= txt_Search.ClientID %>');
-                if (!ddlCat || !ddlLoc) return;
+            var AhaSearchSuggestState = {
+                timer: null,
+                abortController: null,
+                activeIndex: -1,
+                items: [],
+                open: false,
+                source: ''
+            };
 
-                function triggerSearch() {
-                    if (typeof AhaHomeSearchRedirect === 'function') {
-                        AhaHomeSearchRedirect();
-                        return;
-                    }
-                    if (typeof __doPostBack === 'function') {
-                        __doPostBack('<%= btn_Search.UniqueID %>', '');
-                    }
-                }
+            var AHA_RECENT_SEARCH_KEY = 'aha-search-history-v1';
+            var AHA_RECENT_SEARCH_LIMIT = 8;
+            var AHA_LOCATION_STATE_KEY = 'aha-search-location-v1';
 
-                if (ddlCat.dataset.autoSearchBound !== '1') {
-                    ddlCat.dataset.autoSearchBound = '1';
-                    ddlCat.addEventListener('change', triggerSearch);
-                }
-                if (ddlLoc.dataset.autoSearchBound !== '1') {
-                    ddlLoc.dataset.autoSearchBound = '1';
-                    ddlLoc.addEventListener('change', triggerSearch);
-                }
-                if (txtSearch && txtSearch.dataset.autoSearchBound !== '1') {
-                    txtSearch.dataset.autoSearchBound = '1';
-                    txtSearch.addEventListener('keydown', function (e) {
-                        if (e.key === 'Enter') {
-                            e.preventDefault();
-                            triggerSearch();
-                        }
-                    });
-                }
+            function trackSearchEvent(action, payload) {
+                try {
+                    var eventModel = payload || {};
+                    if (window.dataLayer && typeof window.dataLayer.push === 'function') {
+                        window.dataLayer.push({
+                            event: 'track_event',
+                            event_category: 'search_box',
+                            event_action: action,
+                            event_label: eventModel.label || '',
+                            event_model: eventModel
+                        });
+                    }
+                } catch (e) { }
             }
 
-            function buildSearchUrl() {
+            function getSearchTrackingContext(overrides) {
                 var keywordEl = document.getElementById('<%= txt_Search.ClientID %>');
                 var catEl = document.getElementById('<%= ddl_Category.ClientID %>');
                 var locEl = document.getElementById('<%= ddl_Location.ClientID %>');
+                var hfProvince = document.getElementById('<%= hfProvinceCode.ClientID %>');
+                var hfDistrict = document.getElementById('<%= hfDistrictCode.ClientID %>');
+                var hfWard = document.getElementById('<%= hfWardCode.ClientID %>');
+                var ctx = {
+                    label: keywordEl ? (keywordEl.value || '').trim() : '',
+                    cat: catEl ? (catEl.value || '').trim() : '',
+                    loc: locEl ? (locEl.value || '').trim() : '',
+                    province: hfProvince ? (hfProvince.value || '').trim() : '',
+                    district: hfDistrict ? (hfDistrict.value || '').trim() : '',
+                    ward: hfWard ? (hfWard.value || '').trim() : '',
+                    type: 'all'
+                };
 
-                var keyword = keywordEl ? keywordEl.value.trim() : '';
-                var cat = catEl ? catEl.value : '';
-                var loc = locEl ? locEl.value : '';
+                if (!ctx.province && ctx.loc) ctx.province = ctx.loc;
+                ctx.location_level = ctx.ward ? 'ward' : (ctx.district ? 'district' : (ctx.province ? 'province' : 'none'));
+                ctx.query_len = ctx.label.length;
+
+                if (overrides) {
+                    Object.keys(overrides).forEach(function (key) {
+                        ctx[key] = overrides[key];
+                    });
+                    if (!ctx.province && ctx.loc) ctx.province = ctx.loc;
+                    ctx.location_level = ctx.ward ? 'ward' : (ctx.district ? 'district' : (ctx.province ? 'province' : 'none'));
+                    ctx.query_len = (ctx.label || '').length;
+                }
+
+                return ctx;
+            }
+
+            function getSearchElements() {
+                return {
+                    keywordEl: document.getElementById('<%= txt_Search.ClientID %>'),
+                    catEl: document.getElementById('<%= ddl_Category.ClientID %>'),
+                    locEl: document.getElementById('<%= ddl_Location.ClientID %>'),
+                    panelEl: document.getElementById('homeSuggestPanel'),
+                    listEl: document.getElementById('homeSuggestList')
+                };
+            }
+
+            function clearRecentSearches() {
+                writeRecentSearches([]);
+            }
+
+            function removeRecentSearch(item) {
+                if (!item || !item.keyword) return;
+                var keyword = (item.keyword || '').trim().toLowerCase();
+                var cat = (item.categoryId || item.cat || '').trim();
+                var loc = (item.locationId || item.loc || '').trim();
+                var type = (item.type || 'all').trim();
+                var key = [keyword, cat, loc, type].join('|');
+                var list = readRecentSearches().filter(function (x) {
+                    var xKey = [((x.keyword || '').trim().toLowerCase()), (x.cat || '').trim(), (x.loc || '').trim(), ((x.type || 'all').trim())].join('|');
+                    return xKey !== key;
+                });
+                writeRecentSearches(list);
+            }
+
+            function readLocationState() {
+                try {
+                    var raw = localStorage.getItem(AHA_LOCATION_STATE_KEY);
+                    var item = raw ? JSON.parse(raw) : null;
+                    if (!item || typeof item !== 'object') return null;
+                    return item;
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            function writeLocationState(item) {
+                try {
+                    localStorage.setItem(AHA_LOCATION_STATE_KEY, JSON.stringify(item || {}));
+                } catch (e) { }
+            }
+
+            function updateLocationClearState(label) {
+                var clearBtn = document.getElementById('homeLocationClearBtn');
+                if (!clearBtn) return;
+                clearBtn.hidden = !label || !label.trim() || label === 'Địa điểm';
+            }
+
+            function escapeHtml(s) {
+                return (s || '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+            }
+
+            function toSearchSlug(keyword) {
+                var s = (keyword || '').toString().trim().toLowerCase();
+                if (!s) return '';
+                s = s.normalize ? s.normalize('NFD').replace(/[\u0300-\u036f]/g, '') : s;
+                s = s.replace(/đ/g, 'd').replace(/[^a-z0-9\s]/g, ' ');
+                s = s.replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+                return s;
+            }
+
+            function readRecentSearches() {
+                try {
+                    var raw = localStorage.getItem(AHA_RECENT_SEARCH_KEY);
+                    var list = raw ? JSON.parse(raw) : [];
+                    if (!Array.isArray(list)) return [];
+                    return list.filter(function (x) { return x && typeof x.keyword === 'string'; });
+                } catch (e) {
+                    return [];
+                }
+            }
+
+            function writeRecentSearches(items) {
+                try {
+                    localStorage.setItem(AHA_RECENT_SEARCH_KEY, JSON.stringify(items || []));
+                } catch (e) { }
+            }
+
+            function saveRecentSearch(item) {
+                if (!item || !item.keyword || !item.keyword.trim()) return;
+                var keyword = item.keyword.trim();
+                var cat = (item.cat || '').trim();
+                var loc = (item.loc || '').trim();
+                var type = (item.type || 'all').trim();
+                var key = [keyword.toLowerCase(), cat, loc, type].join('|');
+                var list = readRecentSearches();
+                list = list.filter(function (x) {
+                    var k = [(x.keyword || '').toLowerCase(), x.cat || '', x.loc || '', x.type || 'all'].join('|');
+                    return k !== key;
+                });
+                list.unshift({
+                    keyword: keyword,
+                    cat: cat,
+                    loc: loc,
+                    type: type,
+                    savedAt: new Date().getTime()
+                });
+                if (list.length > AHA_RECENT_SEARCH_LIMIT) {
+                    list = list.slice(0, AHA_RECENT_SEARCH_LIMIT);
+                }
+                writeRecentSearches(list);
+            }
+
+            function openSuggestPanel() {
+                var els = getSearchElements();
+                if (!els.panelEl || !els.keywordEl) return;
+                els.panelEl.classList.add('is-open');
+                els.keywordEl.setAttribute('aria-expanded', 'true');
+                AhaSearchSuggestState.open = true;
+            }
+
+            function closeSuggestPanel() {
+                var els = getSearchElements();
+                if (!els.panelEl || !els.keywordEl) return;
+                els.panelEl.classList.remove('is-open');
+                els.keywordEl.setAttribute('aria-expanded', 'false');
+                els.keywordEl.setAttribute('aria-activedescendant', '');
+                AhaSearchSuggestState.open = false;
+                AhaSearchSuggestState.activeIndex = -1;
+                AhaSearchSuggestState.source = '';
+            }
+
+            function renderSuggestEmpty(message) {
+                var els = getSearchElements();
+                if (!els.listEl) return;
+                els.listEl.innerHTML = '';
+                var empty = document.createElement('div');
+                empty.className = 'search-suggest-empty';
+                empty.textContent = message || 'Không có gợi ý phù hợp';
+                els.listEl.appendChild(empty);
+                AhaSearchSuggestState.items = [];
+                AhaSearchSuggestState.activeIndex = -1;
+                AhaSearchSuggestState.source = '';
+                openSuggestPanel();
+            }
+
+            function updateSuggestActiveState() {
+                var els = getSearchElements();
+                if (!els.listEl) return;
+                var nodes = els.listEl.querySelectorAll('.search-suggest-item');
+                nodes.forEach(function (node, idx) {
+                    node.classList.toggle('is-active', idx === AhaSearchSuggestState.activeIndex);
+                    node.setAttribute('aria-selected', idx === AhaSearchSuggestState.activeIndex ? 'true' : 'false');
+                });
+                if (!els.keywordEl) return;
+                if (AhaSearchSuggestState.activeIndex >= 0 && nodes[AhaSearchSuggestState.activeIndex]) {
+                    var activeNode = nodes[AhaSearchSuggestState.activeIndex];
+                    els.keywordEl.setAttribute('aria-activedescendant', activeNode.id || '');
+                    if (typeof activeNode.scrollIntoView === 'function') {
+                        activeNode.scrollIntoView({ block: 'nearest' });
+                    }
+                } else {
+                    els.keywordEl.setAttribute('aria-activedescendant', '');
+                }
+            }
+
+            function createSuggestSection(title, items, source, options) {
+                options = options || {};
+                var section = document.createElement('div');
+                section.className = 'search-suggest-section';
+
+                var heading = document.createElement('div');
+                heading.className = 'search-suggest-heading';
+                heading.innerHTML = '<span class="search-suggest-label">' + escapeHtml(title || 'Gợi ý tìm kiếm') + '</span>';
+                if (options.showClearRecent) {
+                    heading.innerHTML += '<button type="button" class="search-suggest-action" data-role="clear-recent">Xóa</button>';
+                }
+                section.appendChild(heading);
+
+                var frag = document.createDocumentFragment();
+                (items || []).forEach(function (it, idx) {
+                    var div = document.createElement('div');
+                    div.className = 'search-suggest-item';
+                    div.id = 'homeSuggestOption' + idx;
+                    div.setAttribute('data-index', String(idx));
+                    div.setAttribute('data-source', source || 'suggest');
+                    div.setAttribute('role', 'option');
+                    div.setAttribute('aria-selected', 'false');
+                    var iconClass = source === 'recent' ? 'ti-history' : ((it.source || '') === 'popular' ? 'ti-trending-up' : 'ti-search');
+                    div.innerHTML =
+                        '<span class="g-icon"><i class="ti ' + iconClass + '"></i></span>' +
+                        '<div class="search-suggest-text">' +
+                            '<div class="search-suggest-title">' + escapeHtml(it.title || it.keyword || '') + '</div>' +
+                            '<div class="search-suggest-meta">' +
+                                (it.categoryName ? ('<span class="search-suggest-badge">' + escapeHtml(it.categoryName) + '</span>') : '') +
+                                (it.locationName ? ('<span>' + escapeHtml(it.locationName) + '</span>') : '') +
+                            '</div>' +
+                        '</div>' +
+                        (source === 'recent'
+                            ? '<button type="button" class="search-suggest-remove" data-role="remove-recent" aria-label="Xóa tìm kiếm gần đây"><i class="ti ti-x"></i></button>'
+                            : '');
+                    frag.appendChild(div);
+                });
+
+                section.appendChild(frag);
+                return section;
+            }
+
+            function renderSuggestSections(sections) {
+                var els = getSearchElements();
+                if (!els.listEl) return;
+                els.listEl.innerHTML = '';
+                AhaSearchSuggestState.items = [];
+                AhaSearchSuggestState.activeIndex = -1;
+
+                var validSections = (sections || []).filter(function (section) {
+                    return section && Array.isArray(section.items) && section.items.length;
+                });
+
+                if (!validSections.length) {
+                    renderSuggestEmpty('Không có gợi ý phù hợp');
+                    return;
+                }
+
+                var globalIndex = 0;
+                validSections.forEach(function (section) {
+                    var mappedItems = section.items.map(function (item) {
+                        var clone = Object.assign({}, item);
+                        clone._globalIndex = globalIndex++;
+                        clone._sectionSource = section.source || item.source || 'suggest';
+                        return clone;
+                    });
+
+                    mappedItems.forEach(function (item) {
+                        AhaSearchSuggestState.items.push(item);
+                    });
+
+                    var sectionNode = createSuggestSection(section.title, mappedItems.map(function (item) {
+                        return Object.assign({}, item, { _globalIndex: item._globalIndex });
+                    }).map(function (item) { return item; }), section.source, {
+                        showClearRecent: !!section.showClearRecent
+                    });
+
+                    var nodes = sectionNode.querySelectorAll('.search-suggest-item');
+                    nodes.forEach(function (node, idx) {
+                        node.id = 'homeSuggestOption' + mappedItems[idx]._globalIndex;
+                        node.setAttribute('data-index', String(mappedItems[idx]._globalIndex));
+                        node.setAttribute('data-source', mappedItems[idx]._sectionSource || section.source || 'suggest');
+                    });
+
+                    els.listEl.appendChild(sectionNode);
+                });
+                AhaSearchSuggestState.source = validSections.map(function (x) { return x.source || 'suggest'; }).join(',');
+                openSuggestPanel();
+            }
+
+            function renderSuggestItems(items, source) {
+                renderSuggestSections([{
+                    title: source === 'recent' ? 'Tìm kiếm gần đây' : 'Gợi ý tìm kiếm',
+                    items: items || [],
+                    source: source || 'suggest',
+                    showClearRecent: source === 'recent'
+                }]);
+            }
+
+            function renderRecentSuggestions() {
+                var list = readRecentSearches().map(function (x) {
+                    return {
+                        title: x.keyword,
+                        keyword: x.keyword,
+                        categoryId: x.cat || '',
+                        locationId: x.loc || '',
+                        type: x.type || 'all',
+                        source: 'recent'
+                    };
+                });
+                renderSuggestSections([{
+                    title: 'Tìm kiếm gần đây',
+                    items: list,
+                    source: 'recent',
+                    showClearRecent: true
+                }]);
+            }
+
+            function getMatchingRecentSuggestions(keyword) {
+                var needle = (keyword || '').trim().toLowerCase();
+                if (!needle) return [];
+                return readRecentSearches()
+                    .filter(function (x) {
+                        return (x.keyword || '').toLowerCase().indexOf(needle) >= 0;
+                    })
+                    .map(function (x) {
+                        return {
+                            title: x.keyword,
+                            keyword: x.keyword,
+                            categoryId: x.cat || '',
+                            locationId: x.loc || '',
+                            type: x.type || 'all',
+                            source: 'recent'
+                        };
+                    })
+                    .slice(0, 3);
+            }
+
+            function fetchSearchSuggestions(keyword, cat, loc) {
+                if (AhaSearchSuggestState.abortController) {
+                    AhaSearchSuggestState.abortController.abort();
+                }
+                var ctrl = new AbortController();
+                AhaSearchSuggestState.abortController = ctrl;
+
+                var qs = new URLSearchParams();
+                qs.set('q', keyword || '');
+                if (cat) qs.set('cat', cat);
+                if (loc) qs.set('loc', loc);
+                qs.set('limit', '8');
+
+                return fetch('/home/search-suggest.ashx?' + qs.toString(), {
+                    method: 'GET',
+                    signal: ctrl.signal,
+                    headers: { 'Accept': 'application/json' }
+                }).then(function (r) { return r.json(); });
+            }
+
+            function initSearchSuggest() {
+                var els = getSearchElements();
+                if (!els.keywordEl || !els.listEl || !els.panelEl) return;
+                if (els.keywordEl.dataset.suggestBound === '1') return;
+                els.keywordEl.dataset.suggestBound = '1';
+
+                els.keywordEl.addEventListener('focus', function () {
+                    var q = (els.keywordEl.value || '').trim();
+                    if (q.length < 2) {
+                        trackSearchEvent('search_panel_open', getSearchTrackingContext({ label: q }));
+                        renderRecentSuggestions();
+                    }
+                });
+
+                els.keywordEl.addEventListener('input', function () {
+                    var keyword = (els.keywordEl.value || '').trim();
+                    var cat = els.catEl ? (els.catEl.value || '').trim() : '';
+                    var loc = els.locEl ? (els.locEl.value || '').trim() : '';
+
+                    if (AhaSearchSuggestState.timer) {
+                        clearTimeout(AhaSearchSuggestState.timer);
+                    }
+
+                    if (!keyword) {
+                        renderRecentSuggestions();
+                        return;
+                    }
+                    if (keyword.length < 2) {
+                        renderSuggestEmpty('Nhập ít nhất 2 ký tự để xem gợi ý');
+                        return;
+                    }
+
+                    AhaSearchSuggestState.timer = setTimeout(function () {
+                        fetchSearchSuggestions(keyword, cat, loc)
+                            .then(function (res) {
+                                if (!res || res.ok !== true || !Array.isArray(res.items)) {
+                                    trackSearchEvent('search_suggest_empty', getSearchTrackingContext({ label: keyword }));
+                                    renderSuggestEmpty('Không có gợi ý phù hợp');
+                                    return;
+                                }
+                                var items = res.items.map(function (it) {
+                                    return {
+                                        id: it.id || 0,
+                                        title: it.title || '',
+                                        keyword: it.title || '',
+                                        categoryId: it.categoryId || '',
+                                        categoryName: it.categoryName || '',
+                                        locationId: it.locationId || '',
+                                        locationName: it.locationName || '',
+                                        type: 'all',
+                                        url: it.url || '',
+                                        source: it.source || 'suggest'
+                                    };
+                                });
+                                var recentItems = getMatchingRecentSuggestions(keyword);
+                                var realSuggestItems = items.filter(function (it) { return (it.source || 'suggest') !== 'popular'; }).slice(0, 5);
+                                var popularItems = items.filter(function (it) { return (it.source || '') === 'popular'; }).slice(0, 4);
+
+                                var sections = [];
+                                if (recentItems.length) {
+                                    sections.push({
+                                        title: 'Tìm kiếm gần đây',
+                                        items: recentItems,
+                                        source: 'recent',
+                                        showClearRecent: true
+                                    });
+                                }
+                                if (realSuggestItems.length) {
+                                    sections.push({
+                                        title: 'Gợi ý phù hợp',
+                                        items: realSuggestItems,
+                                        source: 'suggest'
+                                    });
+                                }
+                                if (popularItems.length) {
+                                    sections.push({
+                                        title: 'Từ khóa phổ biến',
+                                        items: popularItems,
+                                        source: 'popular'
+                                    });
+                                }
+
+                                if (!sections.length) {
+                                    trackSearchEvent('search_suggest_empty', getSearchTrackingContext({ label: keyword }));
+                                    renderSuggestEmpty('Không có gợi ý phù hợp');
+                                    return;
+                                }
+                                renderSuggestSections(sections);
+                            })
+                            .catch(function (err) {
+                                if (err && err.name === 'AbortError') return;
+                                renderSuggestEmpty('Không thể tải gợi ý lúc này');
+                            });
+                    }, 180);
+                });
+
+                els.listEl.addEventListener('mousedown', function (e) {
+                    e.preventDefault();
+                });
+
+                els.listEl.addEventListener('click', function (e) {
+                    var clearBtn = e.target.closest('[data-role="clear-recent"]');
+                    if (clearBtn) {
+                        clearRecentSearches();
+                        renderRecentSuggestions();
+                        trackSearchEvent('recent_search_clear', getSearchTrackingContext({ label: '' }));
+                        return;
+                    }
+                    var removeBtn = e.target.closest('[data-role="remove-recent"]');
+                    if (removeBtn) {
+                        var removeRow = e.target.closest('.search-suggest-item');
+                        if (!removeRow) return;
+                        var removeIdx = parseInt(removeRow.getAttribute('data-index') || '-1', 10);
+                        if (removeIdx < 0 || removeIdx >= AhaSearchSuggestState.items.length) return;
+                        var removeItem = AhaSearchSuggestState.items[removeIdx];
+                        removeRecentSearch(removeItem);
+                        renderRecentSuggestions();
+                        trackSearchEvent('recent_search_remove', getSearchTrackingContext({ label: removeItem.keyword || removeItem.title || '' }));
+                        return;
+                    }
+                    var row = e.target.closest('.search-suggest-item');
+                    if (!row) return;
+                    var idx = parseInt(row.getAttribute('data-index') || '-1', 10);
+                    if (idx < 0 || idx >= AhaSearchSuggestState.items.length) return;
+                    var item = AhaSearchSuggestState.items[idx];
+                    chooseSuggestItem(item, row.getAttribute('data-source') || 'suggest');
+                });
+
+                if (!window.__ahaSuggestDocClickBound) {
+                    window.__ahaSuggestDocClickBound = true;
+                    document.addEventListener('click', function (e) {
+                        var curr = getSearchElements();
+                        if (!curr.keywordEl) return;
+                        var qWrap = curr.keywordEl.closest('.g-query');
+                        if (!qWrap) return;
+                        if (qWrap.contains(e.target)) return;
+                        closeSuggestPanel();
+                    });
+                }
+
+                window.AhaHomeSearchHandleKeydown = function (e) {
+                    if (!AhaSearchSuggestState.open || !AhaSearchSuggestState.items.length) return false;
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        AhaSearchSuggestState.activeIndex = Math.min(AhaSearchSuggestState.items.length - 1, AhaSearchSuggestState.activeIndex + 1);
+                        updateSuggestActiveState();
+                        return true;
+                    }
+                    if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        AhaSearchSuggestState.activeIndex = Math.max(0, AhaSearchSuggestState.activeIndex - 1);
+                        updateSuggestActiveState();
+                        return true;
+                    }
+                    if (e.key === 'Escape') {
+                        e.preventDefault();
+                        closeSuggestPanel();
+                        return true;
+                    }
+                    if (e.key === 'Enter' && AhaSearchSuggestState.activeIndex >= 0) {
+                        e.preventDefault();
+                        var item = AhaSearchSuggestState.items[AhaSearchSuggestState.activeIndex];
+                        chooseSuggestItem(item, 'keyboard');
+                        return true;
+                    }
+                    return false;
+                };
+            }
+
+            function chooseSuggestItem(item, source) {
+                if (!item) return;
+                var els = getSearchElements();
+                var keyword = (item.keyword || item.title || '').trim();
+                var cat = (item.categoryId || '').trim();
+                var loc = (item.locationId || '').trim();
+                var type = (item.type || 'all').trim();
+
+                if (els.keywordEl) els.keywordEl.value = keyword;
+                if (els.catEl && cat && els.catEl.querySelector('option[value="' + cat + '"]')) els.catEl.value = cat;
+                if (els.locEl && loc && els.locEl.querySelector('option[value="' + loc + '"]')) els.locEl.value = loc;
+
+                saveRecentSearch({ keyword: keyword, cat: cat, loc: loc, type: type });
+                trackSearchEvent(source === 'recent' ? 'recent_search_click' : 'search_suggestion_click', getSearchTrackingContext({
+                    label: keyword,
+                    cat: cat || '',
+                    loc: loc || '',
+                    type: type
+                }));
+                closeSuggestPanel();
+            }
+
+            // ===== Chợ Tốt style location picker =====
+            var LocStore = { provinces: null, districts: null, wards: null, promise: null };
+            var LocState = { level: 'province', province: '', district: '', ward: '' };
+
+            function loadLocData() {
+                if (LocStore.promise) return LocStore.promise;
+                LocStore.promise = Promise.all([
+                    fetch('/assets/data/tinh_tp.json').then(r => r.json()),
+                    fetch('/assets/data/quan_huyen.json').then(r => r.json()),
+                    fetch('/assets/data/xa_phuong.json').then(r => r.json())
+                ]).then(parts => {
+                    LocStore.provinces = parts[0] || {};
+                    LocStore.districts = parts[1] || {};
+                    LocStore.wards = parts[2] || {};
+                    return LocStore;
+                }).catch(() => { LocStore.promise = null; return LocStore; });
+                return LocStore.promise;
+            }
+
+            function updateLocTabs() {
+                ['province','district','ward'].forEach(function(lvl){
+                    var el = document.getElementById('ctLocTab' + lvl.charAt(0).toUpperCase() + lvl.slice(1));
+                    if (el) el.classList.toggle('is-active', LocState.level === lvl);
+                });
+                var title = document.getElementById('ctLocTitle');
+                if (title) title.textContent = LocState.level === 'province' ? 'Tỉnh thành' : (LocState.level === 'district' ? 'Quận huyện' : 'Phường xã');
+            }
+
+            function currentList() {
+                var q = (document.getElementById('ctLocSearchInput')?.value || '').trim().toLowerCase();
+                if (LocState.level === 'province') {
+                    return Object.keys(LocStore.provinces || {}).map(code => {
+                        var it = LocStore.provinces[code]; return { code, name: it.name_with_type || it.name || '', sel: LocState.province === code };
+                    }).filter(x => !q || x.name.toLowerCase().indexOf(q) !== -1);
+                }
+                if (LocState.level === 'district') {
+                    return Object.keys(LocStore.districts || {}).map(code => {
+                        var it = LocStore.districts[code]; if (!it || it.parent_code !== LocState.province) return null;
+                        return { code, name: it.name_with_type || it.name || '', sel: LocState.district === code };
+                    }).filter(Boolean).filter(x => !q || x.name.toLowerCase().indexOf(q) !== -1);
+                }
+                return Object.keys(LocStore.wards || {}).map(code => {
+                    var it = LocStore.wards[code]; if (!it || it.parent_code !== LocState.district) return null;
+                    return { code, name: it.name_with_type || it.name || '', sel: LocState.ward === code };
+                }).filter(Boolean).filter(x => !q || x.name.toLowerCase().indexOf(q) !== -1);
+            }
+
+            function buildHomeLocationDisplay(province, district, ward) {
+                var parts = [];
+                var provinceItem = province ? (LocStore.provinces || {})[province] : null;
+                var districtItem = district ? (LocStore.districts || {})[district] : null;
+                var wardItem = ward ? (LocStore.wards || {})[ward] : null;
+
+                if (wardItem) parts.push(wardItem.name_with_type || wardItem.name || '');
+                if (districtItem) parts.push(districtItem.name_with_type || districtItem.name || '');
+                if (provinceItem) parts.push(provinceItem.name_with_type || provinceItem.name || '');
+
+                parts = parts.filter(function (x) { return (x || '').trim() !== ''; });
+                return parts.join(', ');
+            }
+
+            function renderLocList() {
+                var host = document.getElementById('ctLocList');
+                if (!host) return;
+                host.innerHTML = '';
+                currentList().forEach(function (item) {
+                    var div = document.createElement('div');
+                    div.className = 'ct-loc-item' + (item.sel ? ' is-selected' : '');
+                    div.innerHTML = '<div>' + item.name + '</div><div class="ct-loc-radio"></div>';
+                    div.onclick = function () {
+                        if (LocState.level === 'province') { LocState.province = item.code; LocState.district = ''; LocState.ward = ''; switchLocLevel('district', true); }
+                        else if (LocState.level === 'district') { LocState.district = item.code; LocState.ward = ''; switchLocLevel('ward', true); }
+                        else { LocState.ward = item.code; }
+                        renderLocList();
+                    };
+                    host.appendChild(div);
+                });
+            }
+
+            function switchLocLevel(level, skipRender) {
+                LocState.level = level;
+                updateLocTabs();
+                if (!skipRender) renderLocList();
+            }
+
+            function openLocationPicker() {
+                var modal = document.getElementById('homeLocationModal');
+                if (!modal) return false;
+                modal.classList.add('is-open');
+                modal.setAttribute('aria-hidden','false');
+                document.body.classList.add('home-location-modal-open');
+                loadLocData().then(function () {
+                    var hfP = document.getElementById('<%= hfProvinceCode.ClientID %>');
+                    var hfD = document.getElementById('<%= hfDistrictCode.ClientID %>');
+                    var hfW = document.getElementById('<%= hfWardCode.ClientID %>');
+                    LocState.province = hfP ? hfP.value : '';
+                    LocState.district = hfD ? hfD.value : '';
+                    LocState.ward = hfW ? hfW.value : '';
+                    LocState.level = LocState.province ? (LocState.district ? (LocState.ward ? 'ward' : 'ward') : 'district') : 'province';
+                    document.getElementById('ctLocSearchInput').value = '';
+                    switchLocLevel(LocState.level, true);
+                    renderLocList();
+                });
+                return false;
+            }
+
+            function closeLocationPicker() {
+                var modal = document.getElementById('homeLocationModal');
+                if (!modal) return;
+                modal.classList.remove('is-open');
+                modal.setAttribute('aria-hidden','true');
+                document.body.classList.remove('home-location-modal-open');
+            }
+
+            function filterLocList() { renderLocList(); }
+
+            function applyLocationPicker() {
+                var hfP = document.getElementById('<%= hfProvinceCode.ClientID %>');
+                var hfD = document.getElementById('<%= hfDistrictCode.ClientID %>');
+                var hfW = document.getElementById('<%= hfWardCode.ClientID %>');
+                var hfDisp = document.getElementById('<%= hfLocationDisplay.ClientID %>');
+                var ddlLoc = document.getElementById('<%= ddl_Location.ClientID %>');
+                if (hfP) hfP.value = LocState.province;
+                if (hfD) hfD.value = LocState.district;
+                if (hfW) hfW.value = LocState.ward;
+                if (ddlLoc) ddlLoc.value = LocState.province;
+                var display = buildHomeLocationDisplay(LocState.province, LocState.district, LocState.ward);
+                if (hfDisp) hfDisp.value = display;
+                var lbl = document.getElementById('homeLocationLabel');
+                if (lbl) lbl.textContent = display || 'Địa điểm';
+                updateLocationClearState(display || '');
+                writeLocationState({
+                    province: LocState.province || '',
+                    district: LocState.district || '',
+                    ward: LocState.ward || '',
+                    display: display || '',
+                    savedAt: new Date().getTime()
+                });
+                validateHomeSearchRequired({ notify: false });
+                trackSearchEvent('search_location_apply', getSearchTrackingContext({
+                    label: '',
+                    province: LocState.province || '',
+                    district: LocState.district || '',
+                    ward: LocState.ward || '',
+                    loc: LocState.province || ''
+                }));
+                closeLocationPicker();
+            }
+
+            function clearHomeLocation() {
+                var hfP = document.getElementById('<%= hfProvinceCode.ClientID %>');
+                var hfD = document.getElementById('<%= hfDistrictCode.ClientID %>');
+                var hfW = document.getElementById('<%= hfWardCode.ClientID %>');
+                var hfDisp = document.getElementById('<%= hfLocationDisplay.ClientID %>');
+                var ddlLoc = document.getElementById('<%= ddl_Location.ClientID %>');
+                var lbl = document.getElementById('homeLocationLabel');
+
+                LocState.province = '';
+                LocState.district = '';
+                LocState.ward = '';
+
+                if (hfP) hfP.value = '';
+                if (hfD) hfD.value = '';
+                if (hfW) hfW.value = '';
+                if (hfDisp) hfDisp.value = '';
+                if (ddlLoc) ddlLoc.value = '';
+                if (lbl) lbl.textContent = 'Địa điểm';
+                updateLocationClearState('');
+                writeLocationState({});
+                validateHomeSearchRequired({ notify: false });
+                trackSearchEvent('search_location_clear', getSearchTrackingContext({ label: '', province: '', district: '', ward: '', loc: '' }));
+                closeLocationPicker();
+                return false;
+            }
+
+            function restoreStoredLocation() {
+                var hfP = document.getElementById('<%= hfProvinceCode.ClientID %>');
+                var hfD = document.getElementById('<%= hfDistrictCode.ClientID %>');
+                var hfW = document.getElementById('<%= hfWardCode.ClientID %>');
+                var hfDisp = document.getElementById('<%= hfLocationDisplay.ClientID %>');
+                var ddlLoc = document.getElementById('<%= ddl_Location.ClientID %>');
+                var lbl = document.getElementById('homeLocationLabel');
+                var hasQueryLocation = false;
+
+                if (hfP && hfP.value) hasQueryLocation = true;
+                if (hfD && hfD.value) hasQueryLocation = true;
+                if (hfW && hfW.value) hasQueryLocation = true;
+                if (hasQueryLocation) return;
+
+                var stored = readLocationState();
+                if (!stored) return;
+
+                if (hfP) hfP.value = stored.province || '';
+                if (hfD) hfD.value = stored.district || '';
+                if (hfW) hfW.value = stored.ward || '';
+                if (hfDisp) hfDisp.value = stored.display || '';
+                if (ddlLoc && stored.province && ddlLoc.querySelector('option[value="' + stored.province + '"]')) {
+                    ddlLoc.value = stored.province;
+                }
+                if (lbl) lbl.textContent = stored.display || 'Địa điểm';
+                updateLocationClearState(stored.display || '');
+            }
+
+            function bindMobileQuickFilters() {
+                var txtSearch = document.getElementById('<%= txt_Search.ClientID %>');
+                if (!txtSearch || txtSearch.dataset.autoSearchBound === '1') return;
+                txtSearch.dataset.autoSearchBound = '1';
+                txtSearch.addEventListener('keydown', function (e) {
+                    if (typeof window.AhaHomeSearchHandleKeydown === 'function') {
+                        if (window.AhaHomeSearchHandleKeydown(e)) return;
+                    }
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                    }
+                });
+            }
+
+            function toggleSearchMissingStyles(flags) {
+                flags = flags || {};
+                var catSeg = document.querySelector('.search-wrap .g-seg.g-cat');
+                var querySeg = document.querySelector('.search-wrap .g-seg.g-query');
+                var locSeg = document.querySelector('.search-wrap .g-seg.g-loc');
+                if (catSeg) catSeg.classList.toggle('is-missing', !!flags.catMissing);
+                if (querySeg) querySeg.classList.toggle('is-missing', !!flags.keywordMissing);
+                if (locSeg) locSeg.classList.toggle('is-missing', !!flags.locationMissing);
+            }
+
+            function validateHomeSearchRequired(opts) {
+                opts = opts || {};
+                var keywordEl = document.getElementById('<%= txt_Search.ClientID %>');
+                var catEl = document.getElementById('<%= ddl_Category.ClientID %>');
+                var locEl = document.getElementById('<%= ddl_Location.ClientID %>');
+                var hfProvince = document.getElementById('<%= hfProvinceCode.ClientID %>');
+                var keyword = keywordEl ? (keywordEl.value || '').trim() : '';
+                var cat = catEl ? (catEl.value || '').trim() : '';
+                var loc = locEl ? (locEl.value || '').trim() : '';
+                var province = hfProvince ? (hfProvince.value || '').trim() : '';
+                if (!province && loc) province = loc;
+                var hasAny = !!(keyword || cat || province);
+                var result = {
+                    ok: hasAny,
+                    keywordMissing: !hasAny && !keyword,
+                    catMissing: !hasAny && !cat,
+                    locationMissing: !hasAny && !province
+                };
+
+                toggleSearchMissingStyles(result);
+
+                if (!result.ok && opts.notify !== false) {
+                    alert('Chỉ cần chọn ít nhất 1 trong 3 trường Danh mục, Từ khóa hoặc Địa điểm để tìm kiếm.');
+                    if (keywordEl) {
+                        try { keywordEl.focus(); } catch (e) { }
+                    } else if (catEl) {
+                        try { catEl.focus(); } catch (e) { }
+                    } else if (result.locationMissing) {
+                        try { openLocationPicker(); } catch (e) { }
+                    }
+                }
+
+                return result;
+            }
+
+            function bindRequiredFieldState() {
+                var keywordEl = document.getElementById('<%= txt_Search.ClientID %>');
+                var catEl = document.getElementById('<%= ddl_Category.ClientID %>');
+                var locEl = document.getElementById('<%= ddl_Location.ClientID %>');
+                var clearBtn = document.getElementById('homeLocationClearBtn');
+                var trigger = document.querySelector('.search-wrap .g-location-trigger');
+
+                function refresh() {
+                    validateHomeSearchRequired({ notify: false });
+                }
+
+                if (keywordEl && keywordEl.dataset.requiredStateBound !== '1') {
+                    keywordEl.dataset.requiredStateBound = '1';
+                    keywordEl.addEventListener('input', refresh);
+                }
+                if (catEl && catEl.dataset.requiredStateBound !== '1') {
+                    catEl.dataset.requiredStateBound = '1';
+                    catEl.addEventListener('change', refresh);
+                }
+                if (locEl && locEl.dataset.requiredStateBound !== '1') {
+                    locEl.dataset.requiredStateBound = '1';
+                    locEl.addEventListener('change', refresh);
+                }
+                if (clearBtn && clearBtn.dataset.requiredStateBound !== '1') {
+                    clearBtn.dataset.requiredStateBound = '1';
+                    clearBtn.addEventListener('click', function () {
+                        setTimeout(refresh, 0);
+                    });
+                }
+                if (trigger && trigger.dataset.requiredStateBound !== '1') {
+                    trigger.dataset.requiredStateBound = '1';
+                    trigger.addEventListener('click', function () {
+                        setTimeout(refresh, 0);
+                    });
+                }
+
+                refresh();
+            }
+
+            function buildSearchUrl(opts) {
+                opts = opts || {};
+                var keywordEl = document.getElementById('<%= txt_Search.ClientID %>');
+                var catEl = document.getElementById('<%= ddl_Category.ClientID %>');
+                var locEl = document.getElementById('<%= ddl_Location.ClientID %>');
+                var hfProvince = document.getElementById('<%= hfProvinceCode.ClientID %>');
+                var hfDistrict = document.getElementById('<%= hfDistrictCode.ClientID %>');
+                var hfWard = document.getElementById('<%= hfWardCode.ClientID %>');
+
+                var keyword = (opts.keyword !== undefined) ? String(opts.keyword || '').trim() : (keywordEl ? keywordEl.value.trim() : '');
+                var cat = (opts.cat !== undefined) ? String(opts.cat || '').trim() : (catEl ? catEl.value : '');
+                var loc = (opts.loc !== undefined) ? String(opts.loc || '').trim() : (locEl ? locEl.value : '');
+                var province = (opts.province !== undefined) ? String(opts.province || '').trim() : (hfProvince ? (hfProvince.value || '').trim() : '');
+                var district = (opts.district !== undefined) ? String(opts.district || '').trim() : (hfDistrict ? (hfDistrict.value || '').trim() : '');
+                var ward = (opts.ward !== undefined) ? String(opts.ward || '').trim() : (hfWard ? (hfWard.value || '').trim() : '');
+                var type = (opts.type !== undefined) ? String(opts.type || '').trim() : 'all';
                 var params = new URLSearchParams();
                 if (keyword) params.set('q', keyword);
                 if (cat) params.set('cat', cat);
                 if (loc) params.set('loc', loc);
-                params.set('type', 'all');
+                if (!province && loc) province = loc;
+                if (province) params.set('province', province);
+                if (district) params.set('district', district);
+                if (ward) params.set('ward', ward);
+                params.set('type', type || 'all');
                 params.set('page', '1');
 
+                var slug = toSearchSlug(keyword);
+                var path = '/tim-kiem' + (slug ? ('/' + slug) : '');
                 var qs = params.toString();
-                return '/home/tim-kiem.aspx' + (qs ? ('?' + qs) : '');
+                return path + (qs ? ('?' + qs) : '');
             }
 
             function AhaHomeSearchRedirect() {
                 try {
-                    var url = buildSearchUrl();
+                    var keywordEl = document.getElementById('<%= txt_Search.ClientID %>');
+                    var catEl = document.getElementById('<%= ddl_Category.ClientID %>');
+                    var locEl = document.getElementById('<%= ddl_Location.ClientID %>');
+                    var keyword = keywordEl ? (keywordEl.value || '').trim() : '';
+                    var cat = catEl ? (catEl.value || '').trim() : '';
+                    var loc = locEl ? (locEl.value || '').trim() : '';
+                    var required = validateHomeSearchRequired({ notify: true });
+                    if (!required.ok) return false;
+                    var type = 'all';
+                    if (keyword) {
+                        saveRecentSearch({ keyword: keyword, cat: cat, loc: loc, type: type });
+                    }
+                    trackSearchEvent('search_submit', getSearchTrackingContext({
+                        label: keyword || '',
+                        cat: cat || '',
+                        loc: loc || '',
+                        type: type
+                    }));
+
+                    var url = buildSearchUrl({ keyword: keyword, cat: cat, loc: loc, type: type });
                     if (url) {
                         window.location = url;
                         return false;
@@ -1263,6 +2764,7 @@
                     wrap.dataset.stickyBound = '1';
 
                     var ticking = false;
+                    var stickyReleaseGap = 8;
                     var body = document.body;
                     var html = document.documentElement;
 
@@ -1280,13 +2782,16 @@
                         }
                     }
 
-                function updateStickyState() {
+                    function updateStickyState() {
                     if (!document.body.contains(wrap)) return;
+                    if (document.querySelector('.offcanvas.show, .modal.show')) return;
                     ticking = false;
                     var header = document.querySelector('.site-header');
                     var headerHeight = header ? Math.round(header.getBoundingClientRect().height) : 56;
 
-                    var isMobile = window.matchMedia('(max-width: 991.98px)').matches;
+                    var shortcutBar = document.querySelector('.home-fixed-shortcuts');
+                    var layoutMode = (document.documentElement.getAttribute('data-aha-layout-mode') || '').toLowerCase();
+                    var isMobile = layoutMode ? (layoutMode === 'mobile') : window.matchMedia('(max-width: 849.98px)').matches;
                     var forcePinnedAtTop = false;
 
                     var host = document.getElementById('homeMobileSearchHost');
@@ -1317,7 +2822,11 @@
 
                     headerHeight = header ? Math.round(header.getBoundingClientRect().height) : 56;
                     document.documentElement.style.setProperty('--aha-header-offset', headerHeight + 'px');
-                    var stickyTop = Math.max(48, headerHeight + 6);
+                    var hasPinnedShortcut = document.documentElement.classList.contains('aha-bds-chip-below-topbar');
+                    var shortcutVisible = shortcutBar && window.getComputedStyle(shortcutBar).display !== 'none';
+                    var shortcutHeight = ((isMobile || hasPinnedShortcut) && shortcutVisible) ? Math.round(shortcutBar.getBoundingClientRect().height) : 0;
+                    document.documentElement.style.setProperty('--aha-home-mobile-chip-height', shortcutHeight + 'px');
+                    var stickyTop = Math.max(48, headerHeight + shortcutHeight + (isMobile ? 14 : 6));
                     document.documentElement.style.setProperty('--aha-home-sticky-top', stickyTop + 'px');
 
                     if (wrap.classList.contains('in-header')) {
@@ -1329,10 +2838,12 @@
                     }
 
                         var isFixed = wrap.classList.contains('is-sticky-fixed');
-                        var triggerTop = isFixed
-                            ? spacer.getBoundingClientRect().top
-                            : wrap.getBoundingClientRect().top;
-                        var shouldStick = triggerTop <= stickyTop;
+                        var anchorDocTop = spacer.getBoundingClientRect().top + window.scrollY;
+                        var triggerY = anchorDocTop - stickyTop;
+                        var currentY = window.scrollY || window.pageYOffset || 0;
+                        var shouldStick = isFixed
+                            ? currentY >= (triggerY - stickyReleaseGap)
+                            : currentY >= triggerY;
                         var keepSpacer = shouldStick;
                         spacer.style.height = keepSpacer ? (wrap.offsetHeight + 'px') : '0px';
 
@@ -1353,6 +2864,8 @@
                     document.addEventListener('scroll', queueUpdate, true);
                     window.addEventListener('resize', queueUpdate);
                     document.addEventListener('visibilitychange', queueUpdate);
+                    document.addEventListener('shown.bs.offcanvas', queueUpdate);
+                    document.addEventListener('hidden.bs.offcanvas', queueUpdate);
                     updateStickyState();
 
                     window.__ahaHomeSearchStickyRefresh = function () {
@@ -1363,14 +2876,22 @@
 
             document.addEventListener('DOMContentLoaded', function () {
                 initChoices();
+                restoreStoredLocation();
+                updateLocationClearState((document.getElementById('homeLocationLabel') || {}).textContent || '');
+                initSearchSuggest();
                 bindMobileQuickFilters();
+                bindRequiredFieldState();
                 ensureHomeSearchSticky();
             });
 
             if (window.Sys && Sys.WebForms) {
                 Sys.WebForms.PageRequestManager.getInstance().add_endRequest(function () {
                     initChoices();
+                    restoreStoredLocation();
+                    updateLocationClearState((document.getElementById('homeLocationLabel') || {}).textContent || '');
+                    initSearchSuggest();
                     bindMobileQuickFilters();
+                    bindRequiredFieldState();
                     if (window.__ahaHomeSearchStickyRefresh) {
                         window.__ahaHomeSearchStickyRefresh();
                     } else {
@@ -1580,7 +3101,7 @@
                                     <div class="sp-card">
                                         <div class="sp-body">
                                             <div class="thumb-wrap position-relative">
-                                                <a href="/<%# Eval("name_en") %>-<%# Eval("id") %>.html" class="text-decoration-none">
+                                                <a href="<%# Eval("DetailUrl") %>" class="text-decoration-none">
                                                     <img class="sp-thumb" src="<%# string.IsNullOrWhiteSpace((Eval("image") + "").Trim()) ? "/uploads/images/macdinh.jpg" : (Eval("image") + "").Trim() %>" alt="<%# Eval("name") %>" />
                                                 </a>
                                              <asp:UpdatePanel ID="upHeart" runat="server" UpdateMode="Conditional">
@@ -1602,11 +3123,12 @@
                                                 </Triggers>
                                             </asp:UpdatePanel>
                                             </div>
-                                            <a href="/<%# Eval("name_en") %>-<%# Eval("id") %>.html" class="text-decoration-none">
+                                            <a href="<%# Eval("DetailUrl") %>" class="text-decoration-none">
                                                 <div class="sp-title"><%# Eval("name") %></div>
                                             </a>
                                             <div class="sp-desc"><%# Eval("description") %></div>
-                                            <div class="sp-price"><%# Eval("giaban", "{0:#,##0}") %> đ</div>
+                                            <asp:Literal ID="litSourceBadge" runat="server"></asp:Literal>
+                                            <div class="sp-price"><%# Eval("DisplayPriceText") %></div>
 
                                             <div class="sp-meta">
                                                 <div class="sp-time text-muted">
@@ -1630,6 +3152,7 @@
                                                         <span class="loc-text text-muted"><%# Eval("ThanhPhoDisplay") %></span>
                                                     </div>
 
+                                                    <asp:PlaceHolder ID="ph_kebab" runat="server">
                                                     <div class="kebab-wrap">
                                                         <button type="button" class="kebab-btn js-kebab-toggle" aria-label="menu">
                                                             <svg class="icon-18" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
@@ -1665,6 +3188,7 @@
                                                             </asp:LinkButton>
                                                         </div>
                                                     </div>
+                                                    </asp:PlaceHolder>
                                                 </div>
                                             </div>
                                             <asp:PlaceHolder ID="ph_actions" runat="server">
@@ -1696,8 +3220,9 @@
                         </asp:Repeater>
                     </div>
                     <div class="mt-3 text-center">
+                        <asp:Literal ID="litPager" runat="server"></asp:Literal>
                         <asp:Button ID="but_xemthem" runat="server"
-                            CssClass="btn btn-outline-primary"
+                            CssClass="btn btn-outline-primary d-none"
                             Text="Xem thêm"
                             OnClick="but_xemthem_Click" />
                     </div>

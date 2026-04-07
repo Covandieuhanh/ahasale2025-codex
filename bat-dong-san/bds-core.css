@@ -1,0 +1,747 @@
+html,
+body {
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    line-height: 1.15;
+    -webkit-text-size-adjust: 100%;
+}
+
+body.aha-bds-shell {
+    min-height: 100vh;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    color: #334155;
+    background: #f1f5f9;
+}
+
+body.aha-bds-shell *,
+body.aha-bds-shell *::before,
+body.aha-bds-shell *::after {
+    box-sizing: border-box;
+}
+
+body.aha-bds-shell img {
+    max-width: 100%;
+    display: block;
+}
+
+body.aha-bds-shell a {
+    color: inherit;
+}
+
+body.aha-bds-shell button,
+body.aha-bds-shell input,
+body.aha-bds-shell select,
+body.aha-bds-shell textarea {
+    font: inherit;
+}
+
+body.aha-bds-shell .page {
+    min-height: 100vh;
+}
+
+body.aha-bds-shell .page-wrapper {
+    position: relative;
+    min-height: 0;
+}
+
+body.aha-bds-shell .page-body {
+    padding: 1rem 0 0;
+}
+
+body.aha-bds-shell .container-xl {
+    width: min(100%, 1240px);
+    margin: 0 auto;
+    padding: 0 16px;
+}
+
+body.aha-bds-shell .row,
+body.aha-bds-shell .row-cards {
+    display: flex;
+    flex-wrap: wrap;
+    margin-right: -12px;
+    margin-left: -12px;
+}
+
+body.aha-bds-shell .row > *,
+body.aha-bds-shell .row-cards > * {
+    width: 100%;
+    max-width: 100%;
+    padding-right: 12px;
+    padding-left: 12px;
+}
+
+body.aha-bds-shell .g-2 {
+    margin-right: -8px;
+    margin-left: -8px;
+}
+
+body.aha-bds-shell .g-2 > * {
+    padding-right: 8px;
+    padding-left: 8px;
+}
+
+body.aha-bds-shell .g-3,
+body.aha-bds-shell .row-cards {
+    margin-right: -12px;
+    margin-left: -12px;
+}
+
+body.aha-bds-shell .g-3 > *,
+body.aha-bds-shell .row-cards > * {
+    padding-right: 12px;
+    padding-left: 12px;
+}
+
+body.aha-bds-shell .col,
+body.aha-bds-shell .col-12,
+body.aha-bds-shell .col-6,
+body.aha-bds-shell .col-4 {
+    flex: 0 0 auto;
+}
+
+body.aha-bds-shell .col {
+    flex: 1 0 0%;
+}
+
+body.aha-bds-shell .col-12 {
+    width: 100%;
+}
+
+body.aha-bds-shell .col-6 {
+    width: 50%;
+}
+
+body.aha-bds-shell .col-4 {
+    width: 33.333333%;
+}
+
+@media (min-width: 576px) {
+    body.aha-bds-shell .col-sm-6 {
+        width: 50%;
+    }
+}
+
+@media (min-width: 768px) {
+    body.aha-bds-shell .col-md-3 {
+        width: 25%;
+    }
+
+    body.aha-bds-shell .col-md-4 {
+        width: 33.333333%;
+    }
+
+    body.aha-bds-shell .col-md-6 {
+        width: 50%;
+    }
+}
+
+@media (min-width: 992px) {
+    body.aha-bds-shell .col-lg-3 {
+        width: 25%;
+    }
+
+    body.aha-bds-shell .col-lg-4 {
+        width: 33.333333%;
+    }
+
+    body.aha-bds-shell .col-lg-8 {
+        width: 66.666667%;
+    }
+}
+
+@media (min-width: 1200px) {
+    body.aha-bds-shell .col-xl-4 {
+        width: 33.333333%;
+    }
+}
+
+body.aha-bds-shell .d-flex {
+    display: flex !important;
+}
+
+body.aha-bds-shell .d-print-none {
+    display: block;
+}
+
+body.aha-bds-shell .flex-column {
+    flex-direction: column !important;
+}
+
+body.aha-bds-shell .flex-wrap {
+    flex-wrap: wrap !important;
+}
+
+body.aha-bds-shell .align-items-center {
+    align-items: center !important;
+}
+
+body.aha-bds-shell .align-items-end {
+    align-items: flex-end !important;
+}
+
+body.aha-bds-shell .justify-content-between {
+    justify-content: space-between !important;
+}
+
+body.aha-bds-shell .justify-content-center {
+    justify-content: center !important;
+}
+
+body.aha-bds-shell .flex-fill {
+    flex: 1 1 auto !important;
+}
+
+body.aha-bds-shell .gap-1 {
+    gap: 0.25rem !important;
+}
+
+body.aha-bds-shell .gap-2 {
+    gap: 0.5rem !important;
+}
+
+body.aha-bds-shell .gap-3 {
+    gap: 1rem !important;
+}
+
+body.aha-bds-shell .w-100 {
+    width: 100% !important;
+}
+
+body.aha-bds-shell .h-100 {
+    height: 100% !important;
+}
+
+body.aha-bds-shell .sticky-top {
+    position: sticky;
+    top: 0;
+}
+
+body.aha-bds-shell .border-0 {
+    border: 0 !important;
+}
+
+body.aha-bds-shell .rounded-circle {
+    border-radius: 999px !important;
+}
+
+body.aha-bds-shell .shadow-sm {
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08) !important;
+}
+
+body.aha-bds-shell .fw-medium {
+    font-weight: 500 !important;
+}
+
+body.aha-bds-shell .fw-semibold {
+    font-weight: 600 !important;
+}
+
+body.aha-bds-shell .fw-bold {
+    font-weight: 700 !important;
+}
+
+body.aha-bds-shell .small {
+    font-size: 0.875rem !important;
+}
+
+body.aha-bds-shell .text-center {
+    text-align: center !important;
+}
+
+body.aha-bds-shell .text-uppercase {
+    text-transform: uppercase !important;
+}
+
+body.aha-bds-shell .text-muted,
+body.aha-bds-shell .text-secondary {
+    color: #64748b !important;
+}
+
+body.aha-bds-shell .text-success {
+    color: #15803d !important;
+}
+
+body.aha-bds-shell .text-reset {
+    color: inherit !important;
+}
+
+body.aha-bds-shell .text-decoration-none {
+    text-decoration: none !important;
+}
+
+body.aha-bds-shell .bg-white {
+    background: #ffffff !important;
+}
+
+body.aha-bds-shell .bg-light {
+    background: #f8fafc !important;
+}
+
+body.aha-bds-shell .bg-secondary-lt {
+    background: #f1f5f9 !important;
+}
+
+body.aha-bds-shell .bg-azure-lt {
+    background: #dbeafe !important;
+}
+
+body.aha-bds-shell .text-azure {
+    color: #1d4ed8 !important;
+}
+
+body.aha-bds-shell .bg-green-lt {
+    background: #dcfce7 !important;
+}
+
+body.aha-bds-shell .text-green {
+    color: #15803d !important;
+}
+
+body.aha-bds-shell .bg-gray-lt {
+    background: #e2e8f0 !important;
+}
+
+body.aha-bds-shell .text-gray {
+    color: #475569 !important;
+}
+
+body.aha-bds-shell .mb-0 {
+    margin-bottom: 0 !important;
+}
+
+body.aha-bds-shell .mb-2 {
+    margin-bottom: 0.5rem !important;
+}
+
+body.aha-bds-shell .mb-3 {
+    margin-bottom: 1rem !important;
+}
+
+body.aha-bds-shell .me-3 {
+    margin-right: 1rem !important;
+}
+
+body.aha-bds-shell .mt-1 {
+    margin-top: 0.25rem !important;
+}
+
+body.aha-bds-shell .mt-2 {
+    margin-top: 0.5rem !important;
+}
+
+body.aha-bds-shell .mt-3 {
+    margin-top: 1rem !important;
+}
+
+body.aha-bds-shell .mt-auto {
+    margin-top: auto !important;
+}
+
+body.aha-bds-shell .pt-1 {
+    padding-top: 0.25rem !important;
+}
+
+body.aha-bds-shell .pt-2 {
+    padding-top: 0.5rem !important;
+}
+
+body.aha-bds-shell .px-1 {
+    padding-left: 0.25rem !important;
+    padding-right: 0.25rem !important;
+}
+
+body.aha-bds-shell .px-3 {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+}
+
+body.aha-bds-shell .py-2 {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+}
+
+body.aha-bds-shell .py-3 {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+}
+
+body.aha-bds-shell .p-2 {
+    padding: 0.5rem !important;
+}
+
+body.aha-bds-shell .p-3 {
+    padding: 1rem !important;
+}
+
+body.aha-bds-shell .page-pretitle {
+    margin: 0;
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+body.aha-bds-shell .page-title,
+body.aha-bds-shell .card-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 800;
+}
+
+body.aha-bds-shell .card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+}
+
+body.aha-bds-shell .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 1rem 1rem 0;
+    border: 0;
+    background: transparent;
+}
+
+body.aha-bds-shell .card-body {
+    flex: 1 1 auto;
+    min-height: 1px;
+    padding: 1rem;
+}
+
+body.aha-bds-shell .card-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+body.aha-bds-shell .alert {
+    position: relative;
+    padding: 0.75rem 1rem;
+    border: 1px solid transparent;
+    border-radius: 14px;
+}
+
+body.aha-bds-shell .alert-warning {
+    color: #92400e;
+    background: #fef3c7;
+    border-color: #fcd34d;
+}
+
+body.aha-bds-shell .badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.35rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    line-height: 1;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+body.aha-bds-shell .btn-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+body.aha-bds-shell .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    padding: 0.72rem 1rem;
+    border-radius: 14px;
+    border: 1px solid transparent;
+    background: #e2e8f0;
+    color: #0f172a;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+}
+
+body.aha-bds-shell .btn:hover,
+body.aha-bds-shell .btn:focus {
+    text-decoration: none;
+}
+
+body.aha-bds-shell .btn-sm {
+    padding: 0.5rem 0.8rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+}
+
+body.aha-bds-shell .btn-success {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #ffffff;
+}
+
+body.aha-bds-shell .btn-success:hover,
+body.aha-bds-shell .btn-success:focus {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+    color: #ffffff;
+}
+
+body.aha-bds-shell .btn-outline-secondary {
+    background: #ffffff;
+    border-color: rgba(148, 163, 184, 0.4);
+    color: #334155;
+}
+
+body.aha-bds-shell .btn-outline-secondary:hover,
+body.aha-bds-shell .btn-outline-secondary:focus {
+    background: #f8fafc;
+}
+
+body.aha-bds-shell .btn-outline-primary,
+body.aha-bds-shell .btn-outline-azure,
+body.aha-bds-shell .btn-outline-success {
+    background: #ffffff;
+    border-color: rgba(37, 99, 235, 0.24);
+    color: #1d4ed8;
+}
+
+body.aha-bds-shell .btn-outline-primary:hover,
+body.aha-bds-shell .btn-outline-primary:focus,
+body.aha-bds-shell .btn-outline-azure:hover,
+body.aha-bds-shell .btn-outline-azure:focus,
+body.aha-bds-shell .btn-outline-success:hover,
+body.aha-bds-shell .btn-outline-success:focus {
+    background: rgba(37, 99, 235, 0.08);
+}
+
+body.aha-bds-shell .btn-close {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: #f1f5f9;
+    cursor: pointer;
+}
+
+body.aha-bds-shell .btn-close::before,
+body.aha-bds-shell .btn-close::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 2px;
+    background: #475569;
+    transform-origin: center;
+}
+
+body.aha-bds-shell .btn-close::before {
+    transform: translate(-50%, -50%) rotate(45deg);
+}
+
+body.aha-bds-shell .btn-close::after {
+    transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+body.aha-bds-shell .form-label {
+    display: inline-block;
+    margin-bottom: 0.4rem;
+    font-weight: 700;
+    color: #334155;
+}
+
+body.aha-bds-shell .form-control,
+body.aha-bds-shell .form-select {
+    display: block;
+    width: 100%;
+    min-height: 44px;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 14px;
+    background: #ffffff;
+    color: #0f172a;
+    box-shadow: none;
+}
+
+body.aha-bds-shell .form-control:focus,
+body.aha-bds-shell .form-select:focus {
+    outline: 0;
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.18);
+}
+
+body.aha-bds-shell .form-select {
+    appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, #475569 50%), linear-gradient(135deg, #475569 50%, transparent 50%);
+    background-position: calc(100% - 18px) calc(50% - 3px), calc(100% - 12px) calc(50% - 3px);
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
+    padding-right: 2.4rem;
+}
+
+body.aha-bds-shell .list-group {
+    display: flex;
+    flex-direction: column;
+    padding-left: 0;
+    margin-bottom: 0;
+}
+
+body.aha-bds-shell .list-group-flush > .list-group-item:first-child {
+    border-top-left-radius: inherit;
+    border-top-right-radius: inherit;
+}
+
+body.aha-bds-shell .list-group-flush > .list-group-item:last-child {
+    border-bottom-left-radius: inherit;
+    border-bottom-right-radius: inherit;
+}
+
+body.aha-bds-shell .list-group-item {
+    position: relative;
+    display: block;
+    padding: 0.85rem 1rem;
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    background: #ffffff;
+    color: inherit;
+    text-decoration: none;
+}
+
+body.aha-bds-shell .list-group-item + .list-group-item {
+    border-top-width: 0;
+}
+
+body.aha-bds-shell .list-group-item-action {
+    cursor: pointer;
+}
+
+body.aha-bds-shell .list-group-item.active {
+    background: #dbeafe;
+    color: #1d4ed8;
+    border-color: #93c5fd;
+}
+
+body.aha-bds-shell .avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 999px;
+    background: #e2e8f0;
+    background-size: cover;
+    background-position: center center;
+}
+
+body.aha-bds-shell .avatar-lg {
+    width: 4rem;
+    height: 4rem;
+}
+
+body.aha-bds-shell .offcanvas {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    z-index: 3000;
+    display: block;
+    max-width: 100%;
+    visibility: hidden;
+    background: #ffffff;
+    box-shadow: -20px 0 40px rgba(15, 23, 42, 0.18);
+    transition: transform 0.24s ease, visibility 0.24s ease;
+}
+
+body.aha-bds-shell .offcanvas.offcanvas-end {
+    right: 0;
+    left: auto;
+    transform: translateX(100%);
+}
+
+body.aha-bds-shell .offcanvas.offcanvas-start {
+    left: 0;
+    right: auto;
+    transform: translateX(-100%);
+}
+
+body.aha-bds-shell .offcanvas.show,
+body.aha-bds-shell .offcanvas.showing {
+    visibility: visible;
+    transform: none;
+}
+
+body.aha-bds-shell .offcanvas-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 1rem;
+}
+
+body.aha-bds-shell .offcanvas-title {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 800;
+}
+
+body.aha-bds-shell .offcanvas-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+}
+
+body.aha-bds-shell .offcanvas-footer {
+    padding: 1rem;
+}
+
+body.aha-bds-shell.offcanvas-open {
+    overflow: hidden;
+}
+
+body.aha-bds-shell .ti {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.1rem;
+    height: 1.1rem;
+    font-style: normal;
+    font-size: 1rem;
+    line-height: 1;
+}
+
+body.aha-bds-shell .ti::before {
+    content: "o";
+}
+
+body.aha-bds-shell .ti-menu-2::before { content: "\2261"; }
+body.aha-bds-shell .ti-bell::before { content: "!"; }
+body.aha-bds-shell .ti-user-circle::before { content: "U"; }
+body.aha-bds-shell .ti-chevron-right::before { content: "\203A"; }
+body.aha-bds-shell .ti-pencil::before { content: "+"; }
+body.aha-bds-shell .ti-file-plus::before { content: "+"; }
+body.aha-bds-shell .ti-link::before { content: "="; }
+body.aha-bds-shell .ti-key::before { content: "*"; }
+body.aha-bds-shell .ti-lock::before { content: "o"; }
+body.aha-bds-shell .ti-shopping-bag::before { content: "$"; }
+body.aha-bds-shell .ti-calendar-event::before { content: "#"; }
+body.aha-bds-shell .ti-clock::before { content: "o"; }
+body.aha-bds-shell .ti-heart::before { content: "<3"; }
+body.aha-bds-shell .ti-star::before { content: "*"; }
+body.aha-bds-shell .ti-briefcase::before { content: "="; }
+body.aha-bds-shell .ti-message-report::before { content: "!"; }
+body.aha-bds-shell .ti-settings::before { content: "*"; }
+body.aha-bds-shell .ti-help-circle::before { content: "?"; }
+body.aha-bds-shell .ti-ticket::before { content: "#"; }
+body.aha-bds-shell .ti-heart-handshake::before { content: "+"; }
+body.aha-bds-shell .ti-coin::before { content: "$"; }
+body.aha-bds-shell .ti-history::before { content: "o"; }
+body.aha-bds-shell .ti-logout::before { content: ">"; }
+body.aha-bds-shell .ti-map-pin::before { content: "*"; }

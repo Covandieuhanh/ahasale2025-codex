@@ -17,8 +17,87 @@
         if (RewriteGianHangRoutes(ctx))
             return;
 
+        ApplyDynamicHtmlNoCache(ctx);
         CompanyShopBootstrap_cl.EnsureRuntimeWarmup();
         RewriteDauGiaRoutes(ctx);
+        TryTriggerLinkedFeedAutoSync(ctx);
+    }
+
+    private void ApplyDynamicHtmlNoCache(HttpContext ctx)
+    {
+        try
+        {
+            if (ctx == null || ctx.Request == null || ctx.Response == null)
+                return;
+
+            string method = (ctx.Request.HttpMethod ?? "").Trim().ToUpperInvariant();
+            if (method != "GET" && method != "HEAD")
+                return;
+
+            string path = (ctx.Request.Url == null ? "" : (ctx.Request.Url.AbsolutePath ?? "")).Trim();
+            if (path == "")
+                return;
+
+            if (ShouldAllowStaticCaching(path))
+                return;
+
+            string extension = System.IO.Path.GetExtension(path) ?? "";
+            if (!string.IsNullOrEmpty(extension) &&
+                !string.Equals(extension, ".aspx", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(extension, ".html", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(extension, ".htm", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            ctx.Response.Cache.SetCacheability(HttpCacheability.NoCache);
+            ctx.Response.Cache.SetNoStore();
+            ctx.Response.Cache.SetRevalidation(HttpCacheRevalidation.AllCaches);
+            ctx.Response.Cache.SetExpires(DateTime.UtcNow.AddMinutes(-1));
+            ctx.Response.Cache.SetMaxAge(TimeSpan.Zero);
+            ctx.Response.Cache.AppendCacheExtension("must-revalidate, proxy-revalidate");
+        }
+        catch
+        {
+        }
+    }
+
+    private bool ShouldAllowStaticCaching(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            return true;
+
+        string normalized = path.Trim().ToLowerInvariant();
+        string[] cacheablePrefixes = new[]
+        {
+            "/assetscss/",
+            "/css/",
+            "/js/",
+            "/uploads/",
+            "/assets/",
+            "/metro-ui-css-master/",
+            "/ckeditor/",
+            "/ckfinder/"
+        };
+
+        for (int i = 0; i < cacheablePrefixes.Length; i++)
+        {
+            if (normalized.StartsWith(cacheablePrefixes[i], StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+
+        string[] cacheableExtensions = new[]
+        {
+            ".css", ".js", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico", ".webp",
+            ".woff", ".woff2", ".ttf", ".eot", ".map", ".txt", ".xml", ".json", ".pdf",
+            ".zip", ".rar", ".mp4", ".webm", ".mp3"
+        };
+
+        for (int i = 0; i < cacheableExtensions.Length; i++)
+        {
+            if (normalized.EndsWith(cacheableExtensions[i], StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+
+        return false;
     }
 
     void Application_AcquireRequestState(object sender, EventArgs e)
@@ -108,6 +187,42 @@
             }
         }
 
+        return false;
+    }
+
+    private void TryTriggerLinkedFeedAutoSync(HttpContext ctx)
+    {
+        try
+        {
+            if (ctx == null || ctx.Request == null || ctx.Request.Url == null)
+                return;
+            if (!string.Equals(ctx.Request.HttpMethod ?? "", "GET", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            string path = (ctx.Request.Url.AbsolutePath ?? "").ToLowerInvariant();
+            if (path == "" || IsStaticAssetPath(path))
+                return;
+            if (path.StartsWith("/admin/"))
+                return;
+
+            LinkedFeedSync_cl.EnsureAutoSchedulerStarted();
+            LinkedFeedSync_cl.TriggerAutoSyncInBackground();
+        }
+        catch
+        {
+        }
+    }
+
+    private bool IsStaticAssetPath(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            return true;
+        string[] staticExt = new[] { ".css", ".js", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico", ".webp", ".woff", ".woff2", ".ttf", ".map", ".txt", ".xml" };
+        for (int i = 0; i < staticExt.Length; i++)
+        {
+            if (path.EndsWith(staticExt[i], StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
         return false;
     }
 

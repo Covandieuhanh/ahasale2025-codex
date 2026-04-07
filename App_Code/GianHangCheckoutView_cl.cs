@@ -29,13 +29,19 @@ public static class GianHangCheckoutView_cl
         dbDataContext db,
         HttpSessionState session,
         string sellerAccount,
-        int linkContextTtlMinutes)
+        int linkContextTtlMinutes,
+        string preferredOrderId)
     {
         sellerAccount = NormalizeText(sellerAccount).ToLowerInvariant();
         if (db == null || session == null || sellerAccount == string.Empty)
             return RedirectState();
 
-        GianHangOrderRuntime_cl.OrderRuntime runtime = GianHangOrderRuntime_cl.ResolveLatestWaitingExchange(db, sellerAccount, false);
+        string preferred = NormalizeText(preferredOrderId);
+        GianHangOrderRuntime_cl.OrderRuntime runtime = string.IsNullOrWhiteSpace(preferred)
+            ? null
+            : GianHangOrderRuntime_cl.ResolveByOrderKey(db, sellerAccount, preferred, false);
+        if (runtime == null || !GianHangOrderRuntime_cl.CanExecuteExchange(runtime))
+            runtime = GianHangOrderRuntime_cl.ResolveLatestWaitingExchange(db, sellerAccount, false);
         if (runtime == null || (runtime.Order == null && runtime.Invoice == null))
             return RedirectState();
 

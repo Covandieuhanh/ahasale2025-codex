@@ -25,14 +25,14 @@ public partial class gianhang_uc_space_nav : UserControl
             ? "/uploads/images/macdinh.jpg"
             : model.AvatarUrl;
 
-        lnk_public.NavigateUrl = model.PublicUrl ?? "/gianhang/public.aspx";
-        lnk_home.NavigateUrl = model.HomeUrl ?? "/home/default.aspx";
-        lnk_manage.NavigateUrl = model.ManageUrl ?? "/gianhang/quan-ly-tin/Default.aspx";
-        lnk_orders.NavigateUrl = model.OrdersUrl ?? "/gianhang/don-ban.aspx";
-        lnk_booking.NavigateUrl = model.BookingUrl ?? "/gianhang/quan-ly-lich-hen.aspx";
-        lnk_customers.NavigateUrl = model.CustomersUrl ?? "/gianhang/khach-hang.aspx";
-        lnk_report.NavigateUrl = model.ReportUrl ?? "/gianhang/bao-cao.aspx";
-        lnk_level2.NavigateUrl = model.Level2Url ?? "/gianhang/nang-cap-level2.aspx";
+        lnk_public.NavigateUrl = model.PublicUrl ?? GianHangRoutes_cl.BuildPublicStorefrontUrl(string.Empty);
+        lnk_home.NavigateUrl = model.HomeUrl ?? "/gianhang/tai-khoan/default.aspx";
+        lnk_manage.NavigateUrl = model.ManageUrl ?? GianHangRoutes_cl.BuildOwnerContentUrl();
+        lnk_orders.NavigateUrl = model.OrdersUrl ?? GianHangRoutes_cl.BuildOwnerOrdersUrl();
+        lnk_booking.NavigateUrl = model.BookingUrl ?? GianHangRoutes_cl.BuildOwnerBookingsUrl();
+        lnk_customers.NavigateUrl = model.CustomersUrl ?? GianHangRoutes_cl.BuildOwnerCustomersUrl();
+        lnk_report.NavigateUrl = model.ReportUrl ?? GianHangRoutes_cl.BuildOwnerReportsUrl();
+        lnk_level2.NavigateUrl = model.Level2Url ?? GianHangRoutes_cl.BuildBridgeLevel2Url();
 
         ph_admin.Visible = model.ShowAdminUrl;
         lnk_admin.NavigateUrl = model.AdminUrl ?? "/gianhang/admin";

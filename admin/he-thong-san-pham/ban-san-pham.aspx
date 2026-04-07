@@ -170,6 +170,29 @@
             background: #dcfce7;
             color: #166534;
         }
+
+        .sell-history-toolbar-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .sell-history-toolbar-controls .sell-history-search {
+            min-width: 260px;
+        }
+
+        @media (max-width: 849.98px) {
+            .sell-history-toolbar-controls {
+                width: 100%;
+                margin-top: 8px;
+            }
+
+            .sell-history-toolbar-controls .sell-history-search {
+                width: 100%;
+                min-width: 0;
+            }
+        }
     </style>
 </asp:Content>
 
@@ -493,13 +516,39 @@
                             </a>
                         </li>
 
-                        <li class="ml-auto d-block-lg d-none">
+                        <li class="ml-auto">
+                            <div class="sell-history-toolbar-controls">
+                                <asp:TextBox ID="txt_search_bansp" runat="server" CssClass="input-small sell-history-search"
+                                    placeholder="Tìm ID, tài khoản, tên, sản phẩm, số tiền..." />
+                                <asp:LinkButton ID="but_search_bansp" runat="server" CssClass="button mini primary"
+                                    OnClick="but_search_bansp_Click">
+                                    Tìm
+                                </asp:LinkButton>
+                                <asp:LinkButton ID="but_clear_search_bansp" runat="server" CssClass="button mini"
+                                    OnClick="but_clear_search_bansp_Click">
+                                    Xóa lọc
+                                </asp:LinkButton>
+                            </div>
+                        </li>
+
+                        <li class="d-block-lg d-none">
                             <asp:LinkButton ID="but_quaylai" runat="server" CssClass="button mini" OnClick="but_quaylai_Click">
                                 <span class="mif-arrow-left"></span> Quay lại
                             </asp:LinkButton>
                             <asp:LinkButton ID="but_xemtiep" runat="server" CssClass="button mini" OnClick="but_xemtiep_Click">
                                 Xem tiếp <span class="mif-arrow-right"></span>
                             </asp:LinkButton>
+                            <asp:Repeater ID="rpt_pager_bansp" runat="server" OnItemCommand="rpt_pager_bansp_ItemCommand">
+                                <ItemTemplate>
+                                    <asp:LinkButton ID="lnk_page_bansp" runat="server"
+                                        CssClass='<%# ((bool)Eval("IsCurrent")) ? "button mini primary" : "button mini" %>'
+                                        CommandName="page"
+                                        CommandArgument='<%# Eval("PageNumber") %>'
+                                        Enabled='<%# !((bool)Eval("IsCurrent")) %>'>
+                                        <%# Eval("PageNumber") %>
+                                    </asp:LinkButton>
+                                </ItemTemplate>
+                            </asp:Repeater>
                         </li>
 
                     </ul>
@@ -525,6 +574,7 @@
                     <th class="text-center">ID</th>
                     <th>Thời gian</th>
                     <th>Tài khoản mua</th>
+                    <th>Tên tài khoản home</th>
                     <th>Sản phẩm</th>
                     <th class="text-center">SL</th>
 
@@ -550,6 +600,7 @@
                             <td class="text-center text-bold"><%# Eval("id") %></td>
                             <td><%# Eval("ThoiGian_Text") %></td>
                             <td class="text-bold fg-darkBlue"><%# Eval("TaiKhoan_Mua") %></td>
+                            <td><%# Eval("TenTaiKhoanHome") %></td>
                             <td><%# Eval("TenSanPham") %></td>
                             <td class="text-center"><%# Eval("SoLuong") %></td>
 

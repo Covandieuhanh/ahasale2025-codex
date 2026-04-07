@@ -25,6 +25,7 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
     private const string SessionSellTokenCurrent = "sell_token_current";
     private const string SessionSellTokenUsed = "sell_token_used";
     private const string SessionSellTokenInflight = "sell_token_inflight";
+    private const int SellHistoryPageSize = 20;
 
     private sealed class SaleDetailRow
     {
@@ -43,6 +44,32 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
         public string ExecutionData { get; set; }
         public string ExecutedAtText { get; set; }
         public string ExecutionStatus { get; set; }
+    }
+
+    private sealed class SaleHistoryListRow
+    {
+        public long id { get; set; }
+        public string TaiKhoan_Mua { get; set; }
+        public string TaiKhoan_Ban { get; set; }
+        public string TenSanPham { get; set; }
+        public int SoLuong { get; set; }
+        public long TongVND { get; set; }
+        public decimal TongDongA { get; set; }
+        public decimal? PhanTram_ChiTra_ChoSan { get; set; }
+        public decimal? ViLoiNhuan_DongA_CuaSan_NhanDuoc_ViTong { get; set; }
+        public decimal? Vi1_30PhanTram_NhanDuoc_ViEVoucher { get; set; }
+        public decimal? Vi2_50PhanTram_NhanDuoc_ViLaoDong { get; set; }
+        public decimal? Vi3_20PhanTram_NhanDuoc_ViGanKet { get; set; }
+        public DateTime? ThoiGian { get; set; }
+        public string ThoiGian_Text { get; set; }
+        public string TenTaiKhoanHome { get; set; }
+        public string SpecialExecutionLabel { get; set; }
+    }
+
+    private sealed class PagerItem
+    {
+        public int PageNumber { get; set; }
+        public bool IsCurrent { get; set; }
     }
 
     private bool HasLoaiHanhViColumn(dbDataContext db)
@@ -265,7 +292,7 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
             return false;
         }
 
-        AdminRolePolicy_cl.RequireSuperAdmin();
+        AdminAccessGuard_cl.RequireFeatureAccess("system_products", "/admin/default.aspx?mspace=home");
         ViewState[ViewStatePortalMode] = PortalModeAdmin;
         ViewState[ViewStateShopSpace] = ShopSpacePublic;
 
@@ -386,6 +413,9 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
             // paging lịch sử bán
             ViewState["current_page_bansp"] = 1;
             ViewState["total_page_bansp"] = 1;
+            ViewState["search_bansp"] = "";
+            if (txt_search_bansp != null)
+                txt_search_bansp.Text = "";
 
             show_main();
 
@@ -453,6 +483,46 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
             && (x.phanloai == CompanyShop_cl.ProductTypePublic || x.phanloai == CompanyShop_cl.ProductTypeInternal));
     }
 
+    private string GetSaleSearchKeyword()
+    {
+        return ((ViewState["search_bansp"] ?? "").ToString() ?? "").Trim();
+    }
+
+    private static string NormalizeSearchText(string value)
+    {
+        return (value ?? "").Trim().ToLowerInvariant();
+    }
+
+    private static bool ContainsKeyword(string source, string keyword)
+    {
+        if (string.IsNullOrEmpty(keyword))
+            return true;
+        if (string.IsNullOrEmpty(source))
+            return false;
+        return source.IndexOf(keyword, StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
+    private void BindSellPager(int totalPage, int currentPage)
+    {
+        if (rpt_pager_bansp == null)
+            return;
+
+        if (totalPage < 1) totalPage = 1;
+        if (currentPage < 1) currentPage = 1;
+        if (currentPage > totalPage) currentPage = totalPage;
+
+        var pages = Enumerable.Range(1, totalPage)
+            .Select(p => new PagerItem
+            {
+                PageNumber = p,
+                IsCurrent = (p == currentPage)
+            })
+            .ToList();
+
+        rpt_pager_bansp.DataSource = pages;
+        rpt_pager_bansp.DataBind();
+    }
+
     // ======================= MAIN: LIST LỊCH SỬ BÁN =======================
     public void show_main()
     {
@@ -460,8 +530,14 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
         {
             using (dbDataContext db = new dbDataContext())
             {
-                int show = 30;
+                int show = SellHistoryPageSize;
                 int current_page = 1;
+                string keywordRaw = GetSaleSearchKeyword();
+                string keyword = NormalizeSearchText(keywordRaw);
+                bool hasKeyword = !string.IsNullOrEmpty(keyword);
+
+                if (txt_search_bansp != null && txt_search_bansp.Text != keywordRaw)
+                    txt_search_bansp.Text = keywordRaw;
 
                 if (ViewState["current_page_bansp"] != null)
                     int.TryParse(ViewState["current_page_bansp"].ToString(), out current_page);
@@ -475,83 +551,236 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
                 if (shopMode && !string.IsNullOrEmpty(sellerAccount))
                     q = q.Where(hd => hd.TaiKhoan_Ban == sellerAccount);
 
-                var listQuery = q
-                    .OrderByDescending(hd => hd.ThoiGian)
-                    .Select(hd => new
+                var listQuery = q.OrderByDescending(hd => hd.ThoiGian).Select(hd => new
+                {
+                    hd.id,
+                    hd.TaiKhoan_Mua,
+                    hd.TaiKhoan_Ban,
+                    hd.id_SanPhamDichVu,
+                    hd.SoLuong,
+                    hd.Gia_VND_SanPhamDichVu,
+                    hd.Gia_DongA_SanPhamDichVu,
+                    hd.PhanTram_ChiTra_ChoSan,
+                    hd.ViLoiNhuan_DongA_CuaSan_NhanDuoc_ViTong,
+                    hd.Vi1_30PhanTram_NhanDuoc_ViEVoucher,
+                    hd.Vi2_50PhanTram_NhanDuoc_ViLaoDong,
+                    hd.Vi3_20PhanTram_NhanDuoc_ViGanKet,
+                    hd.ThoiGian
+                });
+
+                List<SaleHistoryListRow> list_show = new List<SaleHistoryListRow>();
+                int total_record = 0;
+
+                if (!hasKeyword)
+                {
+                    total_record = listQuery.Count();
+                    int total_page_calc = (total_record <= 0) ? 1 : (int)Math.Ceiling((double)total_record / show);
+                    if (current_page > total_page_calc) current_page = total_page_calc;
+
+                    var list = listQuery.Skip((current_page - 1) * show).Take(show).ToList();
+                    List<long> saleIds = list.Select(x => x.id).ToList();
+                    Dictionary<long, ShopSpecialExecution_cl.ExecutionTraceInfo> specialMap =
+                        ShopSpecialExecution_cl.GetLatestMap(db, saleIds);
+
+                    List<int> productIds = list
+                        .Select(x => x.id_SanPhamDichVu ?? 0)
+                        .Where(x => x > 0)
+                        .Distinct()
+                        .ToList();
+
+                    Dictionary<int, string> tenSanPhamMap = db.SanPham_Aha_tbs
+                        .Where(p => productIds.Contains(p.id))
+                        .Select(p => new { p.id, Ten = p.TenSanPham })
+                        .ToDictionary(x => x.id, x => x.Ten ?? "");
+                    foreach (var sp in db.BaiViet_tbs.Where(p => productIds.Contains(p.id)).Select(p => new { p.id, Ten = p.name }).ToList())
                     {
-                        hd.id,
-                        hd.TaiKhoan_Mua,
-                        hd.TaiKhoan_Ban,
-                        hd.id_SanPhamDichVu,
-                        hd.SoLuong,
-                        hd.Gia_VND_SanPhamDichVu,
-                        hd.Gia_DongA_SanPhamDichVu,
-                        hd.PhanTram_ChiTra_ChoSan,
-                        hd.ViLoiNhuan_DongA_CuaSan_NhanDuoc_ViTong,
-                        hd.Vi1_30PhanTram_NhanDuoc_ViEVoucher,
-                        hd.Vi2_50PhanTram_NhanDuoc_ViLaoDong,
-                        hd.Vi3_20PhanTram_NhanDuoc_ViGanKet,
-                        hd.ThoiGian
-                    });
+                        if (!tenSanPhamMap.ContainsKey(sp.id) || string.IsNullOrEmpty(tenSanPhamMap[sp.id]))
+                            tenSanPhamMap[sp.id] = sp.Ten ?? "";
+                    }
 
-                int total_record = listQuery.Count();
-                int total_page = (total_record <= 0) ? 1 : (int)Math.Ceiling((double)total_record / show);
+                    List<string> accountMuas = list
+                        .Select(x => (x.TaiKhoan_Mua ?? "").Trim().ToLowerInvariant())
+                        .Where(x => x != "")
+                        .Distinct()
+                        .ToList();
+                    Dictionary<string, string> homeNameMap = db.taikhoan_tbs
+                        .Where(tk => accountMuas.Contains(tk.taikhoan))
+                        .Select(tk => new { tk.taikhoan, tk.hoten })
+                        .ToDictionary(x => (x.taikhoan ?? "").Trim().ToLowerInvariant(), x => (x.hoten ?? "").Trim());
 
-                if (current_page > total_page) current_page = total_page;
+                    list_show = list.Select(x =>
+                    {
+                        int sl = (int)(x.SoLuong ?? 0);
+                        long gia1VND = (long)(x.Gia_VND_SanPhamDichVu ?? 0);
+                        decimal gia1A = (decimal)(x.Gia_DongA_SanPhamDichVu ?? 0m);
+                        long tongVND = gia1VND * (long)sl;
+                        decimal tongA = Math.Round(gia1A * sl, 2, MidpointRounding.AwayFromZero);
+
+                        int idSp = x.id_SanPhamDichVu ?? 0;
+                        string tenSanPham = "";
+                        if (idSp > 0 && tenSanPhamMap.ContainsKey(idSp))
+                            tenSanPham = tenSanPhamMap[idSp];
+                        if (string.IsNullOrEmpty(tenSanPham))
+                            tenSanPham = "SP#" + idSp;
+
+                        string tkMua = (x.TaiKhoan_Mua ?? "").Trim().ToLowerInvariant();
+                        string tenHome = "";
+                        if (tkMua != "" && homeNameMap.ContainsKey(tkMua))
+                            tenHome = homeNameMap[tkMua];
+
+                        ShopSpecialExecution_cl.ExecutionTraceInfo specialTrace = null;
+                        if (specialMap.ContainsKey(x.id))
+                            specialTrace = specialMap[x.id];
+
+                        return new SaleHistoryListRow
+                        {
+                            id = x.id,
+                            TaiKhoan_Mua = x.TaiKhoan_Mua,
+                            TaiKhoan_Ban = x.TaiKhoan_Ban,
+                            TenSanPham = tenSanPham,
+                            SoLuong = sl,
+                            TongVND = tongVND,
+                            TongDongA = tongA,
+                            PhanTram_ChiTra_ChoSan = x.PhanTram_ChiTra_ChoSan,
+                            ViLoiNhuan_DongA_CuaSan_NhanDuoc_ViTong = x.ViLoiNhuan_DongA_CuaSan_NhanDuoc_ViTong,
+                            Vi1_30PhanTram_NhanDuoc_ViEVoucher = x.Vi1_30PhanTram_NhanDuoc_ViEVoucher,
+                            Vi2_50PhanTram_NhanDuoc_ViLaoDong = x.Vi2_50PhanTram_NhanDuoc_ViLaoDong,
+                            Vi3_20PhanTram_NhanDuoc_ViGanKet = x.Vi3_20PhanTram_NhanDuoc_ViGanKet,
+                            ThoiGian = x.ThoiGian,
+                            ThoiGian_Text = (x.ThoiGian ?? DateTime.MinValue).ToString("dd/MM/yyyy HH:mm"),
+                            TenTaiKhoanHome = tenHome,
+                            SpecialExecutionLabel = specialTrace == null ? "" : (specialTrace.HandlerLabel ?? "")
+                        };
+                    }).ToList();
+
+                    ViewState["total_page_bansp"] = total_page_calc;
+                }
+                else
+                {
+                    var allRows = listQuery.ToList();
+                    List<int> productIds = allRows
+                        .Select(x => x.id_SanPhamDichVu ?? 0)
+                        .Where(x => x > 0)
+                        .Distinct()
+                        .ToList();
+                    Dictionary<int, string> tenSanPhamMap = db.SanPham_Aha_tbs
+                        .Where(p => productIds.Contains(p.id))
+                        .Select(p => new { p.id, Ten = p.TenSanPham })
+                        .ToDictionary(x => x.id, x => x.Ten ?? "");
+                    foreach (var sp in db.BaiViet_tbs.Where(p => productIds.Contains(p.id)).Select(p => new { p.id, Ten = p.name }).ToList())
+                    {
+                        if (!tenSanPhamMap.ContainsKey(sp.id) || string.IsNullOrEmpty(tenSanPhamMap[sp.id]))
+                            tenSanPhamMap[sp.id] = sp.Ten ?? "";
+                    }
+
+                    List<string> accountMuas = allRows
+                        .Select(x => (x.TaiKhoan_Mua ?? "").Trim().ToLowerInvariant())
+                        .Where(x => x != "")
+                        .Distinct()
+                        .ToList();
+                    Dictionary<string, string> homeNameMap = db.taikhoan_tbs
+                        .Where(tk => accountMuas.Contains(tk.taikhoan))
+                        .Select(tk => new { tk.taikhoan, tk.hoten })
+                        .ToDictionary(x => (x.taikhoan ?? "").Trim().ToLowerInvariant(), x => (x.hoten ?? "").Trim());
+
+                    var filtered = allRows.Select(x =>
+                    {
+                        int sl = (int)(x.SoLuong ?? 0);
+                        long gia1VND = (long)(x.Gia_VND_SanPhamDichVu ?? 0);
+                        decimal gia1A = (decimal)(x.Gia_DongA_SanPhamDichVu ?? 0m);
+                        long tongVND = gia1VND * (long)sl;
+                        decimal tongA = Math.Round(gia1A * sl, 2, MidpointRounding.AwayFromZero);
+
+                        int idSp = x.id_SanPhamDichVu ?? 0;
+                        string tenSanPham = "";
+                        if (idSp > 0 && tenSanPhamMap.ContainsKey(idSp))
+                            tenSanPham = tenSanPhamMap[idSp];
+                        if (string.IsNullOrEmpty(tenSanPham))
+                            tenSanPham = "SP#" + idSp;
+
+                        string tkMua = (x.TaiKhoan_Mua ?? "").Trim().ToLowerInvariant();
+                        string tenHome = "";
+                        if (tkMua != "" && homeNameMap.ContainsKey(tkMua))
+                            tenHome = homeNameMap[tkMua];
+
+                        string searchBlob = string.Join(" | ", new[]
+                        {
+                            x.id.ToString(),
+                            (x.TaiKhoan_Mua ?? ""),
+                            (x.TaiKhoan_Ban ?? ""),
+                            tenHome,
+                            tenSanPham,
+                            sl.ToString(),
+                            tongVND.ToString("#,##0"),
+                            tongA.ToString("#,##0.##"),
+                            (x.PhanTram_ChiTra_ChoSan ?? 0).ToString(),
+                            (x.ViLoiNhuan_DongA_CuaSan_NhanDuoc_ViTong ?? 0m).ToString("#,##0.##"),
+                            (x.ThoiGian ?? DateTime.MinValue).ToString("dd/MM/yyyy HH:mm")
+                        });
+
+                        return new
+                        {
+                            Row = new SaleHistoryListRow
+                            {
+                                id = x.id,
+                                TaiKhoan_Mua = x.TaiKhoan_Mua,
+                                TaiKhoan_Ban = x.TaiKhoan_Ban,
+                                TenSanPham = tenSanPham,
+                                SoLuong = sl,
+                                TongVND = tongVND,
+                                TongDongA = tongA,
+                                PhanTram_ChiTra_ChoSan = x.PhanTram_ChiTra_ChoSan,
+                                ViLoiNhuan_DongA_CuaSan_NhanDuoc_ViTong = x.ViLoiNhuan_DongA_CuaSan_NhanDuoc_ViTong,
+                                Vi1_30PhanTram_NhanDuoc_ViEVoucher = x.Vi1_30PhanTram_NhanDuoc_ViEVoucher,
+                                Vi2_50PhanTram_NhanDuoc_ViLaoDong = x.Vi2_50PhanTram_NhanDuoc_ViLaoDong,
+                                Vi3_20PhanTram_NhanDuoc_ViGanKet = x.Vi3_20PhanTram_NhanDuoc_ViGanKet,
+                                ThoiGian = x.ThoiGian,
+                                ThoiGian_Text = (x.ThoiGian ?? DateTime.MinValue).ToString("dd/MM/yyyy HH:mm"),
+                                TenTaiKhoanHome = tenHome
+                            },
+                            SearchBlob = NormalizeSearchText(searchBlob)
+                        };
+                    })
+                    .Where(x => ContainsKeyword(x.SearchBlob, keyword))
+                    .Select(x => x.Row)
+                    .ToList();
+
+                    total_record = filtered.Count;
+                    int total_page_calc = (total_record <= 0) ? 1 : (int)Math.Ceiling((double)total_record / show);
+                    if (current_page > total_page_calc) current_page = total_page_calc;
+
+                    list_show = filtered.Skip((current_page - 1) * show).Take(show).ToList();
+
+                    List<long> saleIds = list_show.Select(x => x.id).ToList();
+                    Dictionary<long, ShopSpecialExecution_cl.ExecutionTraceInfo> specialMap =
+                        ShopSpecialExecution_cl.GetLatestMap(db, saleIds);
+                    foreach (var row in list_show)
+                    {
+                        ShopSpecialExecution_cl.ExecutionTraceInfo specialTrace = null;
+                        if (specialMap.ContainsKey(row.id))
+                            specialTrace = specialMap[row.id];
+                        row.SpecialExecutionLabel = specialTrace == null ? "" : (specialTrace.HandlerLabel ?? "");
+                    }
+
+                    ViewState["total_page_bansp"] = total_page_calc;
+                }
+
+                int total_page = 1;
+                int.TryParse((ViewState["total_page_bansp"] ?? "1").ToString(), out total_page);
+                if (total_page < 1) total_page = 1;
 
                 ViewState["current_page_bansp"] = current_page;
-                ViewState["total_page_bansp"] = total_page;
+
+                // label hiển thị
+                int stt = (show * current_page) - show + 1;
+                int s2 = stt + list_show.Count - 1;
+                if (total_record > 0) lb_show.Text = stt + "-" + s2 + " trong số " + total_record.ToString("#,##0");
+                else lb_show.Text = "0-0/0";
 
                 // enable/disable nút phân trang
                 if (but_xemtiep != null) but_xemtiep.Enabled = current_page < total_page;
                 if (but_quaylai != null) but_quaylai.Enabled = current_page > 1;
-
-                var list = listQuery.Skip((current_page - 1) * show).Take(show).ToList();
-                List<long> saleIds = list.Select(x => x.id).ToList();
-                Dictionary<long, ShopSpecialExecution_cl.ExecutionTraceInfo> specialMap =
-                    ShopSpecialExecution_cl.GetLatestMap(db, saleIds);
-
-                // Map hiển thị: tính tổng VNĐ/A theo số lượng
-                var list_show = list.Select(x =>
-                {
-                    int sl = (int)(x.SoLuong ?? 0);
-                    long gia1VND = (long)(x.Gia_VND_SanPhamDichVu ?? 0);
-                    decimal gia1A = (decimal)(x.Gia_DongA_SanPhamDichVu ?? 0m);
-
-                    long tongVND = gia1VND * (long)sl;
-                    decimal tongA = Math.Round(gia1A * sl, 2, MidpointRounding.AwayFromZero);
-                    string tenSanPham = ResolveProductName(db, x.id_SanPhamDichVu, shopMode);
-                    ShopSpecialExecution_cl.ExecutionTraceInfo specialTrace = null;
-                    if (specialMap.ContainsKey(x.id))
-                        specialTrace = specialMap[x.id];
-
-                    return new
-                    {
-                        x.id,
-                        x.TaiKhoan_Mua,
-                        x.TaiKhoan_Ban,
-                        TenSanPham = tenSanPham,
-
-                        SoLuong = sl,
-                        TongVND = tongVND,
-                        TongDongA = tongA,
-
-                        x.PhanTram_ChiTra_ChoSan,
-                        x.ViLoiNhuan_DongA_CuaSan_NhanDuoc_ViTong,
-                        x.Vi3_20PhanTram_NhanDuoc_ViGanKet,
-                        x.Vi1_30PhanTram_NhanDuoc_ViEVoucher,
-                        x.Vi2_50PhanTram_NhanDuoc_ViLaoDong,
-
-                        ThoiGian_Text = (x.ThoiGian ?? DateTime.MinValue).ToString("dd/MM/yyyy HH:mm"),
-                        SpecialExecutionLabel = specialTrace == null ? "" : (specialTrace.HandlerLabel ?? "")
-                    };
-                }).ToList();
-
-                // label hiển thị
-                int stt = (show * current_page) - show + 1;
-                int s2 = stt + list.Count - 1;
-                if (total_record > 0) lb_show.Text = stt + "-" + s2 + " trong số " + total_record.ToString("#,##0");
-                else lb_show.Text = "0-0/0";
+                BindSellPager(total_page, current_page);
 
                 Repeater1.DataSource = list_show;
                 Repeater1.DataBind();
@@ -589,6 +818,37 @@ public partial class admin_he_thong_san_pham_ban_the : System.Web.UI.Page
         p++;
         if (p > total) p = total;
         ViewState["current_page_bansp"] = p;
+        show_main();
+    }
+
+    protected void but_search_bansp_Click(object sender, EventArgs e)
+    {
+        string keyword = "";
+        if (txt_search_bansp != null)
+            keyword = (txt_search_bansp.Text ?? "").Trim();
+        ViewState["search_bansp"] = keyword;
+        ViewState["current_page_bansp"] = 1;
+        show_main();
+    }
+
+    protected void but_clear_search_bansp_Click(object sender, EventArgs e)
+    {
+        ViewState["search_bansp"] = "";
+        if (txt_search_bansp != null)
+            txt_search_bansp.Text = "";
+        ViewState["current_page_bansp"] = 1;
+        show_main();
+    }
+
+    protected void rpt_pager_bansp_ItemCommand(object source, RepeaterCommandEventArgs e)
+    {
+        if (!string.Equals(e.CommandName, "page", StringComparison.OrdinalIgnoreCase))
+            return;
+
+        int page = 1;
+        int.TryParse((e.CommandArgument ?? "1").ToString(), out page);
+        if (page < 1) page = 1;
+        ViewState["current_page_bansp"] = page;
         show_main();
     }
 

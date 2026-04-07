@@ -1,8 +1,8 @@
-﻿@import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap");
+﻿@import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap");
 
 body.admin-shell {
     --aha-sync-font-ui: "Be Vietnam Pro", "Segoe UI", Arial, sans-serif;
-    --aha-sync-font-heading: "Sora", "Be Vietnam Pro", "Segoe UI", sans-serif;
+    --aha-sync-font-heading: "Be Vietnam Pro", "Segoe UI", Arial, sans-serif;
     --aha-sync-brand-600: #c81e1e;
     --aha-sync-brand-700: #9f1239;
     --aha-sync-brand-soft: #ffe9ea;
@@ -75,6 +75,10 @@ body.admin-shell .admin-topbar .admin-topbar-title {
     padding-right: 10px !important;
 }
 
+body.admin-shell .admin-topbar .admin-topbar-brand-mobile {
+    display: none;
+}
+
 body.admin-shell .admin-quickbar {
     display: flex;
     flex-wrap: wrap;
@@ -114,6 +118,10 @@ body.admin-shell .admin-quickbar a:hover {
     border-color: #b7d4e5;
     color: #12364f !important;
     transform: translateY(-1px);
+}
+
+.admin-form-shell-wide {
+    max-width: 1200px;
 }
 
 body.admin-shell .avatar-shortcuts-menu {
@@ -841,6 +849,105 @@ body.admin-shell #nv .navview-pane .admin-left-role-scope {
     color: #90a3b4;
     font-weight: 700;
     margin-top: 2px;
+}
+
+body.admin-shell .admin-nav-space-summary {
+    margin: 14px 14px 6px;
+    padding: 14px;
+    border-radius: 18px;
+    border: 1px solid #dbe7f1;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    box-shadow: 0 12px 26px rgba(12, 38, 58, 0.08);
+}
+
+body.admin-shell .admin-nav-space-summary-eyebrow {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #6d8194;
+}
+
+body.admin-shell .admin-nav-space-summary-title {
+    margin-top: 6px;
+    color: #14324a;
+    font-size: 16px;
+    line-height: 1.4;
+    font-weight: 800;
+}
+
+body.admin-shell .admin-nav-space-summary-account {
+    margin-top: 8px;
+    color: #5e7488;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.5;
+}
+
+body.admin-shell .admin-nav-space-summary-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+body.admin-shell .admin-nav-space-summary .aha-space-launcher__link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 16px;
+    border: 1px solid #dbe6ef;
+    background: #ffffff;
+    color: #102a43 !important;
+    text-decoration: none;
+    transition: border-color .18s ease, background-color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+
+body.admin-shell .admin-nav-space-summary .aha-space-launcher__link:hover {
+    border-color: #bfd3e4;
+    background: #f8fbff;
+    box-shadow: 0 10px 22px rgba(18, 49, 72, 0.08);
+    transform: translateY(-1px);
+}
+
+body.admin-shell .admin-nav-space-summary .aha-space-launcher__link.is-active {
+    border-color: #16a34a;
+    background: #f0fdf4;
+}
+
+body.admin-shell .admin-nav-space-summary .aha-space-launcher__link.is-request {
+    border-color: #fed7aa;
+    background: #fff7ed;
+}
+
+body.admin-shell .admin-nav-space-summary .aha-space-launcher__copy {
+    min-width: 0;
+}
+
+body.admin-shell .admin-nav-space-summary .aha-space-launcher__copy strong {
+    display: block;
+    color: #123148;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.45;
+}
+
+body.admin-shell .admin-nav-space-summary .aha-space-launcher__copy span {
+    display: block;
+    margin-top: 2px;
+    color: #637b90;
+    font-size: 11px;
+    line-height: 1.45;
+    font-weight: 700;
+}
+
+body.admin-shell .admin-nav-space-summary .aha-space-launcher__chevron {
+    color: #8aa0b3;
+    font-size: 22px;
+    line-height: 1;
+    flex: 0 0 auto;
 }
 
 body.admin-shell #nv .navview-menu {
@@ -1667,6 +1774,215 @@ body.admin-shell #admin-quick-shell.admin-quick-dd .admin-quick-divider {
     margin: 6px 0;
 }
 
+@media (max-width: 767.98px) {
+    body.admin-shell.admin-avatar-nav-only #nv .navview-pane,
+    body.admin-shell.admin-avatar-nav-only .navview-pane {
+        display: block !important;
+        width: min(88vw, 340px) !important;
+        min-width: min(88vw, 340px) !important;
+        max-width: min(88vw, 340px) !important;
+        border-right: 1px solid var(--aha-sync-border) !important;
+    }
+
+    body.admin-shell.admin-avatar-nav-only #nv .navview-content,
+    body.admin-shell.admin-avatar-nav-only .navview-content {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+    }
+
+    body.admin-shell {
+        --aha-admin-mobile-circle-size: 40px;
+        --aha-admin-mobile-logo-width: calc(100vw - 172px);
+    }
+
+    body.admin-shell .admin-topbar {
+        padding: 0 6px !important;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        overflow: visible !important;
+    }
+
+    body.admin-shell .admin-topbar > .app-bar-item,
+    body.admin-shell .admin-topbar > .space-launcher-shell,
+    body.admin-shell .admin-topbar > .space-launcher,
+    body.admin-shell .admin-topbar > [id$="spaceLauncher"] {
+        display: none !important;
+    }
+
+    body.admin-shell .admin-topbar #paneToggle {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        width: var(--aha-admin-mobile-circle-size);
+        min-width: var(--aha-admin-mobile-circle-size);
+        height: var(--aha-admin-mobile-circle-size);
+        min-height: var(--aha-admin-mobile-circle-size);
+        margin: 0 6px 0 0;
+        padding: 0 !important;
+        border-radius: 999px !important;
+        border: 1px solid rgba(255, 255, 255, 0.26);
+        background: rgba(255, 255, 255, 0.14) !important;
+        box-shadow: none !important;
+        position: relative;
+        z-index: 2;
+    }
+
+    body.admin-shell .admin-topbar #paneToggle:hover {
+        background: rgba(255, 255, 255, 0.22) !important;
+        border-color: rgba(255, 255, 255, 0.34);
+    }
+
+    body.admin-shell .admin-topbar #paneToggle .mif {
+        font-size: 22px;
+        line-height: 1;
+    }
+
+    body.admin-shell .admin-topbar .admin-topbar-home,
+    body.admin-shell .admin-topbar .admin-topbar-title,
+    body.admin-shell .admin-topbar #admin-ui-density-toggle {
+        display: none !important;
+    }
+
+    body.admin-shell .admin-topbar .admin-topbar-brand-mobile {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: auto;
+        max-width: min(220px, var(--aha-admin-mobile-logo-width));
+        height: var(--aha-admin-topbar-height);
+        min-height: var(--aha-admin-topbar-height);
+        padding: 0;
+        text-decoration: none !important;
+        line-height: 0;
+        z-index: 1;
+    }
+
+    body.admin-shell .admin-topbar .admin-topbar-brand-mobile img {
+        display: block;
+        width: auto;
+        height: calc(var(--aha-admin-topbar-height) - 10px);
+        max-width: min(220px, var(--aha-admin-mobile-logo-width));
+        object-fit: contain;
+        object-position: center;
+    }
+
+    body.admin-shell .admin-topbar .app-bar-container {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-left: auto !important;
+        position: relative;
+        z-index: 2;
+        flex-wrap: nowrap;
+    }
+
+    body.admin-shell .admin-topbar .app-bar-container > .app-bar-item,
+    body.admin-shell #admin-quick-shell.admin-quick-dd .admin-quick-btn,
+    body.admin-shell details.admin-storefront-account > summary.storefront-account__summary {
+        width: var(--aha-admin-mobile-circle-size);
+        min-width: var(--aha-admin-mobile-circle-size);
+        height: var(--aha-admin-mobile-circle-size);
+        min-height: var(--aha-admin-mobile-circle-size);
+        padding: 0 !important;
+        border-radius: 999px !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: none !important;
+    }
+
+    body.admin-shell .admin-topbar .app-bar-container > .app-bar-item {
+        border: 1px solid rgba(255, 255, 255, 0.26);
+        background: rgba(255, 255, 255, 0.14) !important;
+    }
+
+    body.admin-shell .admin-topbar .app-bar-container > .app-bar-item:hover,
+    body.admin-shell #admin-quick-shell.admin-quick-dd .admin-quick-btn:hover,
+    body.admin-shell #admin-quick-shell.admin-quick-dd.open .admin-quick-btn,
+    body.admin-shell details.admin-storefront-account > summary.storefront-account__summary:hover,
+    body.admin-shell details.admin-storefront-account[open] > summary.storefront-account__summary {
+        background: rgba(255, 255, 255, 0.22) !important;
+        border-color: rgba(255, 255, 255, 0.34) !important;
+        transform: none;
+    }
+
+    body.admin-shell .admin-topbar .app-bar-container > .app-bar-item .mif,
+    body.admin-shell #admin-quick-shell.admin-quick-dd .admin-quick-btn .mif {
+        font-size: 20px;
+        line-height: 1;
+    }
+
+    body.admin-shell .admin-topbar .app-bar-container > .app-bar-item .badge {
+        top: 4px !important;
+        right: 2px !important;
+        margin: 0 !important;
+        min-width: 18px;
+        height: 18px;
+        line-height: 18px;
+        font-size: 10px;
+        padding: 0 4px;
+    }
+
+    body.admin-shell #admin-quick-shell.admin-quick-dd {
+        margin-right: 0;
+    }
+
+    body.admin-shell #admin-quick-shell.admin-quick-dd .admin-quick-btn {
+        border: 1px solid rgba(255, 255, 255, 0.26);
+        background: rgba(255, 255, 255, 0.14) !important;
+    }
+
+    body.admin-shell #admin-quick-shell.admin-quick-dd .admin-quick-menu {
+        right: 0;
+        top: calc(100% + 10px);
+        width: min(360px, calc(100vw - 16px));
+        max-height: calc(100vh - 84px);
+        max-height: calc(100dvh - 84px);
+    }
+
+    body.admin-shell details.admin-storefront-account {
+        margin-left: 0;
+    }
+
+    body.admin-shell details.admin-storefront-account > summary.storefront-account__summary {
+        border: 1px solid rgba(255, 255, 255, 0.26);
+        background: rgba(255, 255, 255, 0.14) !important;
+        padding: 0 !important;
+    }
+
+    body.admin-shell details.admin-storefront-account .storefront-account__avatar {
+        width: 34px;
+        height: 34px;
+        flex: 0 0 34px;
+    }
+
+    body.admin-shell details.admin-storefront-account .storefront-account__meta {
+        display: none !important;
+    }
+
+    body.admin-shell details.admin-storefront-account .storefront-account__menu {
+        right: 0;
+        top: calc(100% + 10px);
+        width: min(360px, calc(100vw - 16px));
+    }
+}
+
+@media (max-width: 389.98px) {
+    body.admin-shell {
+        --aha-admin-mobile-logo-width: calc(100vw - 154px);
+    }
+
+    body.admin-shell .admin-topbar .admin-topbar-brand-mobile img {
+        max-width: min(184px, var(--aha-admin-mobile-logo-width));
+    }
+}
+
 body.admin-shell .admin-page .d-menu {
     border-radius: 12px !important;
     border: 1px solid #d7e4ee !important;
@@ -2070,7 +2386,7 @@ body.admin-shell #thongbao-charms .thongbao-thoigian {
     color: #6e8193;
 }
 
-@media (max-width: 991.98px) {
+@media (max-width: 767.98px) {
     body.admin-shell .admin-quickbar {
         top: 52px;
         padding: 8px 12px 10px;
@@ -2738,6 +3054,80 @@ body.admin-shell .admin-role-home-tab-text {
 body.admin-shell .admin-role-home-tab-foot {
     display: flex;
     justify-content: flex-end;
+}
+
+body.admin-shell .admin-role-home-quick-grid,
+body.admin-shell .admin-role-home-pending-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+    margin-top: 16px;
+}
+
+body.admin-shell .admin-role-home-quick-card,
+body.admin-shell .admin-role-home-pending-card {
+    border: 1px solid #dbe7f0;
+    border-radius: 16px;
+    background: #f9fcff;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+body.admin-shell .admin-role-home-quick-card h3,
+body.admin-shell .admin-role-home-pending-card h3 {
+    margin: 0;
+    font-size: 18px;
+    line-height: 1.35;
+}
+
+body.admin-shell .admin-role-home-quick-card p,
+body.admin-shell .admin-role-home-pending-card p {
+    margin: 0;
+    color: #31546e;
+    font-size: 14px;
+    line-height: 1.6;
+    font-weight: 600;
+}
+
+body.admin-shell .admin-role-home-quick-card .button,
+body.admin-shell .admin-role-home-pending-card .button {
+    align-self: flex-start;
+}
+
+body.admin-shell .admin-role-home-pending-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+body.admin-shell .admin-role-home-pending-count {
+    display: inline-flex;
+    min-height: 30px;
+    align-items: center;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: #e9f4ff;
+    color: #215178;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+body.admin-shell .admin-role-home-pending-card-hot {
+    border-color: #f2c4cb;
+    background: #fff7f8;
+}
+
+body.admin-shell .admin-role-home-pending-card-cool {
+    border-color: #dbe7f0;
+    background: #f7fbff;
+}
+
+body.admin-shell .admin-role-home-pending-card-hot .admin-role-home-pending-count {
+    background: #ffe4e8;
+    color: #a1293f;
 }
 
 body.admin-shell .admin-role-home-root-section {

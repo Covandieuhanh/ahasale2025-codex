@@ -43,6 +43,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler-flags.min.css">
     <%--icon cờ quốc kỳ--%>
     <link rel="stylesheet" href="<%= Helper_cl.VersionedUrl("~/assetscss/Tabler-Hota.css") %>" />
+    <link rel="stylesheet" href="<%= Helper_cl.VersionedUrl("~/assetscss/aha-responsive-mode.css") %>" />
     <link rel="stylesheet" href="<%= Helper_cl.VersionedUrl("~/assetscss/header_tabler_UI.css") %>" />
     <link rel="stylesheet" href="<%= Helper_cl.VersionedUrl("~/assetscss/aha-ui-refresh.css") %>" />
     <asp:ContentPlaceHolder ID="head_sau" runat="server"></asp:ContentPlaceHolder>
@@ -92,12 +93,9 @@
         }
 
     </style>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
-<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
-
 </head>
-<body>
-    <form id="form1" runat="server">
+<body class="aha-home-shell <%= "aha-space-" + ModuleSpace_cl.ResolveByPath(Request == null || Request.Url == null ? "" : Request.Url.AbsolutePath) %>">
+    <form id="form1" runat="server" class="aha-scale-root">
 
         <asp:ScriptManager runat="server" ID="ScriptManager1" EnablePageMethods="true" EnableScriptGlobalization="True" />
         <div class="page">
@@ -112,10 +110,6 @@
 
     <asp:ContentPlaceHolder ID="foot_truoc" runat="server"></asp:ContentPlaceHolder>
     <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-    
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.css">
-<script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
     <script src="<%= Helper_cl.VersionedUrl("~/js/aha-ui-refresh.js") %>"></script>
     <script src="<%= Helper_cl.VersionedUrl("~/Js/Tabler-Hota.js") %>"></script>
     <script>

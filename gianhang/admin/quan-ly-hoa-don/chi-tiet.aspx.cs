@@ -30,6 +30,21 @@ public partial class badmin_Default : System.Web.UI.Page
     List<string> list_id_split, list_id_split_thedv;
     #endregion
 
+    private bool HasAnyPermission(params string[] permissionKeys)
+    {
+        string currentUser = (user ?? "").Trim();
+        if (string.IsNullOrEmpty(currentUser))
+            return false;
+
+        foreach (string permissionKey in permissionKeys)
+        {
+            if (!string.IsNullOrEmpty(permissionKey) && bcorn_class.check_quyen(currentUser, permissionKey) == "")
+                return true;
+        }
+
+        return false;
+    }
+
     public void update_hoadon()
     {
         var q_hoadon = db.bspa_hoadon_tables.Where(p => p.id.ToString() == id && p.id_chinhanh == Session["chinhanh"].ToString());
@@ -414,51 +429,21 @@ public partial class badmin_Default : System.Web.UI.Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
-        #region Check_Login
-        string _quyen = "none";
-        string _cookie_user = "", _cookie_pass = "";
-        if (Request.Cookies["save_user_admin_aka_1"] != null) _cookie_user = Request.Cookies["save_user_admin_aka_1"].Value;
-        if (Request.Cookies["save_pass_admin_aka_1"] != null) _cookie_pass = Request.Cookies["save_pass_admin_aka_1"].Value;
-        if (Session["user"] == null) Session["user"] = ""; if (Session["notifi"] == null) Session["notifi"] = ""; if (Session["user"].ToString() == "") Response.Redirect("/gianhang/admin/f5_ss_admin.aspx");
-        string _url = Request.Url.GetLeftPart(UriPartial.Authority).ToLower();
-        string _kq = bcorn_class.check_login(Session["user"].ToString(), _cookie_user, _cookie_pass, _url, _quyen);
-        if (_kq != "")//nếu có thông báo --> có lỗi --> reset --> bắt login lại
-        {
-            if (_kq == "baotri") Response.Redirect("/baotri.aspx");
-            else
-            {
-                if (_kq == "1") Response.Redirect("/gianhang/admin/login.aspx");//hết Session, hết Cookie
-                else
-                {
-                    if (_kq == "2")//k đủ quyền
-                    {
-                        Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
-                        Response.Redirect("/gianhang/admin");
-                    }
-                    else
-                    {
-                        Session["notifi"] = _kq; Session["user"] = "";
-                        Response.Cookies["save_user_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Cookies["save_pass_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Cookies["save_url_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Redirect("/gianhang/admin/login.aspx");
-                    }
-                }
-            }
-        }
-        #endregion
+        GianHangAdminPageGuard_cl.AccessInfo access = GianHangAdminPageGuard_cl.EnsureAccess(this, db, "none");
+        if (access == null)
+            return;
 
         #region Check quyen theo nganh
-        user = Session["user"].ToString();
-        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
-        if (bcorn_class.check_quyen(user, "q7_1") == "" || bcorn_class.check_quyen(user, "n7_1") == "")
+        user = (access.User ?? "").Trim();
+        user_parent = access.OwnerAccountKey;
+        if (HasAnyPermission("q7_1", "n7_1"))
         {
 
             //chỉnh trạng thái thông báo thành đã xem (nếu đc truy cập từ thanh thông báo)
             if (!string.IsNullOrWhiteSpace(Request.QueryString["idtb"]))
             {
                 string _idtb = Request.QueryString["idtb"].ToString().Trim();
-                var q_tb = db.thongbao_tables.Where(p => p.id.ToString() == _idtb && p.nguoinhan == Session["user"].ToString() && p.id_chinhanh == Session["chinhanh"].ToString());
+                var q_tb = db.thongbao_tables.Where(p => p.id.ToString() == _idtb && p.nguoinhan == user && p.id_chinhanh == Session["chinhanh"].ToString());
                 if (q_tb.Count() != 0)
                 {
                     thongbao_table _ob = q_tb.First();
@@ -472,7 +457,7 @@ public partial class badmin_Default : System.Web.UI.Page
                 id = Request.QueryString["id"].ToString().Trim();
                 if (hd_cl.exist_id(id, user_parent))
                 {
-                    if (bcorn_class.check_quyen(user, "q7_1") == "")//neu la quyen cap chi nhanh
+                    if (HasAnyPermission("q7_1"))//neu la quyen cap chi nhanh
                     {
 
                     }
@@ -622,7 +607,7 @@ public partial class badmin_Default : System.Web.UI.Page
     }
     protected void but_xoa_Click(object sender, ImageClickEventArgs e)
     {
-        if (bcorn_class.check_quyen(user, "q7_4") == "" || bcorn_class.check_quyen(user, "n7_4") == "")
+        if (HasAnyPermission("q7_4", "n7_4"))
         {
             for (int i = 0; i < list_id_split.Count; i++)
             {
@@ -726,7 +711,7 @@ public partial class badmin_Default : System.Web.UI.Page
     protected void but_form_themdichvu_Click(object sender, EventArgs e)
     {
 
-        if (bcorn_class.check_quyen(user, "q7_2") == "" || bcorn_class.check_quyen(user, "n7_2") == "")
+        if (HasAnyPermission("q7_2", "n7_2"))
         {
             //string _id_dichvu = ddl_dichvu.SelectedValue.ToString();
             string _ten_dichvu = txt_tendichvu.Text.Trim();
@@ -862,7 +847,7 @@ public partial class badmin_Default : System.Web.UI.Page
                                         _ob.id_hoadon = id;
                                         _ob.kyhieu = "dichvu";
                                         _ob.user_parent = user_parent;
-                                        _ob.nguoitao = Session["user"].ToString();
+                                        _ob.nguoitao = user;
                                         _ob.danhgia_nhanvien_lamdichvu = txt_danhgia_dichvu.Text.Trim();
                                         _ob.danhgia_5sao_dv = Request.Form["danhgia_5sao_nhanvien_dv"];
 
@@ -922,7 +907,7 @@ public partial class badmin_Default : System.Web.UI.Page
     }
     protected void but_form_themsanpham_Click(object sender, EventArgs e)
     {
-        if (bcorn_class.check_quyen(user, "q7_2") == "" || bcorn_class.check_quyen(user, "n7_2") == "")
+        if (HasAnyPermission("q7_2", "n7_2"))
         {
 
             string _ten_sanpham = txt_tensanpham.Text.Trim();
@@ -1031,7 +1016,7 @@ public partial class badmin_Default : System.Web.UI.Page
                                         _ob.id_hoadon = id;
                                         _ob.kyhieu = "sanpham";
                                         _ob.user_parent = user_parent;
-                                        _ob.nguoitao = Session["user"].ToString();
+                                        _ob.nguoitao = user;
                                         _ob.danhgia_nhanvien_lamdichvu = "";
 
 
@@ -1072,7 +1057,7 @@ public partial class badmin_Default : System.Web.UI.Page
     }
     protected void but_xoahoadon_Click(object sender, ImageClickEventArgs e)
     {
-        if (bcorn_class.check_quyen(user, "q7_4") == "" || bcorn_class.check_quyen(user, "n7_4") == "")
+        if (HasAnyPermission("q7_4", "n7_4"))
         {
             //ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Lưu thành công.", "4000", "warning"), true);
             var q = db.bspa_hoadon_tables.Where(p => p.id.ToString() == id && p.id_chinhanh == Session["chinhanh"].ToString());
@@ -1088,7 +1073,7 @@ public partial class badmin_Default : System.Web.UI.Page
     }
     protected void but_form_edithoadon_Click(object sender, EventArgs e)
     {
-        if (bcorn_class.check_quyen(user, "q7_3") == "" || bcorn_class.check_quyen(user, "n7_3") == "")
+        if (HasAnyPermission("q7_3", "n7_3"))
         {
             string _ck = txt_chietkhau_hoadon.Text.Trim().Replace(".", "");
             int _r1 = 0;
@@ -1159,7 +1144,7 @@ public partial class badmin_Default : System.Web.UI.Page
 
     protected void but_xoathanhtoan_Click(object sender, ImageClickEventArgs e)
     {
-        if (bcorn_class.check_quyen(user, "q7_6") == "" || bcorn_class.check_quyen(user, "n7_6") == "")
+        if (HasAnyPermission("q7_6", "n7_6"))
         {
             var q_thanhtoan = db.bspa_lichsu_thanhtoan_tables.Where(p => p.id_hoadon == id && p.id_chinhanh == Session["chinhanh"].ToString()).OrderBy(p => p.thoigian).ToList();
             foreach (var t in q_thanhtoan)
@@ -1205,7 +1190,7 @@ public partial class badmin_Default : System.Web.UI.Page
 
     protected void but_thanhtoan_Click(object sender, EventArgs e)
     {
-        if (bcorn_class.check_quyen(user, "q7_5") == "" || bcorn_class.check_quyen(user, "n7_5") == "")
+        if (HasAnyPermission("q7_5", "n7_5"))
         {
             if (sotien_conlai == 0)
                 ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Đơn này đã thanh toán đủ.", "4000", "warning"), true);
@@ -1360,7 +1345,7 @@ public partial class badmin_Default : System.Web.UI.Page
 
         string _id_thedv = "";
         int _count = 0;
-        if (bcorn_class.check_quyen(user, "q7_2") == "" || bcorn_class.check_quyen(user, "n7_2") == "")
+        if (HasAnyPermission("q7_2", "n7_2"))
         {
             //đảm bảo rằng chỉ chọn 1 lần 1 thẻ dv
             for (int i = 0; i < list_id_split_thedv.Count; i++)
@@ -1463,7 +1448,7 @@ public partial class badmin_Default : System.Web.UI.Page
                                     _ob.id_hoadon = id;
                                     _ob.kyhieu = "dichvu";
                                     _ob.user_parent = user_parent;
-                                    _ob.nguoitao = Session["user"].ToString();
+                                    _ob.nguoitao = user;
                                     _ob.danhgia_nhanvien_lamdichvu = txt_danhgia_dichvu_lamdv.Text.Trim();
                                     _ob.danhgia_5sao_dv = Request.Form["danhgia_5sao_nhanvien_dv_lamdv"];
 
@@ -1528,7 +1513,7 @@ public partial class badmin_Default : System.Web.UI.Page
 
     protected void but_form_edithoadon1_Click(object sender, EventArgs e)
     {
-        if (bcorn_class.check_quyen(user, "q7_3") == "" || bcorn_class.check_quyen(user, "n7_3") == "")
+        if (HasAnyPermission("q7_3", "n7_3"))
         {
             string _ck = txt_chietkhau_hoadon1.Text.Trim().Replace(".", "");
             int _r1 = 0;

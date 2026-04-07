@@ -66,6 +66,45 @@ public partial class home_quan_ly_bai_Default : System.Web.UI.Page
         }
     }
 
+    private void BindBatDongSanOptions()
+    {
+        if (ddl_bds_purpose.Items.Count == 0)
+        {
+            ddl_bds_purpose.Items.Add(new ListItem("Mua bán", "sale"));
+            ddl_bds_purpose.Items.Add(new ListItem("Cho thuê", "rent"));
+        }
+
+        if (ddl_bds_property_type.Items.Count == 0)
+        {
+            ddl_bds_property_type.Items.Add(new ListItem("Căn hộ", "apartment"));
+            ddl_bds_property_type.Items.Add(new ListItem("Nhà phố", "house"));
+            ddl_bds_property_type.Items.Add(new ListItem("Đất nền", "land"));
+            ddl_bds_property_type.Items.Add(new ListItem("Văn phòng", "office"));
+            ddl_bds_property_type.Items.Add(new ListItem("Mặt bằng", "business-premises"));
+        }
+
+        if (ddl_bds_direction.Items.Count == 0)
+        {
+            ddl_bds_direction.Items.Add(new ListItem("Chưa chọn", ""));
+            ddl_bds_direction.Items.Add(new ListItem("Đông", "Đông"));
+            ddl_bds_direction.Items.Add(new ListItem("Tây", "Tây"));
+            ddl_bds_direction.Items.Add(new ListItem("Nam", "Nam"));
+            ddl_bds_direction.Items.Add(new ListItem("Bắc", "Bắc"));
+            ddl_bds_direction.Items.Add(new ListItem("Đông Nam", "Đông Nam"));
+            ddl_bds_direction.Items.Add(new ListItem("Đông Bắc", "Đông Bắc"));
+            ddl_bds_direction.Items.Add(new ListItem("Tây Nam", "Tây Nam"));
+            ddl_bds_direction.Items.Add(new ListItem("Tây Bắc", "Tây Bắc"));
+        }
+    }
+
+    private void BindBatDongSanCategoryIds()
+    {
+        using (dbDataContext db = new dbDataContext())
+        {
+            hf_bds_category_ids.Value = BatDongSanMetadata_cl.GetRealEstateCategoryIdsCsv(db);
+        }
+    }
+
     private string GetCreatePostUrl()
     {
         return PortalRequest_cl.IsShopPortalRequest()
@@ -116,6 +155,8 @@ public partial class home_quan_ly_bai_Default : System.Web.UI.Page
 
             set_dulieu_macdinh();
             BindCompanyShopOptions(isCompanyShopPortal, true);
+            BindBatDongSanOptions();
+            BindBatDongSanCategoryIds();
             show_main();
 
             string editIdRaw = (Request.QueryString["edit_id"] ?? "").Trim();
@@ -128,7 +169,7 @@ public partial class home_quan_ly_bai_Default : System.Web.UI.Page
     }
     public void set_dulieu_macdinh()
     {
-        ViewState["current_page_qltin_home"] = "1";
+        ViewState["current_page_qltin_home"] = HomePager_cl.ResolvePage(Request).ToString();
     }
 
     #region main - phân trang - tìm kiếm
@@ -203,8 +244,15 @@ public partial class home_quan_ly_bai_Default : System.Web.UI.Page
             // Xử lý số record mỗi trang
             int show = 30; if (show <= 0) show = 30;
             //xử lý trang hiện tại. Đảm bảo current_page không nhỏ hơn 1 và không lớn hơn total_page
-            int current_page = int.Parse(ViewState["current_page_qltin_home"].ToString()); int total_page = number_of_page_class.return_total_page(_Tong_Record, show); if (current_page < 1) current_page = 1; else if (current_page > total_page) current_page = total_page;
+            int current_page = int.Parse(ViewState["current_page_qltin_home"].ToString()); int total_page = number_of_page_class.return_total_page(_Tong_Record, show);
+            if (total_page < 1) total_page = 1; if (current_page < 1) current_page = 1; else if (current_page > total_page) current_page = total_page;
             ViewState["total_page"] = total_page;
+
+            litPager.Text = HomePager_cl.RenderPager(Request, current_page, total_page);
+            but_xemtiep.Visible = false;
+            but_xemtiep1.Visible = false;
+            but_quaylai.Visible = false;
+            but_quaylai1.Visible = false;
             //xử lý nút bấm tới lui
             if (current_page >= total_page)
             {
@@ -293,6 +341,8 @@ public partial class home_quan_ly_bai_Default : System.Web.UI.Page
 
             BindThanhPhoOptions((post.ThanhPho ?? "").Trim());
             BindCompanyShopOptions(IsCompanyShopPortalCached(), false);
+            BindBatDongSanOptions();
+            BindBatDongSanCategoryIds();
 
             txt_name.Text = post.name ?? "";
             txt_description.Text = post.description ?? "";
@@ -335,6 +385,36 @@ public partial class home_quan_ly_bai_Default : System.Web.UI.Page
                     ddl_kenh_hienthi.SelectedValue = kenh;
             }
 
+            BatDongSanMetadata_cl.PostMetadata metadata = BatDongSanMetadata_cl.GetByPostId(db, post.id);
+            if (metadata != null)
+            {
+                string normalizedPurpose = BatDongSanMetadata_cl.NormalizePurpose(metadata.ListingPurpose);
+                string normalizedType = BatDongSanMetadata_cl.NormalizePropertyType(metadata.PropertyType);
+                if (ddl_bds_purpose.Items.FindByValue(normalizedPurpose) != null)
+                    ddl_bds_purpose.SelectedValue = normalizedPurpose;
+                if (ddl_bds_property_type.Items.FindByValue(normalizedType) != null)
+                    ddl_bds_property_type.SelectedValue = normalizedType;
+                if (ddl_bds_legal.Items.FindByValue((metadata.LegalStatus ?? "").Trim()) != null)
+                    ddl_bds_legal.SelectedValue = (metadata.LegalStatus ?? "").Trim();
+                if (ddl_bds_furnishing.Items.FindByValue((metadata.FurnishingStatus ?? "").Trim()) != null)
+                    ddl_bds_furnishing.SelectedValue = (metadata.FurnishingStatus ?? "").Trim();
+
+                txt_bds_area.Text = metadata.AreaValue.ToString("0.##");
+                txt_bds_bedrooms.Text = metadata.BedroomCount.ToString();
+                txt_bds_bathrooms.Text = metadata.BathroomCount.ToString();
+                txt_bds_deposit.Text = metadata.DepositAmount.ToString("0.##");
+                txt_bds_rental_term.Text = metadata.RentalTermMonths.ToString();
+                txt_bds_floor_count.Text = metadata.FloorCount.ToString();
+                txt_bds_land_width.Text = metadata.LandWidth.ToString("0.##");
+                txt_bds_land_length.Text = metadata.LandLength.ToString("0.##");
+                if (ddl_bds_direction.Items.FindByValue((metadata.HouseDirection ?? "").Trim()) != null)
+                    ddl_bds_direction.SelectedValue = (metadata.HouseDirection ?? "").Trim();
+                txt_bds_project.Text = metadata.ProjectName ?? "";
+                txt_bds_district.Text = metadata.DistrictName ?? "";
+                txt_bds_ward.Text = metadata.WardName ?? "";
+                txt_bds_address_line.Text = metadata.AddressLine ?? "";
+            }
+
             pn_add.Visible = true;
         }
     }
@@ -374,6 +454,23 @@ public partial class home_quan_ly_bai_Default : System.Web.UI.Page
         lit_uploaded_main.Text = "";
         lit_uploaded_list.Text = "";
         LinkMap.Text = "";
+        txt_bds_area.Text = "0";
+        txt_bds_bedrooms.Text = "0";
+        txt_bds_bathrooms.Text = "0";
+        txt_bds_deposit.Text = "0";
+        txt_bds_rental_term.Text = "0";
+        txt_bds_floor_count.Text = "0";
+        txt_bds_land_width.Text = "0";
+        txt_bds_land_length.Text = "0";
+        txt_bds_project.Text = "";
+        txt_bds_district.Text = "";
+        txt_bds_ward.Text = "";
+        txt_bds_address_line.Text = "";
+        if (ddl_bds_direction.Items.Count > 0) ddl_bds_direction.SelectedIndex = 0;
+        if (ddl_bds_purpose.Items.FindByValue("sale") != null) ddl_bds_purpose.SelectedValue = "sale";
+        if (ddl_bds_property_type.Items.FindByValue("apartment") != null) ddl_bds_property_type.SelectedValue = "apartment";
+        if (ddl_bds_legal.Items.FindByValue("Chưa cập nhật") != null) ddl_bds_legal.SelectedValue = "Chưa cập nhật";
+        if (ddl_bds_furnishing.Items.FindByValue("Chưa cập nhật") != null) ddl_bds_furnishing.SelectedValue = "Chưa cập nhật";
         ViewState["add_edit"] = null;
         ViewState["edit_id"] = null;
         ddl_DanhMuc.DataSource = null;
@@ -395,6 +492,8 @@ public partial class home_quan_ly_bai_Default : System.Web.UI.Page
 
         BindThanhPhoOptions("");
         BindCompanyShopOptions(IsCompanyShopPortalCached(), true);
+        BindBatDongSanOptions();
+        BindBatDongSanCategoryIds();
 
         //hiện form add_edit trong updatePanel_add
         pn_add.Visible = !pn_add.Visible;
@@ -460,6 +559,23 @@ public partial class home_quan_ly_bai_Default : System.Web.UI.Page
         int.TryParse((txt_phantram_san.Text ?? "").Trim(), out _phantram_chietkhau_san);
         _phantram_chietkhau_san = CompanyShop_cl.ClampPlatformSharePercent(_phantram_chietkhau_san);
         string _kenh_hienthi = (ddl_kenh_hienthi.SelectedValue ?? "").Trim();
+        string _bds_purpose = BatDongSanMetadata_cl.NormalizePurpose(ddl_bds_purpose.SelectedValue);
+        string _bds_property_type = BatDongSanMetadata_cl.NormalizePropertyType(ddl_bds_property_type.SelectedValue);
+        decimal _bds_area = BatDongSanMetadata_cl.ParseArea(txt_bds_area.Text);
+        int _bds_bedrooms = Number_cl.Check_Int((txt_bds_bedrooms.Text ?? "").Trim());
+        int _bds_bathrooms = Number_cl.Check_Int((txt_bds_bathrooms.Text ?? "").Trim());
+        decimal _bds_deposit = BatDongSanMetadata_cl.ParseDecimal(txt_bds_deposit.Text);
+        int _bds_rental_term = Number_cl.Check_Int((txt_bds_rental_term.Text ?? "").Trim());
+        int _bds_floor_count = Number_cl.Check_Int((txt_bds_floor_count.Text ?? "").Trim());
+        decimal _bds_land_width = BatDongSanMetadata_cl.ParseDecimal(txt_bds_land_width.Text);
+        decimal _bds_land_length = BatDongSanMetadata_cl.ParseDecimal(txt_bds_land_length.Text);
+        string _bds_direction = (ddl_bds_direction.SelectedValue ?? "").Trim();
+        string _bds_legal = (ddl_bds_legal.SelectedValue ?? "").Trim();
+        string _bds_furnishing = (ddl_bds_furnishing.SelectedValue ?? "").Trim();
+        string _bds_project = (txt_bds_project.Text ?? "").Trim();
+        string _bds_district = (txt_bds_district.Text ?? "").Trim();
+        string _bds_ward = (txt_bds_ward.Text ?? "").Trim();
+        string _bds_address_line = (txt_bds_address_line.Text ?? "").Trim();
 
         #endregion
 
@@ -481,6 +597,70 @@ public partial class home_quan_ly_bai_Default : System.Web.UI.Page
                     Helper_Tabler_cl.ShowModal(this.Page, "Shop của bạn chưa có chính sách % chiết khấu mặc định. Vui lòng gửi/duyệt yêu cầu mở không gian shop trước khi đăng tin.", "Thông báo", true, "warning");
                     return;
                 }
+            }
+
+            bool _isBatDongSan = BatDongSanMetadata_cl.IsRealEstateCategory(db, _idmenu);
+            if (_isBatDongSan)
+            {
+                if (_bds_area <= 0)
+                {
+                    Helper_Tabler_cl.ShowModal(this.Page, "Tin bất động sản bắt buộc phải có diện tích hợp lệ.", "Thông báo", true, "warning");
+                    return;
+                }
+
+                if (string.Equals(_bds_property_type, "land", StringComparison.OrdinalIgnoreCase))
+                {
+                    _bds_bedrooms = 0;
+                    _bds_bathrooms = 0;
+                    _bds_furnishing = "Chưa cập nhật";
+                    if (_bds_land_width <= 0 || _bds_land_length <= 0)
+                    {
+                        Helper_Tabler_cl.ShowModal(this.Page, "Đất nền cần nhập Ngang và Dài hợp lệ.", "Thông báo", true, "warning");
+                        return;
+                    }
+                }
+
+                if (string.Equals(_bds_property_type, "office", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(_bds_property_type, "business-premises", StringComparison.OrdinalIgnoreCase))
+                {
+                    _bds_bedrooms = 0;
+                }
+
+                if (string.Equals(_bds_property_type, "house", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (_bds_floor_count <= 0)
+                    {
+                        Helper_Tabler_cl.ShowModal(this.Page, "Nhà phố cần nhập số tầng.", "Thông báo", true, "warning");
+                        return;
+                    }
+                }
+                else
+                {
+                    _bds_floor_count = 0;
+                }
+
+                if (!string.Equals(_bds_property_type, "land", StringComparison.OrdinalIgnoreCase))
+                {
+                    _bds_land_width = 0;
+                    _bds_land_length = 0;
+                }
+
+                if (!string.Equals(_bds_purpose, "rent", StringComparison.OrdinalIgnoreCase))
+                {
+                    _bds_deposit = 0;
+                    _bds_rental_term = 0;
+                }
+                else
+                {
+                    if (_bds_deposit <= 0 || _bds_rental_term <= 0)
+                    {
+                        Helper_Tabler_cl.ShowModal(this.Page, "Tin cho thuê cần nhập tiền cọc và kỳ hạn thuê.", "Thông báo", true, "warning");
+                        return;
+                    }
+                }
+
+                if (!CompanyShop_cl.IsInternalProductType(_phanloai_baiviet))
+                    _phanloai_baiviet = AccountVisibility_cl.PostTypeProduct;
             }
 
             #region Kiểm tra ngoại lệ.
@@ -564,6 +744,31 @@ public partial class home_quan_ly_bai_Default : System.Web.UI.Page
 
                 db.BaiViet_tbs.InsertOnSubmit(_ob);
                 db.SubmitChanges();
+                if (_isBatDongSan)
+                {
+                    BatDongSanMetadata_cl.Upsert(db, new BatDongSanMetadata_cl.PostMetadata
+                    {
+                        PostId = _ob.id,
+                        ListingPurpose = _bds_purpose,
+                        PropertyType = _bds_property_type,
+                        AreaValue = _bds_area,
+                        DepositAmount = _bds_deposit,
+                        RentalTermMonths = _bds_rental_term,
+                        FloorCount = _bds_floor_count,
+                        LandWidth = _bds_land_width,
+                        LandLength = _bds_land_length,
+                        HouseDirection = _bds_direction,
+                        LegalStatus = _bds_legal,
+                        FurnishingStatus = _bds_furnishing,
+                        BedroomCount = _bds_bedrooms,
+                        BathroomCount = _bds_bathrooms,
+                        ProjectName = _bds_project,
+                        ProvinceName = _thanhPho,
+                        DistrictName = _bds_district,
+                        WardName = _bds_ward,
+                        AddressLine = _bds_address_line
+                    });
+                }
                 ShopToAhaShinePostSync_cl.SyncTradePost(db, _ob);
                 #endregion
 
@@ -596,6 +801,18 @@ public partial class home_quan_ly_bai_Default : System.Web.UI.Page
                 txt_link_fileupload.Text = "";
                 txt_noidung.Text = "";
                 hf_anhphu.Value = "";
+                txt_bds_area.Text = "0";
+                txt_bds_bedrooms.Text = "0";
+                txt_bds_bathrooms.Text = "0";
+                txt_bds_deposit.Text = "0";
+                txt_bds_rental_term.Text = "0";
+                txt_bds_floor_count.Text = "0";
+                txt_bds_land_width.Text = "0";
+                txt_bds_land_length.Text = "0";
+                txt_bds_project.Text = "";
+                txt_bds_district.Text = "";
+                txt_bds_ward.Text = "";
+                txt_bds_address_line.Text = "";
 
                 DropDownList_cl.Return_Index_By_ID(ddl_DanhMuc, _idmenu);//đảm bảo ddl giữ nguyên khi nạp lại dữ liệu
                 show_main();
@@ -645,6 +862,31 @@ public partial class home_quan_ly_bai_Default : System.Web.UI.Page
 
                 _ob.PhanTram_GiamGia_ThanhToan_BangEvoucher = _phantram_uu_dai;
                 CompanyShop_cl.SetPlatformSharePercent(_ob, appliedPlatformSharePercent);
+                if (_isBatDongSan)
+                {
+                    BatDongSanMetadata_cl.Upsert(db, new BatDongSanMetadata_cl.PostMetadata
+                    {
+                        PostId = _ob.id,
+                        ListingPurpose = _bds_purpose,
+                        PropertyType = _bds_property_type,
+                        AreaValue = _bds_area,
+                        DepositAmount = _bds_deposit,
+                        RentalTermMonths = _bds_rental_term,
+                        FloorCount = _bds_floor_count,
+                        LandWidth = _bds_land_width,
+                        LandLength = _bds_land_length,
+                        HouseDirection = _bds_direction,
+                        LegalStatus = _bds_legal,
+                        FurnishingStatus = _bds_furnishing,
+                        BedroomCount = _bds_bedrooms,
+                        BathroomCount = _bds_bathrooms,
+                        ProjectName = _bds_project,
+                        ProvinceName = _thanhPho,
+                        DistrictName = _bds_district,
+                        WardName = _bds_ward,
+                        AddressLine = _bds_address_line
+                    });
+                }
 
                 string ds_anhphu = (hf_anhphu.Value ?? "").Trim();
                 if (!string.IsNullOrEmpty(ds_anhphu))

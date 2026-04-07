@@ -25,7 +25,7 @@
 
         .shop-shell {
             min-height: 100vh;
-            font-family: "Nunito Sans", "Segoe UI", Arial, sans-serif;
+            font-family: "Be Vietnam Pro", "Segoe UI", Arial, sans-serif;
             color: var(--shop-ink-900);
             background:
                 radial-gradient(1000px 280px at 16% -4%, rgba(238,77,45,.20), transparent 65%),

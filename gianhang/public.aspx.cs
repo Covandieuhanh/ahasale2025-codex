@@ -86,7 +86,7 @@ public partial class gianhang_public : System.Web.UI.Page
 
         lb_pending_store_name.Text = HttpUtility.HtmlEncode(ownerName);
         lb_pending_store_account.Text = HttpUtility.HtmlEncode(accountKey);
-        lnk_pending_home.NavigateUrl = "/home/default.aspx";
+        lnk_pending_home.NavigateUrl = "/gianhang/tai-khoan/default.aspx";
     }
 
     private void ApplyStorefrontConfig(dbDataContext db, taikhoan_tb account, string accountKey)
@@ -135,6 +135,7 @@ public partial class gianhang_public : System.Web.UI.Page
 
         img_avatar.ImageUrl = summary.AvatarUrl;
         lb_store_name.Text = HttpUtility.HtmlEncode(summary.StoreName);
+        lb_store_name_banner.Text = HttpUtility.HtmlEncode(summary.StoreName);
         lb_store_account.Text = HttpUtility.HtmlEncode(summary.AccountKey);
         lb_owner_name.Text = HttpUtility.HtmlEncode(summary.OwnerName);
         lb_total_products.Text = summary.ProductCount.ToString("#,##0");
@@ -186,12 +187,12 @@ public partial class gianhang_public : System.Web.UI.Page
             else
             {
                 lnk_home_login.Text = "Vào trang Home";
-                lnk_home_login.NavigateUrl = "/home/default.aspx";
+                lnk_home_login.NavigateUrl = "/gianhang/tai-khoan/default.aspx";
             }
         }
         else
         {
-            lnk_home_login.Text = "Đăng nhập Home để trao đổi";
+            lnk_home_login.Text = "Đăng nhập tài khoản để trao đổi";
             lnk_home_login.NavigateUrl = GianHangRoutes_cl.BuildLoginUrl(Request.RawUrl ?? GianHangPublic_cl.BuildStorefrontUrl(storeAccountKey));
         }
 
@@ -206,6 +207,7 @@ public partial class gianhang_public : System.Web.UI.Page
     private void BindCategoryOptions(IList<GianHangPublic_cl.PublicProductView> products)
     {
         StringBuilder sb = new StringBuilder();
+        StringBuilder discovery = new StringBuilder();
         sb.Append("<option value=\"\">Tất cả danh mục</option>");
 
         SortedDictionary<string, string> categories = new SortedDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -229,9 +231,16 @@ public partial class gianhang_public : System.Web.UI.Page
             sb.Append("\">");
             sb.Append(HttpUtility.HtmlEncode(pair.Value));
             sb.Append("</option>");
+
+            discovery.Append("<a href=\"#gianhang-products\" class=\"discovery-chip\" data-discovery-category=\"");
+            discovery.Append(HttpUtility.HtmlAttributeEncode(pair.Key));
+            discovery.Append("\">");
+            discovery.Append(HttpUtility.HtmlEncode(pair.Value));
+            discovery.Append("</a>");
         }
 
         lit_category_options.Text = sb.ToString();
+        lit_category_discovery.Text = discovery.ToString();
     }
 
     protected string BuildDetailUrl(object dataItem)

@@ -215,12 +215,6 @@
             display: inline-block;
         }
 
-        @media (max-width: 991px) {
-            .crm-kpi-cell {
-                width: 50%;
-            }
-        }
-
         @media (max-width: 767px) {
             .crm-kpi-cell {
                 width: 100%;

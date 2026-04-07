@@ -11,14 +11,35 @@ public partial class admin_Default2 : System.Web.UI.Page
     dbDataContext db = new dbDataContext();
     random_class rd_cl = new random_class();
     public string notifi, meta, user;
+    public string LegacyLoginUrl { get; private set; }
+
+    private bool TryBootstrapFromHomeWorkspace()
+    {
+        string homeAccount;
+        string deniedMessage;
+        if (!GianHangAdminBridge_cl.EnsureLegacyAdminSessionFromCurrentHome(db, out homeAccount, out deniedMessage))
+            return false;
+
+        Response.Redirect(GianHangAdminBridge_cl.ResolvePreferredAdminRedirectUrl(HttpContext.Current, "", "/gianhang/admin"), false);
+        HttpContext current = HttpContext.Current;
+        if (current != null && current.ApplicationInstance != null)
+            current.ApplicationInstance.CompleteRequest();
+        return true;
+    }
+
     protected void Page_Load(object sender, EventArgs e)
     {
-        if (Session["user"].ToString() != "")
+        LegacyLoginUrl = GianHangAdminBridge_cl.BuildLegacyAdminLoginUrl(HttpContext.Current, "");
+
+        if (Session["user"] == null) Session["user"] = "";
+        if (Session["notifi"] == null) Session["notifi"] = "";
+
+        if ((Session["user"] + "").Trim() == "" && TryBootstrapFromHomeWorkspace())
+            return;
+
+        if ((Session["user"] + "").Trim() != "")
         {
-            if (Request.Cookies["save_url_admin_aka_1"] != null)
-                Response.Redirect(Request.Cookies["save_url_admin_aka_1"].Value);
-            else
-                Response.Redirect("/gianhang/admin");
+            Response.Redirect(GianHangAdminBridge_cl.ResolvePreferredAdminRedirectUrl(HttpContext.Current, "", "/gianhang/admin"));
         }
 
         if (!IsPostBack)
@@ -76,21 +97,25 @@ public partial class admin_Default2 : System.Web.UI.Page
                     tk_cl.change_pass(user, _pass_1);
 
                     //lưu cookier với tên tài khoản để đăng nhập trong 1 năm
-                    HttpCookie save_user_admin_aka_1 = new HttpCookie("save_user_admin_aka_1");
-                    save_user_admin_aka_1.Value = encode_class.encrypt(user);
-                    save_user_admin_aka_1.Expires = DateTime.Now.AddSeconds(365);
-                    Response.Cookies.Add(save_user_admin_aka_1);
+                    app_cookie_policy_class.persist_cookie(
+                        HttpContext.Current,
+                        app_cookie_policy_class.admin_user_cookie,
+                        encode_class.encrypt(user),
+                        365
+                    );
 
                     //lưu cookier với pass để đăng nhập trong 1 năm
-                    HttpCookie save_pass_admin_aka_1 = new HttpCookie("save_pass_admin_aka_1");
-                    save_pass_admin_aka_1.Value = encode_class.encode_md5(encode_class.encode_sha1(_pass));
-                    save_pass_admin_aka_1.Expires = DateTime.Now.AddSeconds(365);
-                    Response.Cookies.Add(save_pass_admin_aka_1);
+                    app_cookie_policy_class.persist_cookie(
+                        HttpContext.Current,
+                        app_cookie_policy_class.admin_pass_cookie,
+                        encode_class.encode_md5(encode_class.encode_sha1(_pass)),
+                        365
+                    );
 
                     Session["user"] = user;
                     Session["notifi"] = thongbao_class.metro_notifi_onload("Thông báo", "Đặt lại mật khẩu thành công.", "2000", "warning");
                     Session["user_reset_pass_admin"] = null;
-                    Response.Redirect("/gianhang/admin");
+                    Response.Redirect(GianHangAdminBridge_cl.ResolvePreferredAdminRedirectUrl(HttpContext.Current, "", "/gianhang/admin"));
                 }
             }
         }

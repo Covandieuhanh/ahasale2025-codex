@@ -1,4 +1,4 @@
-<%@ Page Title="Đặt lịch" Language="C#" MasterPageFile="~/MasterPage/Tabler/TablerHome.master" AutoEventWireup="true" CodeFile="dat-lich.aspx.cs" Inherits="gianhang_dat_lich" %>
+<%@ Page Title="Đặt lịch" Language="C#" MasterPageFile="~/MasterPage/Tabler/TablerGianHang.master" AutoEventWireup="true" CodeFile="dat-lich.aspx.cs" Inherits="gianhang_dat_lich" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="main" runat="Server">
     <div class="container-xl">

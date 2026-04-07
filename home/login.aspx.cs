@@ -96,6 +96,8 @@ public partial class home_login : System.Web.UI.Page
                 AccountLoginInfo account = null;
                 if (!string.IsNullOrEmpty(preferredScope))
                     account = AccountAuth_cl.FindAccountByLoginId(db, loginId, preferredScope);
+                if (account == null && string.IsNullOrEmpty(preferredScope))
+                    account = AccountAuth_cl.FindAccountByLoginId(db, loginId, PortalScope_cl.ScopeHome);
                 if (account == null)
                     account = AccountAuth_cl.FindAccountByLoginId(db, loginId);
 
@@ -551,7 +553,7 @@ public partial class home_login : System.Web.UI.Page
 
     private string ResolvePreferredScopeFromReturnUrl()
     {
-        string raw = ReadRequestedReturnUrl();
+        string raw = ResolveExplicitReturnUrlFromCurrentRequest();
         string normalized = NormalizeLocalReturnUrl(raw);
         if (string.IsNullOrEmpty(normalized))
             return "";
@@ -572,6 +574,22 @@ public partial class home_login : System.Web.UI.Page
         }
         if (path == "/" || path.StartsWith("/home/", StringComparison.Ordinal))
             return PortalScope_cl.ScopeHome;
+
+        return "";
+    }
+
+    private string ResolveExplicitReturnUrlFromCurrentRequest()
+    {
+        string raw = Request == null ? "" : (Request.QueryString["return_url"] ?? Request.QueryString["returnUrl"] ?? "");
+        if (!string.IsNullOrWhiteSpace(raw))
+            return raw;
+
+        foreach (string candidate in EnumerateRequestPathAndQueryCandidates())
+        {
+            raw = ExtractReturnUrlFromPathAndQuery(candidate);
+            if (!string.IsNullOrWhiteSpace(raw))
+                return raw;
+        }
 
         return "";
     }

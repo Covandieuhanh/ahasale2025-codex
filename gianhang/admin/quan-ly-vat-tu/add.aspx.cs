@@ -11,53 +11,31 @@ public partial class badmin_temp : System.Web.UI.Page
     public string notifi, url_back, user, user_parent;
     dbDataContext db = new dbDataContext();
 
+    private bool EnsureActionAccess(string requiredPermission)
+    {
+        GianHangAdminPageGuard_cl.AccessInfo access = GianHangAdminPageGuard_cl.EnsureAccess(this, db, requiredPermission);
+        if (access == null)
+            return false;
+
+        user = (access.User ?? "").Trim();
+        user_parent = access.OwnerAccountKey;
+        return true;
+    }
+
     protected void Page_Load(object sender, EventArgs e)
     {
-        #region Check_Login
-        string _quyen = "q13_9";
-        string _cookie_user = "", _cookie_pass = "";
-        if (Request.Cookies["save_user_admin_aka_1"] != null) _cookie_user = Request.Cookies["save_user_admin_aka_1"].Value;
-        if (Request.Cookies["save_pass_admin_aka_1"] != null) _cookie_pass = Request.Cookies["save_pass_admin_aka_1"].Value;
-        if (Session["user"] == null) Session["user"] = ""; if (Session["notifi"] == null) Session["notifi"] = ""; if (Session["user"].ToString() == "") Response.Redirect("/gianhang/admin/f5_ss_admin.aspx");
-        string _url = Request.Url.GetLeftPart(UriPartial.Authority).ToLower();
-        string _kq = bcorn_class.check_login(Session["user"].ToString(), _cookie_user, _cookie_pass, _url, _quyen);
-        if (_kq != "")//nếu có thông báo --> có lỗi --> reset --> bắt login lại
-        {
-            if (_kq == "baotri") Response.Redirect("/baotri.aspx");
-            else
-            {
-                if (_kq == "1") Response.Redirect("/gianhang/admin/login.aspx");//hết Session, hết Cookie
-                else
-                {
-                    if (_kq == "2")//k đủ quyền
-                    {
-                        Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
-                        Response.Redirect("/gianhang/admin");
-                    }
-                    else
-                    {
-                        Session["notifi"] = _kq; Session["user"] = "";
-                        Response.Cookies["save_user_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Cookies["save_pass_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Cookies["save_url_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Redirect("/gianhang/admin/login.aspx");
-                    }
-                }
-            }
-        }
-        #endregion
-        user = Session["user"].ToString();
-        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
+        GianHangAdminPageGuard_cl.AccessInfo access = GianHangAdminPageGuard_cl.EnsureAccess(this, db, "q13_9");
+        if (access == null)
+            return;
+        user = (access.User ?? "").Trim();
+        user_parent = access.OwnerAccountKey;
 
         if (!IsPostBack)
         {
             load_nhom();
         }
 
-        if (Request.Cookies["save_url_admin_aka_1"] != null)
-            url_back = Request.Cookies["save_url_admin_aka_1"].Value;
-        else
-            url_back = "/gianhang/admin/quan-ly-vat-tu/Default.aspx";
+        url_back = GianHangAdminBridge_cl.ResolvePreferredAdminRedirectUrl(HttpContext.Current, "", "/gianhang/admin/quan-ly-vat-tu/Default.aspx");
     }
     public void load_nhom()
     {
@@ -94,6 +72,9 @@ public partial class badmin_temp : System.Web.UI.Page
     #region button click    
     protected void button1_Click(object sender, EventArgs e)
     {
+        if (!EnsureActionAccess("q13_9"))
+            return;
+
         if (!Directory.Exists(Server.MapPath("~/uploads/images/vat-tu/")))
             Directory.CreateDirectory(Server.MapPath("~/uploads/images/vat-tu/"));
         bool _checkloi = false;
@@ -181,6 +162,9 @@ public partial class badmin_temp : System.Web.UI.Page
 
     protected void but_form_themnhomthuchi_Click(object sender, EventArgs e)
     {
+        if (!EnsureActionAccess("q13_9"))
+            return;
+
         string _tennhom = txt_tennhom.Text.Trim();
 
         if (_tennhom == "")
@@ -200,6 +184,9 @@ public partial class badmin_temp : System.Web.UI.Page
 
     protected void Button2_Click(object sender, EventArgs e)
     {
+        if (!EnsureActionAccess("q13_9"))
+            return;
+
         string _ten = txt_tenphongban.Text.Trim();
 
         if (_ten == "")

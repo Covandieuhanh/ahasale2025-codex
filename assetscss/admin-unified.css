@@ -652,7 +652,7 @@ body.admin-shell .admin-page .aha-admin-status.rejected {
     color: #8e3030;
 }
 
-@media (max-width: 1199px) {
+@media (max-width: 767.98px) {
     body.admin-shell {
         --aha-admin-content-max: 100%;
         --aha-admin-space: 14px;
@@ -664,7 +664,7 @@ body.admin-shell .admin-page .aha-admin-status.rejected {
     }
 }
 
-@media (max-width: 991.98px) {
+@media (max-width: 767.98px) {
     body.admin-shell {
         --aha-admin-topbar-height: 52px;
         --aha-admin-space: 12px;
@@ -716,7 +716,7 @@ body.admin-shell .admin-page .aha-admin-status.rejected {
     }
 }
 
-@media (max-width: 575.98px) {
+@media (max-width: 767.98px) {
     body.admin-shell .admin-content-inner {
         padding: 10px 8px 16px !important;
     }

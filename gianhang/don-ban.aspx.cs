@@ -17,6 +17,12 @@ public partial class gianhang_don_ban : System.Web.UI.Page
         EnsureAccess();
         ApplyPageMode();
 
+        if (!IsPostBack && IsCommitCreateModeRequest())
+        {
+            HandleCommitCreateModeRequest();
+            return;
+        }
+
         if (!IsPostBack)
         {
             InitializePage();
@@ -35,6 +41,15 @@ public partial class gianhang_don_ban : System.Web.UI.Page
         return raw == "1" || raw.Equals("true", StringComparison.OrdinalIgnoreCase);
     }
 
+    private bool IsCommitCreateModeRequest()
+    {
+        if (!IsCreateMode())
+            return false;
+
+        string raw = (Request.QueryString["commit"] ?? string.Empty).Trim();
+        return raw == "1" || raw.Equals("true", StringComparison.OrdinalIgnoreCase);
+    }
+
     private void ApplyPageMode()
     {
         bool isCreateMode = IsCreateMode();
@@ -47,6 +62,7 @@ public partial class gianhang_don_ban : System.Web.UI.Page
             string backUrl = ResolveBackUrl();
             lnk_back_top.HRef = backUrl;
             lnk_back_bottom.HRef = backUrl;
+            lnk_taodon.HRef = ResolveCommitCreateUrl();
         }
     }
 
@@ -158,6 +174,117 @@ public partial class gianhang_don_ban : System.Web.UI.Page
     private string ResolveChoThanhToanUrl()
     {
         return GianHangCheckoutPortal_cl.ChoThanhToanUrl();
+    }
+
+    private string ResolveCommitCreateUrl()
+    {
+        Uri requestUrl = Request == null ? null : Request.Url;
+        string path = requestUrl == null ? GianHangRoutes_cl.BuildDonBanUrl() : requestUrl.AbsolutePath;
+        List<string> parts = new List<string>();
+
+        string taodon = (Request.QueryString["taodon"] ?? string.Empty).Trim();
+        if (!string.IsNullOrEmpty(taodon))
+            parts.Add("taodon=" + HttpUtility.UrlEncode(taodon));
+
+        string idsp = (Request.QueryString["idsp"] ?? string.Empty).Trim();
+        if (!string.IsNullOrEmpty(idsp))
+            parts.Add("idsp=" + HttpUtility.UrlEncode(idsp));
+
+        string qty = (Request.QueryString["qty"] ?? string.Empty).Trim();
+        if (!string.IsNullOrEmpty(qty))
+            parts.Add("qty=" + HttpUtility.UrlEncode(qty));
+
+        string returnUrl = (Request.QueryString["return_url"] ?? string.Empty).Trim();
+        if (!string.IsNullOrEmpty(returnUrl))
+            parts.Add("return_url=" + HttpUtility.UrlEncode(returnUrl));
+
+        parts.Add("commit=1");
+        return path + "?" + string.Join("&", parts.ToArray());
+    }
+
+    private void SetCreateFlowDialog(string message, string alertType)
+    {
+        Session["thongbao_home"] = thongbao_class.metro_dialog_onload(
+            "Thông báo",
+            message ?? string.Empty,
+            "false", "false", "OK", string.IsNullOrWhiteSpace(alertType) ? "alert" : alertType, "");
+    }
+
+    private string ResolveCreateModeUrlWithoutCommit()
+    {
+        Uri requestUrl = Request == null ? null : Request.Url;
+        string path = requestUrl == null ? GianHangRoutes_cl.BuildDonBanUrl() : requestUrl.AbsolutePath;
+        List<string> parts = new List<string>();
+
+        string taodon = (Request.QueryString["taodon"] ?? string.Empty).Trim();
+        if (!string.IsNullOrEmpty(taodon))
+            parts.Add("taodon=" + HttpUtility.UrlEncode(taodon));
+
+        string idsp = (Request.QueryString["idsp"] ?? string.Empty).Trim();
+        if (!string.IsNullOrEmpty(idsp))
+            parts.Add("idsp=" + HttpUtility.UrlEncode(idsp));
+
+        string qty = (Request.QueryString["qty"] ?? string.Empty).Trim();
+        if (!string.IsNullOrEmpty(qty))
+            parts.Add("qty=" + HttpUtility.UrlEncode(qty));
+
+        string returnUrl = (Request.QueryString["return_url"] ?? string.Empty).Trim();
+        if (!string.IsNullOrEmpty(returnUrl))
+            parts.Add("return_url=" + HttpUtility.UrlEncode(returnUrl));
+
+        return parts.Count == 0 ? path : (path + "?" + string.Join("&", parts.ToArray()));
+    }
+
+    private void HandleCommitCreateModeRequest()
+    {
+        if (GetCart().Count == 0)
+        {
+            SetCreateFlowDialog("Giỏ hàng trống. Vui lòng thêm tin để tạo đơn.", "warning");
+            Response.Redirect(ResolveCreateModeUrlWithoutCommit(), true);
+            return;
+        }
+
+        using (dbDataContext db = new dbDataContext())
+        {
+            string sellerAccount = CurrentAccountKey();
+            GianHangPosInteraction_cl.CreateOrderActionResult actionResult =
+                GianHangPosInteraction_cl.CreateOfflineOrder(
+                    db,
+                    Session,
+                    CART_SESSION_KEY,
+                    sellerAccount,
+                    ResolveChoThanhToanUrl());
+
+            GianHangOrderCommand_cl.CommandResult result = actionResult == null ? null : actionResult.Command;
+            if (result == null || !result.Success)
+            {
+                SetCreateFlowDialog(result == null ? "Có lỗi xảy ra khi tạo đơn." : result.Message, result == null ? "alert" : result.AlertType);
+                Response.Redirect(ResolveCreateModeUrlWithoutCommit(), true);
+                return;
+            }
+
+            SetCreateFlowDialog(result.Message ?? string.Empty, result.AlertType ?? "alert");
+            Response.Redirect(string.IsNullOrWhiteSpace(result.RedirectUrl) ? ResolveChoThanhToanUrl() : result.RedirectUrl, true);
+        }
+    }
+
+    private void RedirectAfterPostback(string rawUrl)
+    {
+        string url = (rawUrl ?? string.Empty).Trim();
+        if (string.IsNullOrEmpty(url))
+            url = ResolveChoThanhToanUrl();
+
+        ScriptManager scriptManager = ScriptManager.GetCurrent(this.Page);
+        string js = "window.location.href='" + HttpUtility.JavaScriptStringEncode(url) + "';";
+        if (scriptManager != null && scriptManager.IsInAsyncPostBack)
+        {
+            ScriptManager.RegisterStartupScript(this.Page, this.Page.GetType(), Guid.NewGuid().ToString("N"), js, true);
+            return;
+        }
+
+        Response.Redirect(url, false);
+        if (Context != null && Context.ApplicationInstance != null)
+            Context.ApplicationInstance.CompleteRequest();
     }
 
     protected string ResolveImageUrl(object raw)
@@ -507,52 +634,12 @@ public partial class gianhang_don_ban : System.Web.UI.Page
 
     protected void but_taodon_Click(object sender, EventArgs e)
     {
-        if (GetCart().Count == 0)
-        {
-            lb_cart_err.Text = "Giỏ hàng trống. Vui lòng thêm tin để tạo đơn.";
-            BindCartUI();
-            up_taodon.Update();
-            return;
-        }
-
-        using (dbDataContext db = new dbDataContext())
-        {
-            string sellerAccount = CurrentAccountKey();
-            GianHangPosInteraction_cl.CreateOrderActionResult actionResult =
-                GianHangPosInteraction_cl.CreateOfflineOrder(
-                    db,
-                    Session,
-                    CART_SESSION_KEY,
-                    sellerAccount,
-                    ResolveChoThanhToanUrl());
-            GianHangOrderCommand_cl.CommandResult result = actionResult == null ? null : actionResult.Command;
-            if (result == null || !result.Success)
-            {
-                Helper_Tabler_cl.ShowModal(
-                    this.Page,
-                    result == null ? "Có lỗi xảy ra khi tạo đơn." : result.Message,
-                    "Thông báo",
-                    true,
-                    result == null ? "alert" : result.AlertType);
-                return;
-            }
-
-            BindCartUI(actionResult.Cart);
-
-            Session["thongbao_home"] = thongbao_class.metro_dialog_onload(
-                "Thông báo",
-                result.Message ?? "",
-                "false", "false", "OK", result.AlertType ?? "alert", "");
-
-            Response.Redirect(string.IsNullOrWhiteSpace(result.RedirectUrl) ? ResolveChoThanhToanUrl() : result.RedirectUrl, false);
-            Context.ApplicationInstance.CompleteRequest();
-        }
+        HandleCommitCreateModeRequest();
     }
 
     protected void but_show_form_taodon_Click(object sender, EventArgs e)
     {
-        Response.Redirect(ResolveCreateModeEntryUrl(""), false);
-        Context.ApplicationInstance.CompleteRequest();
+        RedirectAfterPostback(ResolveCreateModeEntryUrl(""));
     }
 
     protected void txt_order_search_TextChanged(object sender, EventArgs e)
@@ -581,8 +668,7 @@ public partial class gianhang_don_ban : System.Web.UI.Page
 
             if (result.ShouldRedirect && !string.IsNullOrWhiteSpace(result.RedirectUrl))
             {
-                Response.Redirect(result.RedirectUrl, false);
-                Context.ApplicationInstance.CompleteRequest();
+                RedirectAfterPostback(result.RedirectUrl);
                 return;
             }
 

@@ -9,8 +9,6 @@ using System.Web.UI.WebControls;
 
 public partial class admin_otp_Default : System.Web.UI.Page
 {
-    private const string ScopeHome = "home";
-    private const string ScopeShop = "shop";
     private const string OtpSavedSessionKey = "otp_saved_config_notice";
     private const string OtpConfigUnlockSessionKey = "otp_config_unlocked";
 
@@ -35,9 +33,9 @@ public partial class admin_otp_Default : System.Web.UI.Page
     protected void Page_Load(object sender, EventArgs e)
     {
         DisablePageCache();
+        AdminAccessGuard_cl.RequireFeatureAccess("admin_otp", "/admin/default.aspx?mspace=admin");
         if (!IsPostBack)
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
             BindConfig();
             if (IsOtpConfigUnlocked())
             {
@@ -62,19 +60,21 @@ public partial class admin_otp_Default : System.Web.UI.Page
     {
         get
         {
-            string scope = (Request.QueryString["scope"] ?? "").Trim().ToLowerInvariant();
-            return scope == ScopeShop ? ScopeShop : ScopeHome;
+            string scope = AdminDataScope_cl.NormalizeAccountScope(Request.QueryString["scope"]);
+            return scope == AdminDataScope_cl.AccountScopeShop
+                ? AdminDataScope_cl.AccountScopeShop
+                : AdminDataScope_cl.AccountScopeHome;
         }
     }
 
     private void BindTabs()
     {
         string baseUrl = "/admin/otp/default.aspx";
-        hl_tab_home.NavigateUrl = baseUrl + "?scope=home";
-        hl_tab_shop.NavigateUrl = baseUrl + "?scope=shop";
+        hl_tab_home.NavigateUrl = baseUrl + "?scope=" + AdminDataScope_cl.AccountScopeHome;
+        hl_tab_shop.NavigateUrl = baseUrl + "?scope=" + AdminDataScope_cl.AccountScopeShop;
 
         string scope = CurrentScope;
-        if (scope == ScopeShop)
+        if (scope == AdminDataScope_cl.AccountScopeShop)
         {
             hl_tab_shop.CssClass = "otp-inline-tab active";
             hl_tab_home.CssClass = "otp-inline-tab";
@@ -539,7 +539,7 @@ public partial class admin_otp_Default : System.Web.UI.Page
 
         using (dbDataContext db = new dbDataContext())
         {
-            if (scope == ScopeShop)
+            if (scope == AdminDataScope_cl.AccountScopeShop)
                 ShopOtp_cl.EnsureSchemaSafe(db);
             else
             {
@@ -550,7 +550,7 @@ public partial class admin_otp_Default : System.Web.UI.Page
             using (SqlConnection conn = new SqlConnection(db.Connection.ConnectionString))
             using (SqlCommand cmd = conn.CreateCommand())
             {
-                if (scope == ScopeShop)
+                if (scope == AdminDataScope_cl.AccountScopeShop)
                 {
                     cmd.CommandText = @"
 SELECT TOP 200 id, taikhoan, phone, otp_code, otp_type, status, sent_at, expires_at

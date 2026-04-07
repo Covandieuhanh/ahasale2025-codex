@@ -64,8 +64,10 @@ public static class GianHangOrderLifecycle_cl
     {
         string internalOrderId = runtime == null ? string.Empty : (runtime.OrderId ?? string.Empty).Trim();
         string buyerAccount = GianHangOrderRuntime_cl.ResolveBuyerAccount(runtime);
+        string sellerCreditAccount = GianHangOrderRuntime_cl.ResolveSellerCreditAccount(runtime, sellerAccount);
         if (string.IsNullOrEmpty(buyerAccount))
         {
+            GianHangLedger_cl.ReverseSellerCreditsForOrder(db, sellerCreditAccount, internalOrderId, publicOrderId, buyerAccount);
             GianHangOrderRuntime_cl.PersistCancelled(db, runtime);
             return BuildSuccess("Đã hủy đơn Offline trong /gianhang thành công.");
         }
@@ -73,6 +75,13 @@ public static class GianHangOrderLifecycle_cl
         RefundSummary refund = RefundBuyerRights(db, internalOrderId, buyerAccount);
         if (refund == null)
             return BuildDanger("Không tìm thấy lịch sử trừ Quyền của đơn này. Không thể hoàn tự động.");
+
+        GianHangLedger_cl.ReversalResult sellerReversal = GianHangLedger_cl.ReverseSellerCreditsForOrder(
+            db,
+            sellerCreditAccount,
+            internalOrderId,
+            publicOrderId,
+            buyerAccount);
 
         InsertBuyerNotice(
             db,
@@ -92,6 +101,13 @@ public static class GianHangOrderLifecycle_cl
             string.Format("Đã hoàn tổng: <b>{0:#,##0.##} Quyền</b><br/>", refund.TotalRights) +
             string.Format("- Hồ sơ ưu đãi 30%: <b>+{0:#,##0.##} Quyền ưu đãi</b><br/>", refund.DiscountRights) +
             string.Format("- Hồ sơ tiêu dùng: <b>+{0:#,##0.##} Quyền tiêu dùng</b>", refund.ConsumerRights);
+
+        if (sellerReversal != null && sellerReversal.Changed)
+        {
+            msg += "<br/><br/>Đã thu hồi hồ sơ quyền của gian hàng:<br/>"
+                + string.Format("- Hồ sơ quyền ưu đãi: <b>-{0:#,##0.##} A</b><br/>", sellerReversal.UuDai)
+                + string.Format("- Hồ sơ quyền tiêu dùng: <b>-{0:#,##0.##} A</b>", sellerReversal.TieuDung);
+        }
 
         return new GianHangOrderCommand_cl.CommandResult
         {

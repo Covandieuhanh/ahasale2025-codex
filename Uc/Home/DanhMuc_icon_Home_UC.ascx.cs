@@ -89,6 +89,20 @@ public partial class Uc_Home_DanhMuc_icon_Home_UC : System.Web.UI.UserControl
         return image;
     }
 
+    protected string ResolveCategoryUrl(object nameEnRaw, object idRaw)
+    {
+        string nameEn = (nameEnRaw ?? "").ToString().Trim();
+        string normalizedSlug = BatDongSanService_cl.Slugify(nameEn);
+        if (normalizedSlug == "bat-dong-san" || normalizedSlug == "nha-dat")
+            return "/bat-dong-san";
+
+        string id = (idRaw ?? "").ToString().Trim();
+        if (id == "")
+            return "/";
+
+        return "/" + nameEn + "-" + id;
+    }
+
     private bool IsMissingUploadFile(string relativeUrl)
     {
         return Helper_cl.IsMissingUploadFile(relativeUrl);

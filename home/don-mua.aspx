@@ -171,7 +171,7 @@
                 box-shadow:0 12px 26px rgba(15,23,42,.06);
             }
         }
-        @media (max-width: 575.98px){
+        @media (max-width: 767.98px){
             .status-filter-control{ width:100%; }
             .status-filter-select{ flex:1; min-width:0; }
             .desktop-status-tabs{ display:none; }
@@ -455,6 +455,7 @@
                         <div class="col-auto ms-auto d-print-none">
                             <div class="text-muted small">
                                 <asp:Label ID="lb_show" runat="server" Text=""></asp:Label>
+                                    <asp:Literal ID="litPager" runat="server"></asp:Literal>
                                 <asp:Label ID="lb_show_md" runat="server" Text="" CssClass="d-none"></asp:Label>
                             </div>
                         </div>

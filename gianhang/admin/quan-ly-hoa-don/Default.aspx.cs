@@ -56,6 +56,20 @@ public partial class badmin_Default : System.Web.UI.Page
     datetime_class dt_cl = new datetime_class();
     string_class str_cl = new string_class(); nganh_class ng_cl = new nganh_class();
     public string user, user_parent, show_add = "none";
+    private bool HasAnyPermission(params string[] permissionKeys)
+    {
+        if (string.IsNullOrWhiteSpace(user) || permissionKeys == null)
+            return false;
+
+        for (int i = 0; i < permissionKeys.Length; i++)
+        {
+            string permissionKey = (permissionKeys[i] ?? "").Trim();
+            if (permissionKey != "" && bcorn_class.check_quyen(user, permissionKey) == "")
+                return true;
+        }
+
+        return false;
+    }
     public Int64 doanhso_hoadon_sauck = 0, doanhso_dichvu = 0, doanhso_sanpham, doanhso_hoadon = 0, tong_congno = 0, tongtien_dathanhtoan = 0,
         dichvu_sauck = 0, sanpham_sauck = 0, sanpham_soluong = 0, dichvu_soluong = 0, hoadon_sl = 0,
         /*tong_tienmat = 0, tong_chuyenkhoan = 0,tong_quetthe = 0,*/ tongrieng_dichvu = 0, tongrieng_sanpham = 0;
@@ -66,44 +80,14 @@ public partial class badmin_Default : System.Web.UI.Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
-        #region Check_Login  
-        string _quyen = "none";
-        string _cookie_user = "", _cookie_pass = "";
-        if (Request.Cookies["save_user_admin_aka_1"] != null) _cookie_user = Request.Cookies["save_user_admin_aka_1"].Value;
-        if (Request.Cookies["save_pass_admin_aka_1"] != null) _cookie_pass = Request.Cookies["save_pass_admin_aka_1"].Value;
-        if (Session["user"] == null) Session["user"] = ""; if (Session["notifi"] == null) Session["notifi"] = ""; if (Session["user"].ToString() == "") Response.Redirect("/gianhang/admin/f5_ss_admin.aspx");
-        string _url = Request.Url.GetLeftPart(UriPartial.Authority).ToLower();
-        string _kq = bcorn_class.check_login(Session["user"].ToString(), _cookie_user, _cookie_pass, _url, _quyen);
-        if (_kq != "")//nếu có thông báo --> có lỗi --> reset --> bắt login lại
-        {
-            if (_kq == "baotri") Response.Redirect("/baotri.aspx");
-            else
-            {
-                if (_kq == "1") Response.Redirect("/gianhang/admin/login.aspx");//hết Session, hết Cookie
-                else
-                {
-                    if (_kq == "2")//k đủ quyền
-                    {
-                        Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
-                        Response.Redirect("/gianhang/admin");
-                    }
-                    else
-                    {
-                        Session["notifi"] = _kq; Session["user"] = "";
-                        Response.Cookies["save_user_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Cookies["save_pass_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Cookies["save_url_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Redirect("/gianhang/admin/login.aspx");
-                    }
-                }
-            }
-        }
-        #endregion
+        GianHangAdminPageGuard_cl.AccessInfo access = GianHangAdminPageGuard_cl.EnsureAccess(this, db, "none");
+        if (access == null)
+            return;
 
         #region Check quyen theo nganh
-        user = Session["user"].ToString();
-        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
-        if (bcorn_class.check_quyen(user, "q7_1") == "" || bcorn_class.check_quyen(user, "n7_1") == "")
+        user = (access.User ?? "").Trim();
+        user_parent = access.OwnerAccountKey;
+        if (HasAnyPermission("q7_1", "n7_1"))
         {
             if (!IsPostBack)
             {
@@ -121,7 +105,7 @@ public partial class badmin_Default : System.Web.UI.Page
                 DropDownList5.DataBind();
                 DropDownList5.Items.Insert(0, new ListItem("Tất cả", ""));
                 
-                if (bcorn_class.check_quyen(user, "q7_1") == "")
+                if (HasAnyPermission("q7_1"))
                 {
                 }
                 else
@@ -598,7 +582,7 @@ public partial class badmin_Default : System.Web.UI.Page
 
     protected void Button3_Click(object sender, EventArgs e)
     {
-        if (bcorn_class.check_quyen(user, "q7_2") == "" || bcorn_class.check_quyen(user, "n7_2") == "")
+        if (HasAnyPermission("q7_2", "n7_2"))
         {
             string _tenkhachhang = str_cl.VietHoa_ChuCai_DauTien(txt_tenkhachhang.Text.Trim().ToLower());
             string _sdt = str_cl.remove_blank(txt_sdt.Text.Trim()).Replace(" ", "").Replace(".", "").Replace("-", "").Replace("+", "");
@@ -653,7 +637,7 @@ public partial class badmin_Default : System.Web.UI.Page
                         _ob.ds_dichvu = 0; _ob.ds_sanpham = 0; _ob.sauck_dichvu = 0; _ob.sauck_sanpham = 0;
                         _ob.tongtien_ck_hoadon = 0;
                         _ob.km1_ghichu = "";
-                        _ob.nguoitao = Session["user"].ToString();
+                        _ob.nguoitao = user;
                         _ob.nguongoc = "App";
                         _ob.id_nganh = _nganh;
                         //if (ck_hd_phantram.Checked == true)//nếu ck chốt sale là %
@@ -889,7 +873,7 @@ public partial class badmin_Default : System.Web.UI.Page
 
     protected void Button4_Click(object sender, EventArgs e)
     {
-        if (bcorn_class.check_quyen(user, "q7_4") == ""|| bcorn_class.check_quyen(user, "n7_4") == "")
+        if (HasAnyPermission("q7_4", "n7_4"))
         {
             int _count = 0;
             for (int i = 0; i < list_id_split.Count; i++)

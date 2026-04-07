@@ -34,21 +34,5 @@
     border: 2px solid #fff;
 }
 
-@media (max-width: 575px) { /*sm*/
-  
-}
-
-@media (max-width: 767px) { /*md*/
-
-}
-
-@media (max-width: 991px) { /*lg*/
-
-}
-
-@media (max-width: 1199px) { /*xl*/
-
-}
-
-@media (max-width: 1451px) { /*xxl*/
+@media (max-width: 767px) { /*mobile*/
 }

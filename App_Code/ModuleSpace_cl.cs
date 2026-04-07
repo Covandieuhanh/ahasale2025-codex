@@ -9,6 +9,7 @@ public static class ModuleSpace_cl
     public const string GianHangAdmin = "gianhang_admin";
     public const string DauGia = "daugia";
     public const string Event = "event";
+    public const string BatDongSan = "batdongsan";
 
     public static string Normalize(string raw)
     {
@@ -20,6 +21,7 @@ public static class ModuleSpace_cl
         if (value == GianHangAdmin) return GianHangAdmin;
         if (value == DauGia) return DauGia;
         if (value == Event) return Event;
+        if (value == BatDongSan) return BatDongSan;
         return "";
     }
 
@@ -46,6 +48,9 @@ public static class ModuleSpace_cl
         if (value.Equals("/event", StringComparison.OrdinalIgnoreCase)
             || value.StartsWith("/event/", StringComparison.OrdinalIgnoreCase))
             return Event;
+        if (value.Equals("/bat-dong-san", StringComparison.OrdinalIgnoreCase)
+            || value.StartsWith("/bat-dong-san/", StringComparison.OrdinalIgnoreCase))
+            return BatDongSan;
         if (value.Equals("/home", StringComparison.OrdinalIgnoreCase)
             || value.StartsWith("/home/", StringComparison.OrdinalIgnoreCase))
             return Home;

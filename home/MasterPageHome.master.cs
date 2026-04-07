@@ -8,6 +8,14 @@ using System.Web.UI.WebControls;
 
 public partial class MasterPageHome : System.Web.UI.MasterPage
 {
+    private const int BrandingCacheSeconds = 300;
+
+    private sealed class CachedBrandingHtml
+    {
+        public string IconsHtml { get; set; }
+        public string HeaderCenterLogoUrl { get; set; }
+    }
+
     private string BuildAbsoluteUrl(string rawPath, string fallbackPath)
     {
         return PortalBranding_cl.BuildAbsoluteUrl(Request, rawPath, fallbackPath);
@@ -24,18 +32,21 @@ public partial class MasterPageHome : System.Web.UI.MasterPage
 
                     #region Favicon & icon mobile
                     string scopeKey = PortalBranding_cl.ResolveScopeKeyFromRequest(Request);
-                    PortalBranding_cl.ScopeBrandingSnapshot branding = PortalBranding_cl.LoadScopeBranding(db, scopeKey, true);
-                    string iconUrl = BuildAbsoluteUrl(PortalBranding_cl.ResolveFaviconPath(branding, scopeKey), PortalBranding_cl.DefaultHomeIconPath);
-                    string appleTouchIconUrl = BuildAbsoluteUrl(PortalBranding_cl.ResolveHeaderLogoPath(branding, scopeKey), PortalBranding_cl.ResolveDefaultIconPath(scopeKey));
-                    string pwaIcon192Url = appleTouchIconUrl;
-                    string pwaIcon512Url = appleTouchIconUrl;
-                    string manifestUrl = string.Format("{0}://{1}/manifest.ashx?v=20260324", Request.Url.Scheme, Request.Url.Authority);
-                    string startupImageUrl = appleTouchIconUrl;
+                    string brandingCacheKey = "legacy_home_master_branding_html:" + scopeKey + ":" + Request.Url.Authority.ToLowerInvariant();
+                    CachedBrandingHtml brandingHtml = Helper_cl.RuntimeCacheGetOrAdd<CachedBrandingHtml>(brandingCacheKey, BrandingCacheSeconds, () =>
+                    {
+                        PortalBranding_cl.ScopeBrandingSnapshot branding = PortalBranding_cl.LoadScopeBranding(db, scopeKey, true);
+                        string iconUrl = BuildAbsoluteUrl(PortalBranding_cl.ResolveFaviconPath(branding, scopeKey), PortalBranding_cl.DefaultHomeIconPath);
+                        string appleTouchIconUrl = BuildAbsoluteUrl(PortalBranding_cl.ResolveHeaderLogoPath(branding, scopeKey), PortalBranding_cl.ResolveDefaultIconPath(scopeKey));
+                        string pwaIcon192Url = appleTouchIconUrl;
+                        string pwaIcon512Url = appleTouchIconUrl;
+                        string manifestUrl = string.Format("{0}://{1}{2}", Request.Url.Scheme, Request.Url.Authority, Helper_cl.VersionedUrl("~/manifest.ashx"));
+                        string startupImageUrl = appleTouchIconUrl;
 
-                    if (Context != null)
-                        Context.Items["AhaHeaderCenterLogoUrl"] = appleTouchIconUrl;
-
-                    string iconsHtml = string.Format(@"
+                        return new CachedBrandingHtml
+                        {
+                            HeaderCenterLogoUrl = appleTouchIconUrl,
+                            IconsHtml = string.Format(@"
                 <!-- Favicon -->
                 <link rel='icon' href='{0}' sizes='16x16' type='image/x-icon'>
                 <link rel='icon' href='{1}' sizes='32x32' type='image/x-icon'>
@@ -64,9 +75,14 @@ public partial class MasterPageHome : System.Web.UI.MasterPage
                 <meta name='msapplication-TileColor' content='#10b981'>
                 <meta name='msapplication-TileImage' content='{3}'>
                 <link rel='apple-touch-startup-image' href='{10}'>
-                ", iconUrl, iconUrl, iconUrl, appleTouchIconUrl, appleTouchIconUrl, appleTouchIconUrl, appleTouchIconUrl, pwaIcon192Url, pwaIcon512Url, manifestUrl, startupImageUrl);
+                ", iconUrl, iconUrl, iconUrl, appleTouchIconUrl, appleTouchIconUrl, appleTouchIconUrl, appleTouchIconUrl, pwaIcon192Url, pwaIcon512Url, manifestUrl, startupImageUrl)
+                        };
+                    });
 
-                    literal_fav_icon.Text = iconsHtml;
+                    if (Context != null)
+                        Context.Items["AhaHeaderCenterLogoUrl"] = brandingHtml == null ? "" : (brandingHtml.HeaderCenterLogoUrl ?? "");
+
+                    literal_fav_icon.Text = brandingHtml == null ? "" : (brandingHtml.IconsHtml ?? "");
                     #endregion
                     #region lưu nội dung thông báo nếu có
                     if (Session["thongbao_home"] != null)

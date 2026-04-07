@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Web;
+using System.Web.Caching;
 using System.Web.UI;
 using System.Configuration;
 using System.Net;
@@ -13,6 +14,8 @@ using System.Net.Mail;
 
 public class Helper_cl
 {
+    private static readonly object RuntimeCacheSync = new object();
+
     //Helper_Tabler_cl.ShowToast(this.Page, "Tài khoản không tồn tại.", "danger", true, 3000, "Lỗi");
     //Helper_Tabler_cl.ShowModal(this.Page,"Sai mật khẩu hoặc tài khoản.","Lỗi",true,"danger");
     //ctx.Session["ThongBao_Admin"] ="toast|Thông báo|Mật khẩu đã được thay đổi. Vui lòng đăng nhập lại.|warning|4000";
@@ -43,9 +46,29 @@ public class Helper_cl
         return path;
     }
 
+    // Root version lấy từ appSettings[AssetVersion]; nếu không có, dùng timestamp Web.config để tự động đổi mỗi lần deploy.
+    private static readonly string RootVersion = InitRootVersion();
+
+    private static string InitRootVersion()
+    {
+        try
+        {
+            var fromConfig = ConfigurationManager.AppSettings["AssetVersion"];
+            if (!string.IsNullOrEmpty(fromConfig))
+                return fromConfig.Trim();
+
+            // Nếu không set AssetVersion, tạo phiên bản ngẫu nhiên theo mỗi lần app khởi động (app pool recycle/deploy).
+            return Guid.NewGuid().ToString("N");
+        }
+        catch { }
+
+        return "0";
+    }
+
     public static string VersionedUrl(string virtualPath)
     {
         string preferredPath = NormalizeStaticAssetPath(virtualPath);
+        string customVersion = RootVersion;
 
         try
         {
@@ -53,7 +76,8 @@ public class Helper_cl
             if (File.Exists(physicalPath))
             {
                 long ticks = File.GetLastWriteTime(physicalPath).Ticks;
-                return VirtualPathUtility.ToAbsolute(preferredPath) + "?v=" + ticks;
+                string version = string.IsNullOrEmpty(customVersion) ? ticks.ToString() : (ticks + "-" + customVersion);
+                return VirtualPathUtility.ToAbsolute(preferredPath) + "?v=" + version;
             }
 
             // fallback: giữ tương thích nếu đường dẫn cũ còn tồn tại.
@@ -63,14 +87,69 @@ public class Helper_cl
                 if (File.Exists(oldPhysicalPath))
                 {
                     long oldTicks = File.GetLastWriteTime(oldPhysicalPath).Ticks;
-                    return VirtualPathUtility.ToAbsolute(virtualPath) + "?v=" + oldTicks;
+                    string oldVersion = string.IsNullOrEmpty(customVersion) ? oldTicks.ToString() : (oldTicks + "-" + customVersion);
+                    return VirtualPathUtility.ToAbsolute(virtualPath) + "?v=" + oldVersion;
                 }
             }
         }
         catch { }
 
         // fallback nếu file ko tồn tại
-        return VirtualPathUtility.ToAbsolute(preferredPath) + "?v=0";
+        string fallbackVersion = string.IsNullOrEmpty(customVersion) ? "0" : ("0-" + customVersion);
+        return VirtualPathUtility.ToAbsolute(preferredPath) + "?v=" + fallbackVersion;
+    }
+    #endregion
+
+    #region runtime cache
+    public static T RuntimeCacheGet<T>(string key) where T : class
+    {
+        if (string.IsNullOrWhiteSpace(key))
+            return null;
+
+        return HttpRuntime.Cache[key] as T;
+    }
+
+    public static T RuntimeCacheGetOrAdd<T>(string key, int durationSeconds, Func<T> factory) where T : class
+    {
+        if (string.IsNullOrWhiteSpace(key))
+            throw new ArgumentException("Cache key is required.", "key");
+        if (factory == null)
+            throw new ArgumentNullException("factory");
+
+        T cached = HttpRuntime.Cache[key] as T;
+        if (cached != null)
+            return cached;
+
+        lock (RuntimeCacheSync)
+        {
+            cached = HttpRuntime.Cache[key] as T;
+            if (cached != null)
+                return cached;
+
+            T created = factory();
+            if (created == null)
+                return null;
+
+            if (durationSeconds < 1)
+                durationSeconds = 1;
+
+            HttpRuntime.Cache.Insert(
+                key,
+                created,
+                null,
+                DateTime.UtcNow.AddSeconds(durationSeconds),
+                Cache.NoSlidingExpiration);
+
+            return created;
+        }
+    }
+
+    public static void RuntimeCacheRemove(string key)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+            return;
+
+        HttpRuntime.Cache.Remove(key);
     }
     #endregion
 

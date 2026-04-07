@@ -56,7 +56,7 @@ public partial class gianhang_admin_gianhang_lich_hen : System.Web.UI.Page
 
         HubUrl = GianHangRoutes_cl.BuildAdminWorkspaceHubUrl();
         NativeBookingsUrl = GianHangRoutes_cl.BuildBookingManagementUrl();
-        AdminBookingsUrl = "/gianhang/admin/quan-ly-khach-hang/danh-sach-lich-hen.aspx";
+        AdminBookingsUrl = GianHangRoutes_cl.BuildAdminLegacyBookingsUrl();
         CustomersUrl = GianHangRoutes_cl.BuildAdminWorkspaceCustomersUrl();
         SyncUrl = GianHangRoutes_cl.BuildAdminWorkspaceBookingsUrl() + "?sync=1";
 
@@ -121,7 +121,7 @@ public partial class gianhang_admin_gianhang_lich_hen : System.Web.UI.Page
                 StatusText = statusText,
                 StatusCss = ResolveStatusCss(statusText),
                 HasAdminMirror = legacyId > 0,
-                AdminDetailUrl = legacyId > 0 ? ("/gianhang/admin/quan-ly-khach-hang/sua-lich-hen.aspx?id=" + legacyId.ToString()) : AdminBookingsUrl,
+                AdminDetailUrl = legacyId > 0 ? GianHangRoutes_cl.BuildAdminLegacyBookingDetailUrl(legacyId) : AdminBookingsUrl,
                 WorkspaceDetailUrl = GianHangRoutes_cl.BuildAdminWorkspaceBookingDetailUrl(item.id),
                 AdminMirrorText = legacyId > 0 ? ("Lịch hẹn admin #" + legacyId.ToString()) : "Chưa mirror"
             };

@@ -147,7 +147,7 @@
     <%if (bcorn_class.check_quyen(user, "q7_2") == "" || bcorn_class.check_quyen(user, "n7_2") == "")
         { %>
     <div id='form_2' style="position: fixed; width: 100%; height: 100%; top: 0; left: 0; z-index: 1040!important; overflow: auto; display: <%=show_add%>; background-image: url('/uploads/images/bg1.png');">
-        <div style='top: 0; left: 0; margin: 0 auto; max-width: 1200px; opacity: 1;'>
+        <div class='admin-form-shell-wide' style='top: 0; left: 0; margin: 0 auto; opacity: 1;'>
             <div style='position: absolute; right: 18px; top: 18px; z-index: 1040!important'>
                 <a href='#' class='fg-white d-inline' onclick='show_hide_id_form_2()' title='Đóng'>
                     <span class='mif mif-cross mif-2x fg-red fg-darkRed-hover'></span>

@@ -58,8 +58,7 @@ public partial class admin_vi_token_diem_Default : System.Web.UI.Page
     {
         DisablePageCaching();
         Session["url_back"] = HttpContext.Current.Request.Url.AbsoluteUri.ToLowerInvariant();
-        check_login_cl.check_login_admin("none", "none");
-        AdminRolePolicy_cl.RequireSuperAdmin();
+        AdminAccessGuard_cl.RequireFeatureAccess("token_wallet", "/admin/default.aspx?mspace=admin");
         Session["title"] = "Ví token điểm";
 
         ApplyBridgeConfigVisibility();

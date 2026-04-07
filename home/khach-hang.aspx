@@ -154,9 +154,14 @@
     <!-- ===================== MAIN ===================== -->
     <asp:UpdatePanel ID="up_main" runat="server" UpdateMode="Conditional">
         <ContentTemplate>
+            <style>
+                .customers-page-shell {
+                    max-width: 992px;
+                }
+            </style>
 
             <div class="page-header d-print-none">
-                <div class="container-xl" style="max-width: 992px;">
+                <div class="container-xl customers-page-shell">
                     <div class="row g-2 align-items-center">
                         <div class="col">
                             <div class="page-pretitle">Quản lý</div>
@@ -199,12 +204,13 @@
             </div>
 
             <div class="page-body">
-                <div class="container-xl" style="max-width: 992px;">
+                <div class="container-xl customers-page-shell">
 
                     <div class="card">
                         <div class="card-header">
                             <div class="text-muted small">
                                 <asp:Label ID="lb_show" runat="server" Text=""></asp:Label>
+                                    <asp:Literal ID="litPager" runat="server"></asp:Literal>
                                 <asp:Label ID="lb_show_md" runat="server" Text="" CssClass="d-none"></asp:Label>
                             </div>
 

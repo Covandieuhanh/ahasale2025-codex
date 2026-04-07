@@ -26,7 +26,7 @@
         .gh-util-link{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-radius:14px;background:#f8fafc;border:1px solid #edf2f7;color:#1f2937;text-decoration:none !important;font-weight:700;}
         .gh-util-link small{display:block;color:#8d5d5d;font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:2px;}
         .gh-util-link span{display:block;color:#6b7280;font-size:13px;font-weight:600;}
-        @media (max-width: 991px){.gh-util-title{font-size:26px;}}
+        @media (max-width: 767px){.gh-util-title{font-size:26px;}}
     </style>
 </asp:Content>
 

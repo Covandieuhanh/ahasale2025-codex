@@ -8,9 +8,6 @@ using System.Web.UI.WebControls;
 public partial class admin_uc_menu_left_uc : System.Web.UI.UserControl
 {
     public string loi, tuvan;
-    private const string PermissionManageAdminAccounts = "5";
-    private const string PermissionLegacyGeneralAdmin = "1";
-    private const string PermissionHomeContent = "q3_1";
 
     private bool GetFlag(string key)
     {
@@ -25,139 +22,33 @@ public partial class admin_uc_menu_left_uc : System.Web.UI.UserControl
         ViewState[key] = value ? "true" : "false";
     }
 
-    private static HashSet<string> ParsePermissionTokens(string permissionRaw)
-    {
-        var tokens = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        if (string.IsNullOrWhiteSpace(permissionRaw))
-            return tokens;
-
-        string[] arr = permissionRaw
-            .Split(new[] { ',', '|', ';' }, StringSplitOptions.RemoveEmptyEntries);
-        foreach (string token in arr)
-        {
-            string t = (token ?? "").Trim();
-            if (t != "")
-                tokens.Add(t);
-        }
-        return tokens;
-    }
-
     private void BuildLeftMenuPermissionFlags(taikhoan_tb account)
     {
-        bool isRoot = account != null && PermissionProfile_cl.IsRootAdmin(account.taikhoan);
-        SetFlag("left_is_root", isRoot);
-        if (isRoot)
-        {
-            SetFlag("left_admin_dashboard", true);
-            SetFlag("left_admin_account", true);
-            SetFlag("left_transfer_history", true);
-            SetFlag("left_home_account", true);
-            SetFlag("left_home_approve_hanhvi", true);
-            SetFlag("left_home_issue_card", true);
-            SetFlag("left_home_tier_desc", true);
-            SetFlag("left_home_sell_product", true);
-            SetFlag("left_shop_account", true);
-            SetFlag("left_shop_approve", true);
-            SetFlag("left_shop_email_template", true);
-            SetFlag("left_content_home", true);
-            SetFlag("left_content_home_text", true);
-            SetFlag("left_content_menu", true);
-            SetFlag("left_content_baiviet", true);
-            SetFlag("left_content_banner", true);
-            SetFlag("left_content_gopy", true);
-            SetFlag("left_content_thongbao", true);
-            SetFlag("left_content_tuvan", true);
-            SetFlag("left_group_admin", true);
-            SetFlag("left_group_home", true);
-            SetFlag("left_group_shop", true);
-            SetFlag("left_group_content", true);
-            return;
-        }
-
-        HashSet<string> tokens = ParsePermissionTokens(account != null ? account.permission : "");
-        bool legacyGeneral = tokens.Contains(PermissionLegacyGeneralAdmin);
-        bool canManageAdminAccounts = tokens.Contains(PermissionManageAdminAccounts);
-
-        bool canLegacyTransfer = PermissionProfile_cl.LegacyTieuDungPermissions.Any(code => tokens.Contains(code));
-        bool canTieuDung = tokens.Contains(PermissionProfile_cl.HoSoTieuDung);
-        bool canUuDai = tokens.Contains(PermissionProfile_cl.HoSoUuDai);
-        bool canLaoDong = tokens.Contains(PermissionProfile_cl.HoSoLaoDong);
-        bool canGanKet = tokens.Contains(PermissionProfile_cl.HoSoGanKet);
-        bool canShopOnly = tokens.Contains(PermissionProfile_cl.HoSoShopOnly);
-        bool canHomeContent = tokens.Contains(PermissionHomeContent);
-
-        bool canApproveHanhVi = canUuDai || canLaoDong || canGanKet;
-        bool canHomeAccount = canTieuDung || canApproveHanhVi;
-        bool canTransferHistory = canLegacyTransfer || canTieuDung;
-
-        bool showAdminDashboard = false;
-        bool showAdminAccount = canManageAdminAccounts;
-        bool showTransferHistory = legacyGeneral || canTransferHistory;
-        bool showHomeAccount = legacyGeneral || canHomeAccount;
-        bool showApproveHanhVi = legacyGeneral || canApproveHanhVi;
-        bool showIssueCard = legacyGeneral || canTieuDung;
-        bool showTierDescription = legacyGeneral || canApproveHanhVi;
-        bool showSellProduct = legacyGeneral || canTieuDung;
-        bool showShopAccount = legacyGeneral || canShopOnly;
-        bool showShopApprove = legacyGeneral || canShopOnly;
-        bool showShopEmailTemplate = legacyGeneral || canShopOnly;
-        bool showHomeSettings = false;
-        bool showOtherContent = legacyGeneral || canHomeContent;
-
-        SetFlag("left_admin_dashboard", showAdminDashboard);
-        SetFlag("left_admin_account", showAdminAccount);
-        SetFlag("left_transfer_history", showTransferHistory);
-        SetFlag("left_home_account", showHomeAccount);
-        SetFlag("left_home_approve_hanhvi", showApproveHanhVi);
-        SetFlag("left_home_issue_card", showIssueCard);
-        SetFlag("left_home_tier_desc", showTierDescription);
-        SetFlag("left_home_sell_product", showSellProduct);
-        SetFlag("left_shop_account", showShopAccount);
-        SetFlag("left_shop_approve", showShopApprove);
-        SetFlag("left_shop_email_template", showShopEmailTemplate);
-        SetFlag("left_content_home", showHomeSettings);
-        SetFlag("left_content_home_text", showOtherContent);
-        SetFlag("left_content_menu", showOtherContent);
-        SetFlag("left_content_baiviet", showOtherContent);
-        SetFlag("left_content_banner", showOtherContent);
-        SetFlag("left_content_gopy", showOtherContent);
-        SetFlag("left_content_thongbao", showOtherContent);
-        SetFlag("left_content_tuvan", showOtherContent);
-
-        SetFlag("left_group_admin", showAdminDashboard || showAdminAccount || showTransferHistory);
-        SetFlag("left_group_home", showHomeAccount || showApproveHanhVi || showIssueCard || showTierDescription || showSellProduct);
-        SetFlag("left_group_shop", showShopAccount || showShopApprove || showShopEmailTemplate);
-        SetFlag("left_group_content", showHomeSettings || showOtherContent);
-    }
-
-    private bool IsRootAdminCurrent()
-    {
-        string tk = GianHangAdminContext_cl.ResolveDisplayAccountKey();
-        if (string.IsNullOrEmpty(tk))
-            return false;
-        return PermissionProfile_cl.IsRootAdmin(tk);
-    }
-
-    private bool CanManageHomeContentCurrent()
-    {
-        string tk = GianHangAdminContext_cl.ResolveDisplayAccountKey();
-        if (string.IsNullOrEmpty(tk))
-            return false;
-
-        if (PermissionProfile_cl.IsRootAdmin(tk))
-            return true;
-
-        try
-        {
-            using (dbDataContext db = new dbDataContext())
-            {
-                return PermissionProfile_cl.HasPermission(db, tk, PermissionHomeContent);
-            }
-        }
-        catch
-        {
-            return false;
-        }
+        GianHangAdminMenuPolicy_cl.MenuVisibility model = GianHangAdminMenuPolicy_cl.Build(account, false);
+        SetFlag("left_is_root", model.IsRoot);
+        SetFlag("left_admin_dashboard", model.Dashboard);
+        SetFlag("left_admin_account", model.AdminAccount);
+        SetFlag("left_transfer_history", model.TransferHistory);
+        SetFlag("left_home_account", model.HomeAccount);
+        SetFlag("left_home_approve_hanhvi", model.ApproveHanhVi);
+        SetFlag("left_home_issue_card", model.IssueCard);
+        SetFlag("left_home_tier_desc", model.TierDescription);
+        SetFlag("left_home_sell_product", model.SellProduct);
+        SetFlag("left_shop_account", model.ShopAccount);
+        SetFlag("left_shop_approve", model.ShopApprove);
+        SetFlag("left_shop_email_template", model.ShopEmailTemplate);
+        SetFlag("left_content_home", model.ContentHome);
+        SetFlag("left_content_home_text", model.ContentHomeText);
+        SetFlag("left_content_menu", model.ContentMenu);
+        SetFlag("left_content_baiviet", model.ContentBaiViet);
+        SetFlag("left_content_banner", model.ContentBanner);
+        SetFlag("left_content_gopy", model.ContentGopY);
+        SetFlag("left_content_thongbao", model.ContentThongBao);
+        SetFlag("left_content_tuvan", model.ContentTuVan);
+        SetFlag("left_group_admin", model.GroupAdmin);
+        SetFlag("left_group_home", model.GroupHome);
+        SetFlag("left_group_shop", model.GroupShop);
+        SetFlag("left_group_content", model.GroupContent);
     }
 
     public bool ShowHomeLandingSettingsTab()
@@ -221,6 +112,22 @@ public partial class admin_uc_menu_left_uc : System.Web.UI.UserControl
         return "";
     }
 
+    private void BindSpaceAccessSummary(dbDataContext db)
+    {
+        if (ph_space_access_summary == null || lit_space_access_summary == null)
+            return;
+
+        ph_space_access_summary.Visible = false;
+        lit_space_access_summary.Text = "";
+
+        GlobalSpaceLauncher_cl.LauncherModel model = GlobalSpaceLauncher_cl.BuildCurrent(db, Request == null ? "" : Request.RawUrl);
+        if (model == null || !model.Visible || string.IsNullOrWhiteSpace(model.ItemsHtml))
+            return;
+
+        lit_space_access_summary.Text = model.ItemsHtml;
+        ph_space_access_summary.Visible = true;
+    }
+
     private static string ResolveTitle(string url)
     {
         switch ((url ?? "").ToLower().Trim())
@@ -245,7 +152,7 @@ public partial class admin_uc_menu_left_uc : System.Web.UI.UserControl
                 return "Cài đặt trang chủ";
             case "/gianhang/admin/quan-ly-noi-dung-home/default.aspx":
                 return "Nội dung trang chủ Home";
-            case "/gianhang/admin/quan-ly-tai-khoan/Default.aspx":
+            case "/gianhang/admin/quan-ly-tai-khoan/default.aspx":
                 return "Quản lý tài khoản";
             case "/gianhang/admin/duyet-yeu-cau-len-cap.aspx":
                 return "Duyệt yêu cầu xác nhận hành vi";
@@ -269,20 +176,16 @@ public partial class admin_uc_menu_left_uc : System.Web.UI.UserControl
             try
             {
                 string _url = HttpContext.Current.Request.Url.AbsolutePath.ToLower().Trim();
-                string title = ResolveTitle(_url);
-                if (_url == "/gianhang/admin/quan-ly-tai-khoan/Default.aspx")
-                {
-                    string scope = (Request.QueryString["scope"] ?? "").Trim().ToLowerInvariant();
-                    if (scope == "admin") title = "Quản lý tài khoản admin";
-                    else if (scope == "home") title = "Quản lý tài khoản home";
-                    else if (scope == "shop") title = "Quản lý tài khoản gian hàng đối tác";
-                }
+                string title = GianHangAdminRouteMap_cl.ResolveTitle(Request);
+                if (string.IsNullOrWhiteSpace(title))
+                    title = ResolveTitle(_url);
                 Session["title"] = title;
 
                 using (dbDataContext db = new dbDataContext())
                 {
                     taikhoan_tb account = GianHangAdminContext_cl.ResolveDisplayAccount(db);
                     BuildLeftMenuPermissionFlags(account);
+                    BindSpaceAccessSummary(db);
 
                     #region ĐẾM LỖI HỆ THỐNG CHƯA XỬ LÝ
                     int q_loi = db.Log_tbs.Count(p => p.trangthai == "Chưa sửa" && p.bin == false);

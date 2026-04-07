@@ -142,6 +142,7 @@ public static class SpaceAccess_cl
         switch (ModuleSpace_cl.Normalize(spaceCode))
         {
             case ModuleSpace_cl.Home:
+            case ModuleSpace_cl.BatDongSan:
                 return CanAccessHome(account);
             case ModuleSpace_cl.GianHang:
                 return CanAccessGianHang(account);
@@ -167,6 +168,7 @@ public static class SpaceAccess_cl
             return spaces;
 
         if (CanAccessHome(account)) spaces.Add(ModuleSpace_cl.Home);
+        if (CanAccessHome(account)) spaces.Add(ModuleSpace_cl.BatDongSan);
         if (CanAccessGianHang(account)) spaces.Add(ModuleSpace_cl.GianHang);
         if (CanAccessShop(account)) spaces.Add(ModuleSpace_cl.Shop);
         if (CanAccessAdmin(account)) spaces.Add(ModuleSpace_cl.Admin);
@@ -216,6 +218,7 @@ public static class SpaceAccess_cl
         switch (ModuleSpace_cl.Normalize(spaceCode))
         {
             case ModuleSpace_cl.Home:
+            case ModuleSpace_cl.BatDongSan:
                 return CanAccessHome(db, account);
             case ModuleSpace_cl.GianHang:
                 return CanAccessGianHang(db, account);
@@ -506,6 +509,7 @@ public static class SpaceAccess_cl
             case ModuleSpace_cl.Event:
                 return "Tai khoan chua du quyen vao khong gian event admin.";
             case ModuleSpace_cl.Home:
+            case ModuleSpace_cl.BatDongSan:
                 return "Tai khoan chua du quyen vao khong gian home.";
             default:
                 return "Tai khoan chua du quyen truy cap.";

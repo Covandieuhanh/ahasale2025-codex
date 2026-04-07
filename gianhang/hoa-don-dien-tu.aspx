@@ -48,7 +48,7 @@
 </head>
 <body style="margin: 0!important; padding: 0!important">
     <form id="form1" runat="server">
-        <div style="/*height: 148mm; */ width: 210mm; font-family: 'Times New Roman'; margin: 0 auto; /*border: 1px solid red; */ /*overflow: hidden*" />
+        <div style="/*height: 148mm; */ width: 210mm; font-family: "Be Vietnam Pro", "Segoe UI", Arial, sans-serif; margin: 0 auto; /*border: 1px solid red; */ /*overflow: hidden*" />
 
         <div style="padding: 0 10px" class="text-small-1">
             <%if (logo_hoadon != "")

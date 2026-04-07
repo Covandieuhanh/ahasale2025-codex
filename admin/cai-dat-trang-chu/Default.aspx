@@ -262,6 +262,24 @@
                                             <asp:Button ID="Button55" runat="server" Text="Xóa ảnh cũ" CssClass="alert mini rounded" Visible="false" OnClick="Button55_Click" Width="100" />
                                         </div>
                                     </div>
+                                    <div class="mt-3">
+                                        <label class="fw-600">Icon mobile + logo top bar (Bất động sản)</label>
+                                        <span style="cursor: pointer" class="mif mif-info ml-1" data-role="popover" data-popover-text="<small>Ảnh này dùng cho icon mobile khi thêm link /bat-dong-san vào màn hình chính và logo nằm giữa thanh top bar của không gian Bất động sản.</small>" data-popover-hide="8000" data-close-button="false" data-popover-position="right" data-popover-trigger="click" data-cls-popover="drop-shadow"></span>
+                                        <input type="file" id="fileInput6" onchange="uploadFile6()" data-role="file" data-button-title="<span class='mif-file-upload'></span>" />
+                                        <div id="message6" runat="server"></div>
+                                        <div id="uploadedFilePath6"></div>
+                                        <button type="button" id="cancelButton6" class="button alert mini rounded mb-2 mt-1" onclick="cancelUpload6()" style="display: none; width: 100px">Hủy ảnh mới chọn</button>
+                                        <div class="mt-2">
+                                            <label class="fw-600">Hoặc dán link icon (https://... hoặc /uploads/...)</label>
+                                            <asp:TextBox ID="txt_link_upload_batdongsan" runat="server" data-role="input" placeholder="Ví dụ: https://cdn.domain.com/icon-batdongsan.png"></asp:TextBox>
+                                        </div>
+                                        <div>
+                                            <asp:Label ID="Label6" runat="server" Text=""></asp:Label>
+                                        </div>
+                                        <div>
+                                            <asp:Button ID="Button66" runat="server" Text="Xóa ảnh cũ" CssClass="alert mini rounded" Visible="false" OnClick="Button66_Click" Width="100" />
+                                        </div>
+                                    </div>
                                     <div class="mt-6 mb-3 text-right">
                                         <asp:Button ID="Button5" OnClick="Button5_Click" runat="server" Text="CẬP NHẬT" CssClass="success rounded small" />
                                     </div>
@@ -271,6 +289,9 @@
                     </div>
                 </div>
         </ContentTemplate>
+        <Triggers>
+            <asp:PostBackTrigger ControlID="Button5" />
+        </Triggers>
     </asp:UpdatePanel>
     <asp:UpdateProgress ID="UpdateProgress3" runat="server" AssociatedUpdatePanelID="UpdatePanel1">
         <ProgressTemplate>
@@ -612,6 +633,62 @@
             // Hiển thị thông báo nếu cần
             var message5Div = document.getElementById("message5");
             message5Div.innerHTML = "Đã hủy upload ảnh.";
+        }
+</script>
+    <script>
+        function uploadFile6() {
+            var fileInput6 = document.getElementById("fileInput6");
+            var message6Div = document.getElementById("message6");
+            var uploadedFilePathDiv6 = document.getElementById("uploadedFilePath6");
+            var cancelButton6 = document.getElementById("cancelButton6");
+
+            if (fileInput6.files.length > 0) {
+                var file = fileInput6.files[0];
+
+                var allowedExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".heic"];
+                var fileExtension = file.name.substr(file.name.lastIndexOf(".")).toLowerCase();
+                if (allowedExtensions.indexOf(fileExtension) === -1) {
+                    message6Div.innerHTML = "Định dạng ảnh không hợp lệ.";
+                    return;
+                }
+
+                var maxFileSize = 10 * 1024 * 1024;
+                if (file.size > maxFileSize) {
+                    message6Div.innerHTML = "Vui lòng chọn file có kích thước nhỏ hơn 10 MB.";
+                    return;
+                }
+
+                var formData = new FormData();
+                formData.append("file", file);
+
+                var xhr = new XMLHttpRequest();
+                xhr.open("POST", "/uploads/Upload_Handler_Style1.ashx", true);
+                xhr.onload = function () {
+                    if (xhr.status === 200) {
+                        uploadedFilePathDiv6.innerHTML = "<div><img style='max-width:100px;max-height:100px' src='" + xhr.responseText + "' />";
+                        document.getElementById('<%= txt_link_upload_batdongsan.ClientID %>').value = xhr.responseText;
+                        cancelButton6.style.display = "inline-block";
+                    } else {
+                        message6Div.innerHTML = "Lỗi upload.";
+                    }
+                };
+                xhr.send(formData);
+            } else {
+                message6Div.innerHTML = "Vui lòng chọn file.";
+            }
+        }
+
+        function cancelUpload6() {
+            var uploadedFilePathDiv6 = document.getElementById("uploadedFilePath6");
+            var textBox6 = document.getElementById('<%= txt_link_upload_batdongsan.ClientID %>');
+            var cancelButton6 = document.getElementById("cancelButton6");
+
+            textBox6.value = "";
+            uploadedFilePathDiv6.innerHTML = "";
+            cancelButton6.style.display = "none";
+
+            var message6Div = document.getElementById("message6");
+            message6Div.innerHTML = "Đã hủy upload ảnh.";
         }
 </script>
 </asp:Content>

@@ -1,4 +1,4 @@
-<%@ Page Title="Chi tiết khách hàng gian hàng" Language="C#" MasterPageFile="~/MasterPage/Tabler/TablerHome.master" AutoEventWireup="true" CodeFile="khach-hang-chi-tiet.aspx.cs" Inherits="gianhang_khach_hang_chi_tiet" %>
+<%@ Page Title="Chi tiết khách hàng gian hàng" Language="C#" MasterPageFile="~/MasterPage/Tabler/TablerGianHang.master" AutoEventWireup="true" CodeFile="khach-hang-chi-tiet.aspx.cs" Inherits="gianhang_khach_hang_chi_tiet" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head_truoc" runat="server">
     <style>

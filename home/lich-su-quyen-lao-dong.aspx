@@ -221,6 +221,7 @@
                     <div class="row g-2 align-items-center mt-2">
                         <div class="col-auto text-muted">
                             <asp:Label ID="lb_show" runat="server" Text=""></asp:Label>
+                                    <asp:Literal ID="litPager" runat="server"></asp:Literal>
                         </div>
                         <div class="col-auto ms-auto">
                             <div class="btn-list">

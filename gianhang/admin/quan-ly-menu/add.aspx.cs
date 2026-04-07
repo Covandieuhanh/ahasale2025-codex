@@ -9,51 +9,36 @@ using System.Web.UI.WebControls;
 public partial class badmin_temp : System.Web.UI.Page
 {
     public string notifi, url_back;
+    public string user;
     menu_class mn_cl = new menu_class();
     string_class str_cl = new string_class();
     dbDataContext db = new dbDataContext();
+
+    private bool HasPermission(string permissionKey)
+    {
+        string currentUser = (user ?? "").Trim();
+        if (string.IsNullOrEmpty(currentUser) || string.IsNullOrEmpty(permissionKey))
+            return false;
+
+        return bcorn_class.check_quyen(currentUser, permissionKey) != "2";
+    }
+    private void RedirectToAdminHome()
+    {
+        Response.Redirect(GianHangAdminBridge_cl.BuildAdminHomeUrl(HttpContext.Current));
+    }
+
     protected void Page_Load(object sender, EventArgs e)
     {
-        #region Check_Login
-        string _quyen = "q3_2";
-        string _cookie_user = "", _cookie_pass = "";
-        if (Request.Cookies["save_user_admin_aka_1"] != null) _cookie_user = Request.Cookies["save_user_admin_aka_1"].Value;
-        if (Request.Cookies["save_pass_admin_aka_1"] != null) _cookie_pass = Request.Cookies["save_pass_admin_aka_1"].Value;
-        if (Session["user"] == null) Session["user"] = ""; if (Session["notifi"] == null) Session["notifi"] = "";if (Session["user"].ToString() == "") Response.Redirect("/gianhang/admin/f5_ss_admin.aspx");
-        string _url = Request.Url.GetLeftPart(UriPartial.Authority).ToLower();
-        string _kq = bcorn_class.check_login(Session["user"].ToString(), _cookie_user, _cookie_pass, _url, _quyen);
-        if (_kq != "")//nếu có thông báo --> có lỗi --> reset --> bắt login lại
-        {
-            if (_kq == "baotri") Response.Redirect("/baotri.aspx");
-            else
-            {
-                if (_kq == "1") Response.Redirect("/gianhang/admin/login.aspx");//hết Session, hết Cookie
-                else
-                {
-                    if (_kq == "2")//k đủ quyền
-                    {
-                        Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
-                        Response.Redirect("/gianhang/admin");
-                    }
-                    else
-                    {
-                        Session["notifi"] = _kq; Session["user"] = "";
-                        Response.Cookies["save_user_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Cookies["save_pass_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Cookies["save_url_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Redirect("/gianhang/admin/login.aspx");
-                    }
-                }
-            }
-        }
-        #endregion
+        GianHangAdminPageGuard_cl.AccessInfo access = GianHangAdminPageGuard_cl.EnsureAccess(this, db, "q3_2");
+        if (access == null)
+            return;
+
+        user = (access.User ?? "").Trim();
+
         if (!IsPostBack)
             show_menu_dropdownbox();
 
-        if (Request.Cookies["save_url_admin_aka_1"] != null)
-            url_back = Request.Cookies["save_url_admin_aka_1"].Value;
-        else
-            url_back = "/gianhang/admin/quan-ly-menu/Default.aspx";
+        url_back = GianHangAdminBridge_cl.ResolvePreferredAdminRedirectUrl(HttpContext.Current, "", "/gianhang/admin/quan-ly-menu/Default.aspx");
     }
 
     #region show_category_view
@@ -86,6 +71,13 @@ public partial class badmin_temp : System.Web.UI.Page
     #region button click    
     protected void button1_Click(object sender, EventArgs e)
     {
+        if (!HasPermission("q3_2"))
+        {
+            Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
+            RedirectToAdminHome();
+            return;
+        }
+
         if (!Directory.Exists(Server.MapPath("~/uploads/images/menu/")))
             Directory.CreateDirectory(Server.MapPath("~/uploads/images/menu/"));
         bool _checkloi = false;

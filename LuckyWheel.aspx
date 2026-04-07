@@ -12,7 +12,7 @@
         }
         *{box-sizing:border-box}
         body{
-            margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+            margin:0;font-family:"Be Vietnam Pro","Segoe UI",Arial;
             background: radial-gradient(1000px 600px at 50% -10%, #1f2937 0%, var(--bg) 55%);
             color:#e5e7eb; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:16px;
         }

@@ -34,7 +34,7 @@
 </head>
 <body style="margin: 0!important; padding: 0!important">
     <form id="form1" runat="server">
-        <div style="/*height: 148mm; */ width: 58mm; font-family: 'Times New Roman'; margin: 0 auto; /*border: 1px solid red; */ /*overflow: hidden*/" class="bg-white text-small">
+        <div style="/*height: 148mm; */ width: 58mm; font-family: "Be Vietnam Pro", "Segoe UI", Arial, sans-serif; margin: 0 auto; /*border: 1px solid red; */ /*overflow: hidden*/" class="bg-white text-small">
             
             <div class="text-center text-bold text-big">
                 <%if(logo_hoadon!=""){ %>

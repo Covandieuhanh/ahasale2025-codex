@@ -274,10 +274,13 @@ public static class GianHangInvoice_cl
             return null;
 
         return db.GetTable<GH_HoaDon_tb>()
-            .Where(p => p.shop_taikhoan == tk
-                        && p.exchange_status == DonHangStateMachine_cl.Exchange_ChoTraoDoi)
+            .Where(p => p.shop_taikhoan == tk)
             .OrderByDescending(p => p.id)
-            .FirstOrDefault();
+            .Take(500)
+            .ToList()
+            .FirstOrDefault(p =>
+                DonHangStateMachine_cl.NormalizeExchangeStatus(p.exchange_status)
+                == DonHangStateMachine_cl.Exchange_ChoTraoDoi);
     }
 
     public static GH_HoaDon_tb EnsureInvoiceByOrderKey(dbDataContext db, string shopTaiKhoan, string rawOrderKey)
@@ -366,9 +369,11 @@ public static class GianHangInvoice_cl
 
         EnsureStorefrontInvoiceSnapshots(db, tk, snapshotTake <= 0 ? 500 : snapshotTake);
         List<GH_HoaDon_tb> invoices = QueryByStorefront(db, tk)
-            .Where(p => (p.exchange_status ?? string.Empty).Trim() == DonHangStateMachine_cl.Exchange_ChoTraoDoi)
             .OrderByDescending(p => p.id)
             .Take(snapshotTake <= 0 ? 500 : snapshotTake)
+            .ToList()
+            .Where(p => DonHangStateMachine_cl.NormalizeExchangeStatus(p.exchange_status)
+                        == DonHangStateMachine_cl.Exchange_ChoTraoDoi)
             .ToList();
         PrepareInvoicesWithRuntime(db, invoices);
 
@@ -496,7 +501,7 @@ public static class GianHangInvoice_cl
         string tk = (shopTaiKhoan ?? "").Trim().ToLowerInvariant();
         if (string.IsNullOrEmpty(tk))
         {
-            error = "Không xác định gian hàng đối tác.";
+            error = "Không xác định gian hàng.";
             return null;
         }
 
@@ -742,13 +747,17 @@ public static class GianHangInvoice_cl
         if (string.IsNullOrWhiteSpace(exchangeStatus) && linkedOrder != null)
             exchangeStatus = DonHangStateMachine_cl.GetExchangeStatus(linkedOrder);
 
-        if (orderStatus == DonHangStateMachine_cl.Order_DaHuy)
+        string normalizedOrderStatus = DonHangStateMachine_cl.NormalizeOrderStatus(orderStatus);
+        string normalizedExchangeStatus = DonHangStateMachine_cl.NormalizeExchangeStatus(exchangeStatus);
+
+        if (normalizedOrderStatus == DonHangStateMachine_cl.Order_DaHuy)
             return "da-huy";
-        if (exchangeStatus == DonHangStateMachine_cl.Exchange_DaTraoDoi)
+        if (normalizedExchangeStatus == DonHangStateMachine_cl.Exchange_DaTraoDoi)
             return "da-trao-doi";
-        if (exchangeStatus == DonHangStateMachine_cl.Exchange_ChoTraoDoi)
+        if (normalizedExchangeStatus == DonHangStateMachine_cl.Exchange_ChoTraoDoi)
             return "cho-trao-doi";
-        if (orderStatus == DonHangStateMachine_cl.Order_DaGiao || orderStatus == DonHangStateMachine_cl.Order_DaNhan)
+        if (normalizedOrderStatus == DonHangStateMachine_cl.Order_DaGiao
+            || normalizedOrderStatus == DonHangStateMachine_cl.Order_DaNhan)
             return "da-giao";
         return "da-dat";
     }

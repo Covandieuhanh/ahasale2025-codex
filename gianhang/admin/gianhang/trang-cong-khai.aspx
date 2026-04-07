@@ -27,7 +27,7 @@
         .gh-admin-storefront__frame-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid #edf2f7;background:#f8fafc;flex-wrap:wrap}
         .gh-admin-storefront__frame-url{display:block;color:#6b7280;font-size:12px;line-height:1.6;word-break:break-all}
         .gh-admin-storefront__frame{width:100%;height:920px;border:0;background:#fff}
-        @media (max-width:991px){.gh-admin-storefront__title{font-size:26px}.gh-admin-storefront__frame{height:720px}}
+        @media (max-width:767px){.gh-admin-storefront__title{font-size:26px}.gh-admin-storefront__frame{height:720px}}
     </style>
 </asp:Content>
 

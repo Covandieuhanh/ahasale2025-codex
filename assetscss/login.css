@@ -91,23 +91,8 @@
 .bg-login-bcorn {background: linear-gradient(#7700b3,#a0f); /*đậm nhạt*/}
 .bg-top-bcorn {background-color: #7700b3}/*đậm*/
 
-@media (max-width: 575px) { /*sm*/
-    }
-
-    @media (max-width: 767px) { /*md*/
-
-    }
-
-    @media (max-width: 991px) { /*lg*/
-
-    }
-
-    @media (max-width: 1199px) { /*xl*/
-
-    }
-
-    @media (max-width: 1451px) { /*xxl*/
-    }
+@media (max-width: 767px) { /*mobile*/
+}
 
 /* ===== UI refresh for auth pages ===== */
 body[class*="body-login"],

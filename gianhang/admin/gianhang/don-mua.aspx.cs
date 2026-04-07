@@ -66,7 +66,7 @@ public partial class gianhang_admin_gianhang_don_mua : System.Web.UI.Page
         WaitUrl = GianHangRoutes_cl.BuildAdminWorkspaceWaitUrl();
         UtilityUrl = GianHangRoutes_cl.BuildAdminWorkspaceUtilityUrl();
         PublicUrl = GianHangRoutes_cl.BuildPublicUrl(ownerAccountKey);
-        LegacyInvoiceUrl = "/gianhang/admin/quan-ly-hoa-don/Default.aspx?workspace=gianhang";
+        LegacyInvoiceUrl = GianHangRoutes_cl.BuildAdminLegacyInvoiceListUrl();
         SyncUrl = GianHangRoutes_cl.BuildAdminWorkspaceBuyerFlowUrl() + "?sync=1";
 
         if (!IsPostBack)
@@ -124,7 +124,7 @@ public partial class gianhang_admin_gianhang_don_mua : System.Web.UI.Page
             StageHint = ResolveStageHint(statusGroup),
             TotalAmountText = GianHangReport_cl.FormatCurrency(row == null ? 0m : row.TotalAmount),
             HasLegacyMirror = legacyInvoiceId > 0,
-            LegacyDetailUrl = legacyInvoiceId > 0 ? "/gianhang/admin/quan-ly-hoa-don/chi-tiet.aspx?id=" + legacyInvoiceId.ToString() : string.Empty,
+            LegacyDetailUrl = legacyInvoiceId > 0 ? GianHangRoutes_cl.BuildAdminLegacyInvoiceDetailUrl(legacyInvoiceId) : string.Empty,
             OrderDetailUrl = OrdersUrl + "?keyword=" + Server.UrlEncode(sourceKey),
             PublicUrl = PublicUrl
         };

@@ -9,6 +9,7 @@ public static class AdminManagementSpace_cl
     public const string SpaceAdmin = "admin";
     public const string SpaceHome = "home";
     public const string SpaceGianHang = "gianhang";
+    public const string SpaceBatDongSan = "batdongsan";
     public const string SpaceDauGia = "daugia";
     public const string SpaceEvent = "event";
     public const string SpaceContent = "content";
@@ -33,6 +34,7 @@ public static class AdminManagementSpace_cl
             case SpaceAdmin:
             case SpaceHome:
             case SpaceGianHang:
+            case SpaceBatDongSan:
             case SpaceDauGia:
             case SpaceEvent:
             case SpaceContent:
@@ -52,6 +54,8 @@ public static class AdminManagementSpace_cl
                 return "Quản trị không gian Home";
             case SpaceGianHang:
                 return "Quản trị không gian Gian hàng đối tác";
+            case SpaceBatDongSan:
+                return "Quản trị không gian Bất động sản";
             case SpaceDauGia:
                 return "Quản trị không gian Đấu giá";
             case SpaceEvent:
@@ -73,6 +77,8 @@ public static class AdminManagementSpace_cl
                 return "Quản lý tài khoản Home, điểm, hành vi, phát hành thẻ và các thao tác lõi của hệ Home.";
             case SpaceGianHang:
                 return "Quản lý mở không gian gian hàng, tài khoản shop, duyệt shop và vận hành gian hàng đối tác.";
+            case SpaceBatDongSan:
+                return "Đi tới trung tâm quản trị bất động sản và chỉ hiển thị các tab liên quan đến dữ liệu, feed và vận hành nội dung BĐS.";
             case SpaceDauGia:
                 return "Đi tới trung tâm quản trị đấu giá và chỉ hiển thị các tab liên quan đến đấu giá.";
             case SpaceEvent:
@@ -90,6 +96,7 @@ public static class AdminManagementSpace_cl
         return normalized == SpaceAdmin
             || normalized == SpaceHome
             || normalized == SpaceGianHang
+            || normalized == SpaceBatDongSan
             || normalized == SpaceContent;
     }
 
@@ -141,6 +148,10 @@ public static class AdminManagementSpace_cl
                     || AdminRolePolicy_cl.CanApproveShopLevel2(db, tk)
                     || AdminRolePolicy_cl.CanManageShopOperations(db, tk);
 
+            case SpaceBatDongSan:
+                return AdminRolePolicy_cl.IsSuperAdmin(tk)
+                    || AdminRolePolicy_cl.CanManageHomeBdsLinked(db, tk);
+
             case SpaceDauGia:
                 return AdminRolePolicy_cl.IsSuperAdmin(tk)
                     || DauGiaPolicy_cl.CanAccessAdmin(db, tk, permissionRaw);
@@ -151,7 +162,11 @@ public static class AdminManagementSpace_cl
 
             case SpaceContent:
                 return AdminRolePolicy_cl.IsSuperAdmin(tk)
-                    || AdminRolePolicy_cl.CanManageHomeContent(db, tk);
+                    || AdminRolePolicy_cl.CanManageHomeConfig(db, tk)
+                    || AdminRolePolicy_cl.CanManageHomeContent(db, tk)
+                    || AdminRolePolicy_cl.CanManageHomePosts(db, tk)
+                    || AdminRolePolicy_cl.CanManageHomeMenu(db, tk)
+                    || AdminRolePolicy_cl.CanManageHomeBanner(db, tk);
 
             default:
                 return false;
@@ -165,7 +180,7 @@ public static class AdminManagementSpace_cl
             return result;
 
         string current = GetCurrentSpace(db, account, request);
-        string[] ordered = new[] { SpaceAdmin, SpaceHome, SpaceGianHang, SpaceDauGia, SpaceEvent, SpaceContent };
+        string[] ordered = new[] { SpaceAdmin, SpaceHome, SpaceGianHang, SpaceBatDongSan, SpaceDauGia, SpaceEvent, SpaceContent };
 
         foreach (string space in ordered)
         {
@@ -192,7 +207,7 @@ public static class AdminManagementSpace_cl
         if (db == null || account == null)
             return "";
 
-        string[] ordered = new[] { SpaceAdmin, SpaceHome, SpaceGianHang, SpaceDauGia, SpaceEvent, SpaceContent };
+        string[] ordered = new[] { SpaceAdmin, SpaceHome, SpaceGianHang, SpaceBatDongSan, SpaceDauGia, SpaceEvent, SpaceContent };
         foreach (string space in ordered)
         {
             if (CanAccessSpace(db, account, space))
@@ -271,6 +286,9 @@ public static class AdminManagementSpace_cl
 
             case SpaceGianHang:
                 return AppendSpaceToUrl("/admin/default.aspx", SpaceGianHang);
+
+            case SpaceBatDongSan:
+                return AppendSpaceToUrl("/admin/default.aspx", SpaceBatDongSan);
 
             case SpaceDauGia:
                 return AppendSpaceToUrl("/admin/default.aspx", SpaceDauGia);
@@ -360,6 +378,9 @@ public static class AdminManagementSpace_cl
         if (!path.StartsWith("~/admin/", StringComparison.OrdinalIgnoreCase))
             return "";
 
+        if (string.Equals(path, "~/admin/quan-ly-noi-dung-home/bds-lien-ket-tin.aspx", StringComparison.OrdinalIgnoreCase))
+            return SpaceBatDongSan;
+
         if (path.StartsWith("~/admin/cai-dat-trang-chu/", StringComparison.OrdinalIgnoreCase)
             || path.StartsWith("~/admin/quan-ly-noi-dung-home/", StringComparison.OrdinalIgnoreCase)
             || path.StartsWith("~/admin/quan-ly-menu/", StringComparison.OrdinalIgnoreCase)
@@ -384,12 +405,14 @@ public static class AdminManagementSpace_cl
 
         if (path.StartsWith("~/admin/quan-ly-tai-khoan/", StringComparison.OrdinalIgnoreCase))
         {
-            string scope = ((request.QueryString["scope"] ?? "").Trim()).ToLowerInvariant();
-            if (scope == "admin")
+            string scope = AdminDataScope_cl.ResolveEffectiveAccountScope(
+                request.QueryString["scope"],
+                request.QueryString["fscope"]);
+            if (scope == AdminDataScope_cl.AccountScopeAdmin)
                 return SpaceAdmin;
-            if (scope == "home")
+            if (scope == AdminDataScope_cl.AccountScopeHome)
                 return SpaceHome;
-            if (scope == "shop")
+            if (scope == AdminDataScope_cl.AccountScopeShop)
                 return SpaceGianHang;
             return "";
         }
@@ -415,8 +438,8 @@ public static class AdminManagementSpace_cl
 
         if (path.StartsWith("~/admin/lich-su-chuyen-diem/", StringComparison.OrdinalIgnoreCase))
         {
-            string tab = ((request.QueryString["tab"] ?? "").Trim()).ToLowerInvariant();
-            if (tab == "shop-only")
+            string tab = AdminDataScope_cl.NormalizeTransferTab(request.QueryString["tab"]);
+            if (tab == AdminDataScope_cl.TransferTabShopOnly)
                 return SpaceGianHang;
             return SpaceHome;
         }

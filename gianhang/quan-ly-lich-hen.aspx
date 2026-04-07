@@ -1,4 +1,4 @@
-<%@ Page Title="Lịch hẹn gian hàng" Language="C#" MasterPageFile="~/MasterPage/Tabler/TablerHome.master" AutoEventWireup="true" CodeFile="quan-ly-lich-hen.aspx.cs" Inherits="gianhang_quan_ly_lich_hen" %>
+<%@ Page Title="Lịch hẹn gian hàng" Language="C#" MasterPageFile="~/MasterPage/Tabler/TablerGianHang.master" AutoEventWireup="true" CodeFile="quan-ly-lich-hen.aspx.cs" Inherits="gianhang_quan_ly_lich_hen" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head_truoc" runat="server">
     <style>
@@ -256,13 +256,13 @@
             color: var(--gh-muted);
         }
 
-        @media (max-width: 960px) {
+        @media (max-width: 767px) {
             .gh-filter-grid {
                 grid-template-columns: 1fr 1fr;
             }
         }
 
-        @media (max-width: 900px) {
+        @media (max-width: 767px) {
             .gh-booking-kpi-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }

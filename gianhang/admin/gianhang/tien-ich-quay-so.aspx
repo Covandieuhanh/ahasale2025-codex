@@ -28,7 +28,7 @@
         .gh-spin-stat span{display:block;margin-top:6px;color:#6b7280;font-size:13px;line-height:1.7;}
         .gh-spin-list{margin:14px 0 0;padding-left:18px;color:#4b5563;line-height:1.7;}
         .gh-spin-chip{display:inline-flex;align-items:center;min-height:30px;padding:0 12px;border-radius:999px;background:#fff3ee;border:1px solid #ffd8c7;color:#a8431f;font-size:12px;font-weight:800;}
-        @media (max-width: 991px){.gh-spin-grid{grid-template-columns:1fr;}.gh-spin-title{font-size:26px;}.gh-spin-result{font-size:34px;min-height:150px;}}
+        @media (max-width: 767px){.gh-spin-grid{grid-template-columns:1fr;}.gh-spin-title{font-size:26px;}.gh-spin-result{font-size:34px;min-height:150px;}}
     </style>
 </asp:Content>
 

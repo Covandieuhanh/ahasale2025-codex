@@ -1,0 +1,106 @@
+/*
+ * Two-mode responsive foundation for AhaSale.
+ * - Mobile: < 850px
+ * - Desktop: >= 850px
+ * Tablet widths reuse the desktop layout and are scaled down proportionally
+ * to avoid a separate in-between layout mode.
+ */
+
+:root {
+    --aha-tablet-zoom: 1;
+    --aha-tablet-side-padding: 16px;
+}
+
+@media (min-width: 850px) and (max-width: 1199.98px) {
+    :root {
+        --aha-tablet-zoom: clamp(0.82, calc(100vw / 1280), 0.96);
+        --aha-tablet-side-padding: clamp(12px, 1.6vw, 18px);
+    }
+
+    /*
+     * Promote Bootstrap lg display utilities down to tablet widths so tablet
+     * consistently follows the desktop branch.
+     */
+    .d-lg-none {
+        display: none !important;
+    }
+
+    .d-lg-block,
+    .d-none.d-lg-block {
+        display: block !important;
+    }
+
+    .d-lg-inline,
+    .d-none.d-lg-inline {
+        display: inline !important;
+    }
+
+    .d-lg-inline-block,
+    .d-none.d-lg-inline-block {
+        display: inline-block !important;
+    }
+
+    .d-lg-flex,
+    .d-none.d-lg-flex {
+        display: flex !important;
+    }
+
+    .d-lg-inline-flex,
+    .d-none.d-lg-inline-flex {
+        display: inline-flex !important;
+    }
+
+    .d-lg-grid,
+    .d-none.d-lg-grid {
+        display: grid !important;
+    }
+
+    .d-lg-table-cell,
+    .d-none.d-lg-table-cell {
+        display: table-cell !important;
+    }
+
+    body {
+        overflow-x: hidden;
+    }
+
+    body > form.aha-scale-root {
+        zoom: var(--aha-tablet-zoom);
+        width: calc(100% / var(--aha-tablet-zoom));
+    }
+
+    .container,
+    .container-sm,
+    .container-md,
+    .container-lg,
+    .container-xl,
+    .container-xxl,
+    .container-fluid {
+        padding-left: var(--aha-tablet-side-padding);
+        padding-right: var(--aha-tablet-side-padding);
+    }
+
+    /*
+     * Hard-force two-mode behavior for Home header:
+     * 768-1199 must stay on desktop branch (never mobile controls).
+     */
+    .site-header .mobile-menu-btn,
+    .site-header .mobile-left-icons,
+    .site-header .mobile-right-account,
+    .site-header .brand-center-mobile,
+    .mobile-floating-cart,
+    .home-mobile-search-host,
+    .site-header #homeMobileSearchHost {
+        display: none !important;
+    }
+
+    .site-header #navbar-menu,
+    .site-header .navbar-collapse.d-none.d-lg-flex {
+        display: flex !important;
+    }
+
+    .site-header .brand-center-desktop,
+    .site-header .desktop-menu-btn {
+        display: inline-flex !important;
+    }
+}

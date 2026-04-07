@@ -6,11 +6,13 @@ public partial class badmin_doi_chi_nhanh : System.Web.UI.Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
-        if (Session["user"] == null) Session["user"] = "";
-        string user = (Session["user"] ?? "").ToString().Trim().ToLowerInvariant();
+        if (!GianHangSystemAdminGuard_cl.EnsurePageAccess(this))
+            return;
+
+        string user = GianHangAdminContext_cl.ResolveDisplayAccountKey();
         if (string.IsNullOrWhiteSpace(user))
         {
-            Response.Redirect("/gianhang/admin/login.aspx");
+            Response.Redirect(GianHangAdminBridge_cl.ResolveSessionRecoveryUrl(HttpContext.Current, "/gianhang/admin"));
             return;
         }
 

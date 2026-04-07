@@ -22,6 +22,24 @@ public partial class admin_Default : System.Web.UI.Page
         public string Text { get; set; }
     }
 
+    private sealed class AdminQuickActionView
+    {
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public string Url { get; set; }
+        public string CtaLabel { get; set; }
+    }
+
+    private sealed class AdminPendingItemView
+    {
+        public string Title { get; set; }
+        public string CountText { get; set; }
+        public string Description { get; set; }
+        public string Url { get; set; }
+        public string CtaLabel { get; set; }
+        public bool HasPending { get; set; }
+    }
+
     private sealed class AdminObjectGroupView
     {
         public string Title { get; set; }
@@ -38,77 +56,9 @@ public partial class admin_Default : System.Web.UI.Page
         return string.IsNullOrWhiteSpace(normalized) ? AdminManagementSpace_cl.SpaceAdmin : normalized;
     }
 
-    private static string ResolveTabSpace(string url)
+    private static string ResolveTabSpace(string key)
     {
-        string raw = (url ?? "").Trim();
-        if (string.IsNullOrWhiteSpace(raw))
-            return "";
-
-        string lower = raw.ToLowerInvariant();
-        string path = lower;
-        string query = "";
-        int queryIndex = lower.IndexOf('?');
-        if (queryIndex >= 0)
-        {
-            path = lower.Substring(0, queryIndex);
-            if (queryIndex + 1 < lower.Length)
-                query = lower.Substring(queryIndex + 1);
-        }
-
-        if (path == "/admin/default.aspx")
-            return AdminManagementSpace_cl.SpaceAdmin;
-
-        if (path.StartsWith("/gianhang/admin/", StringComparison.OrdinalIgnoreCase)
-            || path == "/admin/duyet-gian-hang-doi-tac.aspx"
-            || path == "/admin/duyet-shop-doi-tac.aspx"
-            || path == "/admin/duyet-nang-cap-level2.aspx"
-            || path.StartsWith("/admin/quan-ly-email-shop/", StringComparison.OrdinalIgnoreCase))
-            return AdminManagementSpace_cl.SpaceGianHang;
-
-        if (path.StartsWith("/daugia/admin/", StringComparison.OrdinalIgnoreCase))
-            return AdminManagementSpace_cl.SpaceDauGia;
-
-        if (path.StartsWith("/event/admin/", StringComparison.OrdinalIgnoreCase))
-            return AdminManagementSpace_cl.SpaceEvent;
-
-        if (path.StartsWith("/admin/quan-ly-noi-dung-home/", StringComparison.OrdinalIgnoreCase)
-            || path.StartsWith("/admin/quan-ly-menu/", StringComparison.OrdinalIgnoreCase)
-            || path.StartsWith("/admin/quan-ly-bai-viet/", StringComparison.OrdinalIgnoreCase)
-            || path.StartsWith("/admin/quan-ly-banner/", StringComparison.OrdinalIgnoreCase)
-            || path.StartsWith("/admin/cai-dat-trang-chu/", StringComparison.OrdinalIgnoreCase))
-            return AdminManagementSpace_cl.SpaceContent;
-
-        if (path == "/admin/quan-ly-tai-khoan/default.aspx")
-        {
-            if (query.Contains("scope=admin"))
-                return AdminManagementSpace_cl.SpaceAdmin;
-            if (query.Contains("scope=home"))
-                return AdminManagementSpace_cl.SpaceHome;
-            if (query.Contains("scope=shop"))
-                return AdminManagementSpace_cl.SpaceGianHang;
-        }
-
-        if (path == "/admin/lich-su-chuyen-diem/default.aspx")
-            return query.Contains("tab=shop-only")
-                ? AdminManagementSpace_cl.SpaceGianHang
-                : AdminManagementSpace_cl.SpaceHome;
-
-        if (path == "/admin/duyet-yeu-cau-len-cap.aspx"
-            || path == "/admin/motacapbac.aspx"
-            || path.StartsWith("/admin/phat-hanh-the/", StringComparison.OrdinalIgnoreCase)
-            || path.StartsWith("/admin/he-thong-san-pham/", StringComparison.OrdinalIgnoreCase))
-            return AdminManagementSpace_cl.SpaceHome;
-
-        if (path.StartsWith("/admin/otp/", StringComparison.OrdinalIgnoreCase)
-            || path.StartsWith("/admin/quan-ly-gop-y/", StringComparison.OrdinalIgnoreCase)
-            || path.StartsWith("/admin/quan-ly-thong-bao/", StringComparison.OrdinalIgnoreCase)
-            || path.StartsWith("/admin/yeu-cau-tu-van/", StringComparison.OrdinalIgnoreCase)
-            || path.StartsWith("/admin/vi-token-diem/", StringComparison.OrdinalIgnoreCase)
-            || path == "/admin/tools/company-shop-sync.aspx"
-            || path == "/admin/tools/reindex-baiviet.aspx")
-            return AdminManagementSpace_cl.SpaceAdmin;
-
-        return "";
+        return AdminManagementSpace_cl.NormalizeSpace(AdminFeatureRegistry_cl.ResolveManagementSpace(key));
     }
 
     private static bool ObjectGroupMatchesSpace(string currentSpace, string groupKey)
@@ -123,6 +73,9 @@ public partial class admin_Default : System.Web.UI.Page
 
         if (normalizedSpace == AdminManagementSpace_cl.SpaceGianHang)
             return normalizedKey == "shop_partner";
+
+        if (normalizedSpace == AdminManagementSpace_cl.SpaceBatDongSan)
+            return false;
 
         if (normalizedSpace == AdminManagementSpace_cl.SpaceContent)
             return normalizedKey == "home_content";
@@ -157,6 +110,13 @@ public partial class admin_Default : System.Web.UI.Page
         {
             notes.Add(new AdminHomeNoteView { Text = "Không gian này chỉ dành cho các tab quản trị gian hàng đối tác: duyệt không gian gian hàng, duyệt shop, quản lý shop và nghiệp vụ liên quan." });
             notes.Add(new AdminHomeNoteView { Text = "Tài khoản admin chỉ được nhìn thấy và thao tác trong phạm vi gian hàng đối tác đã được cấp." });
+            return notes;
+        }
+
+        if (normalizedSpace == AdminManagementSpace_cl.SpaceBatDongSan)
+        {
+            notes.Add(new AdminHomeNoteView { Text = "Không gian này chỉ hiển thị các tab quản trị bất động sản như feed BĐS liên kết và các nghiệp vụ nội dung chuyên biệt của mục Bất động sản." });
+            notes.Add(new AdminHomeNoteView { Text = "Các tác vụ nội dung website tổng quát vẫn ở không gian Nội dung; tại đây chỉ giữ những gì thuộc riêng không gian Bất động sản." });
             return notes;
         }
 
@@ -204,11 +164,11 @@ public partial class admin_Default : System.Web.UI.Page
     protected void Page_Load(object sender, EventArgs e)
     {
         DisablePageCaching();
+        AdminAccessGuard_cl.RequireFeatureAccess("admin_dashboard", "/admin/login.aspx");
 
         if (!IsPostBack)
         {
             Session["url_back"] = HttpContext.Current.Request.Url.AbsoluteUri.ToLowerInvariant();
-            check_login_cl.check_login_admin("none", "none");
             if (TryRedirectToSelectedManagementSpace())
                 return;
 
@@ -270,6 +230,175 @@ public partial class admin_Default : System.Web.UI.Page
         }
     }
 
+    private List<AdminQuickActionView> BuildQuickActions(IList<AdminHomeTabView> tabs, string currentSpace)
+    {
+        var actions = new List<AdminQuickActionView>();
+        if (tabs == null || tabs.Count == 0)
+            return actions;
+
+        string normalizedSpace = NormalizeManagementSpace(currentSpace);
+        var usedUrls = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (AdminHomeTabView tab in tabs)
+        {
+            if (tab == null)
+                continue;
+
+            string url = (tab.Url ?? "").Trim();
+            if (url == "")
+                continue;
+            if (string.Equals(url, "/admin/default.aspx", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            string actionUrl = url;
+            if (url.StartsWith("/admin/", StringComparison.OrdinalIgnoreCase))
+                actionUrl = AdminManagementSpace_cl.AppendSpaceToUrl(url, normalizedSpace);
+            if (!usedUrls.Add(actionUrl))
+                continue;
+
+            actions.Add(new AdminQuickActionView
+            {
+                Title = tab.Title,
+                Description = tab.ActionSummary,
+                Url = actionUrl,
+                CtaLabel = "Mở nhanh"
+            });
+
+            if (actions.Count >= 6)
+                break;
+        }
+
+        return actions;
+    }
+
+    private int CountPendingHomePointRequests(dbDataContext db, string taiKhoan)
+    {
+        if (db == null || string.IsNullOrWhiteSpace(taiKhoan))
+            return 0;
+
+        IQueryable<YeuCau_HeThongSanPham_tb> query = db.YeuCau_HeThongSanPham_tbs.Where(x => x.TrangThai == 0);
+        if (PermissionProfile_cl.IsRootAdmin(taiKhoan))
+            return query.Count();
+
+        bool canUuDai = PermissionProfile_cl.HasPermission(db, taiKhoan, PermissionProfile_cl.HoSoUuDai);
+        bool canLaoDong = PermissionProfile_cl.HasPermission(db, taiKhoan, PermissionProfile_cl.HoSoLaoDong);
+        bool canGanKet = PermissionProfile_cl.HasPermission(db, taiKhoan, PermissionProfile_cl.HoSoGanKet);
+        if (!canUuDai && !canLaoDong && !canGanKet)
+            return 0;
+
+        query = query.Where(x =>
+            (canUuDai && x.CapYeuCau == 1 && (x.GiaTriYeuCau == 15 || x.GiaTriYeuCau == 9 || x.GiaTriYeuCau == 6))
+            || (canLaoDong && x.CapYeuCau == 2 && (x.GiaTriYeuCau == 10 || x.GiaTriYeuCau == 15 || x.GiaTriYeuCau == 25))
+            || (canGanKet && x.CapYeuCau == 3 && (x.GiaTriYeuCau == 10 || x.GiaTriYeuCau == 6 || x.GiaTriYeuCau == 4)));
+        return query.Count();
+    }
+
+    private int CountPendingCoreSpaceRequests(dbDataContext db, string spaceCode)
+    {
+        if (db == null)
+            return 0;
+
+        string normalizedSpace = ModuleSpace_cl.Normalize(spaceCode);
+        if (string.IsNullOrWhiteSpace(normalizedSpace))
+            return 0;
+
+        CoreSchemaMigration_cl.EnsureSchemaSafe(db);
+        return db.ExecuteQuery<int>(
+                "SELECT COUNT(1) FROM dbo.CoreSpaceRequest_tb WHERE SpaceCode = {0} AND RequestStatus = {1}",
+                normalizedSpace,
+                CoreSpaceRequest_cl.StatusPending)
+            .FirstOrDefault();
+    }
+
+    private int CountPendingShopLevel2Requests(dbDataContext db)
+    {
+        if (db == null)
+            return 0;
+
+        ShopLevel2Request_cl.EnsureSchemaSafe(db);
+        return db.ExecuteQuery<int>(
+                "SELECT COUNT(1) FROM dbo.ShopLevel2Request_tb WHERE TrangThai = {0}",
+                ShopLevel2Request_cl.StatusPending)
+            .FirstOrDefault();
+    }
+
+    private List<AdminPendingItemView> BuildPendingItems(dbDataContext db, string taiKhoan, string currentSpace)
+    {
+        var items = new List<AdminPendingItemView>();
+        string normalizedSpace = NormalizeManagementSpace(currentSpace);
+
+        if (normalizedSpace == AdminManagementSpace_cl.SpaceHome
+            && AdminRolePolicy_cl.CanReviewHomePointRequests(db, taiKhoan))
+        {
+            int pending = CountPendingHomePointRequests(db, taiKhoan);
+            items.Add(new AdminPendingItemView
+            {
+                Title = "Yêu cầu xác nhận hành vi Home",
+                CountText = pending.ToString("#,##0"),
+                Description = pending > 0
+                    ? "Có yêu cầu đang chờ duyệt trong phạm vi hành vi Home bạn phụ trách."
+                    : "Không có yêu cầu chờ duyệt trong phạm vi hành vi Home bạn phụ trách.",
+                Url = AdminManagementSpace_cl.AppendSpaceToUrl(
+                    AdminRolePolicy_cl.ResolveHomePointApprovalUrl(db, taiKhoan),
+                    AdminManagementSpace_cl.SpaceHome),
+                CtaLabel = "Mở danh sách",
+                HasPending = pending > 0
+            });
+        }
+
+        if (normalizedSpace == AdminManagementSpace_cl.SpaceGianHang)
+        {
+            if (AdminRolePolicy_cl.CanApproveHomeGianHangSpace(db, taiKhoan))
+            {
+                int pending = CountPendingCoreSpaceRequests(db, ModuleSpace_cl.GianHang);
+                items.Add(new AdminPendingItemView
+                {
+                    Title = "Yêu cầu mở không gian /gianhang",
+                    CountText = pending.ToString("#,##0"),
+                    Description = pending > 0
+                        ? "Có yêu cầu mở không gian /gianhang từ tài khoản Home đang chờ duyệt."
+                        : "Không có yêu cầu mở không gian /gianhang đang chờ duyệt.",
+                    Url = AdminManagementSpace_cl.AppendSpaceToUrl("/admin/duyet-gian-hang-doi-tac.aspx", AdminManagementSpace_cl.SpaceGianHang),
+                    CtaLabel = "Mở danh sách",
+                    HasPending = pending > 0
+                });
+            }
+
+            if (AdminRolePolicy_cl.CanApproveShopPartnerRegistration(db, taiKhoan))
+            {
+                int pending = CountPendingCoreSpaceRequests(db, ModuleSpace_cl.Shop);
+                items.Add(new AdminPendingItemView
+                {
+                    Title = "Yêu cầu mở không gian /shop",
+                    CountText = pending.ToString("#,##0"),
+                    Description = pending > 0
+                        ? "Có yêu cầu mở không gian /shop và chính sách chiết khấu đang chờ duyệt."
+                        : "Không có yêu cầu mở không gian /shop đang chờ duyệt.",
+                    Url = AdminManagementSpace_cl.AppendSpaceToUrl("/admin/duyet-shop-doi-tac.aspx", AdminManagementSpace_cl.SpaceGianHang),
+                    CtaLabel = "Mở danh sách",
+                    HasPending = pending > 0
+                });
+            }
+
+            if (AdminRolePolicy_cl.CanApproveShopLevel2(db, taiKhoan))
+            {
+                int pending = CountPendingShopLevel2Requests(db);
+                items.Add(new AdminPendingItemView
+                {
+                    Title = "Yêu cầu nâng cấp shop Level 2",
+                    CountText = pending.ToString("#,##0"),
+                    Description = pending > 0
+                        ? "Có yêu cầu nâng cấp Level 2 đang chờ duyệt."
+                        : "Không có yêu cầu nâng cấp Level 2 đang chờ duyệt.",
+                    Url = AdminManagementSpace_cl.AppendSpaceToUrl("/admin/duyet-nang-cap-level2.aspx", AdminManagementSpace_cl.SpaceGianHang),
+                    CtaLabel = "Mở danh sách",
+                    HasPending = pending > 0
+                });
+            }
+        }
+
+        return items;
+    }
+
     private void BindAdminHome()
     {
         string taiKhoan = GetCurrentAdminAccount();
@@ -291,7 +420,7 @@ public partial class admin_Default : System.Web.UI.Page
             string primaryWorkspaceUrl = AdminManagementSpace_cl.ResolveLandingUrl(db, taiKhoan, currentSpace);
 
             var tabs = AdminRolePolicy_cl.BuildAdminHomeTabs(db, taiKhoan, phanloai, permissionRaw)
-                .Where(item => string.Equals(ResolveTabSpace(item.Url), currentSpace, StringComparison.OrdinalIgnoreCase))
+                .Where(item => string.Equals(ResolveTabSpace(item.Key), currentSpace, StringComparison.OrdinalIgnoreCase))
                 .Select(item => new AdminHomeTabView
                 {
                     Title = item.Title,
@@ -304,6 +433,8 @@ public partial class admin_Default : System.Web.UI.Page
                     CtaLabel = "Mở tab"
                 })
                 .ToList();
+            var quickActions = BuildQuickActions(tabs, currentSpace);
+            var pendingItems = BuildPendingItems(db, taiKhoan, currentSpace);
 
             var notes = BuildManagementSpaceNotes(db, taiKhoan, phanloai, permissionRaw, currentSpace);
 
@@ -343,6 +474,12 @@ public partial class admin_Default : System.Web.UI.Page
             lb_admin_home_notes_description.Text = "Các ghi chú dưới đây được sinh theo đúng không gian quản trị đang chọn, không trộn lẫn tab của không gian khác.";
             lb_admin_object_groups_title.Text = "Nhóm nghiệp vụ liên quan";
             lb_admin_object_groups_description.Text = "Chỉ hiển thị các nhóm nghiệp vụ thật sự liên quan tới không gian đang chọn.";
+            lb_admin_home_quick_title.Text = "Hành động nhanh";
+            lb_admin_home_quick_description.Text = "Lối tắt vào các tab đang được cấp để thao tác nhanh trong không gian hiện tại.";
+            lb_admin_quick_empty.Text = "Không có hành động nhanh nào phù hợp với quyền và không gian quản trị hiện tại.";
+            lb_admin_home_pending_title.Text = "Việc chờ xử lý";
+            lb_admin_home_pending_description.Text = "Số lượng hồ sơ đang chờ duyệt theo đúng nghiệp vụ được cấp cho tài khoản này.";
+            lb_admin_pending_empty.Text = "Không có queue chờ duyệt nào cho không gian hiện tại hoặc tài khoản chưa được cấp quyền duyệt.";
             lb_admin_home_tabs_title.Text = "Danh sách tab của không gian này";
             lb_admin_home_tabs_description.Text = "Chỉ các tab thuộc không gian quản trị đang chọn mới xuất hiện ở đây.";
             lb_admin_home_empty.Text = "Không gian này hiện chưa có tab nghiệp vụ nào được cấp cho tài khoản admin đang đăng nhập.";
@@ -358,6 +495,12 @@ public partial class admin_Default : System.Web.UI.Page
 
             rpt_admin_home_notes.DataSource = notes;
             rpt_admin_home_notes.DataBind();
+            rpt_admin_home_quick_actions.DataSource = quickActions;
+            rpt_admin_home_quick_actions.DataBind();
+            pn_admin_quick_empty.Visible = quickActions.Count == 0;
+            rpt_admin_home_pending.DataSource = pendingItems;
+            rpt_admin_home_pending.DataBind();
+            pn_admin_pending_empty.Visible = pendingItems.Count == 0;
             rpt_admin_object_groups.DataSource = objectGroups;
             rpt_admin_object_groups.DataBind();
             pn_admin_object_groups_section.Visible = objectGroups.Count > 0;

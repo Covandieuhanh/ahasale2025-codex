@@ -5,6 +5,9 @@ public partial class admin_phat_hanh_the_them_moi : System.Web.UI.Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
+        if (!AdminAccessGuard_cl.EnsurePageAccess(this))
+            return;
+
         if (CompanyShop_cl.HideLegacyAdminSystemProduct())
         {
             Session["thongbao"] = thongbao_class.metro_notifi_onload(

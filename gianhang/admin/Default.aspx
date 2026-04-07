@@ -174,7 +174,7 @@
             transform: translateY(-2px);
         }
 
-        @media (max-width: 991px) {
+        @media (max-width: 767px) {
             .admin-ops-snapshot__grid {
                 grid-template-columns: 1fr;
             }
@@ -234,7 +234,7 @@
             font-size: 12px;
             color: #8b5b5b;
         }
-        @media (max-width: 991px) {
+        @media (max-width: 767px) {
             .kv-kpi-actions {
                 width: 100%;
             }
@@ -359,7 +359,7 @@
         <div class="admin-flow">
             <div class="admin-flow__head">
                 <div>
-                    <div class="admin-flow__title">Luồng vận hành chuẩn KiotViet</div>
+                    <div class="admin-flow__title">Luồng vận hành chuẩn Aha Shine</div>
                     <div class="admin-flow__subtitle">Đi theo thứ tự thao tác để vận hành nhanh, ít sai sót.</div>
                 </div>
             </div>
@@ -393,7 +393,7 @@
         <div class="kv-kpi-wrap">
             <div class="kv-kpi-head">
                 <div>
-                    <div class="kv-kpi-title">Báo cáo nhanh (chuẩn KiotViet)</div>
+                    <div class="kv-kpi-title">Báo cáo nhanh (chuẩn Aha Shine)</div>
                     <div class="kv-kpi-sub">Từ <%=Session["tungay_thongke_home"] %> đến <%=Session["denngay_thongke_home"] %></div>
                 </div>
                 <div class="kv-kpi-actions">

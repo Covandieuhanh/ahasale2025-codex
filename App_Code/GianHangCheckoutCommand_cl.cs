@@ -181,12 +181,17 @@ public static class GianHangCheckoutCommand_cl
 
     private static ExchangeResult ValidateSessionAndCard(dbDataContext db, HttpSessionState session, ExchangeContext context)
     {
+        GianHangOrderRuntime_cl.OrderRuntime preferredRuntime = string.IsNullOrWhiteSpace(context.OrderId)
+            ? null
+            : GianHangOrderRuntime_cl.ResolveByOrderKey(db, context.SellerAccount, context.OrderId, false);
+
         context.PaymentContext = GianHangCheckoutCore_cl.LoadPaymentContext(
             db,
             session,
             context.SellerAccount,
             true,
-            context.LinkContextTtlMinutes);
+            context.LinkContextTtlMinutes,
+            preferredRuntime);
 
         if (!string.IsNullOrEmpty(context.PaymentContext.ErrorCode))
         {
@@ -353,7 +358,9 @@ public static class GianHangCheckoutCommand_cl
                 context.InternalOrderId,
                 context.DiscountRights,
                 2,
-                string.Format("Bán đơn hàng số {0} (Thẻ ưu đãi - Hồ sơ quyền ưu đãi gian hàng)", context.PublicOrderId));
+                string.Format("Bán đơn hàng số {0} (Thẻ ưu đãi - Hồ sơ quyền ưu đãi gian hàng)", context.PublicOrderId),
+                context.PublicOrderId,
+                context.PayerAccount == null ? "" : context.PayerAccount.taikhoan);
         }
 
         InsertExchangeNotices(
@@ -365,7 +372,7 @@ public static class GianHangCheckoutCommand_cl
             BuildExchangeSuccessNotice(context.DiscountRights, 0m, context.PublicOrderId),
             context.Now);
         GianHangOrderRuntime_cl.PersistExchangeSuccess(db, context.SellerAccount, context.Runtime, context.PayerAccount);
-        return SuccessRedirect(context.SellerDonBanUrl, BuildExchangeSuccessMessage(context.DiscountRights, 0m));
+        return SuccessRedirect(context.SellerDonBanUrl, BuildExchangeSuccessToastMessage());
     }
 
     private static ExchangeResult ExecuteConsumerCardExchange(dbDataContext db, ExchangeContext context)
@@ -454,7 +461,7 @@ public static class GianHangCheckoutCommand_cl
             BuildExchangeSuccessNotice(successDiscountRights, successConsumerRights, context.PublicOrderId),
             context.Now);
         GianHangOrderRuntime_cl.PersistExchangeSuccess(db, context.SellerAccount, context.Runtime, context.PayerAccount);
-        return SuccessRedirect(context.SellerDonBanUrl, BuildExchangeSuccessMessage(successDiscountRights, successConsumerRights));
+        return SuccessRedirect(context.SellerDonBanUrl, BuildExchangeSuccessToastMessage());
     }
 
     private static void InsertSellerCredits(
@@ -475,7 +482,9 @@ public static class GianHangCheckoutCommand_cl
                 context.InternalOrderId,
                 discountPart,
                 2,
-                string.Format("Bán đơn hàng số {0} (ưu đãi - Hồ sơ quyền ưu đãi gian hàng)", context.PublicOrderId));
+                string.Format("Bán đơn hàng số {0} (ưu đãi - Hồ sơ quyền ưu đãi gian hàng)", context.PublicOrderId),
+                context.PublicOrderId,
+                context.PayerAccount == null ? "" : context.PayerAccount.taikhoan);
 
             GianHangLedger_cl.AddSellerCreditFromOrder(
                 db,
@@ -483,7 +492,9 @@ public static class GianHangCheckoutCommand_cl
                 context.InternalOrderId,
                 consumerPart,
                 1,
-                string.Format("Bán đơn hàng số {0} (phần còn lại - Hồ sơ quyền tiêu dùng gian hàng)", context.PublicOrderId));
+                string.Format("Bán đơn hàng số {0} (phần còn lại - Hồ sơ quyền tiêu dùng gian hàng)", context.PublicOrderId),
+                context.PublicOrderId,
+                context.PayerAccount == null ? "" : context.PayerAccount.taikhoan);
             return;
         }
 
@@ -493,7 +504,9 @@ public static class GianHangCheckoutCommand_cl
             context.InternalOrderId,
             context.TotalRights,
             1,
-            string.Format("Bán đơn hàng số {0} (Hồ sơ quyền tiêu dùng gian hàng)", context.PublicOrderId));
+            string.Format("Bán đơn hàng số {0} (Hồ sơ quyền tiêu dùng gian hàng)", context.PublicOrderId),
+            context.PublicOrderId,
+            context.PayerAccount == null ? "" : context.PayerAccount.taikhoan);
     }
 
     private static void InsertExchangeNotices(
@@ -589,6 +602,11 @@ public static class GianHangCheckoutCommand_cl
         return string.Format(
             "Đã trao đổi thành công {0} Quyền tiêu dùng.",
             FormatQuyenValue(consumerRights));
+    }
+
+    private static string BuildExchangeSuccessToastMessage()
+    {
+        return "Đã trao đổi thành công.";
     }
 
     private static string BuildExchangeSuccessNotice(decimal discountRights, decimal consumerRights, string orderId)

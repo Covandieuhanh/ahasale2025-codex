@@ -1,4 +1,4 @@
-<%@ Page Title="Nâng cấp quản trị" Language="C#" MasterPageFile="~/MasterPage/Tabler/TablerHome.master" AutoEventWireup="true" CodeFile="nang-cap-level2.aspx.cs" Inherits="gianhang_nang_cap_level2" %>
+<%@ Page Title="Nâng cấp quản trị" Language="C#" MasterPageFile="~/MasterPage/Tabler/TablerGianHang.master" AutoEventWireup="true" CodeFile="nang-cap-level2.aspx.cs" Inherits="gianhang_nang_cap_level2" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head_truoc" runat="server">
     <style>
@@ -264,7 +264,7 @@
             font-size: 14px;
         }
 
-        @media (max-width: 900px) {
+        @media (max-width: 767px) {
             .level2-kpi-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }

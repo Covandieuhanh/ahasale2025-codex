@@ -1,0 +1,70 @@
+<%@ Master Language="C#" %>
+<%@ Register Src="~/Uc/Xe/Header_uc.ascx" TagPrefix="uc1" TagName="Header_uc" %>
+<%@ Register Src="~/Uc/Xe/Footer_uc.ascx" TagPrefix="uc1" TagName="Footer_uc" %>
+<!DOCTYPE html>
+<html>
+<head runat="server">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="content-language" content="vi" />
+    <meta name="robots" content="index, follow" />
+    <meta name="revisit-after" content="1 days" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="format-detection" content="date=no" />
+    <meta name="format-detection" content="address=no" />
+    <meta name="format-detection" content="email=no" />
+    <meta name="format-detection" content="url=no" />
+
+    <asp:ContentPlaceHolder ID="head_truoc" runat="server"></asp:ContentPlaceHolder>
+    <script>
+        (function () {
+            document.documentElement.setAttribute('data-bs-theme', 'light');
+            try { localStorage.removeItem('theme-preference'); } catch (e) { }
+            document.addEventListener('DOMContentLoaded', function () {
+                if (!document.body) return;
+                document.body.setAttribute('data-bs-theme', 'light');
+                document.body.classList.remove('theme-dark', 'dark', 'dark-mode');
+            });
+        })();
+    </script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler-flags.min.css" />
+    <link rel="stylesheet" href="<%= Helper_cl.VersionedUrl("~/xe/xe-shell.css") %>" />
+    <link rel="stylesheet" href="<%= Helper_cl.VersionedUrl("~/assetscss/xe-aha-responsive-mode.css") %>" />
+    <link rel="stylesheet" href="<%= Helper_cl.VersionedUrl("~/assetscss/xe-header_tabler_UI.css") %>" />
+    <link rel="stylesheet" href="<%= Helper_cl.VersionedUrl("~/assetscss/xe-aha-ui-refresh.css") %>" />
+    <link rel="stylesheet" href="<%= Helper_cl.VersionedUrl("~/xe/xe.css") %>" />
+    <asp:ContentPlaceHolder ID="head_sau" runat="server"></asp:ContentPlaceHolder>
+    <style>
+        :root {
+            --tblr-primary: #2fb344;
+            --tblr-primary-rgb: 47, 179, 68;
+        }
+
+        body.xe-shell {
+            background: #f1f5f9;
+        }
+
+    </style>
+</head>
+<body class="xe-shell">
+    <form id="form1" runat="server" class="aha-scale-root xe-shell-form">
+        <asp:ScriptManager runat="server" ID="ScriptManager1" EnablePageMethods="true" EnableScriptGlobalization="True" />
+        <div class="page">
+            <uc1:Header_uc runat="server" ID="Header_uc" />
+            <div class="page-wrapper" style="margin-top: var(--aha-header-offset, 55px)">
+                <asp:ContentPlaceHolder ID="main" runat="server"></asp:ContentPlaceHolder>
+            </div>
+            <uc1:Footer_uc runat="server" ID="Footer_uc" />
+        </div>
+    </form>
+
+    <asp:ContentPlaceHolder ID="foot_truoc" runat="server"></asp:ContentPlaceHolder>
+    <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
+    <script src="<%= Helper_cl.VersionedUrl("~/xe/xe-shell.js") %>"></script>
+    <script src="<%= Helper_cl.VersionedUrl("~/js/xe-aha-ui-refresh.js") %>"></script>
+    <script src="<%= Helper_cl.VersionedUrl("~/xe/xe.js") %>"></script>
+    <asp:ContentPlaceHolder ID="foot_sau" runat="server"></asp:ContentPlaceHolder>
+</body>
+</html>

@@ -1,4 +1,4 @@
-<%@ Page Title="Mở công cụ quản trị gian hàng" Language="C#" MasterPageFile="~/MasterPage/Tabler/TablerHome.master" AutoEventWireup="true" CodeFile="mo-cong-cu-quan-tri.aspx.cs" Inherits="gianhang_mo_cong_cu_quan_tri" %>
+<%@ Page Title="Mở công cụ quản trị gian hàng" Language="C#" MasterPageFile="~/MasterPage/Tabler/TablerGianHang.master" AutoEventWireup="true" CodeFile="mo-cong-cu-quan-tri.aspx.cs" Inherits="gianhang_mo_cong_cu_quan_tri" %>
 
 <asp:Content ID="ContentHeadTruoc" ContentPlaceHolderID="head_truoc" runat="Server">
 </asp:Content>
@@ -168,7 +168,7 @@
             line-height: 1.7;
         }
 
-        @media (max-width: 900px) {
+        @media (max-width: 767px) {
             .gh-admin-open-grid,
             .gh-admin-open-meta {
                 grid-template-columns: 1fr;

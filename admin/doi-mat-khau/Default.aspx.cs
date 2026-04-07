@@ -43,7 +43,7 @@ public partial class admin_doi_mat_khau_Default : System.Web.UI.Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
-        check_login_cl.check_login_admin("none", "none");
+        AdminAccessGuard_cl.RequireFeatureAccess("change_password", "/admin/login.aspx");
 
         if (!IsPostBack)
         {
@@ -66,7 +66,7 @@ public partial class admin_doi_mat_khau_Default : System.Web.UI.Page
 
     protected void butSave_Click(object sender, EventArgs e)
     {
-        check_login_cl.check_login_admin("none", "none");
+        AdminAccessGuard_cl.RequireFeatureAccess("change_password", "/admin/login.aspx");
 
         string taiKhoan = CurrentTaiKhoan;
         if (string.IsNullOrWhiteSpace(taiKhoan))

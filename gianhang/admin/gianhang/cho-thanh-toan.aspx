@@ -53,7 +53,7 @@
         .gh-admin-wait__action-btn, .gh-admin-wait__action-link { display:inline-flex; align-items:center; justify-content:center; min-height:34px; padding:0 12px; border-radius:12px; border:1px solid #eadfe2; background:#fff; color:#7f1d1d !important; font-size:12px; font-weight:800; text-decoration:none !important; }
         .gh-admin-wait__action-btn { box-shadow:none; }
         .gh-admin-wait__empty { padding:22px 12px; color:#6b7280; text-align:center; }
-        @media (max-width: 991px) { .gh-admin-wait__filters { grid-template-columns:1fr; } .gh-admin-wait__title { font-size:26px; } }
+        @media (max-width: 767px) { .gh-admin-wait__filters { grid-template-columns:1fr; } .gh-admin-wait__title { font-size:26px; } }
     </style>
 </asp:Content>
 

@@ -42,7 +42,7 @@ public partial class gianhang_admin_gianhang_bai_viet : System.Web.UI.Page
         if (ownerAccountKey == "")
             return;
 
-        AdminArticleUrl = "/gianhang/admin/quan-ly-bai-viet/Default.aspx";
+        AdminArticleUrl = GianHangRoutes_cl.BuildAdminLegacyArticlesUrl(string.Empty);
         PublicArticlesUrl = GianHangRoutes_cl.BuildArticlesUrl(ownerAccountKey);
         StorefrontPreviewUrl = GianHangRoutes_cl.BuildAdminWorkspaceStorefrontUrl();
 
@@ -105,7 +105,7 @@ public partial class gianhang_admin_gianhang_bai_viet : System.Web.UI.Page
                 VisibilityCss = (item.hienthi == false || item.bin == true) ? "gh-article-badge gh-article-badge--hidden" : "gh-article-badge gh-article-badge--visible",
                 MirrorText = hasMirror ? ("Đã mirror #" + item.legacy_post_id.Value.ToString()) : "Đang dùng native record",
                 UpdatedAtText = (item.ngay_cap_nhat ?? item.ngaytao).HasValue ? (item.ngay_cap_nhat ?? item.ngaytao).Value.ToString("dd/MM/yyyy HH:mm") : "--",
-                AdminEditUrl = hasMirror ? ("/gianhang/admin/quan-ly-bai-viet/edit.aspx?id=" + item.legacy_post_id.Value.ToString()) : AdminArticleUrl,
+                AdminEditUrl = hasMirror ? GianHangRoutes_cl.BuildAdminLegacyArticleEditUrl(item.legacy_post_id.Value, string.Empty) : AdminArticleUrl,
                 PublicDetailUrl = GianHangArticle_cl.BuildDetailUrl(routeId, ownerAccountKey),
                 PublicListUrl = PublicArticlesUrl,
                 WorkspaceDetailUrl = GianHangRoutes_cl.BuildAdminWorkspaceArticleDetailUrl(routeId),

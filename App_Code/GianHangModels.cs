@@ -35,6 +35,21 @@ public class GH_SanPham_tb
     public string id_danhmuc { get; set; }
 
     [Column]
+    public string dia_diem { get; set; }
+
+    [Column]
+    public string dia_chi_tinh { get; set; }
+
+    [Column]
+    public string dia_chi_quan { get; set; }
+
+    [Column]
+    public string dia_chi_phuong { get; set; }
+
+    [Column]
+    public string dia_chi_chi_tiet { get; set; }
+
+    [Column]
     public bool? bin { get; set; }
 
     [Column]
@@ -232,4 +247,38 @@ public class GH_HoaDon_ChiTiet_tb
 
     [Column]
     public int? phan_tram_uu_dai { get; set; }
+}
+
+[Table(Name = "dbo.GH_HoSoQuyen_tb")]
+public class GH_HoSoQuyen_tb
+{
+    [Column(IsPrimaryKey = true, IsDbGenerated = true)]
+    public long id { get; set; }
+
+    [Column]
+    public string shop_taikhoan { get; set; }
+
+    [Column]
+    public int? loai_vi { get; set; }
+
+    [Column]
+    public decimal? so_quyen { get; set; }
+
+    [Column]
+    public bool? cong_tru { get; set; }
+
+    [Column]
+    public string id_donhang { get; set; }
+
+    [Column]
+    public string public_order_id { get; set; }
+
+    [Column]
+    public string buyer_account { get; set; }
+
+    [Column]
+    public string ghi_chu { get; set; }
+
+    [Column]
+    public DateTime? ngay_tao { get; set; }
 }

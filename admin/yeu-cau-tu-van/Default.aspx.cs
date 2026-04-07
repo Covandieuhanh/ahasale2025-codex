@@ -112,7 +112,7 @@ public partial class admin_yeu_cau_tu_van_Default : System.Web.UI.Page
 
     private void ShowFilterViewFromQuery()
     {
-        AdminRolePolicy_cl.RequireSuperAdmin();
+        AdminAccessGuard_cl.RequireFeatureAccess("consulting", "/admin/default.aspx?mspace=admin");
         HideOtherPanels();
         pn_loc.Visible = true;
         up_loc.Update();
@@ -121,7 +121,7 @@ public partial class admin_yeu_cau_tu_van_Default : System.Web.UI.Page
 
     private void ShowExportViewFromQuery()
     {
-        AdminRolePolicy_cl.RequireSuperAdmin();
+        AdminAccessGuard_cl.RequireFeatureAccess("consulting", "/admin/default.aspx?mspace=admin");
         HideOtherPanels();
 
         check_list_page.Items.Clear();
@@ -139,7 +139,7 @@ public partial class admin_yeu_cau_tu_van_Default : System.Web.UI.Page
 
     private void ShowPrintViewFromQuery()
     {
-        AdminRolePolicy_cl.RequireSuperAdmin();
+        AdminAccessGuard_cl.RequireFeatureAccess("consulting", "/admin/default.aspx?mspace=admin");
         HideOtherPanels();
         pn_in.Visible = true;
         up_in.Update();
@@ -241,7 +241,7 @@ public partial class admin_yeu_cau_tu_van_Default : System.Web.UI.Page
         if (!IsPostBack)
         {
             Session["url_back"] = HttpContext.Current.Request.Url.AbsoluteUri;
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("consulting", "/admin/default.aspx?mspace=admin");
             string _tk = Session["taikhoan"] as string; // Sử dụng 'as' để tránh lỗi nếu là null
             if (!string.IsNullOrEmpty(_tk)) // Kiểm tra xem '_tk' có hợp lệ hay không                
                 _tk = mahoa_cl.giaima_Bcorn(_tk);
@@ -407,7 +407,7 @@ public partial class admin_yeu_cau_tu_van_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("consulting", "/admin/default.aspx?mspace=admin");
             ViewState["current_page_yctv"] = int.Parse(ViewState["current_page_yctv"].ToString()) - 1;
             #region LƯU TRANG HIỆN TẠI
             // Lấy cookie "cookie_yctv" từ Request.Cookies
@@ -439,7 +439,7 @@ public partial class admin_yeu_cau_tu_van_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("consulting", "/admin/default.aspx?mspace=admin");
             ViewState["current_page_yctv"] = int.Parse(ViewState["current_page_yctv"].ToString()) + 1;
             #region LƯU TRANG HIỆN TẠI
             // Lấy cookie "cookie_yctv" từ Request.Cookies
@@ -471,7 +471,7 @@ public partial class admin_yeu_cau_tu_van_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("consulting", "/admin/default.aspx?mspace=admin");
             ViewState["current_page_yctv"] = 1;
             show_main();
         }
@@ -494,7 +494,7 @@ public partial class admin_yeu_cau_tu_van_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("consulting", "/admin/default.aspx?mspace=admin");
             RedirectTo(BuildListUrl(true));
         }
         catch (Exception _ex)
@@ -514,7 +514,7 @@ public partial class admin_yeu_cau_tu_van_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("consulting", "/admin/default.aspx?mspace=admin");
             RedirectTo(BuildListUrl());
         }
         catch (Exception _ex)
@@ -533,7 +533,7 @@ public partial class admin_yeu_cau_tu_van_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("consulting", "/admin/default.aspx?mspace=admin");
             RedirectTo(BuildListUrl());
         }
         catch (Exception _ex)
@@ -555,7 +555,7 @@ public partial class admin_yeu_cau_tu_van_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("consulting", "/admin/default.aspx?mspace=admin");
             string view = (Request.QueryString["view"] ?? "").Trim().ToLowerInvariant();
             if (view == ViewExport)
                 RedirectTo(BuildListUrl());
@@ -579,7 +579,7 @@ public partial class admin_yeu_cau_tu_van_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("consulting", "/admin/default.aspx?mspace=admin");
             bool _chonmuc = false, _chonPage = false;
 
             foreach (ListItem item in check_list_excel.Items)
@@ -801,7 +801,7 @@ public partial class admin_yeu_cau_tu_van_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("consulting", "/admin/default.aspx?mspace=admin");
             // Kiểm tra trạng thái của checkbox "Chọn tất cả"
             bool isChecked = check_all_excel.Checked;
 
@@ -827,7 +827,7 @@ public partial class admin_yeu_cau_tu_van_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("consulting", "/admin/default.aspx?mspace=admin");
             // Kiểm tra xem tất cả các mục trong CheckBoxList đã được chọn hay chưa
             bool allSelected = true;
 
@@ -859,7 +859,7 @@ public partial class admin_yeu_cau_tu_van_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("consulting", "/admin/default.aspx?mspace=admin");
             // Kiểm tra trạng thái của checkbox "Chọn tất cả"
             bool isChecked = check_all_page.Checked;
 
@@ -885,7 +885,7 @@ public partial class admin_yeu_cau_tu_van_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("consulting", "/admin/default.aspx?mspace=admin");
             // Kiểm tra xem tất cả các mục trong CheckBoxList đã được chọn hay chưa
             bool allSelected = true;
 
@@ -996,7 +996,7 @@ public partial class admin_yeu_cau_tu_van_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("consulting", "/admin/default.aspx?mspace=admin");
             string view = (Request.QueryString["view"] ?? "").Trim().ToLowerInvariant();
             if (view == ViewFilter)
                 RedirectTo(BuildListUrl());
@@ -1019,7 +1019,7 @@ public partial class admin_yeu_cau_tu_van_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("consulting", "/admin/default.aspx?mspace=admin");
             if (Request.Cookies["cookie_yctv"] != null)//nếu có ck r thì lưu giá trị mới
             {
                 HttpCookie _ck = Request.Cookies["cookie_yctv"];
@@ -1051,7 +1051,7 @@ public partial class admin_yeu_cau_tu_van_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("consulting", "/admin/default.aspx?mspace=admin");
             if (Request.Cookies["cookie_yctv"] != null)
                 Response.Cookies["cookie_yctv"].Expires = AhaTime_cl.Now.AddYears(-1);
             RedirectTo(BuildListUrl());
@@ -1075,7 +1075,7 @@ public partial class admin_yeu_cau_tu_van_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("consulting", "/admin/default.aspx?mspace=admin");
 
             var selectedIds = new List<string>(); // Danh sách để lưu trữ ID của các mục đã được chọn
 
@@ -1178,7 +1178,7 @@ public partial class admin_yeu_cau_tu_van_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("consulting", "/admin/default.aspx?mspace=admin");
 
             var selectedIds = new List<string>(); // Danh sách để lưu trữ ID của các mục đã được chọn
 
@@ -1241,7 +1241,7 @@ public partial class admin_yeu_cau_tu_van_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("consulting", "/admin/default.aspx?mspace=admin");
 
             var selectedIds = new List<string>(); // Danh sách để lưu trữ ID của các mục đã được chọn
 
@@ -1307,7 +1307,7 @@ public partial class admin_yeu_cau_tu_van_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("consulting", "/admin/default.aspx?mspace=admin");
             string view = (Request.QueryString["view"] ?? "").Trim().ToLowerInvariant();
             if (view == ViewPrint)
                 RedirectTo(BuildListUrl());
@@ -1333,7 +1333,7 @@ public partial class admin_yeu_cau_tu_van_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();//reset control
+            AdminAccessGuard_cl.RequireFeatureAccess("consulting", "/admin/default.aspx?mspace=admin");//reset control
                                                              //ddl_DanhMuc.DataSource = null;
                                                              //ddl_DanhMuc.DataBind();
                                                              //ẩn form
@@ -1355,7 +1355,7 @@ public partial class admin_yeu_cau_tu_van_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("consulting", "/admin/default.aspx?mspace=admin");
             RedirectTo("/admin/yeu-cau-tu-van/in.aspx");
         }
         catch (Exception _ex)

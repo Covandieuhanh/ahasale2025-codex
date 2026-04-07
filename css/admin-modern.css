@@ -705,7 +705,7 @@
 }
 
 /* Mobile */
-@media (max-width: 991px) {
+@media (max-width: 767px) {
     .admin-shell .admin-page-surface {
         border-radius: 0;
         border-left: 0;

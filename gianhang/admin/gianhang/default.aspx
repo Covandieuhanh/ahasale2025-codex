@@ -222,7 +222,7 @@
             margin-top: 12px;
         }
 
-        @media (max-width: 991px) {
+        @media (max-width: 767px) {
             .gh-bridge-title {
                 font-size: 26px;
             }
@@ -514,7 +514,7 @@
                         </div>
                         <strong>&rsaquo;</strong>
                     </a>
-                    <a class="gh-bridge-link" href="/gianhang/admin/quan-ly-con-nguoi/Default.aspx">
+                    <a class="gh-bridge-link" href="<%=PersonHubUrl %>">
                         <div>
                             <small>Con người</small>
                             Hồ sơ người

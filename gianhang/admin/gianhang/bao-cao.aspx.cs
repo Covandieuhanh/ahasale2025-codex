@@ -83,9 +83,9 @@ public partial class gianhang_admin_gianhang_bao_cao : System.Web.UI.Page
         WaitUrl = GianHangRoutes_cl.BuildAdminWorkspaceWaitUrl();
         BuyerFlowUrl = GianHangRoutes_cl.BuildAdminWorkspaceBuyerFlowUrl();
         UtilityUrl = GianHangRoutes_cl.BuildAdminWorkspaceUtilityUrl();
-        LegacyInvoiceUrl = "/gianhang/admin/quan-ly-hoa-don/Default.aspx?workspace=gianhang";
-        LegacyProductStatsUrl = "/gianhang/admin/quan-ly-hoa-don/thong-ke-san-pham.aspx";
-        LegacyServiceStatsUrl = "/gianhang/admin/quan-ly-hoa-don/thong-ke-dich-vu.aspx";
+        LegacyInvoiceUrl = GianHangRoutes_cl.BuildAdminLegacyInvoiceListUrl();
+        LegacyProductStatsUrl = GianHangRoutes_cl.BuildAdminLegacyInvoiceProductStatsUrl();
+        LegacyServiceStatsUrl = GianHangRoutes_cl.BuildAdminLegacyInvoiceServiceStatsUrl();
         SyncUrl = GianHangRoutes_cl.BuildAdminWorkspaceReportUrl() + "?sync=1";
 
         if (!IsPostBack)
@@ -187,7 +187,7 @@ public partial class gianhang_admin_gianhang_bao_cao : System.Web.UI.Page
             StatusCss = ResolveOrderStatusCss(row == null ? "" : row.StatusCss),
             TotalAmountText = GianHangReport_cl.FormatCurrency(row == null ? 0m : row.TotalAmount),
             DetailUrl = legacyInvoiceId > 0
-                ? "/gianhang/admin/quan-ly-hoa-don/chi-tiet.aspx?id=" + legacyInvoiceId.ToString()
+                ? GianHangRoutes_cl.BuildAdminLegacyInvoiceDetailUrl(legacyInvoiceId)
                 : (OrdersUrl + "?keyword=" + Server.UrlEncode(row == null ? "" : row.Id.ToString()))
         };
     }
@@ -204,8 +204,8 @@ public partial class gianhang_admin_gianhang_bao_cao : System.Web.UI.Page
             StatusText = row == null ? "Không xác định" : (row.StatusText ?? "Không xác định"),
             StatusCss = ResolveBookingStatusCss(row == null ? "" : row.StatusCss),
             DetailUrl = legacyBookingId > 0
-                ? "/gianhang/admin/quan-ly-khach-hang/sua-lich-hen.aspx?id=" + legacyBookingId.ToString()
-                : "/gianhang/admin/quan-ly-khach-hang/danh-sach-lich-hen.aspx"
+                ? GianHangRoutes_cl.BuildAdminLegacyBookingDetailUrl(legacyBookingId)
+                : GianHangRoutes_cl.BuildAdminLegacyBookingsUrl()
         };
     }
 

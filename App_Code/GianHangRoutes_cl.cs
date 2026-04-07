@@ -3,12 +3,80 @@ using System.Web;
 
 public static class GianHangRoutes_cl
 {
-    public static string BuildPublicUrl(string accountKey)
+    public static string BuildOwnerHomeUrl()
     {
-        return BuildStorefrontUrl(accountKey);
+        return "/gianhang/default.aspx";
     }
 
-    public static string BuildStorefrontUrl(string accountKey)
+    public static string BuildOwnerContentUrl()
+    {
+        return "/gianhang/quan-ly-tin/Default.aspx";
+    }
+
+    public static string BuildOwnerContentCreateUrl()
+    {
+        return "/gianhang/quan-ly-tin/Them.aspx";
+    }
+
+    public static string BuildOwnerOrdersUrl()
+    {
+        return "/gianhang/don-ban.aspx";
+    }
+
+    public static string BuildOwnerWaitUrl()
+    {
+        return "/gianhang/cho-thanh-toan.aspx";
+    }
+
+    public static string BuildOwnerCustomersUrl()
+    {
+        return "/gianhang/khach-hang.aspx";
+    }
+
+    public static string BuildOwnerCustomerDetailUrl(string customerKey)
+    {
+        string key = (customerKey ?? string.Empty).Trim();
+        if (key == string.Empty)
+            return BuildOwnerCustomersUrl();
+
+        return BuildOwnerCustomersUrl() + "?key=" + HttpUtility.UrlEncode(key);
+    }
+
+    public static string BuildOwnerBookingsUrl()
+    {
+        return "/gianhang/quan-ly-lich-hen.aspx";
+    }
+
+    public static string BuildOwnerReportsUrl()
+    {
+        return "/gianhang/bao-cao.aspx";
+    }
+
+    public static string BuildOwnerAccountUrl()
+    {
+        return "/gianhang/tai-khoan/default.aspx";
+    }
+
+    public static string BuildOwnerElectronicInvoiceUrl(string rawId)
+    {
+        string safe = (rawId ?? string.Empty).Trim();
+        if (safe == string.Empty)
+            return "/gianhang/hoa-don-dien-tu.aspx";
+
+        return "/gianhang/hoa-don-dien-tu.aspx?id=" + HttpUtility.UrlEncode(safe);
+    }
+
+    public static string BuildBridgeAdminAccessUrl()
+    {
+        return "/gianhang/mo-cong-cu-quan-tri.aspx";
+    }
+
+    public static string BuildBridgeLevel2Url()
+    {
+        return "/gianhang/nang-cap-level2.aspx";
+    }
+
+    public static string BuildPublicStorefrontUrl(string accountKey)
     {
         string normalized = NormalizeAccount(accountKey);
         if (normalized == string.Empty)
@@ -17,9 +85,65 @@ public static class GianHangRoutes_cl
         return "/gianhang/public.aspx?user=" + HttpUtility.UrlEncode(normalized);
     }
 
+    public static string BuildPublicProductsUrl(string accountKey)
+    {
+        return AppendUserToUrl("/gianhang/page/danh-sach-san-pham.aspx", accountKey);
+    }
+
+    public static string BuildPublicServicesUrl(string accountKey)
+    {
+        return AppendUserToUrl("/gianhang/page/danh-sach-dich-vu.aspx", accountKey);
+    }
+
+    public static string BuildPublicArticlesUrl(string accountKey)
+    {
+        return AppendUserToUrl("/gianhang/page/danh-sach-bai-viet.aspx", accountKey);
+    }
+
+    public static string BuildPublicProductDetailUrl(int itemId)
+    {
+        return "/gianhang/xem-san-pham.aspx?id=" + itemId.ToString();
+    }
+
+    public static string BuildPublicServiceDetailUrl(int itemId)
+    {
+        return "/gianhang/xem-dich-vu.aspx?id=" + itemId.ToString();
+    }
+
+    public static string BuildPublicBookingUrl(int itemId, string accountKey, string returnUrl)
+    {
+        string url = "/gianhang/datlich.aspx?id=" + itemId.ToString();
+        url = AppendUserToUrl(url, accountKey);
+        return AppendReturnUrl(url, returnUrl);
+    }
+
+    public static string BuildPublicCartUrl(string accountKey, string returnUrl)
+    {
+        string url = "/gianhang/giohang.aspx";
+        url = AppendUserToUrl(url, accountKey);
+        return AppendReturnUrl(url, returnUrl);
+    }
+
+    public static string BuildPublicRemoveCartItemUrl(string accountKey, int itemId, string returnUrl)
+    {
+        string url = "/gianhang/xoa_chitiet_giohang.aspx?id=" + itemId.ToString();
+        url = AppendUserToUrl(url, accountKey);
+        return AppendReturnUrl(url, returnUrl);
+    }
+
+    public static string BuildPublicUrl(string accountKey)
+    {
+        return BuildPublicStorefrontUrl(accountKey);
+    }
+
+    public static string BuildStorefrontUrl(string accountKey)
+    {
+        return BuildPublicStorefrontUrl(accountKey);
+    }
+
     public static string BuildDashboardUrl()
     {
-        return "/gianhang/default.aspx";
+        return BuildOwnerHomeUrl();
     }
 
     public static string BuildLoginUrl(string returnUrl)
@@ -30,82 +154,82 @@ public static class GianHangRoutes_cl
 
     public static string BuildDonBanUrl()
     {
-        return "/gianhang/don-ban.aspx";
+        return BuildOwnerOrdersUrl();
     }
 
     public static string BuildAdminWorkspaceHubUrl()
     {
-        return "/gianhang/admin/gianhang/default.aspx";
+        return WorkspaceContext_cl.AppendSystemAdminFlag("/gianhang/admin/gianhang/default.aspx", HttpContext.Current != null ? HttpContext.Current.Request : null);
     }
 
     public static string BuildAdminWorkspaceAccountCenterUrl()
     {
-        return "/gianhang/admin/gianhang/trung-tam.aspx";
+        return WorkspaceContext_cl.AppendSystemAdminFlag("/gianhang/admin/gianhang/trung-tam.aspx", HttpContext.Current != null ? HttpContext.Current.Request : null);
     }
 
     public static string BuildAdminWorkspaceOrdersUrl()
     {
-        return "/gianhang/admin/gianhang/don-ban.aspx";
+        return WorkspaceContext_cl.AppendSystemAdminFlag("/gianhang/admin/gianhang/don-ban.aspx", HttpContext.Current != null ? HttpContext.Current.Request : null);
     }
 
     public static string BuildAdminWorkspaceCreateUrl()
     {
-        return "/gianhang/admin/gianhang/tao-giao-dich.aspx";
+        return WorkspaceContext_cl.AppendSystemAdminFlag("/gianhang/admin/gianhang/tao-giao-dich.aspx", HttpContext.Current != null ? HttpContext.Current.Request : null);
     }
 
     public static string BuildAdminWorkspaceWaitUrl()
     {
-        return "/gianhang/admin/gianhang/cho-thanh-toan.aspx";
+        return WorkspaceContext_cl.AppendSystemAdminFlag("/gianhang/admin/gianhang/cho-thanh-toan.aspx", HttpContext.Current != null ? HttpContext.Current.Request : null);
     }
 
     public static string BuildAdminWorkspaceBuyerFlowUrl()
     {
-        return "/gianhang/admin/gianhang/don-mua.aspx";
+        return WorkspaceContext_cl.AppendSystemAdminFlag("/gianhang/admin/gianhang/don-mua.aspx", HttpContext.Current != null ? HttpContext.Current.Request : null);
     }
 
     public static string BuildAdminWorkspaceStorefrontUrl()
     {
-        return "/gianhang/admin/gianhang/trang-cong-khai.aspx";
+        return WorkspaceContext_cl.AppendSystemAdminFlag("/gianhang/admin/gianhang/trang-cong-khai.aspx", HttpContext.Current != null ? HttpContext.Current.Request : null);
     }
 
     public static string BuildAdminWorkspacePresentationUrl()
     {
-        return "/gianhang/admin/gianhang/trinh-bay.aspx";
+        return WorkspaceContext_cl.AppendSystemAdminFlag("/gianhang/admin/gianhang/trinh-bay.aspx", HttpContext.Current != null ? HttpContext.Current.Request : null);
     }
 
     public static string BuildAdminWorkspaceCartUrl()
     {
-        return "/gianhang/admin/gianhang/gio-hang.aspx";
+        return WorkspaceContext_cl.AppendSystemAdminFlag("/gianhang/admin/gianhang/gio-hang.aspx", HttpContext.Current != null ? HttpContext.Current.Request : null);
     }
 
     public static string BuildAdminWorkspaceElectronicInvoiceUrl()
     {
-        return "/gianhang/admin/gianhang/hoa-don-dien-tu.aspx";
+        return WorkspaceContext_cl.AppendSystemAdminFlag("/gianhang/admin/gianhang/hoa-don-dien-tu.aspx", HttpContext.Current != null ? HttpContext.Current.Request : null);
     }
 
     public static string BuildAdminWorkspaceUtilityUrl()
     {
-        return "/gianhang/admin/gianhang/tien-ich.aspx";
+        return WorkspaceContext_cl.AppendSystemAdminFlag("/gianhang/admin/gianhang/tien-ich.aspx", HttpContext.Current != null ? HttpContext.Current.Request : null);
     }
 
     public static string BuildAdminWorkspaceUtilityConfigUrl()
     {
-        return "/gianhang/admin/gianhang/tien-ich-co-cau.aspx";
+        return WorkspaceContext_cl.AppendSystemAdminFlag("/gianhang/admin/gianhang/tien-ich-co-cau.aspx", HttpContext.Current != null ? HttpContext.Current.Request : null);
     }
 
     public static string BuildAdminWorkspaceUtilityDrawUrl()
     {
-        return "/gianhang/admin/gianhang/tien-ich-quay-so.aspx";
+        return WorkspaceContext_cl.AppendSystemAdminFlag("/gianhang/admin/gianhang/tien-ich-quay-so.aspx", HttpContext.Current != null ? HttpContext.Current.Request : null);
     }
 
     public static string BuildAdminWorkspaceContentUrl()
     {
-        return "/gianhang/admin/gianhang/quan-ly-noi-dung.aspx";
+        return WorkspaceContext_cl.AppendSystemAdminFlag("/gianhang/admin/gianhang/quan-ly-noi-dung.aspx", HttpContext.Current != null ? HttpContext.Current.Request : null);
     }
 
     public static string BuildAdminWorkspaceArticlesUrl()
     {
-        return "/gianhang/admin/gianhang/bai-viet.aspx";
+        return WorkspaceContext_cl.AppendSystemAdminFlag("/gianhang/admin/gianhang/bai-viet.aspx", HttpContext.Current != null ? HttpContext.Current.Request : null);
     }
 
     public static string BuildAdminWorkspaceArticleDetailUrl(object articleId)
@@ -115,12 +239,12 @@ public static class GianHangRoutes_cl
         if (safe == string.Empty)
             return BuildAdminWorkspaceArticlesUrl();
 
-        return "/gianhang/admin/gianhang/bai-viet-chi-tiet.aspx?id=" + HttpUtility.UrlEncode(safe);
+        return WorkspaceContext_cl.AppendSystemAdminFlag("/gianhang/admin/gianhang/bai-viet-chi-tiet.aspx?id=" + HttpUtility.UrlEncode(safe), HttpContext.Current != null ? HttpContext.Current.Request : null);
     }
 
     public static string BuildAdminWorkspaceProductsUrl()
     {
-        return "/gianhang/admin/gianhang/san-pham.aspx";
+        return WorkspaceContext_cl.AppendSystemAdminFlag("/gianhang/admin/gianhang/san-pham.aspx", HttpContext.Current != null ? HttpContext.Current.Request : null);
     }
 
     public static string BuildAdminWorkspaceProductDetailUrl(int itemId)
@@ -128,12 +252,12 @@ public static class GianHangRoutes_cl
         if (itemId <= 0)
             return BuildAdminWorkspaceProductsUrl();
 
-        return "/gianhang/admin/gianhang/san-pham-chi-tiet.aspx?id=" + itemId.ToString();
+        return WorkspaceContext_cl.AppendSystemAdminFlag("/gianhang/admin/gianhang/san-pham-chi-tiet.aspx?id=" + itemId.ToString(), HttpContext.Current != null ? HttpContext.Current.Request : null);
     }
 
     public static string BuildAdminWorkspaceServicesUrl()
     {
-        return "/gianhang/admin/gianhang/dich-vu.aspx";
+        return WorkspaceContext_cl.AppendSystemAdminFlag("/gianhang/admin/gianhang/dich-vu.aspx", HttpContext.Current != null ? HttpContext.Current.Request : null);
     }
 
     public static string BuildAdminWorkspaceServiceDetailUrl(int itemId)
@@ -141,12 +265,12 @@ public static class GianHangRoutes_cl
         if (itemId <= 0)
             return BuildAdminWorkspaceServicesUrl();
 
-        return "/gianhang/admin/gianhang/dich-vu-chi-tiet.aspx?id=" + itemId.ToString();
+        return WorkspaceContext_cl.AppendSystemAdminFlag("/gianhang/admin/gianhang/dich-vu-chi-tiet.aspx?id=" + itemId.ToString(), HttpContext.Current != null ? HttpContext.Current.Request : null);
     }
 
     public static string BuildAdminWorkspaceCustomersUrl()
     {
-        return "/gianhang/admin/gianhang/khach-hang.aspx";
+        return WorkspaceContext_cl.AppendSystemAdminFlag("/gianhang/admin/gianhang/khach-hang.aspx", HttpContext.Current != null ? HttpContext.Current.Request : null);
     }
 
     public static string BuildAdminWorkspaceCustomerDetailUrl(string customerKey)
@@ -155,12 +279,12 @@ public static class GianHangRoutes_cl
         if (key == string.Empty)
             return BuildAdminWorkspaceCustomersUrl();
 
-        return "/gianhang/admin/gianhang/khach-hang-chi-tiet.aspx?key=" + HttpUtility.UrlEncode(key);
+        return WorkspaceContext_cl.AppendSystemAdminFlag("/gianhang/admin/gianhang/khach-hang-chi-tiet.aspx?key=" + HttpUtility.UrlEncode(key), HttpContext.Current != null ? HttpContext.Current.Request : null);
     }
 
     public static string BuildAdminWorkspaceBookingsUrl()
     {
-        return "/gianhang/admin/gianhang/lich-hen.aspx";
+        return WorkspaceContext_cl.AppendSystemAdminFlag("/gianhang/admin/gianhang/lich-hen.aspx", HttpContext.Current != null ? HttpContext.Current.Request : null);
     }
 
     public static string BuildAdminWorkspaceBookingDetailUrl(long bookingId)
@@ -168,36 +292,122 @@ public static class GianHangRoutes_cl
         if (bookingId <= 0)
             return BuildAdminWorkspaceBookingsUrl();
 
-        return "/gianhang/admin/gianhang/lich-hen-chi-tiet.aspx?id=" + bookingId.ToString();
+        return WorkspaceContext_cl.AppendSystemAdminFlag("/gianhang/admin/gianhang/lich-hen-chi-tiet.aspx?id=" + bookingId.ToString(), HttpContext.Current != null ? HttpContext.Current.Request : null);
     }
 
     public static string BuildAdminWorkspaceReportUrl()
     {
-        return "/gianhang/admin/gianhang/bao-cao.aspx";
+        return WorkspaceContext_cl.AppendSystemAdminFlag("/gianhang/admin/gianhang/bao-cao.aspx", HttpContext.Current != null ? HttpContext.Current.Request : null);
+    }
+
+    public static string BuildAdminLegacyInvoiceListUrl()
+    {
+        return WorkspaceContext_cl.AppendSystemAdminFlag("/gianhang/admin/quan-ly-hoa-don/Default.aspx?workspace=gianhang", HttpContext.Current != null ? HttpContext.Current.Request : null);
+    }
+
+    public static string BuildAdminLegacyInvoiceCreateUrl(string tenKhach, string sdt, string idDatLich, string idNganh)
+    {
+        string url = "/gianhang/admin/quan-ly-hoa-don/Default.aspx?q=add";
+        if (!string.IsNullOrWhiteSpace(tenKhach))
+            url += "&tenkh=" + HttpUtility.UrlEncode(tenKhach.Trim());
+        if (!string.IsNullOrWhiteSpace(sdt))
+            url += "&sdt=" + HttpUtility.UrlEncode(sdt.Trim());
+        if (!string.IsNullOrWhiteSpace(idDatLich))
+            url += "&id_datlich=" + HttpUtility.UrlEncode(idDatLich.Trim());
+        if (!string.IsNullOrWhiteSpace(idNganh))
+            url += "&idnganh=" + HttpUtility.UrlEncode(idNganh.Trim());
+        return WorkspaceContext_cl.AppendSystemAdminFlag(url, HttpContext.Current != null ? HttpContext.Current.Request : null);
+    }
+
+    public static string BuildAdminLegacyInvoiceDetailUrl(long invoiceId)
+    {
+        if (invoiceId <= 0)
+            return BuildAdminLegacyInvoiceListUrl();
+
+        return WorkspaceContext_cl.AppendSystemAdminFlag("/gianhang/admin/quan-ly-hoa-don/chi-tiet.aspx?id=" + invoiceId.ToString(), HttpContext.Current != null ? HttpContext.Current.Request : null);
+    }
+
+    public static string BuildAdminLegacyInvoiceProductStatsUrl()
+    {
+        return WorkspaceContext_cl.AppendSystemAdminFlag("/gianhang/admin/quan-ly-hoa-don/thong-ke-san-pham.aspx", HttpContext.Current != null ? HttpContext.Current.Request : null);
+    }
+
+    public static string BuildAdminLegacyInvoiceServiceStatsUrl()
+    {
+        return WorkspaceContext_cl.AppendSystemAdminFlag("/gianhang/admin/quan-ly-hoa-don/thong-ke-dich-vu.aspx", HttpContext.Current != null ? HttpContext.Current.Request : null);
+    }
+
+    public static string BuildAdminLegacyCustomersUrl(string keyword)
+    {
+        string url = "/gianhang/admin/quan-ly-khach-hang/Default.aspx";
+        if (!string.IsNullOrWhiteSpace(keyword))
+            url += "?keyword=" + HttpUtility.UrlEncode(keyword.Trim());
+        return WorkspaceContext_cl.AppendSystemAdminFlag(url, HttpContext.Current != null ? HttpContext.Current.Request : null);
+    }
+
+    public static string BuildAdminLegacyCustomerDetailUrl(long customerId)
+    {
+        if (customerId <= 0)
+            return BuildAdminLegacyCustomersUrl(string.Empty);
+
+        return WorkspaceContext_cl.AppendSystemAdminFlag("/gianhang/admin/quan-ly-khach-hang/chi-tiet.aspx?id=" + customerId.ToString(), HttpContext.Current != null ? HttpContext.Current.Request : null);
+    }
+
+    public static string BuildAdminLegacyBookingsUrl()
+    {
+        return WorkspaceContext_cl.AppendSystemAdminFlag("/gianhang/admin/quan-ly-khach-hang/danh-sach-lich-hen.aspx", HttpContext.Current != null ? HttpContext.Current.Request : null);
+    }
+
+    public static string BuildAdminLegacyBookingDetailUrl(long bookingId)
+    {
+        if (bookingId <= 0)
+            return BuildAdminLegacyBookingsUrl();
+
+        return WorkspaceContext_cl.AppendSystemAdminFlag("/gianhang/admin/quan-ly-khach-hang/sua-lich-hen.aspx?id=" + bookingId.ToString(), HttpContext.Current != null ? HttpContext.Current.Request : null);
+    }
+
+    public static string BuildAdminLegacyPeopleHubUrl(string keyword)
+    {
+        string url = "/gianhang/admin/quan-ly-con-nguoi/Default.aspx";
+        if (!string.IsNullOrWhiteSpace(keyword))
+            url += "?keyword=" + HttpUtility.UrlEncode(keyword.Trim());
+        return WorkspaceContext_cl.AppendSystemAdminFlag(url, HttpContext.Current != null ? HttpContext.Current.Request : null);
+    }
+
+    public static string BuildAdminLegacyArticlesUrl(string postType)
+    {
+        string url = "/gianhang/admin/quan-ly-bai-viet/Default.aspx";
+        if (!string.IsNullOrWhiteSpace(postType))
+            url += "?pl=" + HttpUtility.UrlEncode(postType.Trim());
+        return WorkspaceContext_cl.AppendSystemAdminFlag(url, HttpContext.Current != null ? HttpContext.Current.Request : null);
+    }
+
+    public static string BuildAdminLegacyArticleEditUrl(long articleId, string postType)
+    {
+        if (articleId <= 0)
+            return BuildAdminLegacyArticlesUrl(postType);
+
+        return WorkspaceContext_cl.AppendSystemAdminFlag("/gianhang/admin/quan-ly-bai-viet/edit.aspx?id=" + articleId.ToString(), HttpContext.Current != null ? HttpContext.Current.Request : null);
     }
 
     public static string BuildBaoCaoUrl()
     {
-        return "/gianhang/bao-cao.aspx";
+        return BuildOwnerReportsUrl();
     }
 
     public static string BuildKhachHangUrl()
     {
-        return "/gianhang/khach-hang.aspx";
+        return BuildOwnerCustomersUrl();
     }
 
     public static string BuildKhachHangChiTietUrl(string customerKey)
     {
-        string key = (customerKey ?? string.Empty).Trim();
-        if (key == string.Empty)
-            return BuildKhachHangUrl();
-
-        return BuildKhachHangUrl() + "?key=" + HttpUtility.UrlEncode(key);
+        return BuildOwnerCustomerDetailUrl(customerKey);
     }
 
     public static string BuildQuanLyTinUrl()
     {
-        return "/gianhang/quan-ly-tin/Default.aspx";
+        return BuildOwnerContentUrl();
     }
 
     public static string BuildBuyerOrdersUrl()
@@ -207,10 +417,7 @@ public static class GianHangRoutes_cl
 
     public static string BuildElectronicInvoiceUrl(string rawId)
     {
-        string safe = (rawId ?? string.Empty).Trim();
-        if (safe == string.Empty)
-            return "/gianhang/hoa-don-dien-tu.aspx";
-        return "/gianhang/hoa-don-dien-tu.aspx?id=" + HttpUtility.UrlEncode(safe);
+        return BuildOwnerElectronicInvoiceUrl(rawId);
     }
 
     public static string BuildUtilityConfigUrl(string accountKey)
@@ -226,12 +433,12 @@ public static class GianHangRoutes_cl
     // Compatibility alias for legacy call sites.
     public static string ChoThanhToanUrl()
     {
-        return "/gianhang/cho-thanh-toan.aspx";
+        return BuildOwnerWaitUrl();
     }
 
     public static string BuildBookingManagementUrl()
     {
-        return "/gianhang/quan-ly-lich-hen.aspx";
+        return BuildOwnerBookingsUrl();
     }
 
     public static string BuildChiTietSanPhamUrl(int itemId)
@@ -246,19 +453,17 @@ public static class GianHangRoutes_cl
 
     public static string BuildXemSanPhamUrl(int itemId)
     {
-        return "/gianhang/xem-san-pham.aspx?id=" + itemId.ToString();
+        return BuildPublicProductDetailUrl(itemId);
     }
 
     public static string BuildXemDichVuUrl(int itemId)
     {
-        return "/gianhang/xem-dich-vu.aspx?id=" + itemId.ToString();
+        return BuildPublicServiceDetailUrl(itemId);
     }
 
     public static string BuildDatLichPublicUrl(int itemId, string accountKey, string returnUrl)
     {
-        string url = "/gianhang/datlich.aspx?id=" + itemId.ToString();
-        url = AppendUserToUrl(url, accountKey);
-        return AppendReturnUrl(url, returnUrl);
+        return BuildPublicBookingUrl(itemId, accountKey, returnUrl);
     }
 
     public static string BuildDatLichUrl(int itemId, string returnUrl)
@@ -290,31 +495,27 @@ public static class GianHangRoutes_cl
 
     public static string BuildCartUrl(string accountKey, string returnUrl)
     {
-        string url = BuildStorefrontUrl(string.Empty).Replace("/public.aspx", "/giohang.aspx");
-        url = AppendUserToUrl(url, accountKey);
-        return AppendReturnUrl(url, returnUrl);
+        return BuildPublicCartUrl(accountKey, returnUrl);
     }
 
     public static string BuildRemoveCartItemUrl(string accountKey, int itemId, string returnUrl)
     {
-        string url = "/gianhang/xoa_chitiet_giohang.aspx?id=" + itemId.ToString();
-        url = AppendUserToUrl(url, accountKey);
-        return AppendReturnUrl(url, returnUrl);
+        return BuildPublicRemoveCartItemUrl(accountKey, itemId, returnUrl);
     }
 
     public static string BuildServicesUrl(string accountKey)
     {
-        return AppendUserToUrl("/gianhang/page/danh-sach-dich-vu.aspx", accountKey);
+        return BuildPublicServicesUrl(accountKey);
     }
 
     public static string BuildProductsUrl(string accountKey)
     {
-        return AppendUserToUrl("/gianhang/page/danh-sach-san-pham.aspx", accountKey);
+        return BuildPublicProductsUrl(accountKey);
     }
 
     public static string BuildArticlesUrl(string accountKey)
     {
-        return AppendUserToUrl("/gianhang/page/danh-sach-bai-viet.aspx", accountKey);
+        return BuildPublicArticlesUrl(accountKey);
     }
 
     public static string BuildBookingHubUrl(string accountKey, string returnUrl)

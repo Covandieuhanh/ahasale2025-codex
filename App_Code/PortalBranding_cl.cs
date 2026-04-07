@@ -7,10 +7,12 @@ public static class PortalBranding_cl
     public const string ScopeHome = "home";
     public const string ScopeShop = "shop";
     public const string ScopeAdmin = "admin";
+    public const string ScopeBatDongSan = "batdongsan";
 
     public const string DefaultHomeIconPath = "/uploads/images/favicon.png";
     public const string DefaultShopIconPath = "/uploads/images/logo-aha.png";
     public const string DefaultAdminIconPath = "/uploads/images/favicon.png";
+    public const string DefaultBatDongSanIconPath = DefaultHomeIconPath;
 
     public sealed class ScopeBrandingSnapshot
     {
@@ -27,12 +29,18 @@ public static class PortalBranding_cl
             return ScopeShop;
         if (scope == ScopeAdmin)
             return ScopeAdmin;
+        if (scope == ScopeBatDongSan)
+            return ScopeBatDongSan;
         return ScopeHome;
     }
 
     public static string ResolveScopeKeyFromRequest(HttpRequest request)
     {
         string path = request == null || request.Url == null ? string.Empty : (request.Url.AbsolutePath ?? string.Empty).Trim();
+        if (path.StartsWith("/bat-dong-san", StringComparison.OrdinalIgnoreCase))
+            return ScopeBatDongSan;
+        if (path.StartsWith("/gianhang", StringComparison.OrdinalIgnoreCase))
+            return ScopeShop;
         return path.StartsWith("/shop", StringComparison.OrdinalIgnoreCase) ? ScopeShop : ScopeHome;
     }
 
@@ -44,6 +52,8 @@ public static class PortalBranding_cl
                 return DefaultShopIconPath;
             case ScopeAdmin:
                 return DefaultAdminIconPath;
+            case ScopeBatDongSan:
+                return DefaultBatDongSanIconPath;
             default:
                 return DefaultHomeIconPath;
         }

@@ -9,7 +9,7 @@
     <meta http-equiv="content-language" content="vi" />
     <style>
         body {
-            font-family: 'Times New Roman', Times, serif !important;
+            font-family: "Be Vietnam Pro", "Segoe UI", Arial, sans-serif !important;
             font-size: 16px !important;
         }
 

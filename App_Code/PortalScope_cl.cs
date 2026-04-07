@@ -195,21 +195,9 @@ public static class PortalScope_cl
 
         bool changed = false;
 
-        if (!string.IsNullOrEmpty(account.logo_shop)) { account.logo_shop = null; changed = true; }
-        if (!string.IsNullOrEmpty(account.anhbia_shop)) { account.anhbia_shop = null; changed = true; }
-        if (!string.IsNullOrEmpty(account.ten_shop)) { account.ten_shop = null; changed = true; }
-        if (!string.IsNullOrEmpty(account.sdt_shop)) { account.sdt_shop = null; changed = true; }
-        if (!string.IsNullOrEmpty(account.email_shop)) { account.email_shop = null; changed = true; }
-        if (!string.IsNullOrEmpty(account.link_zalo_shop)) { account.link_zalo_shop = null; changed = true; }
-        if (!string.IsNullOrEmpty(account.motangan_shop)) { account.motangan_shop = null; changed = true; }
-        if (!string.IsNullOrEmpty(account.diachi_shop)) { account.diachi_shop = null; changed = true; }
-        if (!string.IsNullOrEmpty(account.linkfb_shop)) { account.linkfb_shop = null; changed = true; }
-        if (!string.IsNullOrEmpty(account.youtube_shop)) { account.youtube_shop = null; changed = true; }
-        if (!string.IsNullOrEmpty(account.tiktok_shop)) { account.tiktok_shop = null; changed = true; }
-        if (!string.IsNullOrEmpty(account.Ten_FB_Shop)) { account.Ten_FB_Shop = null; changed = true; }
-        if (!string.IsNullOrEmpty(account.Ten_Youtube_Shop)) { account.Ten_Youtube_Shop = null; changed = true; }
-        if (!string.IsNullOrEmpty(account.Ten_TikTok_Shop)) { account.Ten_TikTok_Shop = null; changed = true; }
-        if (!string.IsNullOrEmpty(account.Ten_Zalo_Shop)) { account.Ten_Zalo_Shop = null; changed = true; }
+        // Giữ nguyên toàn bộ dữ liệu storefront của gian hàng ngay cả khi
+        // tài khoản đang đăng nhập ở scope home. Gian hàng chỉ dùng chung xác thực
+        // với home, không được phép bị xóa tên/logo/mô tả chỉ vì đổi scope đăng nhập.
         if ((account.HoSo_TieuDung_ShopOnly ?? 0m) != 0m) { account.HoSo_TieuDung_ShopOnly = 0m; changed = true; }
         if ((account.HoSo_UuDai_ShopOnly ?? 0m) != 0m) { account.HoSo_UuDai_ShopOnly = 0m; changed = true; }
         if ((account.ChiPhanTram_BanDichVu_ChoSan ?? 0) != 0) { account.ChiPhanTram_BanDichVu_ChoSan = 0; changed = true; }

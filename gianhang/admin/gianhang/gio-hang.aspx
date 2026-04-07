@@ -31,7 +31,7 @@
         .gh-admin-cart__meta{display:block;color:#6b7280;font-size:12px;line-height:1.5;}
         .gh-admin-cart__remove{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:0 12px;border-radius:12px;border:1px solid #eadfe2;background:#fff;color:#7f1d1d !important;font-size:12px;font-weight:800;text-decoration:none !important;}
         .gh-admin-cart__empty{padding:28px 12px;text-align:center;color:#6b7280;}
-        @media (max-width:991px){.gh-admin-cart__title{font-size:26px;}}
+        @media (max-width:767px){.gh-admin-cart__title{font-size:26px;}}
     </style>
 </asp:Content>
 

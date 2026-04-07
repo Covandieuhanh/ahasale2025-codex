@@ -143,7 +143,7 @@
             padding:6px 10px;
             font-weight:600;
         }
-        @media (max-width: 575.98px){
+        @media (max-width: 767.98px){
             .status-filter-control{ width:100%; }
             .status-filter-select{ flex:1; min-width:0; }
         }
@@ -153,7 +153,7 @@
         .pos-standalone-page .modal-dialog{
             margin: 0 auto;
         }
-        @media (min-width: 992px){
+        @media (min-width: 768px){
             .pos-create-layout{
                 align-items:flex-start;
             }
@@ -588,7 +588,7 @@
         html[data-bs-theme="dark"] .pos-paybar-trust{
             color:#6ee7b7;
         }
-        @media (max-width: 991.98px){
+        @media (max-width: 767.98px){
             .pos-shell-title{
                 font-size:24px;
             }
@@ -952,6 +952,7 @@
                             <div class="d-flex align-items-center gap-2 flex-wrap">
                                 <div class="text-muted small">
                                     <asp:Label ID="lb_show" runat="server" Text=""></asp:Label>
+                                    <asp:Literal ID="litPager" runat="server"></asp:Literal>
                                     <asp:Label ID="lb_show_md" runat="server" Text="" CssClass="d-none"></asp:Label>
                                 </div>
 

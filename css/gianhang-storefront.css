@@ -17,7 +17,7 @@
     --storefront-radius-xl: 32px;
     --storefront-radius-lg: 24px;
     --storefront-radius-md: 18px;
-    --storefront-font: "Aptos", "IBM Plex Sans", "Segoe UI Variable", "Segoe UI", sans-serif;
+    --storefront-font: "Be Vietnam Pro", "Segoe UI", Arial, sans-serif;
 }
 
 body.home-body {
@@ -271,6 +271,10 @@ body.storefront-mobile-open {
     flex: 0 0 auto;
 }
 
+.storefront-header__action-mobile {
+    display: none;
+}
+
 .storefront-auth {
     display: inline-flex;
     align-items: center;
@@ -328,6 +332,57 @@ body.storefront-mobile-open {
 .feature-card__button--ghost,
 .service-card__button--ghost {
     background: rgba(255, 255, 255, 0.88);
+    color: var(--storefront-ink) !important;
+}
+
+a.storefront-pill,
+a.storefront-pill:link,
+a.storefront-pill:visited,
+a.storefront-hero__action,
+a.storefront-hero__action:link,
+a.storefront-hero__action:visited,
+a.feature-card__button,
+a.feature-card__button:link,
+a.feature-card__button:visited,
+a.service-card__button,
+a.service-card__button:link,
+a.service-card__button:visited,
+a.storefront-chip-link,
+a.storefront-chip-link:link,
+a.storefront-chip-link:visited {
+    text-decoration: none !important;
+}
+
+a.storefront-pill--primary,
+a.storefront-pill--primary:link,
+a.storefront-pill--primary:visited,
+a.storefront-hero__action--primary,
+a.storefront-hero__action--primary:link,
+a.storefront-hero__action--primary:visited,
+a.feature-card__button--primary,
+a.feature-card__button--primary:link,
+a.feature-card__button--primary:visited,
+a.service-card__button--primary,
+a.service-card__button--primary:link,
+a.service-card__button--primary:visited {
+    color: #fff !important;
+}
+
+a.storefront-pill--ghost,
+a.storefront-pill--ghost:link,
+a.storefront-pill--ghost:visited,
+a.storefront-hero__action--ghost,
+a.storefront-hero__action--ghost:link,
+a.storefront-hero__action--ghost:visited,
+a.feature-card__button--ghost,
+a.feature-card__button--ghost:link,
+a.feature-card__button--ghost:visited,
+a.service-card__button--ghost,
+a.service-card__button--ghost:link,
+a.service-card__button--ghost:visited,
+a.storefront-chip-link,
+a.storefront-chip-link:link,
+a.storefront-chip-link:visited {
     color: var(--storefront-ink) !important;
 }
 
@@ -742,6 +797,32 @@ body.storefront-mobile-open {
 
 .home-page {
     padding: 40px 0 96px;
+}
+
+@media (min-width: 768px) {
+    .storefront-nav {
+        display: block !important;
+    }
+
+    .storefront-mobile-toggle,
+    .storefront-mobile-drawer,
+    .storefront-mobile-backdrop {
+        display: none !important;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .storefront-nav {
+        display: none !important;
+    }
+
+    .storefront-mobile-toggle {
+        display: flex !important;
+    }
+
+    .storefront-mobile-drawer {
+        display: block;
+    }
 }
 
 .storefront-hero {
@@ -1304,7 +1385,13 @@ body.storefront-mobile-open {
     box-shadow: 0 14px 30px rgba(24, 35, 45, 0.16);
 }
 
-@media (max-width: 1199.98px) {
+@media (max-width: 767.98px) {
+    .storefront-header__bar {
+        background: linear-gradient(90deg, #c94d0b, #f97316);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+        box-shadow: 0 12px 30px rgba(154, 52, 18, 0.18);
+    }
+
     .storefront-nav {
         display: none;
     }
@@ -1319,13 +1406,20 @@ body.storefront-mobile-open {
     }
 
     .storefront-header__inner {
-        gap: 16px;
+        gap: 10px;
+        position: relative;
     }
 
-    .storefront-brand__note,
     .d-none.d-inline-flex-xl,
     .d-none.d-flex-xl {
         display: none !important;
+    }
+
+    .storefront-brand__note {
+        display: block !important;
+        max-width: 220px;
+        font-size: 11px;
+        line-height: 1.35;
     }
 
     .home-main-shell {
@@ -1341,7 +1435,7 @@ body.storefront-mobile-open {
     }
 }
 
-@media (max-width: 991.98px) {
+@media (max-width: 767.98px) {
     .home-main-shell {
         margin-top: 96px;
     }
@@ -1394,21 +1488,49 @@ body.storefront-mobile-open {
     .storefront-header__inner {
         min-height: 70px;
         gap: 8px;
+        justify-content: space-between;
     }
 
-    .storefront-brand__logo,
+    .storefront-brand {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        margin-right: 0;
+        width: auto;
+        max-width: calc(100% - 148px);
+        justify-content: center;
+        z-index: 1;
+    }
+
+    .storefront-brand__logo {
+        width: auto;
+        height: 26px;
+        min-width: 96px;
+        border-radius: 0;
+        background: transparent;
+        border: 0;
+        box-shadow: none;
+        overflow: visible;
+    }
+
+    .storefront-brand__logo img {
+        object-fit: contain;
+    }
+
     .storefront-footer__logo {
         width: 50px;
         height: 50px;
         border-radius: 16px;
     }
 
-    .storefront-brand__title {
-        font-size: 17px;
+    .storefront-brand__copy {
+        display: none;
     }
 
     .storefront-header__actions {
         gap: 6px;
+        position: relative;
+        z-index: 2;
     }
 
     .storefront-header__actions .storefront-pill {
@@ -1423,9 +1545,29 @@ body.storefront-mobile-open {
         height: 40px;
     }
 
+    .storefront-header__action-desktop,
+    .storefront-auth {
+        display: none !important;
+    }
+
+    .storefront-header__action-mobile {
+        display: inline-flex;
+    }
+
+    .storefront-mobile-toggle,
+    .storefront-header__action-mobile,
+    .storefront-account__summary {
+        border: 1px solid rgba(255, 255, 255, 0.45);
+        background: rgba(255, 255, 255, 0.92);
+        color: #17233b;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+    }
+
     .storefront-account__summary {
         min-height: 42px;
-        padding: 0 8px 0 6px;
+        width: 42px;
+        padding: 0;
+        justify-content: center;
     }
 
     .storefront-account__meta {
@@ -1505,5 +1647,13 @@ body.storefront-mobile-open {
         right: 10px !important;
         transform: scale(0.92);
         transform-origin: right center;
+    }
+
+    .storefront-mobile-drawer__head,
+    .storefront-mobile-drawer__actions,
+    .storefront-mobile-nav__list,
+    .storefront-mobile-drawer__account {
+        position: relative;
+        z-index: 1;
     }
 }

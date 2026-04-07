@@ -407,6 +407,8 @@
                     </div>
                     <asp:CheckBoxList ID="check_list_quyen_shop_partner" runat="server">
                         <asp:ListItem Text="Quản trị tài khoản shop, duyệt nghiệp vụ shop và các yêu cầu điểm phát sinh trong phạm vi gian hàng đối tác" Value="q2_5" Selected="false"></asp:ListItem>
+                        <asp:ListItem Text="Duyệt riêng quyền mở không gian /gianhang cho tài khoản Home (granular)" Value="home_gianhang_space_approval" Selected="false"></asp:ListItem>
+                        <asp:ListItem Text="Duyệt riêng đăng ký gian hàng đối tác (Shop) (granular)" Value="shop_partner_approval" Selected="false"></asp:ListItem>
                     </asp:CheckBoxList>
                 </div>
 
@@ -415,7 +417,12 @@
                         <asp:CheckBox ID="check_all_quyen_home_content" runat="server" CssClass="text-bold" Text="TÀI KHOẢN QUẢN LÝ NỘI DUNG WEB AHASALE.VN" />
                     </div>
                     <asp:CheckBoxList ID="check_list_quyen_home_content" runat="server">
+                        <asp:ListItem Text="Cấu hình trang chủ và tham số hiển thị lõi (home_config)" Value="home_config_admin" Selected="false"></asp:ListItem>
                         <asp:ListItem Text="Chỉnh sửa nội dung văn bản hiển thị trên web Ahasale.vn; không quản lý menu, banner, bài viết tổng quan và không can thiệp dữ liệu tài sản lõi" Value="q3_1" Selected="false"></asp:ListItem>
+                        <asp:ListItem Text="Quản trị riêng tab BĐS - Liên kết tin (granular)" Value="home_bds_linked_admin" Selected="false"></asp:ListItem>
+                        <asp:ListItem Text="Quản trị riêng tab Bài viết tổng quan website (granular)" Value="home_posts_admin" Selected="false"></asp:ListItem>
+                        <asp:ListItem Text="Quản trị riêng tab Menu tổng quan website (granular)" Value="home_menu_admin" Selected="false"></asp:ListItem>
+                        <asp:ListItem Text="Quản trị riêng tab Banner tổng quan website (granular)" Value="home_banner_admin" Selected="false"></asp:ListItem>
                     </asp:CheckBoxList>
                 </div>
 

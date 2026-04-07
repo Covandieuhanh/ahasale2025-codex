@@ -1,5 +1,6 @@
 ﻿<%@ Master Language="C#" AutoEventWireup="true" CodeFile="mp-admin.master.cs" Inherits="admin_MasterPageAdmin" %>
 
+<%@ Register Src="~/gianhang/admin/uc/menu_left.ascx" TagPrefix="uc1" TagName="menuleftuc" %>
 <%@ Register Src="~/gianhang/admin/uc/menu_top.ascx" TagPrefix="uc1" TagName="menutopuc" %>
 
 
@@ -33,17 +34,18 @@
     <asp:Literal ID="literal_fav_icon" runat="server"></asp:Literal>
 
     <%--css nguồn--%>
-    <link href="/Metro-UI-CSS-master/css/metro-all.min.css" rel="stylesheet" />
-    <link href="/Metro-UI-CSS-master/css/icons.css" rel="stylesheet" />
+    <link href="<%= Helper_cl.VersionedUrl("~/Metro-UI-CSS-master/css/metro-all.min.css") %>" rel="stylesheet" />
+    <link href="<%= Helper_cl.VersionedUrl("~/Metro-UI-CSS-master/css/icons.css") %>" rel="stylesheet" />
     <%--dành riêng cho trang admin--%>
-    <link href="/assetscss/admin-style.css" rel="stylesheet" />
+    <link href="<%= Helper_cl.VersionedUrl("~/assetscss/admin-style.css") %>" rel="stylesheet" />
     <%--viết thêm dựa vào metro--%>
-    <link href="/assetscss/bcorn-with-metro.css" rel="stylesheet" />
+    <link href="<%= Helper_cl.VersionedUrl("~/assetscss/bcorn-with-metro.css") %>" rel="stylesheet" />
     <%--sửa lại css metro theo ý mình--%>
-    <link href="/assetscss/fix-metro.css" rel="stylesheet" />
-    <link href="/assetscss/admin-unified.css?v=2026-03-02.3" rel="stylesheet" />
-    <link href="/assetscss/admin-clean.css?v=2026-03-03.12" rel="stylesheet" />
-    <link href="/assetscss/admin-home-sync.css?v=2026-03-21.1" rel="stylesheet" />
+    <link href="<%= Helper_cl.VersionedUrl("~/assetscss/fix-metro.css") %>" rel="stylesheet" />
+    <link href="<%= Helper_cl.VersionedUrl("~/assetscss/aha-responsive-mode.css") %>" rel="stylesheet" />
+    <link href="<%= Helper_cl.VersionedUrl("~/assetscss/admin-unified.css") %>" rel="stylesheet" />
+    <link href="<%= Helper_cl.VersionedUrl("~/assetscss/admin-clean.css") %>" rel="stylesheet" />
+    <link href="<%= Helper_cl.VersionedUrl("~/assetscss/admin-home-sync.css") %>" rel="stylesheet" />
     <!-- jquery nên để trước các js khác -->
     <%--<script src="/js/jquery-3.7.1.min.js"></script>--%>
     <asp:ContentPlaceHolder ID="head" runat="server"></asp:ContentPlaceHolder>
@@ -85,11 +87,12 @@
             window.setTimeout(markAdminReady, 1400);
         })();
     </script>
-    <form id="form1" runat="server">
+    <form id="form1" runat="server" class="aha-scale-root">
 
         <asp:ScriptManager ID="ScriptManager1" runat="server" EnableScriptGlobalization="True"></asp:ScriptManager>
 
         <div id="nv" class="admin-navview" data-role="navview" data-toggle="#paneToggle" data-expand="xl" data-compact="lg" data-active-state="false">
+            <uc1:menuleftuc runat="server" ID="menuleftuc" />
             
             <div class="navview-content h-vh-100 admin-content">
                 <uc1:menutopuc runat="server" ID="menutopuc" />
@@ -169,9 +172,9 @@
 
 
 
-        <script src="/Metro-UI-CSS-master/js/metro.min.js"></script>
-        <script src="/js/bcorn.js"></script>
-        <script src="/js/aha-ui-refresh.js?v=2026-03-07.3"></script>
+        <script src="<%= Helper_cl.VersionedUrl("~/Metro-UI-CSS-master/js/metro.min.js") %>"></script>
+        <script src="<%= Helper_cl.VersionedUrl("~/js/bcorn.js") %>"></script>
+        <script src="<%= Helper_cl.VersionedUrl("~/js/gianhang-ui-refresh.js") %>"></script>
         <script>
             window.ahaAdminCharms = function (action) {
                 try {

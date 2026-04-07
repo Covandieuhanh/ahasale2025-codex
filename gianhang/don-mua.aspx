@@ -1,4 +1,4 @@
-<%@ Page Title="Đơn mua gian hàng" Language="C#" MasterPageFile="~/MasterPage/Tabler/TablerHome.master" AutoEventWireup="true" CodeFile="don-mua.aspx.cs" Inherits="gianhang_don_mua" %>
+<%@ Page Title="Đơn mua gian hàng" Language="C#" MasterPageFile="~/MasterPage/Tabler/TablerGianHang.master" AutoEventWireup="true" CodeFile="don-mua.aspx.cs" Inherits="gianhang_don_mua" %>
 
 <asp:Content ID="ContentHeadTruoc" ContentPlaceHolderID="head_truoc" runat="Server"></asp:Content>
 

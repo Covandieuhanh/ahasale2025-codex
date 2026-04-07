@@ -1,0 +1,223 @@
+<%@ Master Language="C#" %>
+<%@ Register Src="~/Uc/Shared/SpaceLauncher_uc.ascx" TagPrefix="uc1" TagName="SpaceLauncher" %>
+<%@ Register Src="~/gianhang/uc/footer_uc.ascx" TagPrefix="uc1" TagName="footer_uc" %>
+<script runat="server">
+    private GianHangSpaceNav_cl.SpaceNavModel _spaceNavModel;
+
+    protected string ResolveCurrentAccount()
+    {
+        return (PortalRequest_cl.GetCurrentAccount() ?? "").Trim();
+    }
+
+    protected bool IsSignedIn()
+    {
+        return !string.IsNullOrWhiteSpace(ResolveCurrentAccount());
+    }
+
+    protected GianHangSpaceNav_cl.SpaceNavModel ResolveSpaceNavModel()
+    {
+        if (_spaceNavModel != null)
+            return _spaceNavModel;
+
+        GianHangSpaceNav_cl.SpaceNavModel model = null;
+        try
+        {
+            model = GianHangSpaceNav_cl.BuildCurrent(Request);
+        }
+        catch
+        {
+            model = null;
+        }
+
+        if (model == null)
+            model = new GianHangSpaceNav_cl.SpaceNavModel();
+
+        if (string.IsNullOrWhiteSpace(model.PublicUrl))
+            model.PublicUrl = "/gianhang/public.aspx";
+        if (string.IsNullOrWhiteSpace(model.HomeUrl))
+            model.HomeUrl = "/gianhang/tai-khoan/default.aspx";
+        if (string.IsNullOrWhiteSpace(model.ManageUrl))
+            model.ManageUrl = "/gianhang/quan-ly-tin/Default.aspx";
+        if (string.IsNullOrWhiteSpace(model.OrdersUrl))
+            model.OrdersUrl = "/gianhang/don-ban.aspx";
+        if (string.IsNullOrWhiteSpace(model.BookingUrl))
+            model.BookingUrl = "/gianhang/quan-ly-lich-hen.aspx";
+        if (string.IsNullOrWhiteSpace(model.CustomersUrl))
+            model.CustomersUrl = "/gianhang/khach-hang.aspx";
+        if (string.IsNullOrWhiteSpace(model.ReportUrl))
+            model.ReportUrl = "/gianhang/bao-cao.aspx";
+        if (string.IsNullOrWhiteSpace(model.Level2Url))
+            model.Level2Url = "/gianhang/nang-cap-level2.aspx";
+        if (string.IsNullOrWhiteSpace(model.AdminUrl))
+            model.AdminUrl = "/gianhang/admin";
+
+        _spaceNavModel = model;
+        return _spaceNavModel;
+    }
+
+    protected bool IsGianHangSpaceReady()
+    {
+        return ResolveSpaceNavModel().Visible;
+    }
+
+    protected string ResolveTopbarBrandTitle()
+    {
+        string storeName = (ResolveSpaceNavModel().StoreName ?? string.Empty).Trim();
+        return storeName == string.Empty ? "Không gian gian hàng" : storeName;
+    }
+
+    protected string ResolveTopbarAvatar()
+    {
+        string avatar = (ResolveSpaceNavModel().AvatarUrl ?? string.Empty).Trim();
+        return avatar == string.Empty ? "/uploads/images/macdinh.jpg" : avatar;
+    }
+
+    protected string ResolveTopbarAccountName()
+    {
+        string storeName = (ResolveSpaceNavModel().StoreName ?? string.Empty).Trim();
+        if (storeName != string.Empty)
+            return storeName;
+
+        string account = ResolveCurrentAccount();
+        return account == string.Empty ? "Tài khoản khách" : ("Home " + account);
+    }
+
+    protected string ResolveTopbarAccountMeta()
+    {
+        var model = ResolveSpaceNavModel();
+        string accountKey = (model.AccountKey ?? string.Empty).Trim();
+        if (accountKey == string.Empty)
+            accountKey = ResolveCurrentAccount();
+        string status = (model.StatusText ?? string.Empty).Trim();
+        if (status == string.Empty)
+            status = IsGianHangSpaceReady() ? "Đang hoạt động" : "Chưa kích hoạt";
+
+        if (accountKey == string.Empty)
+            return status;
+
+        return "Home " + accountKey + " | " + status;
+    }
+
+    protected string GetTopbarLinkCss(string key)
+    {
+        string css = "gh-gianhang-account__link";
+        string normalized = (key ?? string.Empty).Trim().ToLowerInvariant();
+        string active = (ResolveSpaceNavModel().ActiveKey ?? string.Empty).Trim().ToLowerInvariant();
+        if (normalized != string.Empty && normalized == active)
+            css += " is-active";
+        return css;
+    }
+</script>
+<!DOCTYPE html>
+<html>
+<head runat="server">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="content-language" content="vi" />
+    <meta name="robots" content="index, follow" />
+    <meta name="revisit-after" content="1 days" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="format-detection" content="date=no" />
+    <meta name="format-detection" content="address=no" />
+    <meta name="format-detection" content="email=no" />
+    <meta name="format-detection" content="url=no" />
+
+    <asp:ContentPlaceHolder ID="head_truoc" runat="server"></asp:ContentPlaceHolder>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler-flags.min.css" />
+    <link rel="stylesheet" href="<%= Helper_cl.VersionedUrl("~/assetscss/gianhang-tabler.css") %>" />
+    <link rel="stylesheet" href="<%= Helper_cl.VersionedUrl("~/assetscss/gianhang-ui-refresh.css") %>" />
+    <link rel="stylesheet" href="<%= Helper_cl.VersionedUrl("~/assetscss/gianhang-shell.css") %>" />
+    <link rel="stylesheet" href="<%= Helper_cl.VersionedUrl("~/assetscss/gianhang-space-nav.css") %>" />
+    <link rel="stylesheet" href="<%= Helper_cl.VersionedUrl("~/css/gianhang-storefront.css") %>" />
+    <asp:ContentPlaceHolder ID="head_sau" runat="server"></asp:ContentPlaceHolder>
+</head>
+<body class="gianhang-tabler-shell">
+    <form id="form1" runat="server" class="aha-scale-root">
+        <asp:ScriptManager runat="server" ID="ScriptManager1" EnablePageMethods="true" EnableScriptGlobalization="True" />
+        <header class="gh-gianhang-topbar">
+            <div class="gh-gianhang-topbar__inner">
+                <div class="gh-gianhang-topbar__left">
+                    <uc1:SpaceLauncher runat="server" ID="SpaceLauncherTopbar" ButtonCssClass="gh-gianhang-topbar__space-btn" WrapperCssClass="gh-gianhang-topbar__space-launcher" />
+                </div>
+
+                <div class="gh-gianhang-topbar__center">
+                    <a class="gh-gianhang-topbar__brand" href="/gianhang/default.aspx" title="<%=ResolveTopbarBrandTitle() %>">
+                        <span class="gh-gianhang-topbar__brand-logo">
+                            <img src="/uploads/images/favicon.png" alt="AhaSale" />
+                        </span>
+                        <span class="gh-gianhang-topbar__brand-text"><%=ResolveTopbarBrandTitle() %></span>
+                    </a>
+                </div>
+
+                <div class="gh-gianhang-topbar__right">
+                    <details class="gh-gianhang-account" data-gh-gianhang-account>
+                        <summary class="gh-gianhang-account__toggle" aria-label="Mở tính năng gian hàng đối tác">
+                            <span class="gh-gianhang-account__avatar">
+                                <% if (IsSignedIn()) { %>
+                                <img src="<%=ResolveTopbarAvatar() %>" alt="<%=ResolveTopbarAccountName() %>" />
+                                <% } else { %>
+                                <span>U</span>
+                                <% } %>
+                            </span>
+                        </summary>
+                        <div class="gh-gianhang-account__menu">
+                            <div class="gh-gianhang-account__profile">
+                                <span class="gh-gianhang-account__profile-name"><%=ResolveTopbarAccountName() %></span>
+                                <span class="gh-gianhang-account__profile-meta"><%=ResolveTopbarAccountMeta() %></span>
+                            </div>
+
+                            <div class="gh-gianhang-account__tabs">
+                                <% if (IsGianHangSpaceReady()) { var nav = ResolveSpaceNavModel(); %>
+                                <a class="<%=GetTopbarLinkCss("public") %>" href="<%=nav.PublicUrl %>">Trang công khai</a>
+                                <a class="<%=GetTopbarLinkCss("home") %>" href="<%=nav.HomeUrl %>">Trung tâm tài khoản</a>
+                                <a class="<%=GetTopbarLinkCss("manage") %>" href="<%=nav.ManageUrl %>">Quản lý tin</a>
+                                <a class="<%=GetTopbarLinkCss("orders") %>" href="<%=nav.OrdersUrl %>">Đơn bán</a>
+                                <a class="<%=GetTopbarLinkCss("booking") %>" href="<%=nav.BookingUrl %>">Lịch hẹn</a>
+                                <a class="<%=GetTopbarLinkCss("customers") %>" href="<%=nav.CustomersUrl %>">Khách hàng</a>
+                                <a class="<%=GetTopbarLinkCss("report") %>" href="<%=nav.ReportUrl %>">Báo cáo</a>
+                                <a class="<%=GetTopbarLinkCss("level2") %>" href="<%=nav.Level2Url %>">Nâng cấp quản trị</a>
+                                <% if (nav.ShowAdminUrl) { %>
+                                <a class="<%=GetTopbarLinkCss("admin") %>" href="<%=nav.AdminUrl %>">Quản trị nâng cao</a>
+                                <% } %>
+                                <% } else { %>
+                                <% if (IsSignedIn()) { %>
+                                <a class="gh-gianhang-account__link" href="/gianhang/tai-khoan/default.aspx">Trung tâm tài khoản</a>
+                                <a class="gh-gianhang-account__link" href="/gianhang/mo-cong-cu-quan-tri.aspx">Mở quyền gian hàng</a>
+                                <% } else { %>
+                                <a class="gh-gianhang-account__link" href="/dang-nhap?return_url=%2Fgianhang%2Fdefault.aspx">Đăng nhập</a>
+                                <a class="gh-gianhang-account__link" href="/home/dangky.aspx?return_url=%2Fgianhang%2Fdefault.aspx">Đăng ký</a>
+                                <% } %>
+                                <% } %>
+                            </div>
+
+                            <% if (IsSignedIn()) { %>
+                            <div class="gh-gianhang-account__footer">
+                                <a class="gh-gianhang-account__logout" href="/home/logout.aspx?return_url=%2Fgianhang%2Fdefault.aspx">
+                                    <span class="ti ti-logout"></span>
+                                    <span>Đăng xuất</span>
+                                </a>
+                            </div>
+                            <% } %>
+                        </div>
+                    </details>
+                </div>
+            </div>
+        </header>
+
+        <div class="gianhang-tabler-main">
+            <asp:ContentPlaceHolder ID="main" runat="server"></asp:ContentPlaceHolder>
+        </div>
+
+        <uc1:footer_uc runat="server" ID="footer_uc" />
+    </form>
+
+    <asp:ContentPlaceHolder ID="foot_truoc" runat="server"></asp:ContentPlaceHolder>
+    <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
+    <script src="<%= Helper_cl.VersionedUrl("~/js/gianhang-ui-refresh.js") %>"></script>
+    <script src="<%= Helper_cl.VersionedUrl("~/js/gianhang-tabler.js") %>"></script>
+    <script src="<%= Helper_cl.VersionedUrl("~/js/gianhang-shell.js") %>"></script>
+    <asp:ContentPlaceHolder ID="foot_sau" runat="server"></asp:ContentPlaceHolder>
+</body>
+</html>

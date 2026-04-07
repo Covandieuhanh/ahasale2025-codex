@@ -22,6 +22,21 @@ public partial class badmin_Default : System.Web.UI.Page
     List<string> list_id_split;
     #endregion
 
+    private bool HasAnyPermission(params string[] permissionKeys)
+    {
+        if (permissionKeys == null)
+            return false;
+
+        foreach (string permissionKey in permissionKeys)
+        {
+            string key = (permissionKey ?? "").Trim();
+            if (key != "" && bcorn_class.check_quyen(user, key) == "")
+                return true;
+        }
+
+        return false;
+    }
+
     public void main()
     {
         //lấy dữ liệu
@@ -79,7 +94,7 @@ public partial class badmin_Default : System.Web.UI.Page
 
     protected void but_xoathanhtoan_Click(object sender, ImageClickEventArgs e)
     {
-        if (bcorn_class.check_quyen(user, "q12_5") == "" || bcorn_class.check_quyen(user, "n12_5") == "")
+        if (HasAnyPermission("q12_5", "n12_5"))
         {
             var q_thanhtoan = db.thedichvu_lichsu_thanhtoan_tables.Where(p => p.id_hoadon == id && p.id_chinhanh == Session["chinhanh"].ToString()).OrderBy(p => p.thoigian).ToList();
             foreach (var t in q_thanhtoan)
@@ -116,7 +131,7 @@ public partial class badmin_Default : System.Web.UI.Page
     }
     protected void but_thanhtoan_Click(object sender, EventArgs e)
     {
-        if (bcorn_class.check_quyen(user, "q12_5") == "" || bcorn_class.check_quyen(user, "n12_5") == "")
+        if (HasAnyPermission("q12_5", "n12_5"))
         {
             if (sotien_conlai == 0)
                 ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Đơn này đã thanh toán đủ.", "4000", "warning"), true);
@@ -199,44 +214,14 @@ public partial class badmin_Default : System.Web.UI.Page
     }
     protected void Page_Load(object sender, EventArgs e)
     {
+        GianHangAdminPageGuard_cl.AccessInfo access = GianHangAdminPageGuard_cl.EnsureAccess(this, db, "none");
+        if (access == null)
+            return;
 
-        #region Check_Login  
-        string _quyen = "none";
-        string _cookie_user = "", _cookie_pass = "";
-        if (Request.Cookies["save_user_admin_aka_1"] != null) _cookie_user = Request.Cookies["save_user_admin_aka_1"].Value;
-        if (Request.Cookies["save_pass_admin_aka_1"] != null) _cookie_pass = Request.Cookies["save_pass_admin_aka_1"].Value;
-        if (Session["user"] == null) Session["user"] = ""; if (Session["notifi"] == null) Session["notifi"] = ""; if (Session["user"].ToString() == "") Response.Redirect("/gianhang/admin/f5_ss_admin.aspx");
-        string _url = Request.Url.GetLeftPart(UriPartial.Authority).ToLower();
-        string _kq = bcorn_class.check_login(Session["user"].ToString(), _cookie_user, _cookie_pass, _url, _quyen);
-        if (_kq != "")//nếu có thông báo --> có lỗi --> reset --> bắt login lại
-        {
-            if (_kq == "baotri") Response.Redirect("/baotri.aspx");
-            else
-            {
-                if (_kq == "1") Response.Redirect("/gianhang/admin/login.aspx");//hết Session, hết Cookie
-                else
-                {
-                    if (_kq == "2")//k đủ quyền
-                    {
-                        Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
-                        Response.Redirect("/gianhang/admin");
-                    }
-                    else
-                    {
-                        Session["notifi"] = _kq; Session["user"] = "";
-                        Response.Cookies["save_user_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Cookies["save_pass_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Cookies["save_url_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Redirect("/gianhang/admin/login.aspx");
-                    }
-                }
-            }
-        }
-        #endregion
         #region Check quyen theo nganh
-        user = Session["user"].ToString();
-        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
-        if (bcorn_class.check_quyen(user, "q12_3") == "" || bcorn_class.check_quyen(user, "n12_3") == "")
+        user = (access.User ?? "").Trim();
+        user_parent = access.OwnerAccountKey;
+        if (HasAnyPermission("q12_3", "n12_3"))
         {
             if (!string.IsNullOrWhiteSpace(Request.QueryString["id"]))
             {
@@ -246,7 +231,7 @@ public partial class badmin_Default : System.Web.UI.Page
                     var q = db.thedichvu_tables.Where(p => p.id.ToString() == id && p.id_chinhanh == Session["chinhanh"].ToString());
                     thedichvu_table _ob = q.First();
 
-                    if (bcorn_class.check_quyen(user, "q12_3") == "")
+                    if (HasAnyPermission("q12_3"))
                     {
                         var list_dv = (from ob1 in db.web_post_tables.Where(p => p.phanloai == "ctdv" && p.id_chinhanh == Session["chinhanh"].ToString()).ToList()
                                        select new { id = ob1.id, tendichvu = ob1.name, }
@@ -380,7 +365,7 @@ public partial class badmin_Default : System.Web.UI.Page
 
     protected void Button3_Click(object sender, EventArgs e)
     {
-        if (bcorn_class.check_quyen(user, "q12_3") == "" || bcorn_class.check_quyen(user, "n12_3") == "")
+        if (HasAnyPermission("q12_3", "n12_3"))
         {
             string _tenkhachhang = str_cl.VietHoa_ChuCai_DauTien(txt_tenkhachhang.Text.Trim().ToLower());
             string _sdt = str_cl.remove_blank(txt_sdt.Text.Trim()).Replace(" ", "").Replace(".", "").Replace("-", "").Replace("+", "");
@@ -443,7 +428,7 @@ public partial class badmin_Default : System.Web.UI.Page
                                         {
                                             thedichvu_table _ob = db.thedichvu_tables.Where(p => p.id.ToString() == id && p.id_chinhanh == Session["chinhanh"].ToString()).First();
                                             _ob.ngaytao = DateTime.Parse(_ngaytao + " " + DateTime.Now.Hour.ToString() + ":" + DateTime.Now.Minute.ToString() + ":" + DateTime.Now.Second.ToString());
-                                            _ob.nguoitao = Session["user"].ToString();
+                                            _ob.nguoitao = user;
                                             _ob.tenthe = _tenthe;
                                             _ob.tenkh = _tenkhachhang;
                                             _ob.iddv = _iddv;

@@ -28,7 +28,7 @@
         .gh-article-detail-badge--hidden{background:#f3f4f6;color:#6b7280}
         .gh-article-detail-content{padding:18px 20px;border-radius:18px;background:#f7fff8;border:1px solid #d9efe0;color:#1f2937;line-height:1.75}
         .gh-article-detail-empty{padding:28px 18px;text-align:center;color:#6b7280}
-        @media (max-width:991px){.gh-article-detail-title{font-size:26px}.gh-article-detail-grid{grid-template-columns:1fr}}
+        @media (max-width:767px){.gh-article-detail-title{font-size:26px}.gh-article-detail-grid{grid-template-columns:1fr}}
     </style>
 </asp:Content>
 

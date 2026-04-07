@@ -59,8 +59,8 @@ public partial class gianhang_admin_gianhang_khach_hang : System.Web.UI.Page
 
         HubUrl = GianHangRoutes_cl.BuildAdminWorkspaceHubUrl();
         NativeCustomersUrl = GianHangRoutes_cl.BuildKhachHangUrl();
-        AdminCustomersUrl = "/gianhang/admin/quan-ly-khach-hang/Default.aspx";
-        PersonHubUrl = "/gianhang/admin/quan-ly-con-nguoi/Default.aspx";
+        AdminCustomersUrl = GianHangRoutes_cl.BuildAdminLegacyCustomersUrl(string.Empty);
+        PersonHubUrl = GianHangRoutes_cl.BuildAdminLegacyPeopleHubUrl(string.Empty);
         OrdersUrl = GianHangRoutes_cl.BuildAdminWorkspaceOrdersUrl();
         SyncUrl = GianHangRoutes_cl.BuildAdminWorkspaceCustomersUrl() + "?sync=1";
 
@@ -110,8 +110,8 @@ public partial class gianhang_admin_gianhang_khach_hang : System.Web.UI.Page
                 RevenueText = GianHangReport_cl.FormatCurrency(item.RevenueTotal) + " đ",
                 LastInteractionText = GianHangReport_cl.FormatDateTime(item.LastInteractionAt),
                 NativeDetailUrl = GianHangRoutes_cl.BuildAdminWorkspaceCustomerDetailUrl(item.CustomerKey),
-                AdminDetailUrl = hasLegacy ? ("/gianhang/admin/quan-ly-khach-hang/chi-tiet.aspx?id=" + legacyCustomerId.ToString()) : (AdminCustomersUrl + "?keyword=" + Server.UrlEncode(phone != "" ? phone : item.DisplayName)),
-                PersonHubUrl = "/gianhang/admin/quan-ly-con-nguoi/Default.aspx?keyword=" + Server.UrlEncode(phone != "" ? phone : item.DisplayName),
+                AdminDetailUrl = hasLegacy ? GianHangRoutes_cl.BuildAdminLegacyCustomerDetailUrl(legacyCustomerId) : GianHangRoutes_cl.BuildAdminLegacyCustomersUrl(phone != "" ? phone : item.DisplayName),
+                PersonHubUrl = GianHangRoutes_cl.BuildAdminLegacyPeopleHubUrl(phone != "" ? phone : item.DisplayName),
                 HasAdminMirror = hasLegacy,
                 MirrorText = hasLegacy ? ("CRM admin #" + legacyCustomerId.ToString()) : "Chưa định danh trong CRM admin"
             };

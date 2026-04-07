@@ -64,7 +64,7 @@ public partial class gianhang_admin_gianhang_quan_ly_noi_dung : System.Web.UI.Pa
         HubUrl = GianHangRoutes_cl.BuildAdminWorkspaceHubUrl();
         NativeManageUrl = GianHangRoutes_cl.BuildQuanLyTinUrl();
         NativeCreateUrl = "/gianhang/quan-ly-tin/Them.aspx";
-        AdminContentUrl = "/gianhang/admin/quan-ly-bai-viet/Default.aspx";
+        AdminContentUrl = GianHangRoutes_cl.BuildAdminLegacyArticlesUrl(string.Empty);
         ArticleHubUrl = GianHangRoutes_cl.BuildAdminWorkspaceArticlesUrl();
         ProductHubUrl = GianHangRoutes_cl.BuildAdminWorkspaceProductsUrl();
         ServiceHubUrl = GianHangRoutes_cl.BuildAdminWorkspaceServicesUrl();
@@ -146,7 +146,7 @@ public partial class gianhang_admin_gianhang_quan_ly_noi_dung : System.Web.UI.Pa
                 ImageUrl = GianHangStorefront_cl.ResolveImageUrl(item.hinh_anh),
                 NativeEditUrl = "/gianhang/quan-ly-tin/Them.aspx?id=" + item.id.ToString(),
                 PublicUrl = isService ? GianHangRoutes_cl.BuildXemDichVuUrl(item.id) : GianHangRoutes_cl.BuildXemSanPhamUrl(item.id),
-                LegacyEditUrl = legacyId > 0 ? ("/gianhang/admin/quan-ly-bai-viet/edit.aspx?id=" + legacyId.ToString()) : AdminContentUrl,
+                LegacyEditUrl = legacyId > 0 ? GianHangRoutes_cl.BuildAdminLegacyArticleEditUrl(legacyId, isService ? "dv" : "sp") : AdminContentUrl,
                 HasLegacyMirror = legacyId > 0,
                 LegacyMirrorText = legacyId > 0 ? ("Đã mirror #" + legacyId.ToString()) : "Chưa mirror"
             };

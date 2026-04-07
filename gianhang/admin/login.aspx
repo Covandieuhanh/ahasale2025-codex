@@ -13,7 +13,7 @@
     <asp:Literal ID="literal_fav_icon" runat="server"></asp:Literal>
 
     <link href="/Metro-UI-CSS-master/css/metro-all.min.css" rel="stylesheet" />
-    <link href="/assetscss/aha-ui-refresh.css?v=2026-03-06.1" rel="stylesheet" />
+    <link href="/assetscss/gianhang-ui-refresh.css?v=2026-03-06.1" rel="stylesheet" />
     <link href="/assetscss/bcorn-with-metro.css" rel="stylesheet" />
     <link href="/assetscss/fix-metro.css" rel="stylesheet" />
     <link href="/assetscss/login.css?v=2026-03-06.2" rel="stylesheet" />
@@ -130,7 +130,7 @@
         </div>
     </form>
     <script src="/Metro-UI-CSS-master/js/metro.min.js"></script>
-    <script src="/js/aha-ui-refresh.js?v=2026-03-07.2"></script>
+    <script src="/js/gianhang-ui-refresh.js?v=2026-03-07.2"></script>
     <%=notifi %>
 </body>
 </html>

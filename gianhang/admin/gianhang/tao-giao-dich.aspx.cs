@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Web;
 
 public partial class gianhang_admin_gianhang_tao_giao_dich : System.Web.UI.Page
@@ -113,19 +112,7 @@ public partial class gianhang_admin_gianhang_tao_giao_dich : System.Web.UI.Page
 
     private string BuildAdminInvoiceCreateUrl(string tenKhach, string sdt, string idDatLich, string idNganh)
     {
-        List<string> parts = new List<string>();
-        parts.Add("q=add");
-
-        if (tenKhach != "")
-            parts.Add("tenkh=" + Server.UrlEncode(tenKhach));
-        if (sdt != "")
-            parts.Add("sdt=" + Server.UrlEncode(sdt));
-        if (idDatLich != "")
-            parts.Add("id_datlich=" + Server.UrlEncode(idDatLich));
-        if (idNganh != "")
-            parts.Add("idnganh=" + Server.UrlEncode(idNganh));
-
-        return "/gianhang/admin/quan-ly-hoa-don/Default.aspx?" + string.Join("&", parts.ToArray());
+        return GianHangRoutes_cl.BuildAdminLegacyInvoiceCreateUrl(tenKhach, sdt, idDatLich, idNganh);
     }
 
     private string BuildNativeOrderCreateUrl(string productId, int qty)

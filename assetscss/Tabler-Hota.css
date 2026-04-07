@@ -246,7 +246,7 @@ html[data-bs-theme="dark"] .page-loading {
     font-size: 36px !important;
 }
 /* lg: */
-@media (max-width: 991px) {
+@media (max-width: 767px) {
     .font-title-hota-header-1 {
         font-size: 30px !important
     }

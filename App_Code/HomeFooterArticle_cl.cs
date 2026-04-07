@@ -12,6 +12,7 @@ public static class HomeFooterArticle_cl
 {
     public const string GroupSupport = "footer.support";
     public const string GroupAbout = "footer.about";
+    private const int FooterCacheSeconds = 300;
 
     private static readonly object SyncRoot = new object();
     private static bool _schemaEnsured;
@@ -117,43 +118,49 @@ public static class HomeFooterArticle_cl
 
     public static List<FooterArticleItem> GetAll(dbDataContext db)
     {
-        EnsureSchema(db);
-        var builtInMap = GetBuiltInItems().ToDictionary(x => x.ContentKey, x => x, StringComparer.OrdinalIgnoreCase);
-        var list = new List<FooterArticleItem>();
+        return Helper_cl.RuntimeCacheGetOrAdd<List<FooterArticleItem>>(
+            "home_footer_articles:all",
+            FooterCacheSeconds,
+            () =>
+            {
+                EnsureSchema(db);
+                var builtInMap = GetBuiltInItems().ToDictionary(x => x.ContentKey, x => x, StringComparer.OrdinalIgnoreCase);
+                var list = new List<FooterArticleItem>();
 
-        using (SqlConnection conn = new SqlConnection(db.Connection.ConnectionString))
-        using (SqlCommand cmd = conn.CreateCommand())
-        {
-            cmd.CommandText = @"
+                using (SqlConnection conn = new SqlConnection(db.Connection.ConnectionString))
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"
 SELECT id, content_key, group_key, display_name, slug, target_url, body_content, sort_order, is_enabled, updated_by, updated_at
 FROM dbo.Home_Footer_Article_tb
 ORDER BY group_key, sort_order, id";
-            conn.Open();
-            using (SqlDataReader reader = cmd.ExecuteReader())
-            {
-                while (reader.Read())
-                {
-                    string contentKey = (reader["content_key"] as string ?? "").Trim().ToLowerInvariant();
-                    list.Add(new FooterArticleItem
+                    conn.Open();
+                    using (SqlDataReader reader = cmd.ExecuteReader())
                     {
-                        Id = Convert.ToInt32(reader["id"]),
-                        ContentKey = contentKey,
-                        GroupKey = NormalizeGroupKey(reader["group_key"] as string ?? ""),
-                        DisplayName = (reader["display_name"] as string ?? "").Trim(),
-                        Slug = (reader["slug"] as string ?? "").Trim().ToLowerInvariant(),
-                        TargetUrl = (reader["target_url"] as string ?? "").Trim(),
-                        BodyContent = (reader["body_content"] as string ?? "").Trim(),
-                        SortOrder = reader["sort_order"] == DBNull.Value ? 0 : Convert.ToInt32(reader["sort_order"]),
-                        IsEnabled = reader["is_enabled"] != DBNull.Value && Convert.ToBoolean(reader["is_enabled"]),
-                        UpdatedBy = (reader["updated_by"] as string ?? "").Trim(),
-                        UpdatedAt = reader["updated_at"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(reader["updated_at"]),
-                        IsBuiltIn = builtInMap.ContainsKey(contentKey)
-                    });
+                        while (reader.Read())
+                        {
+                            string contentKey = (reader["content_key"] as string ?? "").Trim().ToLowerInvariant();
+                            list.Add(new FooterArticleItem
+                            {
+                                Id = Convert.ToInt32(reader["id"]),
+                                ContentKey = contentKey,
+                                GroupKey = NormalizeGroupKey(reader["group_key"] as string ?? ""),
+                                DisplayName = (reader["display_name"] as string ?? "").Trim(),
+                                Slug = (reader["slug"] as string ?? "").Trim().ToLowerInvariant(),
+                                TargetUrl = (reader["target_url"] as string ?? "").Trim(),
+                                BodyContent = (reader["body_content"] as string ?? "").Trim(),
+                                SortOrder = reader["sort_order"] == DBNull.Value ? 0 : Convert.ToInt32(reader["sort_order"]),
+                                IsEnabled = reader["is_enabled"] != DBNull.Value && Convert.ToBoolean(reader["is_enabled"]),
+                                UpdatedBy = (reader["updated_by"] as string ?? "").Trim(),
+                                UpdatedAt = reader["updated_at"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(reader["updated_at"]),
+                                IsBuiltIn = builtInMap.ContainsKey(contentKey)
+                            });
+                        }
+                    }
                 }
-            }
-        }
 
-        return list;
+                return list;
+            });
     }
 
     public static List<FooterArticleItem> GetEnabledByGroup(dbDataContext db, string groupKey)
@@ -276,6 +283,8 @@ WHEN NOT MATCHED THEN
             conn.Open();
             cmd.ExecuteNonQuery();
         }
+
+        Helper_cl.RuntimeCacheRemove("home_footer_articles:all");
     }
 
     public static string ResolveLinkUrl(FooterArticleItem item)

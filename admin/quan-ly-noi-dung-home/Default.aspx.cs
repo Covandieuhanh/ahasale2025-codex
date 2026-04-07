@@ -25,6 +25,8 @@ public partial class admin_quan_ly_noi_dung_home_Default : System.Web.UI.Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
+        AdminAccessGuard_cl.RequireFeatureAccess("home_content", "/admin/default.aspx?mspace=content");
+
         Session["url_back"] = HttpContext.Current.Request.Url.AbsoluteUri.ToLower();
         AdminRolePolicy_cl.RequireContentManager();
 

@@ -151,7 +151,7 @@
                     <% if (ShowMenuGroupAdmin()) { %>
                     <div class="admin-shop-menu-group-title">Quản trị admin</div>
                     <% if (ShowMenuAdminDashboard()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/default.aspx") %>' href="<%= GetAdminDashboardUrl() %>">
+                    <a class='admin-shop-menu-item <%= MenuActiveFeature("admin_dashboard") %>' href="<%= GetAdminDashboardUrl() %>">
                         <span>Trang chủ admin</span>
                         <span class="admin-shop-menu-badge">Dashboard</span>
                     </a>
@@ -162,7 +162,7 @@
                     </a>
                     <% } %>
                     <% if (ShowMenuAdminOtp()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/otp/default.aspx") %>' href="<%= GetAdminOtpUrl() %>">
+                    <a class='admin-shop-menu-item <%= MenuActiveFeature("admin_otp") %>' href="<%= GetAdminOtpUrl() %>">
                         <span>Quản lý OTP</span>
                     </a>
                     <% } %>
@@ -172,27 +172,27 @@
                     </a>
                     <% } %>
                     <% if (ShowMenuAdminGopY()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-gop-y/default.aspx") %>' href="<%= GetAdminGopYUrl() %>">
+                    <a class='admin-shop-menu-item <%= MenuActiveFeature("admin_feedback") %>' href="<%= GetAdminGopYUrl() %>">
                         <span>Quản lý góp ý</span>
                     </a>
                     <% } %>
                     <% if (ShowMenuAdminThongBao()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-thong-bao/default.aspx", "/admin/quan-ly-thong-bao/in.aspx", "/admin/quan-ly-thong-bao/bo-loc.aspx", "/admin/quan-ly-thong-bao/xuat-du-lieu.aspx", "/admin/quan-ly-thong-bao/ban-in.aspx") %>' href="<%= GetAdminThongBaoUrl() %>">
+                    <a class='admin-shop-menu-item <%= MenuActiveFeature("notifications") %>' href="<%= GetAdminThongBaoUrl() %>">
                         <span>Quản lý thông báo</span>
                     </a>
                     <% } %>
                     <% if (ShowMenuAdminTuVan()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/yeu-cau-tu-van/default.aspx", "/admin/yeu-cau-tu-van/bo-loc.aspx", "/admin/yeu-cau-tu-van/xuat-du-lieu.aspx", "/admin/yeu-cau-tu-van/ban-in.aspx") %>' href="<%= GetAdminTuVanUrl() %>">
+                    <a class='admin-shop-menu-item <%= MenuActiveFeature("consulting") %>' href="<%= GetAdminTuVanUrl() %>">
                         <span>Yêu cầu tư vấn</span>
                     </a>
                     <% } %>
                     <% if (ShowMenuAdminCompanyShopSync()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/tools/company-shop-sync.aspx") %>' href="<%= GetAdminCompanyShopSyncUrl() %>">
+                    <a class='admin-shop-menu-item <%= MenuActiveFeature("admin_company_shop_sync") %>' href="<%= GetAdminCompanyShopSyncUrl() %>">
                         <span>Đồng bộ shop công ty</span>
                     </a>
                     <% } %>
                     <% if (ShowMenuAdminReindexBaiViet()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/tools/reindex-baiviet.aspx") %>' href="<%= GetAdminReindexBaiVietUrl() %>">
+                    <a class='admin-shop-menu-item <%= MenuActiveFeature("admin_reindex_baiviet") %>' href="<%= GetAdminReindexBaiVietUrl() %>">
                         <span>Reindex bài viết</span>
                     </a>
                     <% } %>
@@ -217,17 +217,17 @@
                     </a>
                     <% } %>
                     <% if (ShowMenuIssueCard()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/phat-hanh-the.aspx", "/admin/phat-hanh-the/them-moi.aspx") %>' href="<%= GetHomeIssueCardUrl() %>">
+                    <a class='admin-shop-menu-item <%= MenuActiveFeature("issue_cards") %>' href="<%= GetHomeIssueCardUrl() %>">
                         <span>Phát hành thẻ</span>
                     </a>
                     <% } %>
                     <% if (ShowMenuTierDescription()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/motacapbac.aspx", "/admin/MoTaCapBac.aspx") %>' href="<%= GetHomeTierDescriptionUrl() %>">
+                    <a class='admin-shop-menu-item <%= MenuActiveFeature("tier_reference") %>' href="<%= GetHomeTierDescriptionUrl() %>">
                         <span>Mô tả cấp bậc</span>
                     </a>
                     <% } %>
                     <% if (ShowMenuSellProduct()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/he-thong-san-pham/ban-san-pham.aspx", "/admin/he-thong-san-pham/ban-the.aspx", "/admin/he-thong-san-pham/chi-tiet-giao-dich.aspx") %>' href="<%= GetHomeSellProductUrl() %>">
+                    <a class='admin-shop-menu-item <%= MenuActiveFeature("system_products") %>' href="<%= GetHomeSellProductUrl() %>">
                         <span>Bán sản phẩm</span>
                     </a>
                     <% } %>
@@ -236,7 +236,7 @@
                     <% if (ShowMenuGroupShop()) { %>
                     <div class="admin-shop-menu-group-title">Quản trị không gian Gian hàng đối tác</div>
                     <% if (ShowMenuShopWorkspace()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/gianhang/admin", "/gianhang/admin/", "/gianhang/admin/default.aspx") %>' href="<%= GetShopWorkspaceUrl() %>">
+                    <a class='admin-shop-menu-item <%= MenuActiveFeature("shop_workspace") %>' href="<%= GetShopWorkspaceUrl() %>">
                         <span>Trung tâm quản trị gian hàng</span>
                         <span class="admin-shop-menu-badge">Portal</span>
                     </a>
@@ -252,20 +252,67 @@
                     </a>
                     <% } %>
                     <% if (ShowMenuShopEmailTemplate()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-email-shop/default.aspx") %>' href="<%= GetShopEmailTemplateUrl() %>">
+                    <a class='admin-shop-menu-item <%= MenuActiveFeature("shop_email") %>' href="<%= GetShopEmailTemplateUrl() %>">
                         <span>Nội dung email gian hàng đối tác</span>
                     </a>
                     <% } %>
-                    <% if (ShowMenuShopApprove()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/duyet-gian-hang-doi-tac.aspx") %>' href="<%= GetGianHangApprovalUrl() %>">
+                    <% if (ShowMenuShopLegacyInvoices()) { %>
+                    <a class='admin-shop-menu-item <%= MenuActiveFeature("shop_legacy_invoices") %>' href="<%= GetShopLegacyInvoicesUrl() %>">
+                        <span>Vận hành hóa đơn gian hàng</span>
+                    </a>
+                    <% } %>
+                    <% if (ShowMenuShopLegacyCustomers()) { %>
+                    <a class='admin-shop-menu-item <%= MenuActiveFeature("shop_legacy_customers") %>' href="<%= GetShopLegacyCustomersUrl() %>">
+                        <span>Vận hành khách hàng gian hàng</span>
+                    </a>
+                    <% } %>
+                    <% if (ShowMenuShopLegacyContent()) { %>
+                    <a class='admin-shop-menu-item <%= MenuActiveFeature("shop_legacy_content") %>' href="<%= GetShopLegacyContentUrl() %>">
+                        <span>Vận hành nội dung gian hàng</span>
+                    </a>
+                    <% } %>
+                    <% if (ShowMenuShopLegacyFinance()) { %>
+                    <a class='admin-shop-menu-item <%= MenuActiveFeature("shop_legacy_finance") %>' href="<%= GetShopLegacyFinanceUrl() %>">
+                        <span>Vận hành thu chi gian hàng</span>
+                    </a>
+                    <% } %>
+                    <% if (ShowMenuShopLegacyInventory()) { %>
+                    <a class='admin-shop-menu-item <%= MenuActiveFeature("shop_legacy_inventory") %>' href="<%= GetShopLegacyInventoryUrl() %>">
+                        <span>Vận hành kho vật tư gian hàng</span>
+                    </a>
+                    <% } %>
+                    <% if (ShowMenuShopLegacyAccounts()) { %>
+                    <a class='admin-shop-menu-item <%= MenuActiveFeature("shop_legacy_accounts") %>' href="<%= GetShopLegacyAccountsUrl() %>">
+                        <span>Vận hành tài khoản gian hàng</span>
+                    </a>
+                    <% } %>
+                    <% if (ShowMenuShopLegacyOrg()) { %>
+                    <a class='admin-shop-menu-item <%= MenuActiveFeature("shop_legacy_org") %>' href="<%= GetShopLegacyOrgUrl() %>">
+                        <span>Vận hành cơ cấu gian hàng</span>
+                    </a>
+                    <% } %>
+                    <% if (ShowMenuShopLegacyTraining()) { %>
+                    <a class='admin-shop-menu-item <%= MenuActiveFeature("shop_legacy_training") %>' href="<%= GetShopLegacyTrainingUrl() %>">
+                        <span>Vận hành học viên giảng viên</span>
+                    </a>
+                    <% } %>
+                    <% if (ShowMenuShopLegacySupport()) { %>
+                    <a class='admin-shop-menu-item <%= MenuActiveFeature("shop_legacy_support") %>' href="<%= GetShopLegacySupportUrl() %>">
+                        <span>Vận hành hỗ trợ gian hàng</span>
+                    </a>
+                    <% } %>
+                    <% if (ShowMenuGianHangApproval()) { %>
+                    <a class='admin-shop-menu-item <%= MenuActiveFeature("home_gianhang_space") %>' href="<%= GetGianHangApprovalUrl() %>">
                         <span>Duyệt không gian gian hàng</span>
                     </a>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/duyet-shop-doi-tac.aspx") %>' href="<%= GetShopPartnerApprovalUrl() %>">
+                    <% } %>
+                    <% if (ShowMenuShopPartnerApproval()) { %>
+                    <a class='admin-shop-menu-item <%= MenuActiveFeature("shop_partner") %>' href="<%= GetShopPartnerApprovalUrl() %>">
                         <span>Duyệt gian hàng đối tác (Shop)</span>
                     </a>
                     <% } %>
                     <% if (ShowMenuShopLevel2()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/duyet-nang-cap-level2.aspx") %>' href="<%= GetShopLevel2ApprovalUrl() %>">
+                    <a class='admin-shop-menu-item <%= MenuActiveFeature("shop_level2") %>' href="<%= GetShopLevel2ApprovalUrl() %>">
                         <span>Duyệt nâng cấp Level 2</span>
                     </a>
                     <% } %>
@@ -287,30 +334,45 @@
                     </a>
                     <% } %>
 
+                    <% if (ShowMenuGroupBatDongSan()) { %>
+                    <div class="admin-shop-menu-group-title">Quản trị không gian Bất động sản</div>
+                    <% if (ShowMenuBatDongSanWorkspace()) { %>
+                    <a class='admin-shop-menu-item <%= MenuActiveBatDongSanWorkspace() %>' href="<%= GetBatDongSanWorkspaceUrl() %>">
+                        <span>Trung tâm quản trị bất động sản</span>
+                        <span class="admin-shop-menu-badge">Portal</span>
+                    </a>
+                    <% } %>
+                    <% if (ShowMenuBatDongSanLinked()) { %>
+                    <a class='admin-shop-menu-item <%= MenuActiveFeature("home_bds_linked") %>' href="<%= GetBatDongSanLinkedUrl() %>">
+                        <span>BĐS - Liên kết tin</span>
+                    </a>
+                    <% } %>
+                    <% } %>
+
                     <% if (ShowMenuGroupContent()) { %>
                     <div class="admin-shop-menu-group-title">Quản trị nội dung Website</div>
                     <% if (ShowMenuHomeContent() || ShowMenuHomeTextContent()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/cai-dat-trang-chu/default.aspx") %>' href="<%= GetContentSettingsUrl() %>">
+                    <a class='admin-shop-menu-item <%= MenuActiveFeature("home_config") %>' href="<%= GetContentSettingsUrl() %>">
                         <span>Cài đặt trang chủ</span>
                     </a>
                     <% } %>
                     <% if (ShowMenuHomeTextContent()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-noi-dung-home/default.aspx") %>' href="<%= GetContentHomeTextUrl() %>">
+                    <a class='admin-shop-menu-item <%= MenuActiveFeature("home_content") %>' href="<%= GetContentHomeTextUrl() %>">
                         <span>Nội dung trang chủ Home</span>
                     </a>
                     <% } %>
                     <% if (ShowMenuContentMenu()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-menu/default.aspx", "/admin/quan-ly-menu/them-moi.aspx", "/admin/quan-ly-menu/bo-loc.aspx", "/admin/quan-ly-menu/chinh-sua.aspx", "/admin/quan-ly-menu/xuat-du-lieu.aspx", "/admin/quan-ly-menu/ban-in.aspx") %>' href="<%= GetContentMenuUrl() %>">
+                    <a class='admin-shop-menu-item <%= MenuActiveFeature("home_menu") %>' href="<%= GetContentMenuUrl() %>">
                         <span>Quản lý menu</span>
                     </a>
                     <% } %>
                     <% if (ShowMenuContentBaiViet()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-bai-viet/default.aspx", "/admin/quan-ly-bai-viet/in.aspx", "/admin/quan-ly-bai-viet/them-moi.aspx", "/admin/quan-ly-bai-viet/bo-loc.aspx", "/admin/quan-ly-bai-viet/chinh-sua.aspx", "/admin/quan-ly-bai-viet/xuat-du-lieu.aspx", "/admin/quan-ly-bai-viet/ban-in.aspx") %>' href="<%= GetContentBaiVietUrl() %>">
+                    <a class='admin-shop-menu-item <%= MenuActiveFeature("home_posts") %>' href="<%= GetContentBaiVietUrl() %>">
                         <span>Quản lý bài viết</span>
                     </a>
                     <% } %>
                     <% if (ShowMenuContentBanner()) { %>
-                    <a class='admin-shop-menu-item <%= MenuActive("/admin/quan-ly-banner/default.aspx", "/admin/quan-ly-banner/them-moi.aspx") %>' href="<%= GetContentBannerUrl() %>">
+                    <a class='admin-shop-menu-item <%= MenuActiveFeature("home_banner") %>' href="<%= GetContentBannerUrl() %>">
                         <span>Quản lý banner</span>
                     </a>
                     <% } %>

@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
-        body { margin: 0; font-family: Arial, sans-serif; background: #f8fafc; color: #0f172a; }
+        body { margin: 0; font-family: "Be Vietnam Pro", "Segoe UI", Arial, sans-serif; background: #f8fafc; color: #0f172a; }
         .wrap { max-width: 680px; margin: 44px auto; background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 24px; }
         h1 { margin: 0 0 12px; font-size: 24px; }
         p { margin: 0 0 14px; line-height: 1.6; color: #475569; }

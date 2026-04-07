@@ -1,0 +1,99 @@
+<%@ Master Language="C#" %>
+<%@ Register Src="~/bat-dong-san/uc-bds-footer.ascx" TagPrefix="uc3" TagName="BdsFooter" %>
+<%@ Register Src="~/bat-dong-san/uc-bds-nav.ascx" TagPrefix="uc2" TagName="BdsNav" %>
+<script runat="server">
+    protected string BdsFaviconUrl()
+    {
+        try
+        {
+            using (dbDataContext db = new dbDataContext())
+            {
+                PortalBranding_cl.ScopeBrandingSnapshot branding = PortalBranding_cl.LoadScopeBranding(
+                    db,
+                    PortalBranding_cl.ScopeBatDongSan,
+                    true);
+
+                return PortalBranding_cl.ResolveFaviconPath(branding, PortalBranding_cl.ScopeBatDongSan);
+            }
+        }
+        catch
+        {
+            return Helper_cl.VersionedUrl("~/uploads/images/favicon.png");
+        }
+    }
+
+    protected string BdsAppleTouchIconUrl()
+    {
+        try
+        {
+            using (dbDataContext db = new dbDataContext())
+            {
+                PortalBranding_cl.ScopeBrandingSnapshot branding = PortalBranding_cl.LoadScopeBranding(
+                    db,
+                    PortalBranding_cl.ScopeBatDongSan,
+                    true);
+
+                return PortalBranding_cl.ResolveHeaderLogoPath(branding, PortalBranding_cl.ScopeBatDongSan);
+            }
+        }
+        catch
+        {
+            return Helper_cl.VersionedUrl("~/uploads/images/favicon.png");
+        }
+    }
+</script>
+
+<!DOCTYPE html>
+<html>
+<head runat="server">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="content-language" content="vi" />
+    <meta name="robots" content="index, follow" />
+    <meta name="revisit-after" content="1 days" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="format-detection" content="date=no" />
+    <meta name="format-detection" content="address=no" />
+    <meta name="format-detection" content="email=no" />
+    <meta name="format-detection" content="url=no" />
+
+    <link rel="icon" href="<%= BdsFaviconUrl() %>" sizes="32x32" type="image/x-icon" />
+    <link rel="apple-touch-icon" href="<%= BdsAppleTouchIconUrl() %>" sizes="180x180" />
+
+    <asp:ContentPlaceHolder ID="head_truoc" runat="server"></asp:ContentPlaceHolder>
+    <script>
+        (function () {
+            document.documentElement.setAttribute('data-bs-theme', 'light');
+            document.documentElement.classList.add('aha-bds-theme');
+            try { localStorage.removeItem('theme-preference'); } catch (e) { }
+            document.addEventListener('DOMContentLoaded', function () {
+                if (!document.body) return;
+                document.body.setAttribute('data-bs-theme', 'light');
+                document.body.classList.remove('theme-dark', 'dark', 'dark-mode');
+                document.body.classList.add('aha-bds-theme');
+            });
+        })();
+    </script>
+    <link rel="stylesheet" href="<%= Helper_cl.VersionedUrl("~/bat-dong-san/bds-core.css") + "&bds_rev=20260404a" %>" />
+    <link rel="stylesheet" href="<%= Helper_cl.VersionedUrl("~/bat-dong-san/bds-header-tabler-ui.css") + "&bds_rev=20260404a" %>" />
+    <link rel="stylesheet" href="<%= Helper_cl.VersionedUrl("~/bat-dong-san/bds-shell.css") + "&bds_rev=20260404a" %>" />
+    <asp:ContentPlaceHolder ID="head_sau" runat="server"></asp:ContentPlaceHolder>
+</head>
+<body class="aha-bds-shell">
+    <form id="form1" runat="server">
+        <asp:ScriptManager runat="server" ID="ScriptManager1" EnablePageMethods="true" EnableScriptGlobalization="True" />
+        <div class="page">
+            <uc2:BdsNav ID="BdsShellTopbar" runat="server" ShowTopbar="true" ShowBanner="false" ShowNav="false" IncludeAssets="true" />
+            <div class="page-wrapper">
+                <asp:ContentPlaceHolder ID="main" runat="server"></asp:ContentPlaceHolder>
+            </div>
+            <uc3:BdsFooter runat="server" ID="BdsFooter" />
+        </div>
+    </form>
+
+    <asp:ContentPlaceHolder ID="foot_truoc" runat="server"></asp:ContentPlaceHolder>
+    <script src="<%= Helper_cl.VersionedUrl("~/bat-dong-san/bds-core.js") + "&bds_rev=20260404a" %>"></script>
+    <script src="<%= Helper_cl.VersionedUrl("~/bat-dong-san/bds-shell.js") + "&bds_rev=20260404a" %>"></script>
+    <asp:ContentPlaceHolder ID="foot_sau" runat="server"></asp:ContentPlaceHolder>
+</body>
+</html>

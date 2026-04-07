@@ -1,0 +1,250 @@
+.app-shell-launcher {
+    background:
+        radial-gradient(circle at top left, var(--app-page-glow), transparent 24%),
+        linear-gradient(180deg, var(--app-page-gradient-start) 0%, rgba(255,255,255,0) 28%),
+        var(--app-surface);
+}
+
+.app-topbar-launcher {
+    position: relative;
+    background: transparent;
+    padding-bottom: 6px;
+}
+
+.app-launcher-head {
+    padding: 14px 16px 10px;
+}
+
+.app-launcher-kicker {
+    display: inline-flex;
+    min-height: 32px;
+    align-items: center;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.72);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.app-launcher-title {
+    margin: 14px 0 10px;
+    font-size: 30px;
+    line-height: 1.08;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+}
+
+.app-launcher-copy {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--app-text-soft);
+    max-width: 580px;
+}
+
+.app-launcher-grid {
+    display: grid;
+    gap: 14px;
+}
+
+.app-launcher-insight-strip {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.app-launcher-insight-card {
+    padding: 14px 12px;
+    border-radius: 22px;
+    background: rgba(255,255,255,0.84);
+    box-shadow: 0 16px 30px rgba(15, 23, 42, 0.06);
+    border: 1px solid var(--app-soft-border);
+}
+
+.app-launcher-insight-value {
+    display: block;
+    font-size: 19px;
+    line-height: 1.05;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--app-text-title);
+}
+
+.app-launcher-insight-label {
+    display: block;
+    margin-top: 8px;
+    color: var(--app-text-soft);
+    font-size: 12px;
+    line-height: 1.45;
+    font-weight: 700;
+}
+
+.app-launcher-card {
+    display: block;
+    padding: 18px;
+    border-radius: 28px;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: 0 18px 36px rgba(15, 23, 42, 0.08);
+    border: 1px solid var(--app-soft-border);
+    min-width: 0;
+}
+
+.app-launcher-card.is-home {
+    background: linear-gradient(135deg, var(--space-100), #ffffff 62%);
+}
+
+.app-launcher-card.is-batdongsan {
+    background: linear-gradient(135deg, #e6eef8, #f1f5f9 62%);
+}
+
+.app-launcher-card.is-gianhang {
+    background: linear-gradient(135deg, #ede9fe, #f5f3ff 62%);
+}
+
+.app-launcher-card.is-choxe {
+    background: linear-gradient(135deg, #e2e8f0, #f8fafc 62%);
+}
+
+.app-launcher-card.is-dienthoai-maytinh {
+    background: linear-gradient(135deg, #dbeafe, #eff6ff 62%);
+}
+
+.app-launcher-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.app-launcher-arrow {
+    width: 42px;
+    height: 42px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.72);
+    border: 1px solid rgba(255,255,255,0.68);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--app-text-title);
+    font-size: 20px;
+    font-weight: 800;
+}
+
+.app-launcher-badge {
+    width: 58px;
+    height: 58px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.72);
+    border: 1px solid rgba(255,255,255,0.68);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.app-launcher-label {
+    margin: 16px 0 4px;
+    font-size: 24px;
+    line-height: 1.1;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+}
+
+.app-launcher-sub {
+    display: block;
+    font-size: 13px;
+    line-height: 1.45;
+    font-weight: 800;
+    color: var(--app-text-soft);
+}
+
+.app-launcher-desc {
+    margin: 12px 0 0;
+    color: var(--app-text-soft);
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 290px;
+    overflow-wrap: anywhere;
+}
+
+.app-launcher-meta {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+}
+
+.app-launcher-chip {
+    display: inline-flex;
+    min-height: 30px;
+    align-items: center;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.72);
+    color: var(--app-text);
+    border: 1px solid rgba(255,255,255,0.68);
+    font-size: 12px;
+    line-height: 1;
+    font-weight: 800;
+}
+
+@media (max-width: 360px) {
+    .app-launcher-head {
+        padding: 12px 14px 8px;
+    }
+
+    .app-launcher-title {
+        font-size: 26px;
+    }
+
+    .app-launcher-insight-strip {
+        grid-template-columns: 1fr;
+    }
+
+    .app-launcher-card {
+        padding: 16px;
+        border-radius: 24px;
+    }
+
+    .app-launcher-badge {
+        width: 52px;
+        height: 52px;
+        border-radius: 18px;
+        font-size: 12px;
+    }
+
+    .app-launcher-arrow {
+        width: 38px;
+        height: 38px;
+        border-radius: 14px;
+        font-size: 18px;
+    }
+
+    .app-launcher-label {
+        font-size: 22px;
+    }
+
+    .app-launcher-desc {
+        font-size: 13px;
+        line-height: 1.55;
+    }
+}
+
+@media (min-width: 361px) and (max-width: 420px) {
+    .app-launcher-insight-strip {
+        grid-template-columns: 1fr;
+    }
+
+    .app-launcher-card {
+        border-radius: 26px;
+    }
+
+    .app-launcher-badge {
+        width: 54px;
+        height: 54px;
+    }
+}

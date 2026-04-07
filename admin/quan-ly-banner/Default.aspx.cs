@@ -68,6 +68,8 @@ public partial class admin_quan_ly_banner_Default : System.Web.UI.Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
+        AdminAccessGuard_cl.RequireFeatureAccess("home_banner", "/admin/default.aspx?mspace=content");
+
         if (!IsPostBack)
         {
 

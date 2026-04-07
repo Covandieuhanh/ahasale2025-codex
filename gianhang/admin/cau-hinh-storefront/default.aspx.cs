@@ -11,13 +11,18 @@ public partial class gianhang_admin_cau_hinh_storefront_default : System.Web.UI.
     public string shopPublicUrl = "/gianhang/public.aspx";
     private gianhang_storefront_config_table config;
     private string chiNhanhId = "1";
+    private string currentUser = string.Empty;
 
     protected void Page_Load(object sender, EventArgs e)
     {
         try
         {
-            RequireAdmin("q1_3");
-            if (!AdvancedAdminOwnerGuard_cl.EnsureOwnerOnly(this, Session["user"].ToString(), AhaShineContext_cl.UserParent, "cấu hình /gianhang", "/gianhang/admin"))
+            GianHangAdminPageGuard_cl.AccessInfo access = GianHangAdminPageGuard_cl.EnsureAccess(this, db, "q1_3");
+            if (access == null)
+                return;
+
+            currentUser = (access.User ?? string.Empty).Trim();
+            if (!AdvancedAdminOwnerGuard_cl.EnsureOwnerOnly(this, currentUser, AhaShineContext_cl.UserParent, "cấu hình /gianhang", "/gianhang/admin"))
                 return;
 
             string warningMessage;
@@ -126,8 +131,12 @@ public partial class gianhang_admin_cau_hinh_storefront_default : System.Web.UI.
     {
         try
         {
-            RequireAdmin("q1_3");
-            if (!AdvancedAdminOwnerGuard_cl.EnsureOwnerOnly(this, Session["user"].ToString(), AhaShineContext_cl.UserParent, "cấu hình /gianhang", "/gianhang/admin"))
+            GianHangAdminPageGuard_cl.AccessInfo access = GianHangAdminPageGuard_cl.EnsureAccess(this, db, "q1_3");
+            if (access == null)
+                return;
+
+            currentUser = (access.User ?? string.Empty).Trim();
+            if (!AdvancedAdminOwnerGuard_cl.EnsureOwnerOnly(this, currentUser, AhaShineContext_cl.UserParent, "cấu hình /gianhang", "/gianhang/admin"))
                 return;
             chiNhanhId = AhaShineContext_cl.ResolveChiNhanhId();
             config = SqlTransientGuard_cl.Execute(() => GianHangStorefrontConfig_cl.GetConfig(db, chiNhanhId), 3, 250);
@@ -183,54 +192,6 @@ public partial class gianhang_admin_cau_hinh_storefront_default : System.Web.UI.
 
             Session["notifi"] = thongbao_class.metro_notifi_onload("Thông báo", AhaShineContext_cl.BuildTransientWarningMessage(), "2200", "warning");
             Response.Redirect("/gianhang/admin/cau-hinh-storefront/default.aspx");
-        }
-    }
-
-    private void RequireAdmin(string quyen)
-    {
-        try
-        {
-            string cookieUser = Request.Cookies["save_user_admin_aka_1"] != null ? Request.Cookies["save_user_admin_aka_1"].Value : "";
-            string cookiePass = Request.Cookies["save_pass_admin_aka_1"] != null ? Request.Cookies["save_pass_admin_aka_1"].Value : "";
-            if (Session["user"] == null) Session["user"] = "";
-            if (Session["notifi"] == null) Session["notifi"] = "";
-            if (Session["user"].ToString() == "") Response.Redirect("/gianhang/admin/f5_ss_admin.aspx");
-            string url = Request.Url.GetLeftPart(UriPartial.Authority).ToLower();
-            string result = SqlTransientGuard_cl.Execute(() => bcorn_class.check_login(Session["user"].ToString(), cookieUser, cookiePass, url, quyen), 3, 250);
-            if (result == "")
-                return;
-
-            if (result == "baotri")
-            {
-                Response.Redirect("/baotri.aspx");
-                return;
-            }
-            if (result == "1")
-            {
-                Response.Redirect("/gianhang/admin/login.aspx");
-                return;
-            }
-            if (result == "2")
-            {
-                Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập thao tác vừa rồi.", "false", "false", "OK", "alert", "");
-                Response.Redirect("/gianhang/admin");
-                return;
-            }
-
-            Session["notifi"] = result;
-            Session["user"] = "";
-            Response.Cookies["save_user_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-            Response.Cookies["save_pass_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-            Response.Cookies["save_url_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-            Response.Redirect("/gianhang/admin/login.aspx");
-        }
-        catch (Exception ex)
-        {
-            if (!SqlTransientGuard_cl.IsTransient(ex))
-                throw;
-
-            Session["notifi"] = thongbao_class.metro_notifi_onload("Thông báo", AhaShineContext_cl.BuildTransientWarningMessage(), "2200", "warning");
-            Response.Redirect("/gianhang/admin/login.aspx");
         }
     }
 }

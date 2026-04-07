@@ -1,0 +1,533 @@
+{
+  "found": 63,
+  "missing": [],
+  "credits": {
+    "an-giang": {
+      "province": "An Giang",
+      "page_title": "An Giang",
+      "page_url": "https://vi.wikipedia.org/wiki/An_Giang",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/5/55/Hon_Thom_Cable_Car_aerial_view_Phu_Quoc_Island_Vietnam.jpg",
+      "local_file": "an-giang.jpg",
+      "source": "vi.wikipedia.org / Wikimedia",
+      "license_note": "Open-license Wikimedia content; verify page/image attribution before production publishing."
+    },
+    "ba-ria-vung-tau": {
+      "province": "Bà Rịa - Vũng Tàu",
+      "page_title": "Bà Rịa - Vũng Tàu",
+      "page_url": "https://vi.wikipedia.org/wiki/B%C3%A0_R%E1%BB%8Ba_%E2%80%93_V%C5%A9ng_T%C3%A0u",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/4/49/M%E1%BB%99t_ph%E1%BA%A7n_V%C5%A9ng_T%C3%A0u_2.JPG",
+      "local_file": "ba-ria-vung-tau.jpg",
+      "source": "vi.wikipedia.org / Wikimedia",
+      "license_note": "Open-license Wikimedia content; verify page/image attribution before production publishing."
+    },
+    "bac-ninh": {
+      "province": "Bắc Ninh",
+      "page_title": "Bắc Ninh",
+      "page_url": "https://vi.wikipedia.org/wiki/B%E1%BA%AFc_Ninh",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/8/87/Trung_t%C3%A2m_v%C4%83n_h%C3%B3a_Kinh_B%E1%BA%AFc.jpg",
+      "local_file": "bac-ninh.jpg",
+      "source": "vi.wikipedia.org / Wikimedia",
+      "license_note": "Open-license Wikimedia content; verify page/image attribution before production publishing."
+    },
+    "ca-mau": {
+      "province": "Cà Mau",
+      "page_title": "Cà Mau",
+      "page_url": "https://vi.wikipedia.org/wiki/C%C3%A0_Mau",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/1/1a/Muicamau.jpg",
+      "local_file": "ca-mau.jpg",
+      "source": "vi.wikipedia.org / Wikimedia",
+      "license_note": "Open-license Wikimedia content; verify page/image attribution before production publishing."
+    },
+    "can-tho": {
+      "province": "Cần Thơ",
+      "page_title": "Cần Thơ",
+      "page_url": "https://vi.wikipedia.org/wiki/C%E1%BA%A7n_Th%C6%A1",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/6/6d/Can_Tho_Bridge.jpg",
+      "local_file": "can-tho.jpg",
+      "source": "vi.wikipedia.org / Wikimedia",
+      "license_note": "Open-license Wikimedia content; verify page/image attribution before production publishing."
+    },
+    "cao-bang": {
+      "province": "Cao Bằng",
+      "page_title": "Cao Bằng",
+      "page_url": "https://vi.wikipedia.org/wiki/Cao_B%E1%BA%B1ng",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/9/9b/Ban_Gioc_-_Detian_Falls2.jpg",
+      "local_file": "cao-bang.jpg",
+      "source": "vi.wikipedia.org / Wikimedia",
+      "license_note": "Open-license Wikimedia content; verify page/image attribution before production publishing."
+    },
+    "da-nang": {
+      "province": "Đà Nẵng",
+      "page_title": "Đà Nẵng",
+      "page_url": "https://vi.wikipedia.org/wiki/%C4%90%C3%A0_N%E1%BA%B5ng",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/4/4c/Han_River_Bridge_in_Vietnam_Night_View.jpg",
+      "local_file": "da-nang.jpg",
+      "source": "vi.wikipedia.org / Wikimedia",
+      "license_note": "Open-license Wikimedia content; verify page/image attribution before production publishing."
+    },
+    "dak-nong": {
+      "province": "Đắk Nông",
+      "page_title": "Đắk Nông",
+      "page_url": "https://vi.wikipedia.org/wiki/%C4%90%E1%BA%AFk_N%C3%B4ng",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/e/e4/DraySap400.jpg",
+      "local_file": "dak-nong.jpg",
+      "source": "vi.wikipedia.org / Wikimedia",
+      "license_note": "Open-license Wikimedia content; verify page/image attribution before production publishing."
+    },
+    "dien-bien": {
+      "province": "Điện Biên",
+      "page_title": "Điện Biên",
+      "page_url": "https://vi.wikipedia.org/wiki/%C4%90i%E1%BB%87n_Bi%C3%AAn",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/e/e8/M%C6%B0%E1%BB%9Dng_Thanh_Valley.jpg",
+      "local_file": "dien-bien.jpg",
+      "source": "vi.wikipedia.org / Wikimedia",
+      "license_note": "Open-license Wikimedia content; verify page/image attribution before production publishing."
+    },
+    "gia-lai": {
+      "province": "Gia Lai",
+      "page_title": "Gia Lai",
+      "page_url": "https://vi.wikipedia.org/wiki/Gia_Lai",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/9/9c/Chi%E1%BB%81u_cao_nguy%C3%AAn_-_Late_afternoon_in_the_Central_High_Plateaux_-_panoramio.jpg",
+      "local_file": "gia-lai.jpg",
+      "source": "vi.wikipedia.org / Wikimedia",
+      "license_note": "Open-license Wikimedia content; verify page/image attribution before production publishing."
+    },
+    "ha-noi": {
+      "province": "Hà Nội",
+      "page_title": "Hà Nội",
+      "page_url": "https://vi.wikipedia.org/wiki/H%C3%A0_N%E1%BB%99i",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/1/10/Hanoi_Skyline_-_NKS.jpg",
+      "local_file": "ha-noi.jpg",
+      "source": "vi.wikipedia.org / Wikimedia",
+      "license_note": "Open-license Wikimedia content; verify page/image attribution before production publishing."
+    },
+    "ha-tinh": {
+      "province": "Hà Tĩnh",
+      "page_title": "Hà Tĩnh",
+      "page_url": "https://vi.wikipedia.org/wiki/H%C3%A0_T%C4%A9nh",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/3/3f/Toancanhthixa.jpg",
+      "local_file": "ha-tinh.jpg",
+      "source": "vi.wikipedia.org / Wikimedia",
+      "license_note": "Open-license Wikimedia content; verify page/image attribution before production publishing."
+    },
+    "hai-phong": {
+      "province": "Hải Phòng",
+      "page_title": "Hải Phòng",
+      "page_url": "https://vi.wikipedia.org/wiki/H%E1%BA%A3i_Ph%C3%B2ng",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/c/cb/Haiphong2020.jpg",
+      "local_file": "hai-phong.jpg",
+      "source": "vi.wikipedia.org / Wikimedia",
+      "license_note": "Open-license Wikimedia content; verify page/image attribution before production publishing."
+    },
+    "lam-dong": {
+      "province": "Lâm Đồng",
+      "page_title": "Lâm Đồng",
+      "page_url": "https://vi.wikipedia.org/wiki/L%C3%A2m_%C4%90%E1%BB%93ng",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/a/ae/Da_Lat%2C_view_to_Xuan_Huong_lake_2.jpg",
+      "local_file": "lam-dong.jpg",
+      "source": "vi.wikipedia.org / Wikimedia",
+      "license_note": "Open-license Wikimedia content; verify page/image attribution before production publishing."
+    },
+    "lao-cai": {
+      "province": "Lào Cai",
+      "page_title": "Lào Cai",
+      "page_url": "https://vi.wikipedia.org/wiki/L%C3%A0o_Cai",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/1/1d/Fansipan_summit_2_in_sunrise.jpg",
+      "local_file": "lao-cai.jpg",
+      "source": "vi.wikipedia.org / Wikimedia",
+      "license_note": "Open-license Wikimedia content; verify page/image attribution before production publishing."
+    },
+    "ninh-thuan": {
+      "province": "Ninh Thuận",
+      "page_title": "Ninh Thuận",
+      "page_url": "https://vi.wikipedia.org/wiki/Ninh_Thu%E1%BA%ADn",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/4/4f/Po_Klong_Garai.jpg",
+      "local_file": "ninh-thuan.jpg",
+      "source": "vi.wikipedia.org / Wikimedia",
+      "license_note": "Open-license Wikimedia content; verify page/image attribution before production publishing."
+    },
+    "phu-tho": {
+      "province": "Phú Thọ",
+      "page_title": "Phú Thọ",
+      "page_url": "https://vi.wikipedia.org/wiki/Ph%C3%BA_Th%E1%BB%8D",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/2/21/%C4%90%C6%B0%E1%BB%9Dng_l%C3%AAn_%C4%90%E1%BB%81n_H%C3%B9ng_-_panoramio.jpg",
+      "local_file": "phu-tho.jpg",
+      "source": "vi.wikipedia.org / Wikimedia",
+      "license_note": "Open-license Wikimedia content; verify page/image attribution before production publishing."
+    },
+    "tay-ninh": {
+      "province": "Tây Ninh",
+      "page_title": "Tây Ninh",
+      "page_url": "https://vi.wikipedia.org/wiki/T%C3%A2y_Ninh",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/b/bc/Ho_dau_tieng.jpg",
+      "local_file": "tay-ninh.jpg",
+      "source": "vi.wikipedia.org / Wikimedia",
+      "license_note": "Open-license Wikimedia content; verify page/image attribution before production publishing."
+    },
+    "thai-nguyen": {
+      "province": "Thái Nguyên",
+      "page_title": "Thái Nguyên",
+      "page_url": "https://vi.wikipedia.org/wiki/Th%C3%A1i_Nguy%C3%AAn",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/1/19/TN_VNG_QT.jpg",
+      "local_file": "thai-nguyen.jpg",
+      "source": "vi.wikipedia.org / Wikimedia",
+      "license_note": "Open-license Wikimedia content; verify page/image attribution before production publishing."
+    },
+    "thanh-hoa": {
+      "province": "Thanh Hóa",
+      "page_title": "Thanh Hóa",
+      "page_url": "https://vi.wikipedia.org/wiki/Thanh_H%C3%B3a",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/8/81/Le_Loi_statue.JPG",
+      "local_file": "thanh-hoa.jpg",
+      "source": "vi.wikipedia.org / Wikimedia",
+      "license_note": "Open-license Wikimedia content; verify page/image attribution before production publishing."
+    },
+    "bac-giang": {
+      "province": "Bắc Giang",
+      "page_title": "Bắc Giang province",
+      "page_url": "https://en.wikipedia.org/wiki/B%E1%BA%AFc_Giang_province",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/0/04/%C4%90%C6%B0%E1%BB%9Dng_ph%E1%BB%91_th%C3%A0nh_ph%E1%BB%91_B%E1%BA%AFc_Giang.jpg",
+      "local_file": "bac-giang.jpg",
+      "source": "en.wikipedia.org / Wikimedia",
+      "license_note": "Open-license Wikimedia content; verify page/image attribution before production publishing."
+    },
+    "bac-kan": {
+      "province": "Bắc Kạn",
+      "page_title": "Bac Kan province",
+      "page_url": "https://en.wikipedia.org/wiki/B%E1%BA%AFc_K%E1%BA%A1n_province",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/9/91/Ba_Be_Lake_7.jpg",
+      "local_file": "bac-kan.jpg",
+      "source": "en.wikipedia.org / Wikimedia",
+      "license_note": "Open-license Wikimedia content; verify page/image attribution before production publishing."
+    },
+    "dong-thap": {
+      "province": "Đồng Tháp",
+      "page_title": "Đồng Tháp province",
+      "page_url": "https://en.wikipedia.org/wiki/%C4%90%E1%BB%93ng_Th%C3%A1p_province",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/8/84/Ph%C6%B0%E1%BB%9Dng_M%E1%BB%B9_Tho.jpg",
+      "local_file": "dong-thap.jpg",
+      "source": "en.wikipedia.org / Wikimedia",
+      "license_note": "Open-license Wikimedia content; verify page/image attribution before production publishing."
+    },
+    "ha-giang": {
+      "province": "Hà Giang",
+      "page_title": "Hà Giang province",
+      "page_url": "https://en.wikipedia.org/wiki/H%C3%A0_Giang_province",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/2/2f/%C4%90%C3%A8o_M%C3%A3_P%C3%AC_L%C3%A8ng.jpg",
+      "local_file": "ha-giang.jpg",
+      "source": "en.wikipedia.org / Wikimedia",
+      "license_note": "Open-license Wikimedia content; verify page/image attribution before production publishing."
+    },
+    "hai-duong": {
+      "province": "Hải Dương",
+      "page_title": "Hải Dương province",
+      "page_url": "https://en.wikipedia.org/wiki/H%E1%BA%A3i_D%C6%B0%C6%A1ng_province",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/6/6e/V%C6%B0%E1%BB%9Dn_v%E1%BA%A3i_thi%E1%BB%81u_Thanh_H%C3%A0.jpeg",
+      "local_file": "hai-duong.jpeg",
+      "source": "en.wikipedia.org / Wikimedia",
+      "license_note": "Open-license Wikimedia content; verify page/image attribution before production publishing."
+    },
+    "phu-yen": {
+      "province": "Phú Yên",
+      "page_title": "Phú Yên province",
+      "page_url": "https://en.wikipedia.org/wiki/Ph%C3%BA_Y%C3%AAn_province",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/7/7f/Mui_Dien.jpg",
+      "local_file": "phu-yen.jpg",
+      "source": "en.wikipedia.org / Wikimedia",
+      "license_note": "Open-license Wikimedia content; verify page/image attribution before production publishing."
+    },
+    "binh-dinh": {
+      "province": "Bình Định",
+      "page_title": "File:Định Bình in Yên Định district.svg",
+      "page_url": "https://commons.wikimedia.org/wiki/File:%C4%90%E1%BB%8Bnh_B%C3%ACnh_in_Y%C3%AAn_%C4%90%E1%BB%8Bnh_district.svg",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/%C4%90%E1%BB%8Bnh_B%C3%ACnh_in_Y%C3%AAn_%C4%90%E1%BB%8Bnh_district.svg/1920px-%C4%90%E1%BB%8Bnh_B%C3%ACnh_in_Y%C3%AAn_%C4%90%E1%BB%8Bnh_district.svg.png",
+      "local_file": "binh-dinh.png",
+      "source": "commons.wikimedia.org",
+      "license_note": "Open-license Wikimedia Commons content; verify file-level attribution before production publishing."
+    },
+    "binh-phuoc": {
+      "province": "Bình Phước",
+      "page_title": "File:Long Phước, tx. Phước Long, Bình Phước, Vietnam - panoramio.jpg",
+      "page_url": "https://commons.wikimedia.org/wiki/File:Long_Ph%C6%B0%E1%BB%9Bc,_tx._Ph%C6%B0%E1%BB%9Bc_Long,_B%C3%ACnh_Ph%C6%B0%E1%BB%9Bc,_Vietnam_-_panoramio.jpg",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Long_Ph%C6%B0%E1%BB%9Bc%2C_tx._Ph%C6%B0%E1%BB%9Bc_Long%2C_B%C3%ACnh_Ph%C6%B0%E1%BB%9Bc%2C_Vietnam_-_panoramio.jpg/1920px-Long_Ph%C6%B0%E1%BB%9Bc%2C_tx._Ph%C6%B0%E1%BB%9Bc_Long%2C_B%C3%ACnh_Ph%C6%B0%E1%BB%9Bc%2C_Vietnam_-_panoramio.jpg",
+      "local_file": "binh-phuoc.jpg",
+      "source": "commons.wikimedia.org",
+      "license_note": "Open-license Wikimedia Commons content; verify file-level attribution before production publishing."
+    },
+    "binh-thuan": {
+      "province": "Bình Thuận",
+      "page_title": "File:Tân Thành, Hàm Thuận Nam, Bình Thuận, Vietnam - panoramio.jpg",
+      "page_url": "https://commons.wikimedia.org/wiki/File:T%C3%A2n_Th%C3%A0nh,_H%C3%A0m_Thu%E1%BA%ADn_Nam,_B%C3%ACnh_Thu%E1%BA%ADn,_Vietnam_-_panoramio.jpg",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/T%C3%A2n_Th%C3%A0nh%2C_H%C3%A0m_Thu%E1%BA%ADn_Nam%2C_B%C3%ACnh_Thu%E1%BA%ADn%2C_Vietnam_-_panoramio.jpg/1920px-T%C3%A2n_Th%C3%A0nh%2C_H%C3%A0m_Thu%E1%BA%ADn_Nam%2C_B%C3%ACnh_Thu%E1%BA%ADn%2C_Vietnam_-_panoramio.jpg",
+      "local_file": "binh-thuan.jpg",
+      "source": "commons.wikimedia.org",
+      "license_note": "Open-license Wikimedia Commons content; verify file-level attribution before production publishing."
+    },
+    "dong-nai": {
+      "province": "Đồng Nai",
+      "page_title": "File:Tri An Hydroelectric Dam And Its Reservoir.jpg",
+      "page_url": "https://commons.wikimedia.org/wiki/File:Tri_An_Hydroelectric_Dam_And_Its_Reservoir.jpg",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/9/97/Tri_An_Hydroelectric_Dam_And_Its_Reservoir.jpg",
+      "local_file": "dong-nai.jpg",
+      "source": "commons.wikimedia.org",
+      "license_note": "Open-license Wikimedia Commons content; verify file-level attribution before production publishing."
+    },
+    "ha-nam": {
+      "province": "Hà Nam",
+      "page_title": "File:Trường thi Hà Nam, Khoa thi Hương năm 1897.jpg",
+      "page_url": "https://commons.wikimedia.org/wiki/File:Tr%C6%B0%E1%BB%9Dng_thi_H%C3%A0_Nam,_Khoa_thi_H%C6%B0%C6%A1ng_n%C4%83m_1897.jpg",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Tr%C6%B0%E1%BB%9Dng_thi_H%C3%A0_Nam%2C_Khoa_thi_H%C6%B0%C6%A1ng_n%C4%83m_1897.jpg/1920px-Tr%C6%B0%E1%BB%9Dng_thi_H%C3%A0_Nam%2C_Khoa_thi_H%C6%B0%C6%A1ng_n%C4%83m_1897.jpg",
+      "local_file": "ha-nam.jpg",
+      "source": "commons.wikimedia.org",
+      "license_note": "Open-license Wikimedia Commons content; verify file-level attribution before production publishing."
+    },
+    "hoa-binh": {
+      "province": "Hòa Bình",
+      "page_title": "File:Hòa Bình Province, Kim Bôi District.jpg",
+      "page_url": "https://commons.wikimedia.org/wiki/File:H%C3%B2a_B%C3%ACnh_Province,_Kim_B%C3%B4i_District.jpg",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/H%C3%B2a_B%C3%ACnh_Province%2C_Kim_B%C3%B4i_District.jpg/1920px-H%C3%B2a_B%C3%ACnh_Province%2C_Kim_B%C3%B4i_District.jpg",
+      "local_file": "hoa-binh.jpg",
+      "source": "commons.wikimedia.org",
+      "license_note": "Open-license Wikimedia Commons content; verify file-level attribution before production publishing."
+    },
+    "khanh-hoa": {
+      "province": "Khánh Hòa",
+      "page_title": "File:Ninh Vân, tx. Ninh Hòa, Khánh Hòa, Vietnam - panoramio.jpg",
+      "page_url": "https://commons.wikimedia.org/wiki/File:Ninh_V%C3%A2n,_tx._Ninh_H%C3%B2a,_Kh%C3%A1nh_H%C3%B2a,_Vietnam_-_panoramio.jpg",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Ninh_V%C3%A2n%2C_tx._Ninh_H%C3%B2a%2C_Kh%C3%A1nh_H%C3%B2a%2C_Vietnam_-_panoramio.jpg/1920px-Ninh_V%C3%A2n%2C_tx._Ninh_H%C3%B2a%2C_Kh%C3%A1nh_H%C3%B2a%2C_Vietnam_-_panoramio.jpg",
+      "local_file": "khanh-hoa.jpg",
+      "source": "commons.wikimedia.org",
+      "license_note": "Open-license Wikimedia Commons content; verify file-level attribution before production publishing."
+    },
+    "kien-giang": {
+      "province": "Kiên Giang",
+      "page_title": "File:Street in Kiên Giang Province (Viet Nam).jpg",
+      "page_url": "https://commons.wikimedia.org/wiki/File:Street_in_Ki%C3%AAn_Giang_Province_(Viet_Nam).jpg",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Street_in_Ki%C3%AAn_Giang_Province_%28Viet_Nam%29.jpg/1920px-Street_in_Ki%C3%AAn_Giang_Province_%28Viet_Nam%29.jpg",
+      "local_file": "kien-giang.jpg",
+      "source": "commons.wikimedia.org",
+      "license_note": "Open-license Wikimedia Commons content; verify file-level attribution before production publishing."
+    },
+    "quang-nam": {
+      "province": "Quảng Nam",
+      "page_title": "File:Thích Quảng Đức self-immolation.jpg",
+      "page_url": "https://commons.wikimedia.org/wiki/File:Th%C3%ADch_Qu%E1%BA%A3ng_%C4%90%E1%BB%A9c_self-immolation.jpg",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Th%C3%ADch_Qu%E1%BA%A3ng_%C4%90%E1%BB%A9c_self-immolation.jpg/1920px-Th%C3%ADch_Qu%E1%BA%A3ng_%C4%90%E1%BB%A9c_self-immolation.jpg",
+      "local_file": "quang-nam.jpg",
+      "source": "commons.wikimedia.org",
+      "license_note": "Open-license Wikimedia Commons content; verify file-level attribution before production publishing."
+    },
+    "tp-ho-chi-minh": {
+      "province": "Thành phố Hồ Chí Minh",
+      "page_title": "Ho Chi Minh City",
+      "page_url": "https://en.wikipedia.org/wiki/Ho_Chi_Minh_City",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/f/f4/Ho_Chi_Minh_City_panorama_2019_%28cropped2%29.jpg",
+      "local_file": "tp-ho-chi-minh.jpg",
+      "source": "en.wikipedia.org / Wikimedia",
+      "license_note": "Open-license Wikimedia content; verify page/image attribution before production publishing."
+    },
+    "bac-lieu": {
+      "province": "Bạc Liêu",
+      "page_title": "File:Bạc Liêu windpower farm (cropped).jpg",
+      "page_url": "https://commons.wikimedia.org/wiki/File:B%E1%BA%A1c_Li%C3%AAu_windpower_farm_(cropped).jpg",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/d/df/B%E1%BA%A1c_Li%C3%AAu_windpower_farm_%28cropped%29.jpg",
+      "local_file": "bac-lieu.jpg",
+      "source": "commons.wikimedia.org",
+      "license_note": "Open-license Wikimedia Commons content; verify file-level attribution before production publishing."
+    },
+    "ben-tre": {
+      "province": "Bến Tre",
+      "page_title": "File:Tân Thạch, Châu Thành, Bến Tre, Vietnam - panoramio.jpg",
+      "page_url": "https://commons.wikimedia.org/wiki/File:T%C3%A2n_Th%E1%BA%A1ch,_Ch%C3%A2u_Th%C3%A0nh,_B%E1%BA%BFn_Tre,_Vietnam_-_panoramio.jpg",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/T%C3%A2n_Th%E1%BA%A1ch%2C_Ch%C3%A2u_Th%C3%A0nh%2C_B%E1%BA%BFn_Tre%2C_Vietnam_-_panoramio.jpg/1920px-T%C3%A2n_Th%E1%BA%A1ch%2C_Ch%C3%A2u_Th%C3%A0nh%2C_B%E1%BA%BFn_Tre%2C_Vietnam_-_panoramio.jpg",
+      "local_file": "ben-tre.jpg",
+      "source": "commons.wikimedia.org",
+      "license_note": "Open-license Wikimedia Commons content; verify file-level attribution before production publishing."
+    },
+    "dak-lak": {
+      "province": "Đắk Lắk",
+      "page_title": "File:Buon Ma Thuot Airport2.JPG",
+      "page_url": "https://commons.wikimedia.org/wiki/File:Buon_Ma_Thuot_Airport2.JPG",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/b/bf/Buon_Ma_Thuot_Airport2.JPG",
+      "local_file": "dak-lak.jpg",
+      "source": "commons.wikimedia.org",
+      "license_note": "Open-license Wikimedia Commons content; verify file-level attribution before production publishing."
+    },
+    "hung-yen": {
+      "province": "Hưng Yên",
+      "page_title": "File:Tạ Hiện Street.jpg",
+      "page_url": "https://commons.wikimedia.org/wiki/File:T%E1%BA%A1_Hi%E1%BB%87n_Street.jpg",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/T%E1%BA%A1_Hi%E1%BB%87n_Street.jpg/1920px-T%E1%BA%A1_Hi%E1%BB%87n_Street.jpg",
+      "local_file": "hung-yen.jpg",
+      "source": "commons.wikimedia.org",
+      "license_note": "Open-license Wikimedia Commons content; verify file-level attribution before production publishing."
+    },
+    "kon-tum": {
+      "province": "Kon Tum",
+      "page_title": "File:Wooden catholic church Kon Tum 2.JPG",
+      "page_url": "https://commons.wikimedia.org/wiki/File:Wooden_catholic_church_Kon_Tum_2.JPG",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Wooden_catholic_church_Kon_Tum_2.JPG/1920px-Wooden_catholic_church_Kon_Tum_2.JPG",
+      "local_file": "kon-tum.jpg",
+      "source": "commons.wikimedia.org",
+      "license_note": "Open-license Wikimedia Commons content; verify file-level attribution before production publishing."
+    },
+    "lang-son": {
+      "province": "Lạng Sơn",
+      "page_title": "File:Woman in Market - Lang Son - Vietnam - 02 (48141731731).jpg",
+      "page_url": "https://commons.wikimedia.org/wiki/File:Woman_in_Market_-_Lang_Son_-_Vietnam_-_02_(48141731731).jpg",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Woman_in_Market_-_Lang_Son_-_Vietnam_-_02_%2848141731731%29.jpg/1920px-Woman_in_Market_-_Lang_Son_-_Vietnam_-_02_%2848141731731%29.jpg",
+      "local_file": "lang-son.jpg",
+      "source": "commons.wikimedia.org",
+      "license_note": "Open-license Wikimedia Commons content; verify file-level attribution before production publishing."
+    },
+    "nam-dinh": {
+      "province": "Nam Định",
+      "page_title": "File:Trung tâm Văn hóa - Thể thao Thanh thiếu niên tỉnh Nam Định (Nam Dinh Cultural and Sports Center for Youth) (1).jpg",
+      "page_url": "https://commons.wikimedia.org/wiki/File:Trung_t%C3%A2m_V%C4%83n_h%C3%B3a_-_Th%E1%BB%83_thao_Thanh_thi%E1%BA%BFu_ni%C3%AAn_t%E1%BB%89nh_Nam_%C4%90%E1%BB%8Bnh_(Nam_Dinh_Cultural_and_Sports_Center_for_Youth)_(1).jpg",
+      "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/Trung_t%C3%A2m_V%C4%83n_h%C3%B3a_-_Th%E1%BB%83_thao_Thanh_thi%E1%BA%BFu_ni%C3%AAn_t%E1%BB%89nh_Nam_%C4%90%E1%BB%8Bnh_%28Nam_Dinh_Cultural_and_Sports_Center_for_Youth%29_%281%29.jpg/1920px-Trung_t%C3%A2m_V%C4%83n_h%C3%B3a_-_Th%E1%BB%83_thao_Thanh_thi%E1%BA%BFu_ni%C3%AAn_t%E1%BB%89nh_Nam_%C4%90%E1%BB%8Bnh_%28Nam_Dinh_Cultural_and_Sports_Center_for_Youth%29_%281%29.jpg",
+      "local_file": "nam-dinh.jpg",
+      "source": "commons.wikimedia.org",
+      "license_note": "Open-license Wikimedia Commons content; verify file-level attribution before production publishing."
+    },
+    "binh-duong": {
+      "label": "Bình Dương province",
+      "source": "https://en.wikipedia.org/api/rest_v1/page/summary/B%C3%ACnh%20D%C6%B0%C6%A1ng%20province",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/8/8b/Binh_Duong_Collage.jpg",
+      "license_note": "Wikipedia page summary thumbnail/original image",
+      "local_file": "binh-duong.jpg"
+    },
+    "hau-giang": {
+      "label": "Hậu Giang province",
+      "source": "https://en.wikipedia.org/api/rest_v1/page/summary/H%E1%BA%ADu%20Giang%20province",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/2/24/Th%C3%A1p_%C4%90%E1%BB%93ng_H%E1%BB%93_%E1%BB%9F_V%E1%BB%8B_Thanh.jpg",
+      "license_note": "Wikipedia page summary thumbnail/original image",
+      "local_file": "hau-giang.jpg"
+    },
+    "lai-chau": {
+      "label": "Lai Châu province",
+      "source": "https://en.wikipedia.org/api/rest_v1/page/summary/Lai%20Ch%C3%A2u%20province",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/a/a0/Sunset_on_O_Quy_Ho_pass.jpg",
+      "license_note": "Wikipedia page summary thumbnail/original image",
+      "local_file": "lai-chau.jpg"
+    },
+    "nghe-an": {
+      "label": "Nghệ An province",
+      "source": "https://en.wikipedia.org/api/rest_v1/page/summary/Ngh%E1%BB%87%20An%20province",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/a/a4/B%C3%A3i_bi%E1%BB%83n_C%E1%BB%ADa_L%C3%B2..jpg",
+      "license_note": "Wikipedia page summary thumbnail/original image",
+      "local_file": "nghe-an.jpg"
+    },
+    "ninh-binh": {
+      "label": "Ninh Bình province",
+      "source": "https://en.wikipedia.org/api/rest_v1/page/summary/Ninh%20B%C3%ACnh%20province",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/3/3c/Tam_Coc_by_Tuan_Mai_%22007%22_%288888350545%29.jpg",
+      "license_note": "Wikipedia page summary thumbnail/original image",
+      "local_file": "ninh-binh.jpg"
+    },
+    "quang-binh": {
+      "label": "Quảng Bình province",
+      "source": "https://en.wikipedia.org/api/rest_v1/page/summary/Qu%E1%BA%A3ng%20B%C3%ACnh%20province",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/a/a4/Phongnhakebang7.jpg",
+      "license_note": "Wikipedia page summary thumbnail/original image",
+      "local_file": "quang-binh.jpg"
+    },
+    "quang-ninh": {
+      "label": "Qu%E1%BA%A3ng_Ninh_province",
+      "source": "https://en.wikipedia.org/wiki/Qu%E1%BA%A3ng_Ninh_province",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/Ha_Long_Bay_in_2019.jpg/1280px-Ha_Long_Bay_in_2019.jpg",
+      "license_note": "Wikipedia article og:image",
+      "local_file": "quang-ninh.jpg"
+    },
+    "thua-thien-hue": {
+      "label": "Hu%E1%BA%BF",
+      "source": "https://en.wikipedia.org/wiki/Hu%E1%BA%BF",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Th%C3%A0nh_ph%E1%BB%91_Hu%E1%BA%BF_nh%C3%ACn_t%E1%BB%AB_tr%C3%AAn_cao_%282%29.jpg/1280px-Th%C3%A0nh_ph%E1%BB%91_Hu%E1%BA%BF_nh%C3%ACn_t%E1%BB%AB_tr%C3%AAn_cao_%282%29.jpg",
+      "license_note": "Wikipedia article og:image",
+      "local_file": "thua-thien-hue.jpg"
+    },
+    "yen-bai": {
+      "label": "Y%C3%AAn_B%C3%A1i_province",
+      "source": "https://en.wikipedia.org/wiki/Y%C3%AAn_B%C3%A1i_province",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Tr%E1%BA%A1m_T%E1%BA%A5u%2C_Y%C3%AAn_B%C3%A1i_road.jpg/1280px-Tr%E1%BA%A1m_T%E1%BA%A5u%2C_Y%C3%AAn_B%C3%A1i_road.jpg",
+      "license_note": "Wikipedia article og:image",
+      "local_file": "yen-bai.jpg"
+    },
+    "long-an": {
+      "label": "Long_An_province",
+      "source": "https://en.wikipedia.org/wiki/Long_An_province",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/f/fb/Th%C3%A0nh_ph%E1%BB%91_T%C3%A2n_An.jpg",
+      "license_note": "Wikipedia article og:image",
+      "local_file": "long-an.jpg"
+    },
+    "quang-ngai": {
+      "label": "L%C3%BD_S%C6%A1n",
+      "source": "https://en.wikipedia.org/wiki/L%C3%BD_S%C6%A1n",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/Mot_phan_quang_canh_Ly_Son.jpg/1280px-Mot_phan_quang_canh_Ly_Son.jpg",
+      "license_note": "Wikipedia article og:image",
+      "local_file": "quang-ngai.jpg"
+    },
+    "quang-tri": {
+      "label": "Qu%E1%BA%A3ng_Tr%E1%BB%8B_province",
+      "source": "https://en.wikipedia.org/wiki/Qu%E1%BA%A3ng_Tr%E1%BB%8B_province",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Th%C3%A0nh_c%E1%BB%95_Qu%E1%BA%A3ng_Tr%E1%BB%8B_Foto.jpg/1280px-Th%C3%A0nh_c%E1%BB%95_Qu%E1%BA%A3ng_Tr%E1%BB%8B_Foto.jpg",
+      "license_note": "Wikipedia article og:image",
+      "local_file": "quang-tri.jpg"
+    },
+    "soc-trang": {
+      "label": "S%C3%B3c_Tr%C4%83ng_province",
+      "source": "https://en.wikipedia.org/wiki/S%C3%B3c_Tr%C4%83ng_province",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/Rural_Soc_Trang.JPG/1280px-Rural_Soc_Trang.JPG",
+      "license_note": "Wikipedia article og:image",
+      "local_file": "soc-trang.jpg"
+    },
+    "son-la": {
+      "label": "S%C6%A1n_La_province",
+      "source": "https://en.wikipedia.org/wiki/S%C6%A1n_La_province",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/S%C6%A1n_La_Province.JPG/1280px-S%C6%A1n_La_Province.JPG",
+      "license_note": "Wikipedia article og:image",
+      "local_file": "son-la.jpg"
+    },
+    "thai-binh": {
+      "label": "Th%C3%A1i_B%C3%ACnh_province",
+      "source": "https://en.wikipedia.org/wiki/Th%C3%A1i_B%C3%ACnh_province",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Chua_Keo.jpg/1280px-Chua_Keo.jpg",
+      "license_note": "Wikipedia article og:image",
+      "local_file": "thai-binh.jpg"
+    },
+    "tien-giang": {
+      "label": "M%E1%BB%B9_Tho",
+      "source": "https://en.wikipedia.org/wiki/M%E1%BB%B9_Tho",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Ph%C6%B0%E1%BB%9Dng_M%E1%BB%B9_Tho.jpg/1280px-Ph%C6%B0%E1%BB%9Dng_M%E1%BB%B9_Tho.jpg",
+      "license_note": "Wikipedia article og:image",
+      "local_file": "tien-giang.jpg"
+    },
+    "tra-vinh": {
+      "label": "Tr%C3%A0_Vinh_province",
+      "source": "https://en.wikipedia.org/wiki/Tr%C3%A0_Vinh_province",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Ao_B%C3%A0_Om.jpg/1280px-Ao_B%C3%A0_Om.jpg",
+      "license_note": "Wikipedia article og:image",
+      "local_file": "tra-vinh.jpg"
+    },
+    "tuyen-quang": {
+      "label": "Tuy%C3%AAn_Quang_province",
+      "source": "https://en.wikipedia.org/wiki/Tuy%C3%AAn_Quang_province",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/S%C3%B4ng_Nho_Qu%E1%BA%BF_2022_-_NKS.jpg/1280px-S%C3%B4ng_Nho_Qu%E1%BA%BF_2022_-_NKS.jpg",
+      "license_note": "Wikipedia article og:image",
+      "local_file": "tuyen-quang.jpg"
+    },
+    "vinh-phuc": {
+      "label": "V%C4%A9nh_Ph%C3%BAc_province",
+      "source": "https://en.wikipedia.org/wiki/V%C4%A9nh_Ph%C3%BAc_province",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/V%C3%B2ng_xoay_%E1%BB%9F_ch%E1%BB%97_B%C6%B0u_%C4%91i%E1%BB%87n_V%C4%A9nh_Ph%C3%BAc.jpg/1280px-V%C3%B2ng_xoay_%E1%BB%9F_ch%E1%BB%97_B%C6%B0u_%C4%91i%E1%BB%87n_V%C4%A9nh_Ph%C3%BAc.jpg",
+      "license_note": "Wikipedia article og:image",
+      "local_file": "vinh-phuc.jpg"
+    },
+    "vinh-long": {
+      "label": "V%C4%A9nh_Long_province",
+      "source": "https://en.wikipedia.org/wiki/V%C4%A9nh_Long_province",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Trung_t%C3%A2m_H%C3%A0nh_ch%C3%ADnh_t%E1%BB%89nh_V%C4%A9nh_Long.jpg/1280px-Trung_t%C3%A2m_H%C3%A0nh_ch%C3%ADnh_t%E1%BB%89nh_V%C4%A9nh_Long.jpg",
+      "license_note": "Wikipedia article og:image",
+      "local_file": "vinh-long.jpg"
+    }
+  }
+}

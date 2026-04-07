@@ -73,4 +73,19 @@ public partial class gianhang_chi_tiet_dich_vu : System.Web.UI.Page
         Response.Redirect("/gianhang/dat-lich.aspx?id=" + HttpUtility.UrlEncode(idRaw)
             + "&return_url=" + HttpUtility.UrlEncode(returnUrl));
     }
+
+    protected void but_order_Click(object sender, EventArgs e)
+    {
+        string idRaw = ViewState["id"] != null ? ViewState["id"].ToString() : "";
+        if (string.IsNullOrEmpty(idRaw))
+            return;
+
+        string returnUrl = "/gianhang/chi-tiet-dich-vu.aspx?id=" + HttpUtility.UrlEncode(idRaw);
+        string url = "/gianhang/don-ban.aspx?taodon=1&idsp=" + HttpUtility.UrlEncode(idRaw)
+            + "&qty=1"
+            + "&return_url=" + HttpUtility.UrlEncode(returnUrl);
+        Response.Redirect(url, false);
+        if (Context != null && Context.ApplicationInstance != null)
+            Context.ApplicationInstance.CompleteRequest();
+    }
 }

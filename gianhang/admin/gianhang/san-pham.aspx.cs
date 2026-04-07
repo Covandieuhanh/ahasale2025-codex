@@ -31,7 +31,7 @@ public partial class gianhang_admin_gianhang_san_pham : System.Web.UI.Page
         ContentUrl = GianHangRoutes_cl.BuildAdminWorkspaceContentUrl();
         CompanionUrl = GianHangRoutes_cl.BuildAdminWorkspaceServicesUrl();
         PublicListUrl = GianHangRoutes_cl.BuildProductsUrl(ownerAccountKey);
-        AdminLegacyUrl = "/gianhang/admin/quan-ly-bai-viet/Default.aspx?pl=sp";
+        AdminLegacyUrl = GianHangRoutes_cl.BuildAdminLegacyArticlesUrl("sp");
         NativeManageUrl = GianHangRoutes_cl.BuildQuanLyTinUrl();
 
         if (!IsPostBack)

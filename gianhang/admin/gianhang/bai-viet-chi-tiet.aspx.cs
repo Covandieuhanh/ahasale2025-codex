@@ -65,8 +65,8 @@ public partial class gianhang_admin_gianhang_bai_viet_chi_tiet : System.Web.UI.P
         long routeId = GianHangArticle_cl.ResolveRouteId(article);
         PublicDetailUrl = GianHangArticle_cl.BuildDetailUrl(routeId, ownerAccountKey);
         AdminEditUrl = article.legacy_post_id.HasValue && article.legacy_post_id.Value > 0
-            ? ("/gianhang/admin/quan-ly-bai-viet/edit.aspx?id=" + article.legacy_post_id.Value.ToString())
-            : "/gianhang/admin/quan-ly-bai-viet/Default.aspx";
+            ? GianHangRoutes_cl.BuildAdminLegacyArticleEditUrl(article.legacy_post_id.Value, string.Empty)
+            : GianHangRoutes_cl.BuildAdminLegacyArticlesUrl(string.Empty);
         MirrorText = article.legacy_post_id.HasValue && article.legacy_post_id.Value > 0
             ? ("Đã mirror #" + article.legacy_post_id.Value.ToString())
             : "Đang dùng native record";

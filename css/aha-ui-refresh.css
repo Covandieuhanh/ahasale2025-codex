@@ -1,8 +1,8 @@
-@import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap");
 
 :root {
     --aha-font-ui: "Be Vietnam Pro", "Segoe UI", "Arial", sans-serif;
-    --aha-font-heading: "Sora", "Be Vietnam Pro", "Segoe UI", sans-serif;
+    --aha-font-heading: "Be Vietnam Pro", "Segoe UI", Arial, sans-serif;
     --aha-brand-500: #16a34a;
     --aha-brand-600: #15803d;
     --aha-brand-700: #166534;
@@ -31,6 +31,17 @@ body {
     background: linear-gradient(180deg, #f5fff8 0%, #f0f6fb 35%, #ffffff 100%);
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
+}
+
+body input,
+body textarea,
+body select,
+body button,
+body .form-control,
+body .form-select,
+body .btn,
+body .button {
+    font-family: var(--aha-font-ui) !important;
 }
 
 h1,
@@ -393,7 +404,7 @@ body.m4-cloak {
     transform: none;
 }
 
-@media (max-width: 1199px) {
+@media (max-width: 767.98px) {
     .site-header .navbar-brand {
         font-size: 1rem;
     }
@@ -403,7 +414,7 @@ body.m4-cloak {
     }
 }
 
-@media (max-width: 991.98px) {
+@media (max-width: 767.98px) {
     .page-wrapper {
         margin-top: 56px !important;
         padding-left: 10px;
@@ -461,7 +472,7 @@ body.m4-cloak {
     }
 }
 
-@media (max-width: 576px) {
+@media (max-width: 767.98px) {
     .btn,
     .button,
     input[type="button"],

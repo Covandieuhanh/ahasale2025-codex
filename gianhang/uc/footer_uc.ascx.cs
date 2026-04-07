@@ -46,6 +46,7 @@ public partial class uc_footer_uc : System.Web.UI.UserControl
     public string QuickServiceText = "Dịch vụ";
     public string QuickProductText = "Sản phẩm";
     public string QuickArticleText = "Bài viết";
+    public bool ShowFooterCategories;
     private string currentStoreAccount = string.Empty;
 
     private readonly dbDataContext db = new dbDataContext();
@@ -63,11 +64,13 @@ public partial class uc_footer_uc : System.Web.UI.UserControl
             LoadEmbed();
             LoadStorefrontConfig(storefrontConfig);
 
-            Repeater1.DataSource = TrySql(
+            var footerCategories = TrySql(
                 () => GianHangMenu_cl.LoadAll(db, currentChiNhanhId)
                     .Where(p => p.id_parent == "0" && p.bin == false)
                     .ToList(),
                 new System.Collections.Generic.List<web_menu_table>());
+            ShowFooterCategories = footerCategories != null && footerCategories.Count > 0;
+            Repeater1.DataSource = footerCategories;
             Repeater1.DataBind();
         }
         catch (Exception ex)
@@ -77,6 +80,7 @@ public partial class uc_footer_uc : System.Web.UI.UserControl
 
             hasTransientDataIssue = true;
             ApplyFallbackState();
+            ShowFooterCategories = false;
             Repeater1.DataSource = null;
             Repeater1.DataBind();
         }

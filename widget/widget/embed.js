@@ -715,6 +715,7 @@
 
     const style = document.createElement("style");
     style.textContent = `
+      @import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap");
       :host {
         all: initial;
       }
@@ -728,7 +729,7 @@
         z-index: ${config.layout.zIndex};
         display: grid;
         gap: 10px;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-family: "Be Vietnam Pro", "Segoe UI", Arial, sans-serif;
         pointer-events: none;
       }
       .aha-root.open {

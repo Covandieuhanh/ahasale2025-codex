@@ -1,44 +1,90 @@
 ﻿<%@ Page Title="Phát hành thẻ" Language="C#" MasterPageFile="~/admin/MasterPageAdmin.master"
     AutoEventWireup="true" CodeFile="phat-hanh-the.aspx.cs" Inherits="admin_phat_hanh_the" %>
 
-<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="Server"></asp:Content>
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="Server">
+    <style>
+        .card-history-toolbar-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .card-history-toolbar-controls .card-history-search {
+            min-width: 260px;
+        }
+
+        .card-history-toolbar-controls .card-history-pager {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 849.98px) {
+            .card-history-toolbar-controls {
+                width: 100%;
+                margin-top: 8px;
+            }
+
+            .card-history-toolbar-controls .card-history-search {
+                width: 100%;
+                min-width: 0;
+            }
+        }
+    </style>
+</asp:Content>
 
 <asp:Content ID="Content2" ContentPlaceHolderID="main" runat="Server">
 
-    <!-- FORM PHÁT HÀNH (TRANG RIÊNG) -->
+    <!-- FORM PHÁT HÀNH (TRANG RIÊNG / FULL-PAGE) -->
     <asp:Panel ID="pn_add" runat="server" Visible="false" DefaultButton="but_tao_the">
-        <div class="p-3">
-            <div class="bg-white p-4 shadow-2 rounded" style="max-width: 760px;">
-                <div class="d-flex flex-justify-between flex-align-center mb-3">
-                    <h4 class="m-0 text-bold">PHÁT HÀNH THẺ</h4>
-                    <asp:HyperLink ID="lnk_back_list" runat="server" CssClass="button light">Quay lại danh sách</asp:HyperLink>
+        <div class="admin-fullpage-head admin-route-panel-head">
+            <div class='admin-fullpage-shell admin-fullpage-head-shell admin-route-panel-shell admin-route-panel-head-shell'>
+                <div class="admin-route-panel-actions">
+                    <asp:HyperLink ID="lnk_back_list" runat="server" CssClass="admin-route-back-link">Quay lại danh sách</asp:HyperLink>
                 </div>
-                <hr class="mt-0 mb-4" />
-
-                <div class="mt-3">
-                    <label class="fw-600 fg-red">Chọn tài khoản</label>
-                    <div>
-                        <asp:DropDownList ID="ddl_taikhoan" runat="server" data-role="select" data-filter="true"></asp:DropDownList>
+                <div class="bg-white pl-4 pl-8-md pr-8-md pr-4" style="height: 52px;">
+                    <div class="pt-4 text-upper text-bold">
+                        PHÁT HÀNH THẺ
                     </div>
+                    <hr />
                 </div>
+            </div>
+        </div>
+        <div class="admin-fullpage-body-wrap admin-route-panel-body-wrap">
+            <div class='admin-fullpage-shell admin-fullpage-dialog admin-route-panel-shell admin-route-panel-dialog'>
+                <div class="bg-white border bd-transparent admin-fullpage-body admin-route-panel-body pl-4 pl-8-md pr-8-md pr-4">
+                    <div class="row">
+                        <div class="cell-lg-12">
+                            <div class="mt-3">
+                                <label class="fw-600 fg-red">Chọn tài khoản</label>
+                                <div>
+                                    <asp:DropDownList ID="ddl_taikhoan" runat="server" data-role="select" data-filter="true"></asp:DropDownList>
+                                </div>
+                            </div>
 
-                <div class="mt-3">
-                    <label class="fw-600 fg-red">Loại thẻ</label>
-                    <div>
-                        <asp:DropDownList ID="ddl_loaithe" runat="server" CssClass="input-large">
-                            <asp:ListItem Value="" Text="-- Chọn tài khoản trước --"></asp:ListItem>
-                            <asp:ListItem Value="1" Text="Thẻ ưu đãi"></asp:ListItem>
-                            <asp:ListItem Value="2" Text="Thẻ tiêu dùng"></asp:ListItem>
-                            <asp:ListItem Value="5" Text="Thẻ lao động"></asp:ListItem>
-                            <asp:ListItem Value="4" Text="Thẻ đồng hành hệ sinh thái"></asp:ListItem>
-                            <asp:ListItem Value="3" Text="Thẻ gian hàng đối tác"></asp:ListItem>
-                        </asp:DropDownList>
+                            <div class="mt-3">
+                                <label class="fw-600 fg-red">Loại thẻ</label>
+                                <div>
+                                    <asp:DropDownList ID="ddl_loaithe" runat="server" CssClass="input-large">
+                                        <asp:ListItem Value="" Text="-- Chọn tài khoản trước --"></asp:ListItem>
+                                        <asp:ListItem Value="1" Text="Thẻ ưu đãi"></asp:ListItem>
+                                        <asp:ListItem Value="2" Text="Thẻ tiêu dùng"></asp:ListItem>
+                                        <asp:ListItem Value="5" Text="Thẻ lao động"></asp:ListItem>
+                                        <asp:ListItem Value="4" Text="Thẻ đồng hành hệ sinh thái"></asp:ListItem>
+                                        <asp:ListItem Value="3" Text="Thẻ gian hàng đối tác"></asp:ListItem>
+                                    </asp:DropDownList>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <div class="mt-6 mb-2 text-right">
-                    <asp:Button ID="but_tao_the" runat="server" Text="PHÁT HÀNH"
-                        CssClass="button success" OnClick="but_tao_the_Click" />
+                    <div class="mt-6 mb-20 text-right">
+                        <asp:Button ID="but_tao_the" runat="server" Text="PHÁT HÀNH"
+                            CssClass="button success" OnClick="but_tao_the_Click" />
+                    </div>
+                    <div class="mb-20"></div>
                 </div>
             </div>
         </div>
@@ -49,7 +95,7 @@
         <ContentTemplate>
 
             <div class="pos-relative pb-11">
-                <div id="menutop-tool-bc" style="position: fixed; top: 52px; width: 100%; z-index: 4">
+                <div id="menutop-tool-bc" class="aha-admin-toolbar">
                     <ul class="h-menu bg-white">
                         <li data-role="hint" data-hint-position="top" data-hint-text="Phát hành thẻ">
                             <asp:HyperLink ID="but_show_add" runat="server" CssClass="button primary">
@@ -59,18 +105,54 @@
 
                         <li class="bd-gray border bd-default mt-2 d-block-lg d-none" style="height: 24px"></li>
 
-                        <li class="d-block-lg d-none">
+                        <li>
                             <a data-role="hint" data-hint-position="top" data-hint-text="Hiển thị">
                                 <small>
                                     <asp:Label ID="lb_show" runat="server" /></small>
                             </a>
                         </li>
+
+                        <li class="ml-auto">
+                            <div class="card-history-toolbar-controls">
+                                <asp:TextBox ID="txt_search_cards" runat="server" CssClass="input-small card-history-search"
+                                    placeholder="Tìm tài khoản, tên, loại thẻ, trạng thái..." />
+                                <asp:LinkButton ID="but_search_cards" runat="server" CssClass="button mini primary"
+                                    OnClick="but_search_cards_Click">
+                                    Tìm
+                                </asp:LinkButton>
+                                <asp:LinkButton ID="but_clear_search_cards" runat="server" CssClass="button mini"
+                                    OnClick="but_clear_search_cards_Click">
+                                    Xóa lọc
+                                </asp:LinkButton>
+                                <asp:LinkButton ID="but_prev_cards" runat="server" CssClass="button mini"
+                                    OnClick="but_prev_cards_Click">
+                                    <span class="mif-arrow-left"></span> Quay lại
+                                </asp:LinkButton>
+                                <asp:LinkButton ID="but_next_cards" runat="server" CssClass="button mini"
+                                    OnClick="but_next_cards_Click">
+                                    Xem tiếp <span class="mif-arrow-right"></span>
+                                </asp:LinkButton>
+                                <span class="card-history-pager">
+                                    <asp:Repeater ID="rpt_pager_cards" runat="server" OnItemCommand="rpt_pager_cards_ItemCommand">
+                                        <ItemTemplate>
+                                            <asp:LinkButton ID="lnk_page_cards" runat="server"
+                                                CssClass='<%# ((bool)Eval("IsCurrent")) ? "button mini primary" : "button mini" %>'
+                                                CommandName="page"
+                                                CommandArgument='<%# Eval("PageNumber") %>'
+                                                Enabled='<%# !((bool)Eval("IsCurrent")) %>'>
+                                                <%# Eval("PageNumber") %>
+                                            </asp:LinkButton>
+                                        </ItemTemplate>
+                                    </asp:Repeater>
+                                </span>
+                            </div>
+                        </li>
                     </ul>
                 </div>
             </div>
 
-            <div class="p-3">
-                <div class="bg-white p-4 shadow-2 rounded">
+            <div class="p-3 aha-admin-section">
+                <div class="aha-admin-card p-4">
                     <div class="d-flex flex-align-center mb-3">
                         <h5 class="m-0 text-bold">DANH SÁCH THẺ</h5>
                     </div>
@@ -81,6 +163,7 @@
                                 <tr>
                                     <th class="text-center">#</th>
                                     <th>Tài khoản</th>
+                                    <th>Tên tài khoản home</th>
                                     <th>Loại thẻ</th>
                                     <th>Ngày phát hành</th>
                                     <th class="text-center">Trạng thái</th>
@@ -95,9 +178,10 @@
                                 <asp:Repeater ID="Repeater1" runat="server" OnItemCommand="Repeater1_ItemCommand">
                                     <ItemTemplate>
                                         <tr>
-                                            <td class="text-center text-bold"><%# Container.ItemIndex + 1 %></td>
+                                            <td class="text-center text-bold"><%# Eval("Stt") %></td>
 
                                             <td class="text-bold fg-darkBlue"><%# Eval("taikhoan") %></td>
+                                            <td><%# Eval("TenTaiKhoanHome") %></td>
 
                                             <td><%# Eval("TenThe") %></td>
 
@@ -165,10 +249,10 @@
   <script>
       function getAllowedCardValuesByScope(scope) {
           var s = (scope || "").toLowerCase();
-          if (s === "portal_shop") {
+          if (s === "<%= PortalScope_cl.ScopeShop %>") {
               return { "3": true };
           }
-          if (s === "portal_home") {
+          if (s === "<%= PortalScope_cl.ScopeHome %>") {
               return { "1": true, "2": true, "5": true, "4": true };
           }
           return {};

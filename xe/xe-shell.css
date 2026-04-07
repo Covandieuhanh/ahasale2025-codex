@@ -1,0 +1,13 @@
+:root {
+    --tblr-primary: #2fb344;
+    --tblr-primary-rgb: 47, 179, 68;
+}
+
+body.xe-shell {
+    background: #f1f5f9;
+}
+
+body.xe-shell .aha-btn-loading {
+    opacity: 0.72;
+    cursor: wait;
+}

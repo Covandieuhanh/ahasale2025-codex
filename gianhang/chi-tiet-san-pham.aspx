@@ -1,4 +1,4 @@
-<%@ Page Title="Chi tiết sản phẩm" Language="C#" MasterPageFile="~/MasterPage/Tabler/TablerHome.master" AutoEventWireup="true" CodeFile="chi-tiet-san-pham.aspx.cs" Inherits="gianhang_chi_tiet_san_pham" %>
+<%@ Page Title="Chi tiết sản phẩm" Language="C#" MasterPageFile="~/MasterPage/Tabler/TablerGianHang.master" AutoEventWireup="true" CodeFile="chi-tiet-san-pham.aspx.cs" Inherits="gianhang_chi_tiet_san_pham" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="main" runat="Server">
     <div class="container-xl">
@@ -29,7 +29,7 @@
                     </div>
 
                     <div class="mt-3">
-                        <asp:HyperLink ID="lnk_back" runat="server" CssClass="btn btn-outline-secondary">Quay lại gian hàng đối tác</asp:HyperLink>
+                        <asp:HyperLink ID="lnk_back" runat="server" CssClass="btn btn-outline-secondary">Quay lại gian hàng</asp:HyperLink>
                     </div>
                 </div>
             </div>

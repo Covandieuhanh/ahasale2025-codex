@@ -11,6 +11,9 @@ public partial class xoa_chitiet_giohang : System.Web.UI.Page
     DataTable giohang_nhapvattu_admin = new DataTable();
     protected void Page_Load(object sender, EventArgs e)
     {
+        if (!GianHangSystemAdminGuard_cl.EnsurePageAccess(this))
+            return;
+
         if (Session["giohang_nhapvattu_admin"] == null)
         {
             Response.Redirect("/gianhang/admin/quan-ly-vat-tu/nhap-vat-tu.aspx");

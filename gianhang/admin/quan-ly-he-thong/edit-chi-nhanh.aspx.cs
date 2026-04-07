@@ -19,44 +19,24 @@ public partial class badmin_Default : System.Web.UI.Page
     List<string> list_id_split;
     #endregion
 
+    private bool HasPermission(string permissionKey)
+    {
+        string currentUser = (user ?? "").Trim();
+        if (string.IsNullOrEmpty(currentUser) || string.IsNullOrEmpty(permissionKey))
+            return false;
+
+        return bcorn_class.check_quyen(currentUser, permissionKey) != "2";
+    }
+
     protected void Page_Load(object sender, EventArgs e)
     {
-        #region Check_Login
-        string _quyen = "q16_0";
-        string _cookie_user = "", _cookie_pass = "";
-        if (Request.Cookies["save_user_admin_aka_1"] != null) _cookie_user = Request.Cookies["save_user_admin_aka_1"].Value;
-        if (Request.Cookies["save_pass_admin_aka_1"] != null) _cookie_pass = Request.Cookies["save_pass_admin_aka_1"].Value;
-        if (Session["user"] == null) Session["user"] = ""; if (Session["notifi"] == null) Session["notifi"] = ""; if (Session["user"].ToString() == "") Response.Redirect("/gianhang/admin/f5_ss_admin.aspx");
-        string _url = Request.Url.GetLeftPart(UriPartial.Authority).ToLower();
-        string _kq = bcorn_class.check_login(Session["user"].ToString(), _cookie_user, _cookie_pass, _url, _quyen);
-        if (_kq != "")//nếu có thông báo --> có lỗi --> reset --> bắt login lại
-        {
-            if (_kq == "baotri") Response.Redirect("/baotri.aspx");
-            else
-            {
-                if (_kq == "1") Response.Redirect("/gianhang/admin/login.aspx");//hết Session, hết Cookie
-                else
-                {
-                    if (_kq == "2")//k đủ quyền
-                    {
-                        Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
-                        Response.Redirect("/gianhang/admin");
-                    }
-                    else
-                    {
-                        Session["notifi"] = _kq; Session["user"] = "";
-                        Response.Cookies["save_user_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Cookies["save_pass_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Cookies["save_url_admin_aka_1"].Expires = DateTime.Now.AddDays(-1);
-                        Response.Redirect("/gianhang/admin/login.aspx");
-                    }
-                }
-            }
-        }
-        #endregion 
+        GianHangAdminPageGuard_cl.AccessInfo access = GianHangAdminPageGuard_cl.EnsureAccess(this, db, "q16_0");
+        if (access == null)
+            return;
+
         #region Check id
-        user = Session["user"].ToString();
-        user_parent = GianHangAdminContext_cl.ResolveCurrentOwnerAccountKey();
+        user = (access.User ?? "").Trim();
+        user_parent = access.OwnerAccountKey;
 
         if (!string.IsNullOrWhiteSpace(Request.QueryString["id"]))
         {
@@ -116,6 +96,13 @@ public partial class badmin_Default : System.Web.UI.Page
 
     protected void but_form_themthuchi_Click(object sender, EventArgs e)
     {
+        if (!HasPermission("q16_0"))
+        {
+            Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
+            Response.Redirect("/gianhang/admin");
+            return;
+        }
+
         string _ten_cn = txt_tenchinhanh.Text;
         string _slogan = TextBox1.Text;
         string _diachi = TextBox2.Text;
@@ -198,6 +185,12 @@ public partial class badmin_Default : System.Web.UI.Page
 
     protected void Button2_Click(object sender, EventArgs e)
     {
+        if (!HasPermission("q16_0"))
+        {
+            Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
+            Response.Redirect("/gianhang/admin");
+            return;
+        }
     
         var q = db.chinhanh_tables.Where(p => p.id.ToString() == id);
         chinhanh_table _ob = q.First();
@@ -210,6 +203,13 @@ public partial class badmin_Default : System.Web.UI.Page
 
     protected void Button1_Click(object sender, EventArgs e)
     {
+        if (!HasPermission("q16_0"))
+        {
+            Session["notifi"] = thongbao_class.metro_dialog_onload("Thông báo", "Bạn không đủ quyền để truy cập hoặc thực hiện thao tác vừa rồi.", "false", "false", "OK", "alert", "");
+            Response.Redirect("/gianhang/admin");
+            return;
+        }
+
         var q = db.chinhanh_tables.Where(p => p.id.ToString() == id);
         chinhanh_table _ob = q.First();
         file_folder_class.del_file(_ob.logo_footer);//xóa ảnh cũ

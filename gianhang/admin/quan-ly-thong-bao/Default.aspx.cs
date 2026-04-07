@@ -7,18 +7,27 @@ public partial class admin_quan_ly_thong_bao_Default : Page
     dbDataContext db = new dbDataContext();
     taikhoan_class tk_cl = new taikhoan_class();
 
+    private string GetCurrentWorkspaceAccount()
+    {
+        return (GianHangAdminContext_cl.ResolveDisplayAccountKey() ?? "").Trim().ToLowerInvariant();
+    }
+
     protected void Page_Load(object sender, EventArgs e)
     {
-        if (Session["user"] == null || string.IsNullOrWhiteSpace(Session["user"].ToString()))
+        if (!GianHangSystemAdminGuard_cl.EnsurePageAccess(this))
+            return;
+
+        string currentAccount = GetCurrentWorkspaceAccount();
+        if (string.IsNullOrWhiteSpace(currentAccount))
         {
-            Response.Redirect("/gianhang/admin/login.aspx");
+            Response.Redirect(GianHangAdminBridge_cl.ResolveSessionRecoveryUrl(HttpContext.Current, "/gianhang/admin"));
             return;
         }
 
         if (!IsPostBack)
         {
-            mark_all_as_read(Session["user"].ToString());
-            load_data(Session["user"].ToString());
+            mark_all_as_read(currentAccount);
+            load_data(currentAccount);
         }
     }
 

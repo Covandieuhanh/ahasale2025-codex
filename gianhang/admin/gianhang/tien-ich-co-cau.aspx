@@ -26,7 +26,7 @@
         .gh-utility-form__stat strong{display:block;margin-top:8px;color:#111827;font-size:26px;font-weight:900;}
         .gh-utility-form__stat span{display:block;margin-top:6px;color:#6b7280;font-size:13px;line-height:1.7;}
         .gh-utility-form__list{margin:14px 0 0;padding-left:18px;color:#4b5563;line-height:1.7;}
-        @media (max-width: 991px){.gh-utility-form__grid{grid-template-columns:1fr;}.gh-utility-form__title{font-size:26px;}}
+        @media (max-width: 767px){.gh-utility-form__grid{grid-template-columns:1fr;}.gh-utility-form__title{font-size:26px;}}
     </style>
 </asp:Content>
 

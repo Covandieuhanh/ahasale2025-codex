@@ -522,6 +522,9 @@
         <div class="mb-2">
             <asp:CheckBox ID="cb_home_daugia_admin" runat="server" Text="Cho phép truy cập không gian Đấu giá (/daugia/admin)" />
         </div>
+        <div class="mb-2">
+            <asp:CheckBox ID="cb_home_batdongsan_admin" runat="server" Text="Cho phép truy cập không gian Bất động sản (/admin/default.aspx?mspace=batdongsan)" />
+        </div>
         <div>
             <asp:CheckBox ID="cb_home_gianhang_admin" runat="server" Text="Cho phép truy cập không gian quản trị Gian hàng (/gianhang/admin)" />
         </div>

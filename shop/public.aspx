@@ -22,7 +22,7 @@
 
         body {
             margin: 0;
-            font-family: "Nunito Sans", "Segoe UI", Arial, sans-serif;
+            font-family: "Be Vietnam Pro", "Segoe UI", Arial, sans-serif;
             color: var(--shop-text);
             background:
                 radial-gradient(920px 280px at 18% -4%, rgba(238, 77, 45, .12), transparent 62%),

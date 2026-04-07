@@ -77,7 +77,10 @@ public partial class admin_Default : System.Web.UI.Page
                 return;
 
             Session["url_back"] = AdminFullPageRoute_cl.SanitizeAdminReturnUrl(HttpContext.Current.Request.Url.AbsoluteUri, "/admin/default.aspx");
-            check_login_cl.check_login_admin("none", "none");
+            string routeFeatureKey = AdminRouteMap_cl.ResolveFeatureKey(Request);
+            if (string.IsNullOrWhiteSpace(routeFeatureKey))
+                routeFeatureKey = "admin_accounts";
+            AdminAccessGuard_cl.RequireFeatureAccess(routeFeatureKey, "/admin/default.aspx");
 
             string _tk = Session["taikhoan"] as string;
             if (!string.IsNullOrEmpty(_tk)) _tk = mahoa_cl.giaima_Bcorn(_tk);
@@ -149,19 +152,19 @@ public partial class admin_Default : System.Web.UI.Page
 
             if (string.IsNullOrWhiteSpace(ViewState["filter_admin_role"] as string))
             {
-                if (string.Equals(currentScope, "home", StringComparison.OrdinalIgnoreCase)
+                if (string.Equals(currentScope, AdminDataScope_cl.AccountScopeHome, StringComparison.OrdinalIgnoreCase)
                     && (string.Equals(presetKey, AdminRolePolicy_cl.PresetHomeCustomer, StringComparison.OrdinalIgnoreCase)
                         || string.Equals(presetKey, AdminRolePolicy_cl.PresetHomeDevelopment, StringComparison.OrdinalIgnoreCase)
                         || string.Equals(presetKey, AdminRolePolicy_cl.PresetHomeEcosystem, StringComparison.OrdinalIgnoreCase)))
                 {
                     ViewState["filter_admin_role"] = presetKey;
                 }
-                else if (string.Equals(currentScope, "shop", StringComparison.OrdinalIgnoreCase)
+                else if (string.Equals(currentScope, AdminDataScope_cl.AccountScopeShop, StringComparison.OrdinalIgnoreCase)
                     && string.Equals(presetKey, AdminRolePolicy_cl.PresetShopPartner, StringComparison.OrdinalIgnoreCase))
                 {
                     ViewState["filter_admin_role"] = presetKey;
                 }
-                else if (string.Equals(currentScope, "admin", StringComparison.OrdinalIgnoreCase)
+                else if (string.Equals(currentScope, AdminDataScope_cl.AccountScopeAdmin, StringComparison.OrdinalIgnoreCase)
                     && string.Equals(presetKey, AdminRolePolicy_cl.PresetHomeContent, StringComparison.OrdinalIgnoreCase))
                 {
                     ViewState["filter_admin_role"] = presetKey;
@@ -196,10 +199,7 @@ public partial class admin_Default : System.Web.UI.Page
 
     private string NormalizeFilterScope(string raw)
     {
-        string scope = (raw ?? "").Trim().ToLowerInvariant();
-        if (scope == "admin" || scope == "home" || scope == "shop")
-            return scope;
-        return "";
+        return AdminDataScope_cl.NormalizeAccountScope(raw);
     }
 
     private string NormalizeFilterAdminRole(string raw)
@@ -230,17 +230,17 @@ public partial class admin_Default : System.Web.UI.Page
             if (string.IsNullOrWhiteSpace(presetKey))
                 return normalizedRole;
 
-            if (string.Equals(normalizedScope, "home", StringComparison.OrdinalIgnoreCase)
+            if (string.Equals(normalizedScope, AdminDataScope_cl.AccountScopeHome, StringComparison.OrdinalIgnoreCase)
                 && (string.Equals(presetKey, AdminRolePolicy_cl.PresetHomeCustomer, StringComparison.OrdinalIgnoreCase)
                     || string.Equals(presetKey, AdminRolePolicy_cl.PresetHomeDevelopment, StringComparison.OrdinalIgnoreCase)
                     || string.Equals(presetKey, AdminRolePolicy_cl.PresetHomeEcosystem, StringComparison.OrdinalIgnoreCase)))
                 return presetKey;
 
-            if (string.Equals(normalizedScope, "shop", StringComparison.OrdinalIgnoreCase)
+            if (string.Equals(normalizedScope, AdminDataScope_cl.AccountScopeShop, StringComparison.OrdinalIgnoreCase)
                 && string.Equals(presetKey, AdminRolePolicy_cl.PresetShopPartner, StringComparison.OrdinalIgnoreCase))
                 return presetKey;
 
-            if (string.Equals(normalizedScope, "admin", StringComparison.OrdinalIgnoreCase)
+            if (string.Equals(normalizedScope, AdminDataScope_cl.AccountScopeAdmin, StringComparison.OrdinalIgnoreCase)
                 && string.Equals(presetKey, AdminRolePolicy_cl.PresetHomeContent, StringComparison.OrdinalIgnoreCase))
                 return presetKey;
         }
@@ -314,7 +314,7 @@ public partial class admin_Default : System.Web.UI.Page
     private bool IsAdminAccountManagementScope()
     {
         string scope = GetPageScopeForUrl();
-        return string.Equals(scope, "admin", StringComparison.OrdinalIgnoreCase);
+        return string.Equals(scope, AdminDataScope_cl.AccountScopeAdmin, StringComparison.OrdinalIgnoreCase);
     }
 
     private bool CanManageAdminAccounts(dbDataContext db, string taiKhoanAdmin)
@@ -338,15 +338,15 @@ public partial class admin_Default : System.Web.UI.Page
         // In some runtime flows, GetPageScopeForUrl() can be empty during redirect/open-view.
         // Accept if either scope or filter-scope indicates admin.
         string scope = NormalizeFilterScope(GetPageScopeForUrl());
-        if (string.Equals(scope, "admin", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(scope, AdminDataScope_cl.AccountScopeAdmin, StringComparison.OrdinalIgnoreCase))
             return true;
 
         string scopeFromQuery = NormalizeFilterScope(Request.QueryString["scope"]);
-        if (string.Equals(scopeFromQuery, "admin", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(scopeFromQuery, AdminDataScope_cl.AccountScopeAdmin, StringComparison.OrdinalIgnoreCase))
             return true;
 
         string scopeFromFilter = NormalizeFilterScope(Request.QueryString["fscope"]);
-        if (string.Equals(scopeFromFilter, "admin", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(scopeFromFilter, AdminDataScope_cl.AccountScopeAdmin, StringComparison.OrdinalIgnoreCase))
             return true;
 
         string rawUrl = (Request.RawUrl ?? "").ToLowerInvariant();
@@ -362,8 +362,12 @@ public partial class admin_Default : System.Web.UI.Page
 
     private string GetPageScopeForUrl()
     {
-        string scope = NormalizeFilterScope(Request.QueryString["scope"]);
-        if (!string.IsNullOrEmpty(scope)) return scope;
+        string scope = AdminDataScope_cl.ResolveEffectiveAccountScope(
+            Request.QueryString["scope"],
+            Request.QueryString["fscope"]);
+        if (!string.IsNullOrEmpty(scope))
+            return scope;
+
         scope = NormalizeFilterScope(ViewState["filter_scope"] as string);
         return scope;
     }
@@ -371,11 +375,11 @@ public partial class admin_Default : System.Web.UI.Page
     protected string GetAccountListScopeCssClass()
     {
         string scope = GetPageScopeForUrl();
-        if (string.Equals(scope, "home", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(scope, AdminDataScope_cl.AccountScopeHome, StringComparison.OrdinalIgnoreCase))
             return "scope-home";
-        if (string.Equals(scope, "shop", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(scope, AdminDataScope_cl.AccountScopeShop, StringComparison.OrdinalIgnoreCase))
             return "scope-shop";
-        if (string.Equals(scope, "admin", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(scope, AdminDataScope_cl.AccountScopeAdmin, StringComparison.OrdinalIgnoreCase))
             return "scope-admin";
         return "scope-all";
     }
@@ -511,7 +515,7 @@ public partial class admin_Default : System.Web.UI.Page
 
     private string BuildAdminRoleFilterUrl(string roleKey)
     {
-        return BuildListUrl(AccountTypeAdminStaff, "admin", roleKey);
+        return BuildListUrl(AccountTypeAdminStaff, AdminDataScope_cl.AccountScopeAdmin, roleKey);
     }
 
     private string BuildAdminRoleQuickSummaryHtml(IEnumerable<AdminRoleQuickSummaryVm> rows)
@@ -808,11 +812,11 @@ public partial class admin_Default : System.Web.UI.Page
         using (dbDataContext db = new dbDataContext())
         {
             bool allowed = false;
-            if (string.Equals(scope, "admin", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(scope, AdminDataScope_cl.AccountScopeAdmin, StringComparison.OrdinalIgnoreCase))
                 allowed = AdminRolePolicy_cl.CanManageAdminAccounts(db, tkAdmin);
-            else if (string.Equals(scope, "shop", StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(scope, AdminDataScope_cl.AccountScopeShop, StringComparison.OrdinalIgnoreCase))
                 allowed = AdminRolePolicy_cl.CanManageShopAccounts(db, tkAdmin);
-            else if (string.Equals(scope, "home", StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(scope, AdminDataScope_cl.AccountScopeHome, StringComparison.OrdinalIgnoreCase))
                 allowed = AdminRolePolicy_cl.CanManageHomeAccounts(db, tkAdmin);
             else
                 allowed = true;
@@ -821,11 +825,11 @@ public partial class admin_Default : System.Web.UI.Page
                 return true;
 
             string deniedMessage;
-            if (string.Equals(scope, "admin", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(scope, AdminDataScope_cl.AccountScopeAdmin, StringComparison.OrdinalIgnoreCase))
                 deniedMessage = "Bạn không có quyền truy cập khu quản trị tài khoản admin.";
-            else if (string.Equals(scope, "shop", StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(scope, AdminDataScope_cl.AccountScopeShop, StringComparison.OrdinalIgnoreCase))
                 deniedMessage = "Bạn không có quyền truy cập khu quản trị tài khoản gian hàng đối tác.";
-            else if (string.Equals(scope, "home", StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(scope, AdminDataScope_cl.AccountScopeHome, StringComparison.OrdinalIgnoreCase))
                 deniedMessage = "Bạn không có quyền truy cập khu quản trị tài khoản Home của vai trò này.";
             else
                 deniedMessage = "Bạn không có quyền truy cập nhóm dữ liệu admin này.";
@@ -1030,9 +1034,9 @@ public partial class admin_Default : System.Web.UI.Page
                     list_filtered = list_filtered.Where(p =>
                     {
                         string resolvedScope = PortalScope_cl.ResolveScope(p.taikhoan, p.phanloai, p.permission);
-                        if (_filter_scope == "admin")
+                        if (_filter_scope == AdminDataScope_cl.AccountScopeAdmin)
                             return string.Equals(resolvedScope, PortalScope_cl.ScopeAdmin, StringComparison.OrdinalIgnoreCase);
-                        if (_filter_scope == "shop")
+                        if (_filter_scope == AdminDataScope_cl.AccountScopeShop)
                             return string.Equals(resolvedScope, PortalScope_cl.ScopeShop, StringComparison.OrdinalIgnoreCase);
                         return string.Equals(resolvedScope, PortalScope_cl.ScopeHome, StringComparison.OrdinalIgnoreCase);
                     }).ToList();
@@ -1259,7 +1263,8 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            if (!EnsureCurrentScopeAccess())
+                return;
             ViewState["current_page_qlnv"] = int.Parse(ViewState["current_page_qlnv"].ToString()) - 1;
 
             HttpCookie cookie = Request.Cookies["cookie_qlnv"];
@@ -1285,7 +1290,8 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            if (!EnsureCurrentScopeAccess())
+                return;
             ViewState["current_page_qlnv"] = int.Parse(ViewState["current_page_qlnv"].ToString()) + 1;
 
             HttpCookie cookie = Request.Cookies["cookie_qlnv"];
@@ -1311,7 +1317,8 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            if (!EnsureCurrentScopeAccess())
+                return;
             SyncSearchInputs(GetSearchKeyword());
             ViewState["current_page_qlnv"] = 1;
             show_main();
@@ -1334,7 +1341,8 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            if (!EnsureCurrentScopeAccess())
+                return;
             SyncSearchInputs("");
             ViewState["current_page_qlnv"] = 1;
             show_main();
@@ -1353,7 +1361,8 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            if (!EnsureCurrentScopeAccess())
+                return;
 
             if (!IsRootAdminCurrent())
             {
@@ -1455,7 +1464,8 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            if (!EnsureCurrentScopeAccess())
+                return;
 
             if (!IsRootAdminCurrent())
             {
@@ -1496,7 +1506,8 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            if (!EnsureCurrentScopeAccess())
+                return;
             Response.Redirect(BuildFilterUrl(), false);
             Context.ApplicationInstance.CompleteRequest();
         }
@@ -1519,7 +1530,8 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            if (!EnsureCurrentScopeAccess())
+                return;
 
             ViewState["filter_phanloai"] = NormalizeFilterAccountType(ddl_loc_phanloai.SelectedValue);
             ViewState["filter_scope"] = NormalizeFilterScope(ddl_loc_scope.SelectedValue);
@@ -1547,7 +1559,8 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            if (!EnsureCurrentScopeAccess())
+                return;
 
             ViewState["filter_phanloai"] = "";
             ViewState["filter_scope"] = "";
@@ -1596,6 +1609,7 @@ public partial class admin_Default : System.Web.UI.Page
         pn_home_event_builder.Visible = false;
         cb_home_event_builder.Checked = false;
         cb_home_daugia_admin.Checked = false;
+        cb_home_batdongsan_admin.Checked = false;
         cb_home_gianhang_admin.Checked = false;
 
         txt_reset_home_password.Text = "";
@@ -1800,7 +1814,8 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            if (!EnsureCurrentScopeAccess())
+                return;
             if (!CanCreateAdminAccountInCurrentScope())
             {
                 ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
@@ -1833,7 +1848,8 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            if (!EnsureCurrentScopeAccess())
+                return;
             Response.Redirect(BuildListUrl(), false);
             Context.ApplicationInstance.CompleteRequest();
         }
@@ -1850,7 +1866,8 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            if (!EnsureCurrentScopeAccess())
+                return;
             LinkButton button = (LinkButton)sender;
             string _tk_edit = (button.CommandArgument ?? "").Trim();
             if (string.IsNullOrEmpty(_tk_edit))
@@ -1923,6 +1940,7 @@ public partial class admin_Default : System.Web.UI.Page
             pn_home_event_builder.Visible = isHomeAccount;
             cb_home_event_builder.Checked = HasActiveSpaceAccess(db, q, ModuleSpace_cl.Event);
             cb_home_daugia_admin.Checked = HasActiveSpaceAccess(db, q, ModuleSpace_cl.DauGia);
+            cb_home_batdongsan_admin.Checked = HasActiveSpaceAccess(db, q, ModuleSpace_cl.BatDongSan);
             cb_home_gianhang_admin.Checked = HasActiveSpaceAccess(db, q, ModuleSpace_cl.GianHangAdmin);
 
             txt_taikhoan.Text = q.taikhoan;
@@ -2000,6 +2018,13 @@ public partial class admin_Default : System.Web.UI.Page
             return false;
         }
 
+        string tkAdmin = GetCurrentAdminUser();
+        if (!CanAccessAccountRecord(db, tkAdmin, account))
+        {
+            error = "Bạn không có quyền thao tác trên tài khoản này.";
+            return false;
+        }
+
         scope = PortalScope_cl.ResolveScope(account.taikhoan, account.phanloai, account.permission);
         bool isHome = string.Equals(scope, PortalScope_cl.ScopeHome, StringComparison.OrdinalIgnoreCase);
         bool isShop = string.Equals(scope, PortalScope_cl.ScopeShop, StringComparison.OrdinalIgnoreCase);
@@ -2030,7 +2055,8 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            if (!EnsureCurrentScopeAccess())
+                return;
             string passTam = (txt_reset_home_password.Text ?? "").Trim();
             if (string.IsNullOrEmpty(passTam))
             {
@@ -2086,7 +2112,8 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            if (!EnsureCurrentScopeAccess())
+                return;
             string pinTam = (txt_reset_home_pin.Text ?? "").Trim();
             if (!PinSecurity_cl.IsValidPinFormat(pinTam))
             {
@@ -2143,7 +2170,8 @@ public partial class admin_Default : System.Web.UI.Page
     {
         try
         {
-            check_login_cl.check_login_admin("none", "none");
+            if (!EnsureCurrentScopeAccess())
+                return;
             string passTam = (txt_reset_shop_password.Text ?? "").Trim();
             if (string.IsNullOrEmpty(passTam))
             {
@@ -2199,7 +2227,17 @@ public partial class admin_Default : System.Web.UI.Page
     {
         using (dbDataContext db = new dbDataContext())
         {
-            var q = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == ViewState["id_edit"].ToString());
+            taikhoan_tb q;
+            string scope;
+            string taiKhoan;
+            string error;
+            if (!TryGetEditingAccountWithScope(db, out q, out scope, out taiKhoan, false, false, out error))
+            {
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                    thongbao_class.metro_notifi("Thông báo", error, "1500", "warning"), true);
+                return;
+            }
+
             if (q != null)
             {
                 taikhoan_tb _ob = q;
@@ -2512,6 +2550,7 @@ public partial class admin_Default : System.Web.UI.Page
 
                         SetHomeSpaceAccess(db, q, ModuleSpace_cl.Event, cb_home_event_builder.Checked, tkAdmin);
                         SetHomeSpaceAccess(db, q, ModuleSpace_cl.DauGia, cb_home_daugia_admin.Checked, tkAdmin);
+                        SetHomeSpaceAccess(db, q, ModuleSpace_cl.BatDongSan, cb_home_batdongsan_admin.Checked, tkAdmin);
                         SetHomeSpaceAccess(db, q, ModuleSpace_cl.GianHangAdmin, cb_home_gianhang_admin.Checked, tkAdmin);
                     }
 
@@ -2626,7 +2665,7 @@ public partial class admin_Default : System.Web.UI.Page
 
     private void OpenPermissionFormByAccount(string taiKhoan)
     {
-        AdminRolePolicy_cl.RequireSuperAdmin();
+        AdminAccessGuard_cl.RequireFeatureAccess("admin_accounts", "/admin/default.aspx?mspace=admin");
         reset_control_phanquyen();
         string _tk = (taiKhoan ?? "").Trim();
         if (string.IsNullOrEmpty(_tk))
@@ -2647,6 +2686,12 @@ public partial class admin_Default : System.Web.UI.Page
             if (q == null)
             {
                 RedirectToListWithNotice("Thông báo", "Không tìm thấy tài khoản.");
+                return;
+            }
+
+            if (!CanAccessAccountRecord(db, GetCurrentAdminUser(), q))
+            {
+                RedirectToListWithNotice("Thông báo", "Bạn không có quyền phân quyền cho tài khoản này.");
                 return;
             }
 
@@ -2692,7 +2737,7 @@ public partial class admin_Default : System.Web.UI.Page
 
     protected void but_show_form_phanquyen_Click(object sender, EventArgs e)
     {
-        AdminRolePolicy_cl.RequireSuperAdmin();
+        AdminAccessGuard_cl.RequireFeatureAccess("admin_accounts", "/admin/default.aspx?mspace=admin");
 
         LinkButton button = (LinkButton)sender;
         string _tk = (button.CommandArgument ?? "").Trim();
@@ -2706,13 +2751,24 @@ public partial class admin_Default : System.Web.UI.Page
             return;
         }
 
+        using (dbDataContext db = new dbDataContext())
+        {
+            taikhoan_tb account = FindAccountByUsername(db, _tk);
+            if (account == null || !CanAccessAccountRecord(db, GetCurrentAdminUser(), account))
+            {
+                ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                    thongbao_class.metro_notifi("Thông báo", "Bạn không có quyền phân quyền cho tài khoản này.", "2600", "warning"), true);
+                return;
+            }
+        }
+
         Response.Redirect(BuildPermissionPageUrl(_tk), false);
         Context.ApplicationInstance.CompleteRequest();
     }
 
     protected void but_phanquyen_Click(object sender, EventArgs e)
     {
-        AdminRolePolicy_cl.RequireSuperAdmin();
+        AdminAccessGuard_cl.RequireFeatureAccess("admin_accounts", "/admin/default.aspx?mspace=admin");
         string _tk = ViewState["tk_phanquyen"].ToString();
         if (PermissionProfile_cl.IsRootAdmin(_tk))
         {
@@ -2725,6 +2781,13 @@ public partial class admin_Default : System.Web.UI.Page
             var q = db.taikhoan_tbs.FirstOrDefault(p => p.taikhoan == _tk);
             if (q != null)
             {
+                if (!CanAccessAccountRecord(db, GetCurrentAdminUser(), q))
+                {
+                    ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(),
+                        thongbao_class.metro_notifi("Thông báo", "Bạn không có quyền phân quyền cho tài khoản này.", "2600", "warning"), true);
+                    return;
+                }
+
                 string existingScope = PortalScope_cl.ResolveScope(q.taikhoan, q.phanloai, q.permission);
                 if (!string.Equals(existingScope, PortalScope_cl.ScopeAdmin, StringComparison.OrdinalIgnoreCase))
                 {
@@ -2776,7 +2839,7 @@ public partial class admin_Default : System.Web.UI.Page
 
     protected void ddl_admin_permission_preset_SelectedIndexChanged(object sender, EventArgs e)
     {
-        AdminRolePolicy_cl.RequireSuperAdmin();
+        AdminAccessGuard_cl.RequireFeatureAccess("admin_accounts", "/admin/default.aspx?mspace=admin");
         ApplyAdminPermissionPreset(ddl_admin_permission_preset.SelectedValue);
     }
 

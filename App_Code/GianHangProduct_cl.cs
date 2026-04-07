@@ -62,6 +62,11 @@ public static class GianHangProduct_cl
         int? phanTramUuDai,
         string loai,
         string idDanhMuc,
+        string diaDiem,
+        string diaChiTinh,
+        string diaChiQuan,
+        string diaChiPhuong,
+        string diaChiChiTiet,
         bool isHidden)
     {
         EnsureSchema(db);
@@ -95,6 +100,11 @@ public static class GianHangProduct_cl
         gh.gia_von = giaVon;
         gh.loai = NormalizeLoai(loai);
         gh.id_danhmuc = string.IsNullOrWhiteSpace(idDanhMuc) ? null : idDanhMuc.Trim();
+        gh.dia_diem = string.IsNullOrWhiteSpace(diaDiem) ? null : diaDiem.Trim();
+        gh.dia_chi_tinh = string.IsNullOrWhiteSpace(diaChiTinh) ? null : diaChiTinh.Trim();
+        gh.dia_chi_quan = string.IsNullOrWhiteSpace(diaChiQuan) ? null : diaChiQuan.Trim();
+        gh.dia_chi_phuong = string.IsNullOrWhiteSpace(diaChiPhuong) ? null : diaChiPhuong.Trim();
+        gh.dia_chi_chi_tiet = string.IsNullOrWhiteSpace(diaChiChiTiet) ? null : diaChiChiTiet.Trim();
         gh.bin = isHidden;
         gh.ngay_cap_nhat = AhaTime_cl.Now;
         gh.so_luong_ton = soLuongTon ?? gh.so_luong_ton ?? 0;
@@ -103,6 +113,7 @@ public static class GianHangProduct_cl
         gh.phan_tram_uu_dai = ClampDiscountPercent(phanTramUuDai);
 
         db.SubmitChanges();
+        TryEnsureWorkspaceMirror(db, tk);
         return gh;
     }
 
@@ -118,6 +129,7 @@ public static class GianHangProduct_cl
         gh.bin = gh.bin != true;
         gh.ngay_cap_nhat = AhaTime_cl.Now;
         db.SubmitChanges();
+        TryEnsureWorkspaceMirror(db, tk);
         return true;
     }
 
@@ -168,5 +180,21 @@ public static class GianHangProduct_cl
     public static int ResolveDiscountPercent(GH_SanPham_tb product)
     {
         return product == null ? 0 : ClampDiscountPercent(product.phan_tram_uu_dai);
+    }
+
+    private static void TryEnsureWorkspaceMirror(dbDataContext db, string shopTaiKhoan)
+    {
+        string tk = (shopTaiKhoan ?? "").Trim().ToLowerInvariant();
+        if (db == null || tk == "")
+            return;
+
+        try
+        {
+            GianHangWorkspaceLink_cl.EnsureWorkspaceLinked(db, tk, true);
+        }
+        catch
+        {
+            // Không làm gián đoạn luồng lưu tin nếu bước bridge sang Home gặp lỗi tạm thời.
+        }
     }
 }

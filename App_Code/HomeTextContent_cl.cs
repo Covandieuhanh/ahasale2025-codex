@@ -25,6 +25,7 @@ public static class HomeTextContent_cl
 
     private static readonly object SyncRoot = new object();
     private static bool _schemaEnsured;
+    private const int EffectiveCacheSeconds = 120;
 
     public sealed class TextContentItem
     {
@@ -257,12 +258,20 @@ WHERE content_key = @key";
     public static TextContentItem GetEffectiveByKey(dbDataContext db, string key)
     {
         string contentKey = NormalizeKey(key);
+        if (string.IsNullOrEmpty(contentKey))
+            return null;
+
+        string cacheKey = "home_text_content_effective:" + contentKey;
+        TextContentItem cached = Helper_cl.RuntimeCacheGet<TextContentItem>(cacheKey);
+        if (cached != null)
+            return CloneTextContentItem(cached);
+
         BuiltInTextItem builtIn = GetBuiltInItems().FirstOrDefault(x => string.Equals(x.Key, contentKey, StringComparison.OrdinalIgnoreCase));
         TextContentItem dbRow = GetByKey(db, contentKey);
 
         if (dbRow == null)
         {
-            return new TextContentItem
+            TextContentItem fallback = new TextContentItem
             {
                 Key = contentKey,
                 Title = builtIn != null ? builtIn.Title : contentKey,
@@ -270,11 +279,13 @@ WHERE content_key = @key";
                 IsEnabled = true,
                 IsBuiltIn = builtIn != null
             };
+            Helper_cl.RuntimeCacheGetOrAdd<TextContentItem>(cacheKey, EffectiveCacheSeconds, () => CloneTextContentItem(fallback));
+            return fallback;
         }
 
         if (!dbRow.IsEnabled)
         {
-            return new TextContentItem
+            TextContentItem disabled = new TextContentItem
             {
                 Key = dbRow.Key,
                 Title = string.IsNullOrWhiteSpace(dbRow.Title) && builtIn != null ? builtIn.Title : dbRow.Title,
@@ -284,6 +295,8 @@ WHERE content_key = @key";
                 UpdatedAt = dbRow.UpdatedAt,
                 IsBuiltIn = dbRow.IsBuiltIn
             };
+            Helper_cl.RuntimeCacheGetOrAdd<TextContentItem>(cacheKey, EffectiveCacheSeconds, () => CloneTextContentItem(disabled));
+            return disabled;
         }
 
         if (string.IsNullOrWhiteSpace(dbRow.TextContent) && builtIn != null)
@@ -292,6 +305,7 @@ WHERE content_key = @key";
         if (string.IsNullOrWhiteSpace(dbRow.Title) && builtIn != null)
             dbRow.Title = builtIn.Title;
 
+        Helper_cl.RuntimeCacheGetOrAdd<TextContentItem>(cacheKey, EffectiveCacheSeconds, () => CloneTextContentItem(dbRow));
         return dbRow;
     }
 
@@ -337,6 +351,25 @@ WHEN NOT MATCHED THEN
             conn.Open();
             cmd.ExecuteNonQuery();
         }
+
+        Helper_cl.RuntimeCacheRemove("home_text_content_effective:" + contentKey);
+    }
+
+    private static TextContentItem CloneTextContentItem(TextContentItem item)
+    {
+        if (item == null)
+            return null;
+
+        return new TextContentItem
+        {
+            Key = item.Key,
+            Title = item.Title,
+            TextContent = item.TextContent,
+            IsEnabled = item.IsEnabled,
+            UpdatedBy = item.UpdatedBy,
+            UpdatedAt = item.UpdatedAt,
+            IsBuiltIn = item.IsBuiltIn
+        };
     }
 
     public static List<KeywordLineItem> ParseKeywordLines(string rawText)

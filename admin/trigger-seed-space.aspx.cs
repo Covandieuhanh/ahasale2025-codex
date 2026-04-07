@@ -7,7 +7,7 @@ public partial class admin_trigger_seed_space : Page
 {
     protected void Page_Load(object sender, EventArgs e)
     {
-        AdminRolePolicy_cl.RequireSuperAdmin();
+        AdminAccessGuard_cl.RequireFeatureAccess("core_assets", "/admin/default.aspx?mspace=home");
 
         if (!IsPostBack)
         {
@@ -48,9 +48,11 @@ public partial class admin_trigger_seed_space : Page
                     continue;
                 }
 
-                string permission = (acc.permission ?? "").ToLowerInvariant();
-                bool hasHome = permission.Contains("portal_home");
-                bool hasShop = permission.Contains("portal_shop");
+                HashSet<string> permissionTokens = new HashSet<string>(
+                    PortalScope_cl.SplitPermissionTokens(acc.permission ?? ""),
+                    StringComparer.OrdinalIgnoreCase);
+                bool hasHome = permissionTokens.Contains(PortalScope_cl.ScopeHome);
+                bool hasShop = permissionTokens.Contains(PortalScope_cl.ScopeShop);
 
                 string key = acc.taikhoan.Trim();
 

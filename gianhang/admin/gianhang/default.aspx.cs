@@ -26,6 +26,7 @@ public partial class gianhang_admin_gianhang_default : System.Web.UI.Page
     public string CartUrl = "/gianhang/admin/gianhang/gio-hang.aspx";
     public string ElectronicInvoiceUrl = "/gianhang/admin/gianhang/hoa-don-dien-tu.aspx";
     public string LegacyInvoiceUrl = "/gianhang/admin/quan-ly-hoa-don/Default.aspx?workspace=gianhang";
+    public string PersonHubUrl = "/gianhang/admin/quan-ly-con-nguoi/Default.aspx";
     public string SyncUrl = "/gianhang/admin/gianhang/default.aspx?sync=1";
     public int ProductCount;
     public int ServiceCount;
@@ -72,7 +73,8 @@ public partial class gianhang_admin_gianhang_default : System.Web.UI.Page
         CartUrl = GianHangRoutes_cl.BuildAdminWorkspaceCartUrl();
         ElectronicInvoiceUrl = GianHangRoutes_cl.BuildAdminWorkspaceElectronicInvoiceUrl();
         PublicUrl = GianHangRoutes_cl.BuildPublicUrl(ownerAccountKey);
-        LegacyInvoiceUrl = "/gianhang/admin/quan-ly-hoa-don/Default.aspx?workspace=gianhang";
+        LegacyInvoiceUrl = GianHangRoutes_cl.BuildAdminLegacyInvoiceListUrl();
+        PersonHubUrl = GianHangRoutes_cl.BuildAdminLegacyPeopleHubUrl(string.Empty);
         SyncUrl = GianHangRoutes_cl.BuildAdminWorkspaceHubUrl() + "?sync=1";
 
         taikhoan_tb owner = RootAccount_cl.GetByAccountKey(db, ownerAccountKey);

@@ -28,6 +28,11 @@ public partial class admin_Default2 : System.Web.UI.Page
         return ResolveUrl("~/admin/quen-mat-khau/default.aspx");
     }
 
+    private string BuildRecoverUrl()
+    {
+        return BuildLoginUrl() + "?view=" + ViewRecover;
+    }
+
     private string ResolveSafeAdminReturnUrl(string rawUrl, string fallbackUrl)
     {
         return AdminFullPageRoute_cl.SanitizeAdminReturnUrl(rawUrl, fallbackUrl);
@@ -168,7 +173,8 @@ public partial class admin_Default2 : System.Web.UI.Page
         {
             try
             {
-                but_show_form_quenmk.NavigateUrl = BuildForgotPasswordUrl();
+                string forgotPasswordUrl = BuildForgotPasswordUrl();
+                but_show_form_quenmk.NavigateUrl = forgotPasswordUrl;
                 #region THÔNG TIN TRANG
                 using (dbDataContext db = new dbDataContext())
                 {
@@ -438,6 +444,21 @@ public partial class admin_Default2 : System.Web.UI.Page
         {
             Log_cl.Add_Log(_ex.Message, "", _ex.StackTrace);
         }
+    }
+
+    protected void but_show_form_quenmk_Click(object sender, EventArgs e)
+    {
+        RedirectTo(BuildForgotPasswordUrl());
+    }
+
+    protected void but_close_form_quenmk_Click(object sender, EventArgs e)
+    {
+        RedirectTo(BuildLoginUrl());
+    }
+
+    protected void but_nhanma_Click(object sender, EventArgs e)
+    {
+        RedirectTo(BuildForgotPasswordUrl());
     }
 
 }

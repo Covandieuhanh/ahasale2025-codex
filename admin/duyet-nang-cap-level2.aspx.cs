@@ -15,7 +15,7 @@ public partial class admin_duyet_nang_cap_level2 : System.Web.UI.Page
     {
         if (!IsPostBack)
         {
-            check_login_cl.check_login_admin("none", "none");
+            AdminAccessGuard_cl.RequireFeatureAccess("shop_level2", "/admin/default.aspx?mspace=gianhang");
             txt_timkiem.Text = "";
             ddl_trangthai.SelectedValue = "";
             LoadDanhSach();

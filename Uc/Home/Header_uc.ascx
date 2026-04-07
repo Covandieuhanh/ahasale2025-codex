@@ -6,7 +6,9 @@
         --aha-top-icon-border: #d9e2ec;
         --aha-top-icon-text: #111111;
         --aha-topbar-height: 54px;
-        --aha-logo-available-width: calc(100vw - 148px);
+        --aha-logo-available-width: calc(100% - 148px);
+        --aha-mobile-logo-width: 132px;
+        --aha-mobile-logo-height: 34px;
     }
 
     html[data-bs-theme="dark"],
@@ -69,6 +71,12 @@
         background: #fff7ed;
         border-color: #fdba74;
         color: #c2410c;
+    }
+
+    .mode-badge.mode-batdongsan {
+        background: #ecfccb;
+        border-color: #bef264;
+        color: #3f6212;
     }
 
     .mode-badge.mode-mobile {
@@ -180,8 +188,8 @@
         padding: 0 4px;
         font-size: 12px;
         font-weight: 800;
-        letter-spacing: .04em;
-        text-transform: uppercase;
+        letter-spacing: 0;
+        text-transform: none;
         color: #64748b;
     }
 
@@ -441,9 +449,11 @@
 
     .site-header.site-header-space-home .mobile-auth-link.login {
         background: #ffffff;
-        color: #176a4a;
+        color: #176a4a !important;
         border: 1px solid rgba(15, 23, 42, .08);
         box-shadow: 0 10px 22px rgba(12, 46, 30, .12);
+        opacity: 1;
+        text-shadow: none;
     }
 
     .site-header.site-header-space-home .mobile-auth-link.signup {
@@ -497,8 +507,48 @@
         z-index: 3;
     }
 
-    @media (min-width: 992px) {
-        .site-header .mobile-menu-btn {
+    .site-header .header-bds-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 36px;
+        padding: 0 14px;
+        border-radius: 999px;
+        text-decoration: none !important;
+        font-weight: 800;
+        font-size: 14px;
+        line-height: 1;
+        white-space: nowrap;
+        color: #ffffff !important;
+        background: rgba(255, 255, 255, .16);
+        border: 1px solid rgba(255, 255, 255, .20);
+        box-shadow: 0 10px 20px rgba(15, 23, 42, .10);
+        transition: background-color .18s ease, border-color .18s ease, transform .18s ease;
+    }
+
+    .site-header .header-bds-link:hover,
+    .site-header .header-bds-link:focus {
+        background: rgba(255, 255, 255, .22);
+        border-color: rgba(255, 255, 255, .28);
+        color: #ffffff !important;
+        transform: translateY(-1px);
+    }
+
+    .site-header .header-left-nav .nav-item-menu-trigger {
+        order: 0;
+    }
+
+    .site-header .header-left-nav .nav-item-bds-chip {
+        order: 1;
+    }
+
+    @media (min-width: 850px) {
+        .site-header .mobile-menu-btn,
+        .site-header .mobile-left-icons,
+        .site-header .mobile-right-account,
+        .mobile-floating-cart,
+        .site-header .brand-center-mobile,
+        .site-header #homeMobileSearchHost {
             display: none !important;
         }
 
@@ -517,11 +567,13 @@
         .site-header .header-left-nav {
             justify-self: start;
             min-width: 0;
+            gap: 10px !important;
         }
 
         .site-header .header-right-nav {
             justify-self: end;
             min-width: 0;
+            gap: 12px !important;
         }
 
         .site-header .brand-center-desktop {
@@ -543,9 +595,114 @@
             max-width: 240px;
             object-fit: contain;
         }
+
+        .site-header .desktop-menu-btn {
+            display: inline-flex !important;
+        }
+
+        .site-header .header-left-nav .nav-item-menu-trigger,
+        .site-header .header-left-nav .nav-item-bds-chip {
+            display: inline-flex !important;
+            align-items: center;
+        }
+
+        .site-header .header-left-nav .header-bds-link {
+            min-height: 38px;
+            padding: 0 16px;
+        }
+
+        .site-header .desktop-menu-btn .ti {
+            font-size: 24px;
+        }
+
+        .site-header .desktop-icon-bell {
+            width: 34px;
+            min-width: 34px;
+            height: 34px;
+            min-height: 34px;
+            padding: 0;
+            border: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+        }
+
+        .site-header .desktop-icon-bell:hover,
+        .site-header .desktop-icon-bell:focus {
+            background: transparent !important;
+            border-color: transparent !important;
+            transform: none;
+        }
+
+        .site-header .desktop-icon-bell .ti {
+            font-size: 24px;
+            color: #111111 !important;
+        }
+
+        .site-header .desktop-account-btn {
+            width: auto;
+            height: 46px;
+            min-width: 94px;
+            min-height: 46px;
+            padding: 0 14px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.96) !important;
+            color: #102a43 !important;
+            gap: 0;
+            justify-content: center;
+            border: 1px solid rgba(15, 23, 42, .08) !important;
+            box-shadow: 0 10px 22px rgba(15, 23, 42, .14);
+            text-decoration: none !important;
+            overflow: hidden;
+        }
+
+        .site-header .desktop-account-btn.guest-account-trigger {
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .site-header .desktop-account-btn:hover,
+        .site-header .desktop-account-btn:focus {
+            background: #ffffff !important;
+            color: #102a43 !important;
+            transform: translateY(-1px);
+        }
+
+        .site-header .desktop-account-btn .desktop-account-avatar {
+            display: block;
+            width: 36px;
+            height: 36px;
+            min-width: 36px;
+            min-height: 36px;
+            border-radius: 999px;
+            object-fit: cover;
+            object-position: center;
+            background-color: #eff6ff;
+            border: 1px solid #dbeafe;
+            box-shadow: none;
+        }
+
+    .site-header .desktop-account-btn .guest-avatar-fallback {
+        width: 100%;
+        height: 100%;
+        min-width: 0;
+        min-height: 0;
+        border-radius: inherit;
     }
 
-    @media (max-width: 991.98px) {
+        .site-header .desktop-auth-entry,
+        .site-header .aha-header-quick-shell,
+        .site-header .header-left-nav .mode-badge,
+        .site-header .header-right-nav .mode-badge,
+        .site-header .header-left-nav .topbar-space-toggle,
+        .site-header .header-right-nav .topbar-auth-btn,
+        .site-header .header-right-nav .position-relative.d-none.d-lg-block {
+            display: none !important;
+        }
+    }
+
+    @media (max-width: 849.98px) {
         .site-header .mobile-menu-btn {
             margin-left: 0;
             margin-right: 6px;
@@ -573,7 +730,7 @@
             padding: 0;
             align-items: center;
             justify-content: center;
-            max-width: calc(100vw - 160px);
+            max-width: var(--aha-logo-available-width);
             line-height: 0;
         }
 
@@ -601,7 +758,7 @@
         }
     }
 
-    @media (max-width: 575.98px) {
+    @media (max-width: 849.98px) {
         .site-header .container-fluid {
             padding-left: 6px;
             padding-right: 6px;
@@ -611,6 +768,14 @@
         .site-header.site-header-space-home {
             background: linear-gradient(90deg, #176a4a 0%, #1f7a52 100%) !important;
             border-bottom: 0;
+        }
+
+        .site-header.site-header-mobile-logged {
+            --aha-logo-available-width: calc(100% - 188px);
+        }
+
+        .site-header.site-header-mobile-guest {
+            --aha-logo-available-width: calc(100% - 148px);
         }
 
         .site-header.site-header-space-home .home-top-circle-btn {
@@ -624,7 +789,7 @@
             left: 50%;
             top: 50%;
             transform: translate(-50%, -50%);
-            width: auto;
+            width: var(--aha-mobile-logo-width);
             height: var(--aha-topbar-height);
             min-width: 0;
             min-height: var(--aha-topbar-height);
@@ -632,7 +797,7 @@
             padding: 0;
             align-items: center;
             justify-content: center;
-            max-width: calc(100vw - 148px);
+            max-width: none;
         }
 
         .site-header .mobile-hide-ct {
@@ -676,6 +841,29 @@
             display: inline-flex !important;
         }
 
+        .site-header .d-lg-none .mobile-icon-bell {
+            width: 32px;
+            min-width: 32px;
+            height: 32px;
+            min-height: 32px;
+            padding: 0;
+            border: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+        }
+
+        .site-header .d-lg-none .mobile-icon-bell:hover,
+        .site-header .d-lg-none .mobile-icon-bell:focus {
+            background: transparent !important;
+            border-color: transparent !important;
+            transform: none;
+        }
+
+        .site-header .d-lg-none .mobile-icon-bell .ti {
+            font-size: 24px;
+            color: #111111 !important;
+        }
+
         .site-header .d-lg-none .mobile-icon-bell,
         .site-header .d-lg-none .mobile-icon-cart,
         .site-header .d-lg-none .mobile-icon-heart,
@@ -683,10 +871,35 @@
             order: initial;
         }
 
+        .site-header .d-lg-none .mobile-icon-account {
+            padding: 5px !important;
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .site-header .d-lg-none .mobile-icon-account.p-0 {
+            padding: 5px !important;
+        }
+
+        .site-header .d-lg-none .mobile-icon-account .mobile-account-avatar {
+            display: block;
+            width: 36px;
+            height: 36px;
+            min-width: 36px;
+            min-height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            object-position: center;
+            background-color: #eff6ff;
+            border: 1px solid #dbeafe;
+            box-shadow: none;
+        }
+
         .site-header .brand-center-mobile img {
             height: var(--aha-topbar-height) !important;
             width: auto !important;
-            max-width: calc(100vw - 148px);
+            max-width: var(--aha-logo-available-width);
             object-fit: contain;
             background: transparent !important;
         }
@@ -757,19 +970,30 @@
         max-height: var(--aha-topbar-height) !important;
     }
 
-    @media (max-width: 991.98px) {
+    @media (max-width: 849.98px) {
         .site-header .brand-center-logo-link .brand-center-logo-img {
-            height: var(--aha-topbar-height) !important;
-            width: auto !important;
-            max-width: min(220px, var(--aha-logo-available-width));
+            width: var(--aha-mobile-logo-width) !important;
+            height: var(--aha-mobile-logo-height) !important;
+            max-width: var(--aha-mobile-logo-width) !important;
+            max-height: var(--aha-mobile-logo-height) !important;
+            object-fit: contain;
+        }
+
+        .site-header .brand-center-logo-link .brand-center-logo-img.logo-fit-by-width {
+            width: var(--aha-mobile-logo-width) !important;
+            height: var(--aha-mobile-logo-height) !important;
+            max-width: var(--aha-mobile-logo-width) !important;
+            max-height: var(--aha-mobile-logo-height) !important;
         }
     }
 
-    @media (max-width: 575.98px) {
+    @media (max-width: 849.98px) {
         .site-header .brand-center-logo-link .brand-center-logo-img {
-            height: var(--aha-topbar-height) !important;
-            width: auto !important;
-            max-width: min(200px, var(--aha-logo-available-width));
+            width: var(--aha-mobile-logo-width) !important;
+            height: var(--aha-mobile-logo-height) !important;
+            max-width: var(--aha-mobile-logo-width) !important;
+            max-height: var(--aha-mobile-logo-height) !important;
+            object-fit: contain;
         }
     }
 
@@ -1009,6 +1233,8 @@
         background: #0f172a;
         color: #ffffff !important;
         border: 1px solid rgba(255,255,255,0.18);
+        opacity: 1;
+        text-shadow: none;
     }
 
     .site-header .mobile-auth-link.signup {
@@ -1017,7 +1243,85 @@
         border: 1px solid rgba(255,255,255,0.2);
     }
 
-    @media (max-width: 991.98px) {
+    .site-header .guest-account-label {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        padding: 0 12px;
+        color: #102a43;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1;
+        white-space: nowrap;
+        text-align: center;
+    }
+
+    .site-header .desktop-account-btn.guest-account-trigger,
+    .site-header .mobile-icon-account.guest-account-trigger {
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .site-header .mobile-icon-account.guest-account-trigger {
+        width: auto;
+        min-width: 86px;
+        padding: 0 12px;
+        background: rgba(255, 255, 255, 0.96) !important;
+        border: 1px solid rgba(15, 23, 42, .08) !important;
+        box-shadow: 0 10px 22px rgba(15, 23, 42, .14) !important;
+        border-radius: 999px;
+    }
+
+    .mobile-floating-cart {
+        position: fixed;
+        left: 14px;
+        bottom: calc(16px + env(safe-area-inset-bottom));
+        z-index: 1085;
+        display: none;
+    }
+
+    .mobile-floating-cart .floating-cart-btn {
+        width: 58px;
+        height: 58px;
+        min-width: 58px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #ffffff;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        box-shadow: 0 16px 34px rgba(15, 23, 42, 0.18);
+        color: #176a4a;
+        text-decoration: none;
+    }
+
+    .mobile-floating-cart .floating-cart-btn .ti {
+        font-size: 24px;
+        line-height: 1;
+    }
+
+    .mobile-floating-cart .floating-cart-badge {
+        min-width: 20px;
+        height: 20px;
+        line-height: 20px;
+        padding: 0 5px;
+        font-size: 11px;
+        background: #fff3cd;
+        color: #856404;
+        box-shadow: 0 6px 14px rgba(15, 23, 42, 0.15);
+    }
+
+    @media (max-width: 849.98px) {
+        .mobile-floating-cart {
+            display: block;
+        }
+    }
+
+    @media (max-width: 849.98px) {
         .site-header .container-fluid {
             min-height: 56px;
         }
@@ -1026,8 +1330,85 @@
             display: none !important;
         }
     }
+
+    /* Final lock for 2-mode rule:
+       mobile < 850, desktop >= 850 (tablet belongs to desktop). */
+    @media (min-width: 850px) {
+        .site-header .mobile-menu-btn,
+        .site-header .mobile-left-icons,
+        .site-header .mobile-right-account,
+        .site-header .brand-center-mobile,
+        .site-header #homeMobileSearchHost,
+        .mobile-floating-cart {
+            display: none !important;
+        }
+
+        .site-header .collapse.navbar-collapse.d-none.d-lg-flex,
+        .site-header #navbar-menu,
+        .site-header .header-left-nav,
+        .site-header .header-right-nav,
+        .site-header .brand-center-desktop {
+            display: flex !important;
+        }
+
+        .site-header .header-left-nav .nav-item-menu-trigger,
+        .site-header .header-left-nav .nav-item-bds-chip {
+            display: inline-flex !important;
+            align-items: center;
+        }
+    }
+
+    html.aha-force-desktop .site-header .mobile-menu-btn,
+    html.aha-force-desktop .site-header .mobile-left-icons,
+    html.aha-force-desktop .site-header .mobile-right-account,
+    html.aha-force-desktop .site-header .brand-center-mobile,
+    html.aha-force-desktop .site-header #homeMobileSearchHost,
+    html.aha-force-desktop .mobile-floating-cart {
+        display: none !important;
+    }
+
+    html.aha-force-desktop .site-header .collapse.navbar-collapse.d-none.d-lg-flex {
+        display: flex !important;
+    }
+
+    html.aha-force-desktop .site-header.navbar,
+    html.aha-force-desktop .site-header .container-fluid {
+        flex-wrap: nowrap !important;
+    }
+
+    html.aha-force-desktop .site-header #navbar-menu {
+        width: 100%;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        align-items: center;
+        column-gap: 16px;
+    }
+
+    html.aha-force-desktop .site-header .header-left-nav {
+        justify-self: start;
+    }
+
+    html.aha-force-desktop .site-header .header-right-nav {
+        justify-self: end;
+    }
+
+    html.aha-force-desktop .site-header .brand-center-desktop,
+    html.aha-force-desktop .site-header .desktop-menu-btn {
+        display: inline-flex !important;
+    }
+
+    html.aha-force-desktop .site-header .header-left-nav .nav-item-menu-trigger,
+    html.aha-force-desktop .site-header .header-left-nav .nav-item-bds-chip {
+        display: inline-flex !important;
+        align-items: center;
+    }
+
+    html.aha-bds-chip-below-topbar .site-header .nav-item-bds-chip,
+    html.aha-bds-chip-below-topbar .site-header .header-bds-link {
+        display: none !important;
+    }
 </style>
-<header class="navbar navbar-expand-lg fixed-top d-print-none site-header <%= ResolveHeaderSpaceCssClass() %>"
+<header class="navbar navbar-expand-lg fixed-top d-print-none site-header <%= ResolveHeaderCssClassTokens() %>"
     style="<%= ResolveHeaderInlineStyle() %>">
     <div class="container-fluid position-relative">
 
@@ -1040,7 +1421,9 @@
 
         <div class="d-lg-none mobile-left-icons">
             <asp:PlaceHolder ID="phModeBadgeMobile" runat="server" Visible="false">
+                <% if (!HideMobileSpaceBadge()) { %>
                 <asp:Label ID="lb_mode_badge_mobile" runat="server" CssClass="mode-badge mode-mobile mode-home"></asp:Label>
+                <% } %>
             </asp:PlaceHolder>
         </div>
 
@@ -1048,17 +1431,24 @@
 
         <!-- BRAND MOBILE -->
         <a class="navbar-brand fw-bold d-flex align-items-center brand-center-mobile d-lg-none brand-center-logo-link"
-            href="<%= ((ViewState["portal_scope"] ?? "").ToString() == PortalScope_cl.ScopeShop) ? "/shop/default.aspx" : "/" %>">
+            href="<%= ResolveHeaderCenterLogoTargetUrl() %>">
             <img src="<%= ResolveHeaderCenterLogoUrl() %>" class="brand-center-logo-img" alt="AhaSale" />
         </a>
 
         <!-- DESKTOP NAV -->
         <div class="collapse navbar-collapse d-none d-lg-flex" id="navbar-menu">
             <ul class="navbar-nav align-items-lg-center gap-lg-2 header-left-nav">
-                <li class="nav-item d-none d-lg-flex align-items-center">
-                    <uc1:SpaceLauncher runat="server" ID="spaceLauncher" ButtonCssClass="home-top-circle-btn topbar-space-toggle" />
+                <li class="nav-item d-none d-lg-flex align-items-center nav-item-menu-trigger">
+                    <button class="btn btn-icon home-top-circle-btn bg-white desktop-menu-btn" type="button"
+                        data-bs-toggle="offcanvas" data-bs-target="#mobileMenu"
+                        aria-controls="mobileMenu" aria-label="Menu">
+                        <i class="ti ti-menu-2"></i>
+                    </button>
                 </li>
-                <asp:PlaceHolder ID="phDesktopSpaceBadge" runat="server" Visible="true">
+                <li class="nav-item d-none d-lg-flex align-items-center nav-item-bds-chip">
+                    <a href="/bat-dong-san" class="header-bds-link" title="Bất động sản">Bất động sản</a>
+                </li>
+                <asp:PlaceHolder ID="phDesktopSpaceBadge" runat="server" Visible="false">
                     <li class="nav-item">
                         <asp:Label ID="lb_desktop_space_badge" runat="server" CssClass="mode-badge mode-home"></asp:Label>
                     </li>
@@ -1069,7 +1459,7 @@
             </ul>
 
             <a class="brand-center-desktop brand-center-logo-link"
-                href="<%= ((ViewState["portal_scope"] ?? "").ToString() == PortalScope_cl.ScopeShop) ? "/shop/default.aspx" : "/" %>">
+                href="<%= ResolveHeaderCenterLogoTargetUrl() %>">
                 <img src="<%= ResolveHeaderCenterLogoUrl() %>" class="brand-center-logo-img" alt="AhaSale" />
             </a>
 
@@ -1117,7 +1507,7 @@
                             <div class="nav-item position-relative">
                                 <asp:LinkButton ID="but_show_form_thongbao"
                                     runat="server"
-                                    CssClass="home-top-circle-btn position-relative"
+                                    CssClass="home-top-circle-btn position-relative desktop-icon-bell"
                                     OnClick="but_show_form_thongbao_Click"
                                     OnClientClick="showNotif();">
                                     <i class="ti ti-bell"></i>
@@ -1140,7 +1530,7 @@
                             <div class="nav-item position-relative">
                                 <asp:LinkButton ID="but_show_form_thongbao_shop"
                                     runat="server"
-                                    CssClass="home-top-circle-btn position-relative"
+                                    CssClass="home-top-circle-btn position-relative desktop-icon-bell"
                                     OnClick="but_show_form_thongbao_Click"
                                     OnClientClick="showNotif();">
                                     <i class="ti ti-bell"></i>
@@ -1157,63 +1547,35 @@
                         </ContentTemplate>
                     </asp:UpdatePanel>
                 </asp:PlaceHolder>
-                <asp:PlaceHolder ID="PlaceHolder1" runat="server">
+                <asp:PlaceHolder ID="PlaceHolder1" runat="server" Visible="false">
                     <% if (!PortalRequest_cl.IsShopPortalRequest() && string.IsNullOrEmpty(PortalRequest_cl.GetCurrentAccountEncrypted())) { %>
-                    <a href="/dang-nhap" class="topbar-auth-btn topbar-auth-login">Đăng nhập</a>
-                    <a href="/home/dangky.aspx"
-                        class="topbar-auth-btn topbar-auth-signup">Đăng ký
-                    </a>
+                    <span class="desktop-auth-entry"></span>
                     <% } %>
                 </asp:PlaceHolder>
 
                 <!-- USER DROPDOWN -->
                 <asp:PlaceHolder ID="phTopDesktopAccount" runat="server" Visible="true">
-                    <% if (!string.IsNullOrEmpty(PortalRequest_cl.GetCurrentAccountEncrypted())) { %>
-                    <div class="nav-item aha-account">
-                        <a id="userMenuToggle" href="#" class="home-account-toggle"
-                            aria-expanded="false">
-                            <span class="home-account-avatar" style="background-image: url('<%= ViewState["anhdaidien"] %>')"></span>
-                            <span class="home-account-name"><%: ResolveTopAccountLabel() %></span>
-                            <i class="ti ti-chevron-down home-account-caret"></i>
-                        </a>
-
-                        <div class="account-dropdown account-menu-host"
-                            id="accountMenuHostDesktop"
-                            style="width: 360px; border-radius: 16px;">
-                        </div>
-                    </div>
-                    <% } %>
+                    <button type="button"
+                        class="btn home-account-toggle desktop-account-btn position-relative <%= IsHeaderLoggedIn() ? "logged-in" : "guest-account-trigger" %>"
+                        data-bs-toggle="offcanvas"
+                        data-bs-target="#accountMenuCanvas"
+                        aria-controls="accountMenuCanvas"
+                        aria-label="Tài khoản">
+                        <span class="guest-account-label">Tài khoản</span>
+                    </button>
                 </asp:PlaceHolder>
             </div>
         </div>
 
         <!-- MOBILE RIGHT: account only -->
         <div class="d-lg-none mobile-right-account">
-            <asp:PlaceHolder ID="phTopMobileGuestAuth" runat="server" Visible="false">
-                <a href="/dang-nhap" class="mobile-auth-link login">Đăng nhập</a>
-                <a href="/home/dangky.aspx" class="mobile-auth-link signup">Đăng ký</a>
-            </asp:PlaceHolder>
+            <asp:PlaceHolder ID="phTopMobileGuestAuth" runat="server" Visible="false"></asp:PlaceHolder>
             <asp:PlaceHolder ID="phTopMobileFavorite" runat="server" Visible="true">
                 <a href="/home/quan-ly-tin/tin-da-luu.aspx"
                     class="btn btn-icon home-top-circle-btn bg-white mobile-icon-heart"
                     title="Tin đã lưu">
                     <i class="ti ti-heart text-success"></i>
                 </a>
-            </asp:PlaceHolder>
-            <asp:PlaceHolder ID="phTopMobileHomeUtilities" runat="server" Visible="true">
-                <asp:UpdatePanel ID="UpdatePanel8" runat="server" UpdateMode="Conditional">
-                    <ContentTemplate>
-                        <a class="btn btn-icon home-top-circle-btn bg-white position-relative mobile-icon-cart"
-                            href="/home/gio-hang.aspx"
-                            title="Giỏ hàng">
-                            <i class="ti ti-shopping-cart text-success"></i>
-                            <span id="badgeGioHangMobile" runat="server" class="position-absolute top-0 start-100 translate-middle badge rounded-pill"
-                                style="background: #FFF3CD; color: #856404; font-size: 11px; min-width: 18px; height: 18px; line-height: 18px; padding: 0 4px;">
-                                <asp:Label ID="lb_sl_giohang_mobile" runat="server" Text="0"></asp:Label>
-                            </span>
-                        </a>
-                    </ContentTemplate>
-                </asp:UpdatePanel>
             </asp:PlaceHolder>
             <asp:PlaceHolder ID="phTopNotificationMobile" runat="server" Visible="true">
                 <asp:UpdatePanel ID="UpdatePanel7" runat="server" UpdateMode="Conditional">
@@ -1231,7 +1593,7 @@
                     </ContentTemplate>
                 </asp:UpdatePanel>
             </asp:PlaceHolder>
-            <% if (ShowHeaderQuickActions()) { %>
+            <% if (ShowHeaderQuickActions() && !HideMobileQuickActionButton()) { %>
             <button type="button"
                 class="btn btn-icon home-top-circle-btn bg-white mobile-icon-quick"
                 data-bs-toggle="offcanvas"
@@ -1243,14 +1605,17 @@
             <% } %>
             <asp:PlaceHolder ID="phTopMobileAccount" runat="server" Visible="true">
                 <button type="button"
-                    class="btn btn-icon home-top-circle-btn bg-white position-relative p-0 mobile-icon-account"
+                    class="btn btn-icon home-top-circle-btn bg-white position-relative mobile-icon-account <%= IsHeaderLoggedIn() ? "p-0" : "guest-account-trigger" %>"
                     data-bs-toggle="offcanvas"
                     data-bs-target="#accountMenuCanvas"
                     aria-controls="accountMenuCanvas"
                     aria-label="Tài khoản"
                     style="overflow: hidden;">
-                    <span class="d-block w-100 h-100"
-                        style="background-image: url('<%= ViewState["anhdaidien"] %>'); background-size: cover; background-position: center; border-radius: 50%;"></span>
+                    <% if (IsHeaderLoggedIn()) { %>
+                    <img src="<%= ResolveHeaderAvatarUrl() %>" alt="" class="mobile-account-avatar" />
+                    <% } else { %>
+                    <span class="guest-account-label">Tài khoản</span>
+                    <% } %>
                 </button>
             </asp:PlaceHolder>
         </div>
@@ -1258,8 +1623,25 @@
     </div>
 </header>
 
+<asp:PlaceHolder ID="phTopMobileHomeUtilities" runat="server" Visible="true">
+    <div class="mobile-floating-cart d-lg-none">
+        <asp:UpdatePanel ID="UpdatePanel8" runat="server" UpdateMode="Conditional">
+            <ContentTemplate>
+                <a class="floating-cart-btn position-relative"
+                    href="/home/gio-hang.aspx"
+                    title="Giỏ hàng">
+                    <i class="ti ti-shopping-cart"></i>
+                    <span id="badgeGioHangMobile" runat="server" class="position-absolute top-0 start-100 translate-middle badge rounded-pill floating-cart-badge">
+                        <asp:Label ID="lb_sl_giohang_mobile" runat="server" Text="0"></asp:Label>
+                    </span>
+                </a>
+            </ContentTemplate>
+        </asp:UpdatePanel>
+    </div>
+</asp:PlaceHolder>
+
 <!-- MOBILE MAIN MENU OFFCANVAS -->
-<div class="offcanvas offcanvas-start" tabindex="-1" id="mobileMenu" aria-labelledby="mobileMenuLabel">
+<div class="offcanvas offcanvas-start" tabindex="-1" id="mobileMenu" aria-labelledby="mobileMenuLabel" data-bs-scroll="true" data-bs-backdrop="false">
     <div class="offcanvas-header">
         <h5 class="offcanvas-title fw-bold" id="mobileMenuLabel">Menu</h5>
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
@@ -1268,12 +1650,25 @@
     <div class="offcanvas-body">
         <asp:PlaceHolder ID="phHomeSpaceAccessSummaryMobile" runat="server" Visible="false">
             <div class="home-space-access-card <%= ResolveHeaderSpaceCssClass() %> mt-1 mb-3">
-                <div class="home-space-access-title">Không gian hoạt động:</div>
+                <div class="home-space-access-title">Đây là lối tắt truy cập các không gian tại Aha Sale</div>
                 <div class="home-space-access-list">
                     <asp:Literal ID="litHomeSpaceAccessSummaryMobile" runat="server" />
                 </div>
             </div>
         </asp:PlaceHolder>
+
+        <div class="home-space-access-card site-header-space-home mt-1 mb-3">
+            <div class="home-space-access-title">Lối tắt giao diện app</div>
+            <div class="home-space-access-list">
+                <a class="home-space-access-link" href="/app-ui/default.aspx">
+                    <span class="home-space-access-copy">
+                        <strong>Truy cập Giao diện App</strong>
+                        <span>/app-ui</span>
+                    </span>
+                    <i class="ti ti-chevron-right text-secondary"></i>
+                </a>
+            </div>
+        </div>
 
         <div class="list-group list-group-flush">
             <%= show_danhmuc_mobile %>
@@ -1292,19 +1687,21 @@
 
 
 <!-- MOBILE ACCOUNT OFFCANVAS -->
-<div class="offcanvas offcanvas-end" tabindex="-1" id="accountMenuCanvas" aria-labelledby="accountMenuCanvasLabel">
+<div class="offcanvas offcanvas-end" tabindex="-1" id="accountMenuCanvas" aria-labelledby="accountMenuCanvasLabel" data-bs-scroll="true" data-bs-backdrop="false">
     <div class="offcanvas-header">
         <h5 class="offcanvas-title fw-bold" id="accountMenuCanvasLabel">Tài khoản</h5>
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
 
     <div class="offcanvas-body p-3">
-        <div id="accountMenuHostMobile" class="account-dropdown"></div>
+        <div id="accountMenuHostMobile" class="account-dropdown">
+            <div class="p-3 text-secondary small">Đang tải tài khoản...</div>
+        </div>
     </div>
 </div>
 
 <% if (ShowHeaderQuickActions()) { %>
-<div class="offcanvas offcanvas-end" tabindex="-1" id="quickActionsCanvas" aria-labelledby="quickActionsCanvasLabel">
+<div class="offcanvas offcanvas-end" tabindex="-1" id="quickActionsCanvas" aria-labelledby="quickActionsCanvasLabel" data-bs-scroll="true" data-bs-backdrop="false">
     <div class="offcanvas-header">
         <h5 class="offcanvas-title fw-bold" id="quickActionsCanvasLabel"><%: ResolveHeaderQuickActionsTitle() %></h5>
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
@@ -1568,7 +1965,7 @@
 
                     <asp:PlaceHolder ID="phHomeSpaceAccessSummary" runat="server" Visible="false">
                         <div class="home-space-access-card <%= ResolveHeaderSpaceCssClass() %>">
-                            <div class="home-space-access-title">Không gian hoạt động:</div>
+                            <div class="home-space-access-title">Đây là lối tắt truy cập các không gian tại Aha Sale</div>
                             <div class="home-space-access-list">
                                 <asp:Literal ID="litHomeSpaceAccessSummary" runat="server" />
                             </div>
@@ -1579,7 +1976,7 @@
                         <div class="gianhang-space-menu-card">
                             <div class="gianhang-space-menu-title">Không gian gian hàng</div>
                             <div class="list-group list-group-flush bg-white">
-                                <a class='list-group-item d-flex align-items-center justify-content-between py-3 gianhang-space-link <%= ResolveGianHangMenuItemClass("trang-cong-khai") %>' href="/gianhang/">
+                                <a class='list-group-item d-flex align-items-center justify-content-between py-3 gianhang-space-link <%= ResolveGianHangMenuItemClass("trang-cong-khai") %>' href="<%= ResolveGianHangPublicUrl() %>">
                                     <div class="d-flex align-items-center gap-2">
                                         <i class="ti ti-world text-secondary"></i>
                                         <span class="fw-medium">Trang công khai</span>
@@ -1618,6 +2015,13 @@
                                     <div class="d-flex align-items-center gap-2">
                                         <i class="ti ti-chart-bar text-secondary"></i>
                                         <span class="fw-medium">Báo cáo</span>
+                                    </div>
+                                    <i class="ti ti-chevron-right text-secondary"></i>
+                                </a>
+                                <a class='list-group-item d-flex align-items-center justify-content-between py-3 gianhang-space-link <%= ResolveGianHangMenuItemClass("thong-tin-gian-hang") %>' href="/gianhang/tai-khoan/default.aspx">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="ti ti-pencil text-secondary"></i>
+                                        <span class="fw-medium">Chỉnh sửa thông tin gian hàng</span>
                                     </div>
                                     <i class="ti ti-chevron-right text-secondary"></i>
                                 </a>
@@ -2076,6 +2480,14 @@
                     <i class="ti ti-chevron-right text-secondary"></i>
                 </a>
 
+                <a class="list-group-item d-flex align-items-center justify-content-between py-3" href="/app-ui/default.aspx">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="ti ti-device-mobile text-secondary"></i>
+                        <span class="fw-medium">Giao diện App</span>
+                    </div>
+                    <i class="ti ti-chevron-right text-secondary"></i>
+                </a>
+
             </div>
         </div>
     </asp:PlaceHolder>
@@ -2094,6 +2506,16 @@
         </asp:PlaceHolder>
     </div>
 </div>
+
+<script>
+    (function primeAccountMenuHost() {
+        var host = document.getElementById('accountMenuHostMobile');
+        var tpl = document.getElementById('accountMenuContent');
+        if (!host || !tpl) return;
+        if (host.querySelector('.account-menu-shell')) return;
+        host.innerHTML = tpl.innerHTML;
+    })();
+</script>
 
 <script>
     function showNotif() {
@@ -2218,6 +2640,63 @@
 </script>
 
 <script>
+    function isElementActuallyVisible(el) {
+        if (!el) return false;
+        var st = window.getComputedStyle ? window.getComputedStyle(el) : null;
+        if (st && (st.display === 'none' || st.visibility === 'hidden' || parseFloat(st.opacity || '1') === 0)) return false;
+        return !!(el.getClientRects && el.getClientRects().length);
+    }
+
+    function syncBdsChipPlacement() {
+        var html = document.documentElement;
+        if (!html) return;
+
+        var mode = (html.getAttribute('data-aha-layout-mode') || '').toLowerCase();
+        var isMobile = mode === 'mobile';
+        var pinBelowTopbar = isMobile;
+
+        if (!isMobile) {
+            html.classList.remove('aha-bds-chip-below-topbar');
+
+            var header = document.querySelector('.site-header');
+            var menuBtn = document.querySelector('.site-header .desktop-menu-btn');
+            var chip = document.querySelector('.site-header .header-bds-link');
+
+            if (!header || !menuBtn || !chip || !isElementActuallyVisible(menuBtn) || !isElementActuallyVisible(chip)) {
+                pinBelowTopbar = true;
+            } else {
+                var menuRect = menuBtn.getBoundingClientRect();
+                var chipRect = chip.getBoundingClientRect();
+                var headerRect = header.getBoundingClientRect();
+                var viewportWidth = Math.max(window.innerWidth || 0, (document.documentElement && document.documentElement.clientWidth) || 0);
+
+                var sameRow = Math.abs(chipRect.top - menuRect.top) <= 10;
+                var rightOfMenu = chipRect.left >= (menuRect.right - 2);
+                var insideHeader = chipRect.top >= (headerRect.top - 2) && chipRect.bottom <= (headerRect.bottom + 2);
+                var fullyVisible = chipRect.left >= 0 && chipRect.right <= (viewportWidth + 1);
+
+                pinBelowTopbar = !(sameRow && rightOfMenu && insideHeader && fullyVisible);
+            }
+        }
+
+        html.classList.toggle('aha-bds-chip-below-topbar', !!pinBelowTopbar);
+    }
+
+    function syncAhaResponsiveMode() {
+        var html = document.documentElement;
+        if (!html) return;
+        var viewportWidth = Math.max(
+            window.innerWidth || 0,
+            (document.documentElement && document.documentElement.clientWidth) || 0,
+            (window.visualViewport && window.visualViewport.width) || 0
+        );
+        var isMobile = viewportWidth < 850;
+        html.classList.toggle('aha-force-desktop', !isMobile);
+        html.setAttribute('data-aha-layout-mode', isMobile ? 'mobile' : 'desktop');
+        syncBdsChipPlacement();
+    }
+    syncAhaResponsiveMode();
+
     function refreshCenterLogoLayout() {
         var header = document.querySelector('.site-header');
         if (!header) return;
@@ -2228,6 +2707,7 @@
         if (!logos || logos.length === 0) return;
 
         var viewportWidth = Math.max(document.documentElement ? document.documentElement.clientWidth : 0, window.innerWidth || 0);
+        var isMobileViewport = viewportWidth < 850;
         var leftWidth = left ? Math.ceil(left.getBoundingClientRect().width) : 0;
         var rightWidth = right ? Math.ceil(right.getBoundingClientRect().width) : 0;
         var sideMax = Math.max(leftWidth, rightWidth);
@@ -2240,6 +2720,7 @@
             if (!logo) continue;
 
             logo.classList.remove('logo-fit-by-width');
+            if (isMobileViewport) continue;
             var naturalWidth = parseFloat(logo.naturalWidth || 0);
             var naturalHeight = parseFloat(logo.naturalHeight || 0);
             if (naturalWidth <= 0 || naturalHeight <= 0) continue;
@@ -2252,6 +2733,24 @@
     }
 
     function syncCenterLogoFromHead() {
+        var logos = document.querySelectorAll('.brand-center-logo-img');
+        if (!logos || logos.length === 0) return;
+
+        var needsSync = false;
+        for (var j = 0; j < logos.length; j++) {
+            if (!logos[j]) continue;
+            var currentSrc = (logos[j].getAttribute('src') || '').trim();
+            if (!currentSrc) {
+                needsSync = true;
+                break;
+            }
+        }
+
+        if (!needsSync) {
+            refreshCenterLogoLayout();
+            return;
+        }
+
         var iconUrl = "";
         var apple = document.querySelector("link[rel='apple-touch-icon'][sizes='180x180']")
             || document.querySelector("link[rel='apple-touch-icon']");
@@ -2262,8 +2761,6 @@
         }
         if (!iconUrl) return;
 
-        var logos = document.querySelectorAll('.brand-center-logo-img');
-        if (!logos || logos.length === 0) return;
         for (var i = 0; i < logos.length; i++) {
             if (!logos[i]) continue;
             logos[i].setAttribute('src', iconUrl);
@@ -2299,8 +2796,15 @@
     function syncAccountMenuToMobile() {
         var hostDesktop = document.getElementById('accountMenuHostDesktop');
         var hostMobile = document.getElementById('accountMenuHostMobile');
-        if (!hostDesktop || !hostMobile) return;
-        var clone = cloneAccountNode(hostDesktop);
+        var tpl = document.getElementById('accountMenuContent');
+        if (!hostMobile) return;
+        if (hostMobile.querySelector('.account-menu-shell')) return;
+        var source = hostDesktop;
+        if (!source || !source.children || source.children.length === 0) {
+            if (!tpl) return;
+            source = tpl;
+        }
+        var clone = cloneAccountNode(source);
         if (!clone) return;
         hostMobile.innerHTML = clone.innerHTML;
     }
@@ -2389,26 +2893,61 @@
         });
     }
 
+    function normalizeGuestAvatarButtons() {
+        var nodes = document.querySelectorAll(
+            '.site-header .guest-account-trigger img, .site-header .mobile-icon-account img[alt="Khách"], .site-header .desktop-account-btn img[alt="Khách"]'
+        );
+        if (!nodes || !nodes.length) return;
+
+        nodes.forEach(function (img) {
+            if (!img) return;
+            var parent = img.parentElement;
+            if (!parent) return;
+            if (parent.querySelector('.guest-avatar-fallback')) {
+                img.remove();
+                return;
+            }
+
+            var fallback = document.createElement('span');
+            fallback.className = 'guest-avatar-fallback';
+            fallback.setAttribute('aria-hidden', 'true');
+            fallback.innerHTML = '<i class="ti ti-user"></i>';
+            img.replaceWith(fallback);
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
+        syncAhaResponsiveMode();
         syncCenterLogoFromHead();
         refreshCenterLogoLayout();
+        normalizeGuestAvatarButtons();
         mountAccountMenuOnce();
+        syncAccountMenuToMobile();
         setupAccountDropdown();
         setupQuickDropdown();
     });
 
     window.addEventListener('load', function () {
+        syncAhaResponsiveMode();
         syncCenterLogoFromHead();
+        refreshCenterLogoLayout();
+        normalizeGuestAvatarButtons();
+        syncAccountMenuToMobile();
+    });
+
+    window.addEventListener('resize', function () {
+        syncAhaResponsiveMode();
         refreshCenterLogoLayout();
     });
 
-    window.addEventListener('resize', refreshCenterLogoLayout);
-
     if (window.Sys && window.Sys.WebForms && Sys.WebForms.PageRequestManager) {
         Sys.WebForms.PageRequestManager.getInstance().add_endRequest(function () {
+            syncAhaResponsiveMode();
             syncCenterLogoFromHead();
             refreshCenterLogoLayout();
+            normalizeGuestAvatarButtons();
             mountAccountMenuOnce();
+            syncAccountMenuToMobile();
             setupAccountDropdown();
             setupQuickDropdown();
         });

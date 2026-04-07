@@ -45,7 +45,7 @@
         .gh-admin-einv__lines table{width:100%;border-collapse:collapse;}
         .gh-admin-einv__lines th,.gh-admin-einv__lines td{padding:10px 8px;border-bottom:1px solid #edf2f7;text-align:left;vertical-align:top;}
         .gh-admin-einv__empty{padding:28px 12px;text-align:center;color:#6b7280;}
-        @media (max-width:991px){.gh-admin-einv__filters{grid-template-columns:1fr;}.gh-admin-einv__split{grid-template-columns:1fr;}.gh-admin-einv__title{font-size:26px;}.gh-admin-einv__preview-grid{grid-template-columns:1fr;}}
+        @media (max-width:767px){.gh-admin-einv__filters{grid-template-columns:1fr;}.gh-admin-einv__split{grid-template-columns:1fr;}.gh-admin-einv__title{font-size:26px;}.gh-admin-einv__preview-grid{grid-template-columns:1fr;}}
     </style>
 </asp:Content>
 

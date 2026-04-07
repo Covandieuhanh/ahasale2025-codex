@@ -1,8 +1,8 @@
-﻿@import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap");
+﻿@import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap");
 
 body.admin-shell {
     --aha-sync-font-ui: "Be Vietnam Pro", "Segoe UI", Arial, sans-serif;
-    --aha-sync-font-heading: "Sora", "Be Vietnam Pro", "Segoe UI", sans-serif;
+    --aha-sync-font-heading: "Be Vietnam Pro", "Segoe UI", Arial, sans-serif;
     --aha-sync-brand-600: #148647;
     --aha-sync-brand-700: #11673a;
     --aha-sync-brand-soft: #e9f8ef;
@@ -73,6 +73,10 @@ body.admin-shell .admin-topbar .admin-topbar-title {
     min-width: 0 !important;
     padding-left: 4px !important;
     padding-right: 10px !important;
+}
+
+.admin-form-shell-wide {
+    max-width: 1200px;
 }
 
 
@@ -1466,7 +1470,7 @@ body.admin-shell #thongbao-charms .thongbao-thoigian {
     color: #6e8193;
 }
 
-@media (max-width: 991.98px) {
+@media (max-width: 767.98px) {
     body.admin-shell .admin-content-inner {
         padding: 12px 12px 22px !important;
     }
@@ -2118,6 +2122,80 @@ body.admin-shell .admin-role-home-tab-text {
 body.admin-shell .admin-role-home-tab-foot {
     display: flex;
     justify-content: flex-end;
+}
+
+body.admin-shell .admin-role-home-quick-grid,
+body.admin-shell .admin-role-home-pending-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+    margin-top: 16px;
+}
+
+body.admin-shell .admin-role-home-quick-card,
+body.admin-shell .admin-role-home-pending-card {
+    border: 1px solid #dbe7f0;
+    border-radius: 16px;
+    background: #f9fcff;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+body.admin-shell .admin-role-home-quick-card h3,
+body.admin-shell .admin-role-home-pending-card h3 {
+    margin: 0;
+    font-size: 18px;
+    line-height: 1.35;
+}
+
+body.admin-shell .admin-role-home-quick-card p,
+body.admin-shell .admin-role-home-pending-card p {
+    margin: 0;
+    color: #31546e;
+    font-size: 14px;
+    line-height: 1.6;
+    font-weight: 600;
+}
+
+body.admin-shell .admin-role-home-quick-card .button,
+body.admin-shell .admin-role-home-pending-card .button {
+    align-self: flex-start;
+}
+
+body.admin-shell .admin-role-home-pending-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+body.admin-shell .admin-role-home-pending-count {
+    display: inline-flex;
+    min-height: 30px;
+    align-items: center;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: #e9f4ff;
+    color: #215178;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+body.admin-shell .admin-role-home-pending-card-hot {
+    border-color: #f2c4cb;
+    background: #fff7f8;
+}
+
+body.admin-shell .admin-role-home-pending-card-cool {
+    border-color: #dbe7f0;
+    background: #f7fbff;
+}
+
+body.admin-shell .admin-role-home-pending-card-hot .admin-role-home-pending-count {
+    background: #ffe4e8;
+    color: #a1293f;
 }
 
 body.admin-shell .admin-role-home-root-section {

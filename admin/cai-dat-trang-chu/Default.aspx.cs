@@ -39,7 +39,7 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
 
     protected void Page_Load(object sender, EventArgs e)
     {
-        AdminRolePolicy_cl.RequireSuperAdmin();
+        AdminAccessGuard_cl.RequireFeatureAccess("home_config", "/admin/default.aspx?mspace=content");
         if (!EnsureRootAdminAccess())
             return;
 
@@ -144,7 +144,7 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("home_config", "/admin/default.aspx?mspace=content");
             TextBox1.Text = "";
             Label1.Text = "";
             Button11.Visible = false;
@@ -165,7 +165,7 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("home_config", "/admin/default.aspx?mspace=content");
             using (dbDataContext db = new dbDataContext())
             {
                 var q = db.CaiDatChung_tbs.Where(p => p.phanloai_trang == "home".ToString()).FirstOrDefault();
@@ -279,7 +279,7 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("home_config", "/admin/default.aspx?mspace=content");
             using (dbDataContext db = new dbDataContext())
             {
                 string _check_baotri = DropDownList1.SelectedValue.ToString();
@@ -313,7 +313,7 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("home_config", "/admin/default.aspx?mspace=content");
             string _check_baotri = DropDownList1.SelectedValue.ToString();
             if (_check_baotri == "0")//k bảo trì
             {
@@ -441,7 +441,7 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("home_config", "/admin/default.aspx?mspace=content");
             using (dbDataContext db = new dbDataContext())
             {
                 var q = db.CaiDatChung_tbs.Where(p => p.phanloai_trang == "home".ToString()).FirstOrDefault();
@@ -532,7 +532,7 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("home_config", "/admin/default.aspx?mspace=content");
             using (dbDataContext db = new dbDataContext())
             {
                 var q = db.CaiDatChung_tbs.Where(p => p.phanloai_trang == "home".ToString()).FirstOrDefault();
@@ -738,6 +738,12 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
                 p.thongtin_apple_touch_icon
             }).FirstOrDefault();
             ApplyIconPreview(qAdmin != null ? qAdmin.thongtin_apple_touch_icon : "", txt_link_upload_admin, Label5, Button55);
+
+            var qBatDongSan = db.CaiDatChung_tbs.Where(p => p.phanloai_trang == "batdongsan").Select(p => new
+            {
+                p.thongtin_apple_touch_icon
+            }).FirstOrDefault();
+            ApplyIconPreview(qBatDongSan != null ? qBatDongSan.thongtin_apple_touch_icon : "", txt_link_upload_batdongsan, Label6, Button66);
         }
         catch (Exception _ex)
         {
@@ -756,7 +762,7 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("home_config", "/admin/default.aspx?mspace=content");
             txt_link_upload_2.Text = "";
             Label2.Text = "";
             Button22.Visible = false;
@@ -777,7 +783,7 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("home_config", "/admin/default.aspx?mspace=content");
             txt_link_upload_3.Text = "";
             Label3.Text = "";
             Button33.Visible = false;
@@ -798,7 +804,7 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("home_config", "/admin/default.aspx?mspace=content");
             txt_link_upload_shop.Text = "";
             Label4.Text = "";
             Button44.Visible = false;
@@ -819,10 +825,31 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("home_config", "/admin/default.aspx?mspace=content");
             txt_link_upload_admin.Text = "";
             Label5.Text = "";
             Button55.Visible = false;
+        }
+        catch (Exception _ex)
+        {
+            string _tk = Session["taikhoan"] as string;
+            if (!string.IsNullOrEmpty(_tk))
+            {
+                _tk = mahoa_cl.giaima_Bcorn(_tk);
+            }
+            else
+                _tk = "";
+            Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
+        }
+    }
+    protected void Button66_Click(object sender, EventArgs e)
+    {
+        try
+        {
+            AdminAccessGuard_cl.RequireFeatureAccess("home_config", "/admin/default.aspx?mspace=content");
+            txt_link_upload_batdongsan.Text = "";
+            Label6.Text = "";
+            Button66.Visible = false;
         }
         catch (Exception _ex)
         {
@@ -840,12 +867,13 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
     {
         try
         {
-            AdminRolePolicy_cl.RequireSuperAdmin();
+            AdminAccessGuard_cl.RequireFeatureAccess("home_config", "/admin/default.aspx?mspace=content");
             using (dbDataContext db = new dbDataContext())
             {
                 var qHome = GetOrCreateSetting(db, "home");
                 var qShop = GetOrCreateSetting(db, "shop");
                 var qAdmin = GetOrCreateSetting(db, "admin");
+                var qBatDongSan = GetOrCreateSetting(db, "batdongsan");
 
                 if (qHome != null)
                 {
@@ -876,6 +904,10 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
                     string _img_iconmobile_admin_old = qAdmin.thongtin_apple_touch_icon;
                     qAdmin.thongtin_apple_touch_icon = _img_iconmobile_admin;
 
+                    string _img_iconmobile_batdongsan = NormalizeIconShortcutValue(txt_link_upload_batdongsan.Text);
+                    string _img_iconmobile_batdongsan_old = qBatDongSan.thongtin_apple_touch_icon;
+                    qBatDongSan.thongtin_apple_touch_icon = _img_iconmobile_batdongsan;
+
                     db.SubmitChanges();
 
                     if (_img_iconmobile_home != _img_iconmobile_home_old)
@@ -884,10 +916,13 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
                         TryDeleteOldUploadedFile(_img_iconmobile_shop_old);
                     if (_img_iconmobile_admin != _img_iconmobile_admin_old)
                         TryDeleteOldUploadedFile(_img_iconmobile_admin_old);
+                    if (_img_iconmobile_batdongsan != _img_iconmobile_batdongsan_old)
+                        TryDeleteOldUploadedFile(_img_iconmobile_batdongsan_old);
 
                     load_anh_icon_mobile(_img_iconmobile_home, "");
                     ApplyIconPreview(_img_iconmobile_shop, txt_link_upload_shop, Label4, Button44);
                     ApplyIconPreview(_img_iconmobile_admin, txt_link_upload_admin, Label5, Button55);
+                    ApplyIconPreview(_img_iconmobile_batdongsan, txt_link_upload_batdongsan, Label6, Button66);
                 }
                 ScriptManager.RegisterStartupScript(this.Page, this.GetType(), Guid.NewGuid().ToString(), thongbao_class.metro_notifi("Thông báo", "Cập nhật thành công.", "1000", "warning"), true);
             }
@@ -902,6 +937,12 @@ public partial class admin_cai_dat_trang_chu_Default : System.Web.UI.Page
             else
                 _tk = "";
             Log_cl.Add_Log(_ex.Message, _tk, _ex.StackTrace);
+            ScriptManager.RegisterStartupScript(
+                this.Page,
+                this.GetType(),
+                Guid.NewGuid().ToString(),
+                thongbao_class.metro_notifi("Thông báo", "Không thể cập nhật logo. Vui lòng thử lại hoặc kiểm tra log hệ thống.", "2600", "danger"),
+                true);
         }
     }
     #endregion

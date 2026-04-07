@@ -1,4 +1,6 @@
 using System;
+using System.Globalization;
+using System.Text;
 
 public static class DonHangStateMachine_cl
 {
@@ -13,33 +15,71 @@ public static class DonHangStateMachine_cl
 
     public static string NormalizeOrderStatus(string value)
     {
-        if (value == Order_DaGiao) return Order_DaGiao;
-        if (value == Order_DaNhan) return Order_DaNhan;
-        if (value == Order_DaHuy) return Order_DaHuy;
+        string token = CanonicalizeStatusToken(value);
+        if (token == "da-giao" || token == "dagiao") return Order_DaGiao;
+        if (token == "da-nhan" || token == "danhan") return Order_DaNhan;
+        if (token == "da-huy" || token == "dahuy") return Order_DaHuy;
         return Order_DaDat;
     }
 
     public static string NormalizeExchangeStatus(string value)
     {
-        if (value == Exchange_ChoTraoDoi) return Exchange_ChoTraoDoi;
-        if (value == Exchange_DaTraoDoi) return Exchange_DaTraoDoi;
+        string token = CanonicalizeStatusToken(value);
+        if (token == "cho-trao-doi" || token == "chotraodoi") return Exchange_ChoTraoDoi;
+        if (token == "da-trao-doi" || token == "datraodoi") return Exchange_DaTraoDoi;
         return Exchange_ChuaTraoDoi;
     }
 
     public static string InferOrderStatusFromLegacy(string legacyStatus)
     {
-        if (legacyStatus == Order_DaGiao) return Order_DaGiao;
-        if (legacyStatus == Order_DaNhan) return Order_DaNhan;
-        if (legacyStatus == Order_DaHuy) return Order_DaHuy;
+        string normalized = NormalizeOrderStatus(legacyStatus);
+        if (normalized == Order_DaGiao) return Order_DaGiao;
+        if (normalized == Order_DaNhan) return Order_DaNhan;
+        if (normalized == Order_DaHuy) return Order_DaHuy;
         return Order_DaDat;
     }
 
     public static string InferExchangeStatusFromLegacy(string legacyStatus)
     {
-        if (legacyStatus == Exchange_ChoTraoDoi) return Exchange_ChoTraoDoi;
-        if (legacyStatus == Exchange_DaTraoDoi) return Exchange_DaTraoDoi;
-        if (legacyStatus == Order_DaNhan) return Exchange_DaTraoDoi;
+        string normalizedExchange = NormalizeExchangeStatus(legacyStatus);
+        if (normalizedExchange == Exchange_ChoTraoDoi) return Exchange_ChoTraoDoi;
+        if (normalizedExchange == Exchange_DaTraoDoi) return Exchange_DaTraoDoi;
+        if (NormalizeOrderStatus(legacyStatus) == Order_DaNhan) return Exchange_DaTraoDoi;
         return Exchange_ChuaTraoDoi;
+    }
+
+    private static string CanonicalizeStatusToken(string value)
+    {
+        string raw = (value ?? string.Empty).Trim();
+        if (raw == string.Empty)
+            return string.Empty;
+
+        string lowered = RemoveDiacritics(raw).ToLowerInvariant();
+        lowered = lowered.Replace('_', '-').Replace(' ', '-');
+        while (lowered.Contains("--"))
+            lowered = lowered.Replace("--", "-");
+        return lowered.Trim('-');
+    }
+
+    private static string RemoveDiacritics(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return string.Empty;
+
+        string normalized = input.Normalize(NormalizationForm.FormD);
+        StringBuilder sb = new StringBuilder(normalized.Length);
+        for (int i = 0; i < normalized.Length; i++)
+        {
+            char c = normalized[i];
+            UnicodeCategory category = CharUnicodeInfo.GetUnicodeCategory(c);
+            if (category != UnicodeCategory.NonSpacingMark)
+                sb.Append(c);
+        }
+
+        return sb.ToString()
+            .Normalize(NormalizationForm.FormC)
+            .Replace('đ', 'd')
+            .Replace('Đ', 'D');
     }
 
     public static string GetOrderStatus(DonHang_tb donHang)

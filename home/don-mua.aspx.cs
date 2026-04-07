@@ -278,7 +278,7 @@ public partial class home_don_mua : System.Web.UI.Page
 
     public void set_dulieu_macdinh()
     {
-        ViewState["current_page_donmua_home"] = "1";
+        ViewState["current_page_donmua_home"] = HomePager_cl.ResolvePage(Request).ToString();
         ViewState[STATUS_FILTER_KEY] = "all";
     }
 
@@ -306,7 +306,7 @@ public partial class home_don_mua : System.Web.UI.Page
         if (!string.IsNullOrEmpty(status))
         {
             ViewState[STATUS_FILTER_KEY] = status;
-            ViewState["current_page_donmua_home"] = "1";
+            ViewState["current_page_donmua_home"] = HomePager_cl.ResolvePage(Request).ToString();
         }
 
         string q = (Request.QueryString["q"] ?? "").Trim();
@@ -314,7 +314,7 @@ public partial class home_don_mua : System.Web.UI.Page
         {
             if (txt_timkiem1 != null) txt_timkiem1.Text = q;
             if (txt_timkiem != null) txt_timkiem.Text = q;
-            ViewState["current_page_donmua_home"] = "1";
+            ViewState["current_page_donmua_home"] = HomePager_cl.ResolvePage(Request).ToString();
         }
     }
 
@@ -682,10 +682,17 @@ public partial class home_don_mua : System.Web.UI.Page
             int show = 30; if (show <= 0) show = 30;
             int current_page = int.Parse(ViewState["current_page_donmua_home"].ToString());
             int total_page = number_of_page_class.return_total_page(_Tong_Record, show);
+            if (total_page < 1) total_page = 1;
             if (current_page < 1) current_page = 1;
             else if (current_page > total_page) current_page = total_page;
 
             ViewState["total_page"] = total_page;
+
+            litPager.Text = HomePager_cl.RenderPager(Request, current_page, total_page);
+            but_xemtiep.Visible = false;
+            but_xemtiep1.Visible = false;
+            but_quaylai.Visible = false;
+            but_quaylai1.Visible = false;
 
             if (current_page >= total_page)
             {

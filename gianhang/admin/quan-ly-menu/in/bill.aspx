@@ -17,7 +17,7 @@
 </head>
 <body style="margin: 0!important; padding: 0!important">
     <form id="form1" runat="server">
-        <div style="width: 58mm;  font-family: 'Times New Roman'; margin: 0 auto; /*border: 1px solid black; overflow: hidden*/" class="bg-white">
+        <div style="width: 58mm;  font-family: "Be Vietnam Pro", "Segoe UI", Arial, sans-serif; margin: 0 auto; /*border: 1px solid black; overflow: hidden*/" class="bg-white">
             <table class="table row-hover table-border cell-border <%--striped--%>  mt-2 ">
                 <tbody>
                     <tr class="text-bold">

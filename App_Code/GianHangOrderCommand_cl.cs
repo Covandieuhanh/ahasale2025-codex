@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Web;
 
 public static class GianHangOrderCommand_cl
 {
@@ -40,7 +41,7 @@ public static class GianHangOrderCommand_cl
             .ToList();
 
         if (db == null || string.IsNullOrWhiteSpace(sellerAccount))
-            return Fail("Không xác định gian hàng đối tác hiện tại.");
+            return Fail("Không xác định gian hàng hiện tại.");
 
         if (cart.Count == 0)
             return Fail("Giỏ hàng trống. Vui lòng thêm tin để tạo đơn.");
@@ -117,15 +118,20 @@ public static class GianHangOrderCommand_cl
 
         GianHangOrderRuntime_cl.OrderRuntime anotherPending = GianHangOrderRuntime_cl.ResolveAnotherWaitingExchangeForCommand(db, sellerAccount, orderId);
         string message;
+        string waitingOrderIdForRedirect;
         if (anotherPending == null)
         {
             GianHangOrderRuntime_cl.PersistWaitingExchangeOpened(db, runtime);
 
             message = "Tạo đơn trong /gianhang thành công. ID: <b>" + publicOrderId + "</b>";
+            waitingOrderIdForRedirect = string.IsNullOrWhiteSpace(runtime == null ? string.Empty : runtime.OrderId)
+                ? orderId
+                : runtime.OrderId;
         }
         else
         {
             message = "Bạn đang có 1 đơn chờ Trao đổi khác (ID: <b>" + anotherPending.OrderId + "</b>). Hệ thống giữ đơn mới nhưng sẽ chuyển sang phiên chờ Trao đổi đang hoạt động.";
+            waitingOrderIdForRedirect = anotherPending.OrderId;
         }
 
         return new CommandResult
@@ -135,7 +141,7 @@ public static class GianHangOrderCommand_cl
             AlertType = "alert",
             UseHtmlMessage = true,
             ShouldRedirect = true,
-            RedirectUrl = string.IsNullOrWhiteSpace(choThanhToanUrl) ? "/gianhang/cho-thanh-toan.aspx" : choThanhToanUrl,
+            RedirectUrl = BuildWaitRedirectUrl(choThanhToanUrl, waitingOrderIdForRedirect),
             OrderId = publicOrderId
         };
     }
@@ -162,7 +168,7 @@ public static class GianHangOrderCommand_cl
         {
             Success = true,
             ShouldRedirect = true,
-            RedirectUrl = string.IsNullOrWhiteSpace(choThanhToanUrl) ? "/gianhang/cho-thanh-toan.aspx" : choThanhToanUrl
+            RedirectUrl = BuildWaitRedirectUrl(choThanhToanUrl, runtime.OrderId)
         };
     }
 
@@ -269,5 +275,16 @@ public static class GianHangOrderCommand_cl
             Message = message,
             AlertType = "success"
         };
+    }
+
+    private static string BuildWaitRedirectUrl(string baseUrl, string orderId)
+    {
+        string url = string.IsNullOrWhiteSpace(baseUrl) ? "/gianhang/cho-thanh-toan.aspx" : baseUrl.Trim();
+        string safeOrderId = (orderId ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(safeOrderId))
+            return url;
+
+        string join = url.Contains("?") ? "&" : "?";
+        return url + join + "id=" + HttpUtility.UrlEncode(safeOrderId);
     }
 }

@@ -122,10 +122,6 @@
 }
 /*auto complete ajax*/
 
-@media (max-width: 575px) { /*sm*/
-
-}
-
 @media (max-width: 767px) { /*md*/
     .text-gioithieu {
         line-height: unset !important;
@@ -164,16 +160,9 @@
    
 }
 
-@media (max-width: 991px) { /*lg*/
-
-}
-
-@media (max-width: 1199px) { /*xl*/
+@media (min-width: 768px) {
     .text-gioithieu {
         line-height: 25px;
         font-size: 18px;
     }
-}
-
-@media (max-width: 1451px) { /*xxl*/
 }

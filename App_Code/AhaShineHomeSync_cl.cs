@@ -14,11 +14,31 @@ public static class AhaShineHomeSync_cl
 
         string postType = loai == "ctdv" ? AccountVisibility_cl.PostTypeService : AccountVisibility_cl.PostTypeProduct;
         BaiViet_tb bv = null;
+        String_cl str = new String_cl();
+        string ten = (post.name ?? "").Trim();
+        string tenSlug = string.IsNullOrEmpty(ten) ? "" : str.replace_name_to_url(ten);
+        string nguoitao = (post.nguoitao ?? "").Trim();
+        if (string.IsNullOrEmpty(nguoitao))
+            nguoitao = AhaShineContext_cl.UserParent;
 
         if (post.id_baiviet.HasValue && post.id_baiviet.Value > 0)
         {
             int id = post.id_baiviet.Value;
             bv = db.BaiViet_tbs.FirstOrDefault(p => p.id == id);
+        }
+
+        if (bv == null && !string.IsNullOrWhiteSpace(tenSlug) && !string.IsNullOrWhiteSpace(nguoitao))
+        {
+            // Guard against legacy rows losing id_baiviet during sync cycles:
+            // reuse an existing home post with same owner/type/slug instead of creating duplicates.
+            bv = db.BaiViet_tbs
+                .Where(p => p.nguoitao == nguoitao
+                    && p.phanloai == postType
+                    && p.name_en == tenSlug
+                    && (p.bin == false || p.bin == null))
+                .OrderByDescending(p => p.ngaytao)
+                .ThenByDescending(p => p.id)
+                .FirstOrDefault();
         }
 
         if (bv == null)
@@ -27,19 +47,15 @@ public static class AhaShineHomeSync_cl
             db.BaiViet_tbs.InsertOnSubmit(bv);
         }
 
-        String_cl str = new String_cl();
-        string ten = (post.name ?? "").Trim();
-        string nguoitao = AhaShineContext_cl.UserParent;
-
         bv.name = ten;
-        bv.name_en = string.IsNullOrEmpty(ten) ? "" : str.replace_name_to_url(ten);
+        bv.name_en = tenSlug;
         bv.id_DanhMuc = post.id_category;
         bv.content_post = post.content_post;
         bv.description = post.description;
         bv.image = post.image;
         bv.bin = post.bin == true;
         bv.ngaytao = post.ngaytao ?? DateTime.Now;
-        bv.nguoitao = string.IsNullOrEmpty(nguoitao) ? post.nguoitao ?? "" : nguoitao;
+        bv.nguoitao = nguoitao ?? "";
         bv.noibat = post.noibat == true;
         bv.phanloai = postType;
 

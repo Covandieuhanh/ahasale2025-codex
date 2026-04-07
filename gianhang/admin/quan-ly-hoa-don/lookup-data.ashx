@@ -27,7 +27,14 @@ public class GianHangInvoiceLookupHandler : IHttpHandler, System.Web.SessionStat
 
         if (!string.Equals(context.Request.HttpMethod, "GET", StringComparison.OrdinalIgnoreCase))
         {
+            context.Response.AppendHeader("Allow", "GET");
             WriteJson(context, 405, false, "Method not allowed.", null);
+            return;
+        }
+
+        if (!GianHangSystemAdminGuard_cl.EnsureHandlerAccess(context))
+        {
+            WriteJson(context, 403, false, "Bạn không có quyền truy cập endpoint này trong chế độ quản trị hệ thống.", null);
             return;
         }
 
